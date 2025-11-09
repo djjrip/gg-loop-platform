@@ -5,12 +5,15 @@ async function seed() {
   console.log("Seeding database...");
 
   const existingGames = await db.select().from(games);
-  if (existingGames.length > 0) {
+  const existingRewards = await db.select().from(rewards);
+  
+  if (existingGames.length > 0 && existingRewards.length > 0) {
     console.log("Database already seeded");
     return;
   }
 
-  await db.insert(games).values([
+  if (existingGames.length === 0) {
+    await db.insert(games).values([
     {
       title: "Counter-Strike 2",
       category: "FPS",
@@ -65,45 +68,143 @@ async function seed() {
       avgScore: 1780,
       challenges: 35,
     },
-  ]);
+    ]);
+  }
 
-  await db.insert(rewards).values([
+  if (existingRewards.length === 0) {
+    await db.insert(rewards).values([
     {
-      title: "Steam Gift Card",
-      description: "$50 Steam wallet credit",
-      pointsCost: 5000,
-      imageUrl: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80",
-      category: "Gift Cards",
-    },
-    {
-      title: "Gaming Headset",
-      description: "Premium wireless gaming headset",
-      pointsCost: 12000,
-      imageUrl: "https://images.unsplash.com/photo-1599669454699-248893623440?w=400&q=80",
-      category: "Gaming Gear",
+      title: "Exclusive GG Badge",
+      description: "Unlock a premium profile badge",
+      pointsCost: 50,
+      realValue: 5,
+      tier: 1,
+      imageUrl: "https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=400&q=80",
+      category: "Digital",
+      fulfillmentType: "automatic",
     },
     {
       title: "Discord Nitro",
-      description: "3 months Discord Nitro subscription",
-      pointsCost: 3000,
+      description: "1 month Discord Nitro subscription",
+      pointsCost: 100,
+      realValue: 10,
+      tier: 1,
       imageUrl: "https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=400&q=80",
       category: "Subscriptions",
+      fulfillmentType: "digital_key",
     },
     {
-      title: "Mechanical Keyboard",
-      description: "RGB mechanical gaming keyboard",
-      pointsCost: 15000,
-      imageUrl: "https://images.unsplash.com/photo-1595225476474-87563907a212?w=400&q=80",
-      category: "Gaming Gear",
+      title: "20% Off Gaming Store",
+      description: "Get 20% off your next purchase at partner stores",
+      pointsCost: 150,
+      realValue: 15,
+      tier: 1,
+      imageUrl: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80",
+      category: "Discounts",
+      fulfillmentType: "code",
     },
     {
       title: "Xbox Game Pass",
       description: "1 month Xbox Game Pass Ultimate",
-      pointsCost: 2500,
+      pointsCost: 300,
+      realValue: 17,
+      tier: 2,
       imageUrl: "https://images.unsplash.com/photo-1605901309584-818e25960a8f?w=400&q=80",
       category: "Subscriptions",
+      fulfillmentType: "digital_key",
     },
-  ]);
+    {
+      title: "Steam $10 Gift Card",
+      description: "$10 Steam wallet credit",
+      pointsCost: 350,
+      realValue: 10,
+      tier: 2,
+      imageUrl: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80",
+      category: "Gift Cards",
+      fulfillmentType: "digital_key",
+    },
+    {
+      title: "Premium Game Skin Pack",
+      description: "Exclusive in-game skins for popular titles",
+      pointsCost: 400,
+      realValue: 25,
+      tier: 2,
+      imageUrl: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=400&q=80",
+      category: "Digital",
+      fulfillmentType: "digital_key",
+    },
+    {
+      title: "Steam $25 Gift Card",
+      description: "$25 Steam wallet credit",
+      pointsCost: 800,
+      realValue: 25,
+      tier: 3,
+      imageUrl: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80",
+      category: "Gift Cards",
+      fulfillmentType: "digital_key",
+    },
+    {
+      title: "Razer Gaming Mouse",
+      description: "High-precision wireless gaming mouse",
+      pointsCost: 1200,
+      realValue: 50,
+      tier: 3,
+      stock: 50,
+      sku: "RAZER-MOUSE-001",
+      imageUrl: "https://images.unsplash.com/photo-1527814050087-3793815479db?w=400&q=80",
+      category: "Gaming Gear",
+      fulfillmentType: "physical",
+    },
+    {
+      title: "Custom Gaming Chair",
+      description: "Ergonomic gaming chair with lumbar support",
+      pointsCost: 3000,
+      realValue: 150,
+      tier: 3,
+      stock: 20,
+      sku: "CHAIR-GAMING-001",
+      imageUrl: "https://images.unsplash.com/photo-1598550476439-6847785fcea6?w=400&q=80",
+      category: "Gaming Gear",
+      fulfillmentType: "physical",
+    },
+    {
+      title: "Premium Mechanical Keyboard",
+      description: "RGB mechanical gaming keyboard with custom switches",
+      pointsCost: 5000,
+      realValue: 150,
+      tier: 4,
+      stock: 15,
+      sku: "KB-MECH-001",
+      imageUrl: "https://images.unsplash.com/photo-1595225476474-87563907a212?w=400&q=80",
+      category: "Gaming Gear",
+      fulfillmentType: "physical",
+    },
+    {
+      title: "VIP Event Ticket",
+      description: "Exclusive access to major gaming event",
+      pointsCost: 2500,
+      realValue: 100,
+      tier: 4,
+      stock: 100,
+      sku: "EVENT-VIP-001",
+      imageUrl: "https://images.unsplash.com/photo-1560253023-3ec5d502959f?w=400&q=80",
+      category: "Experiences",
+      fulfillmentType: "manual",
+    },
+    {
+      title: "Gaming Laptop Upgrade Fund",
+      description: "$500 towards a new gaming laptop",
+      pointsCost: 15000,
+      realValue: 500,
+      tier: 4,
+      stock: 5,
+      sku: "LAPTOP-FUND-001",
+      imageUrl: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=400&q=80",
+      category: "High-Value",
+      fulfillmentType: "manual",
+    },
+    ]);
+  }
 
   console.log("Database seeded successfully!");
 }
