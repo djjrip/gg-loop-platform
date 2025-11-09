@@ -14,12 +14,60 @@ import { Trophy, Gamepad2, Award, TrendingUp, Users, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import type { Game, LeaderboardEntryWithUser, Achievement, Reward } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState<"daily" | "weekly" | "all-time">("weekly");
+  const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const claimRewardMutation = useMutation({
+    mutationFn: async (rewardId: string) => {
+      try {
+        const res = await apiRequest("POST", "/api/user/rewards/redeem", { rewardId });
+        return await res.json();
+      } catch (error: any) {
+        const errorMessage = error.response
+          ? await error.response.json().then((data: any) => data.message).catch(() => "Failed to claim reward")
+          : error.message || "Failed to claim reward";
+        throw new Error(errorMessage);
+      }
+    },
+    onSuccess: () => {
+      setClaimingRewardId(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/rewards"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Success!",
+        description: "Reward claimed successfully!",
+      });
+    },
+    onError: (error: Error) => {
+      setClaimingRewardId(null);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to claim reward",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleClaimReward = (rewardId: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to claim rewards",
+        variant: "destructive",
+      });
+      return;
+    }
+    setClaimingRewardId(rewardId);
+    claimRewardMutation.mutate(rewardId);
+  };
 
   // Fetch games from API
   const { data: games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames } = useQuery<Game[]>({
@@ -255,12 +303,15 @@ export default function Home() {
                 rewards.slice(0, 4).map((reward) => (
                   <RewardsCard
                     key={reward.id}
+                    id={reward.id}
                     title={reward.title}
                     description={reward.description || ""}
                     points={reward.pointsCost}
                     isUnlocked={user ? user.totalPoints >= reward.pointsCost : false}
                     isClaimed={false}
                     category={reward.category}
+                    onClaim={handleClaimReward}
+                    isClaimLoading={claimingRewardId === reward.id}
                   />
                 ))
               ) : (

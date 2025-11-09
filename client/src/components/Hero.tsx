@@ -15,7 +15,7 @@ export default function Hero() {
           data-testid="video-background"
         >
           <source 
-            src="https://player.vimeo.com/external/371433846.sd.mp4?s=236a2e634c245fc6ce89dcdf0ac0d2b5d8e30b25&profile_id=164&oauth2_token_id=57447761" 
+            src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" 
             type="video/mp4" 
           />
         </video>

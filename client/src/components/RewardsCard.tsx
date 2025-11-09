@@ -4,15 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { Lock, Check } from "lucide-react";
 
 interface RewardsCardProps {
+  id: string;
   title: string;
   description: string;
   points: number;
   isUnlocked: boolean;
   isClaimed?: boolean;
   category: string;
+  onClaim?: (rewardId: string) => void;
+  isClaimLoading?: boolean;
 }
 
-export default function RewardsCard({ title, description, points, isUnlocked, isClaimed, category }: RewardsCardProps) {
+export default function RewardsCard({ id, title, description, points, isUnlocked, isClaimed, category, onClaim, isClaimLoading }: RewardsCardProps) {
   return (
     <Card className="p-6 relative overflow-hidden" data-testid={`card-reward-${title.toLowerCase().replace(/\s/g, '-')}`}>
       {!isUnlocked && (
@@ -47,7 +50,8 @@ export default function RewardsCard({ title, description, points, isUnlocked, is
           {isUnlocked && (
             <Button 
               size="sm" 
-              disabled={isClaimed}
+              disabled={isClaimed || isClaimLoading}
+              onClick={() => onClaim?.(id)}
               data-testid={`button-claim-${title.toLowerCase().replace(/\s/g, '-')}`}
             >
               {isClaimed ? (
@@ -55,6 +59,8 @@ export default function RewardsCard({ title, description, points, isUnlocked, is
                   <Check className="mr-1 h-4 w-4" />
                   Claimed
                 </>
+              ) : isClaimLoading ? (
+                "Claiming..."
               ) : (
                 "Claim"
               )}
