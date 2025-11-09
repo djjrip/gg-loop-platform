@@ -1,81 +1,284 @@
 import { Button } from "@/components/ui/button";
-import { Play } from "lucide-react";
+import { Play, Sparkles } from "lucide-react";
 import { Link } from "wouter";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export default function Hero() {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({
+        x: (e.clientX / window.innerWidth - 0.5) * 20,
+        y: (e.clientY / window.innerHeight - 0.5) * 20,
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  // Floating particles
+  const particles = Array.from({ length: 15 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    duration: 3 + Math.random() * 4,
+    delay: Math.random() * 2,
+  }));
+
   return (
-    <section className="relative w-full overflow-hidden">
+    <section className="relative w-full overflow-hidden min-h-[90vh] flex items-center">
+      {/* Animated Background Layers */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 gaming-gradient-bg">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/15 via-background to-background"></div>
-          <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/8 rounded-full blur-[100px] animate-pulse-slow"></div>
-          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] animate-pulse-slower"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary/3 rounded-full blur-[120px] animate-spin-slow"></div>
-        </div>
+        {/* Animated gradient orbs with parallax */}
+        <motion.div
+          className="absolute top-0 left-0 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px]"
+          animate={{
+            x: [mousePosition.x, mousePosition.x + 50],
+            y: [mousePosition.y, mousePosition.y + 50],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+        />
         
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-background/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-background/70" />
-        
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255, 140, 66, 0.02) 3px, rgba(255, 140, 66, 0.02) 4px)',
-        }}></div>
+        <motion.div
+          className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-primary/15 rounded-full blur-[100px]"
+          animate={{
+            x: [-mousePosition.x, -mousePosition.x - 30],
+            y: [-mousePosition.y, -mousePosition.y - 30],
+            scale: [1, 1.3, 1],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+        />
+
+        {/* Floating particles */}
+        {particles.map((particle) => (
+          <motion.div
+            key={particle.id}
+            className="absolute w-1 h-1 bg-primary rounded-full"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+              boxShadow: '0 0 10px 2px rgba(255, 140, 66, 0.4)',
+            }}
+            animate={{
+              y: [0, -30, 0],
+              opacity: [0.3, 0.8, 0.3],
+              scale: [1, 1.5, 1],
+            }}
+            transition={{
+              duration: particle.duration,
+              repeat: Infinity,
+              delay: particle.delay,
+            }}
+          />
+        ))}
+
+        {/* Animated grid overlay */}
+        <motion.div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(255, 140, 66, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255, 140, 66, 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px',
+          }}
+          animate={{
+            backgroundPosition: ['0px 0px', '50px 50px'],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
+
+        {/* Scanlines */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 140, 66, 0.1) 2px, rgba(255, 140, 66, 0.1) 4px)',
+        }} />
+
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/90 to-background/50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/80" />
       </div>
 
-      <div className="relative container mx-auto max-w-6xl px-6 py-32 md:py-48">
-        <div className="max-w-3xl space-y-10">
-          <h1 
-            className="text-6xl md:text-7xl lg:text-8xl font-bold leading-none tracking-tighter text-foreground"
-            style={{textShadow: '0 0 30px rgba(255, 140, 66, 0.3)'}}
+      {/* Content */}
+      <div className="relative container mx-auto max-w-7xl px-6 py-20">
+        <div className="max-w-4xl">
+          {/* Animated badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8"
           >
-            Play.{" "}
-            <span className="text-primary" style={{textShadow: '0 0 40px rgba(255, 140, 66, 0.6)'}}>Earn.</span>{" "}
-            <span className="block mt-2">Loop.</span>
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl leading-relaxed">
-            Turn your gaming into rewards. Every match played, every win earned—real value for real skill.
-          </p>
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Real Rewards. Real Gaming.</span>
+          </motion.div>
 
-          <div className="flex flex-wrap gap-4 pt-4">
+          {/* Animated title with glitch effect */}
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-6xl md:text-7xl lg:text-9xl font-bold leading-none tracking-tighter mb-8"
+          >
+            <motion.span
+              className="block text-foreground"
+              whileHover={{ scale: 1.02 }}
+              style={{
+                textShadow: '0 0 40px rgba(255, 140, 66, 0.2)',
+              }}
+            >
+              Play.{" "}
+            </motion.span>
+            
+            <motion.span
+              className="block text-primary"
+              animate={{
+                textShadow: [
+                  '0 0 20px rgba(255, 140, 66, 0.5)',
+                  '0 0 60px rgba(255, 140, 66, 0.8)',
+                  '0 0 20px rgba(255, 140, 66, 0.5)',
+                ],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse",
+              }}
+              whileHover={{ scale: 1.02 }}
+            >
+              Earn.{" "}
+            </motion.span>
+            
+            <motion.span
+              className="block text-foreground"
+              whileHover={{ scale: 1.02 }}
+              style={{
+                textShadow: '0 0 40px rgba(255, 140, 66, 0.2)',
+              }}
+            >
+              Loop.
+            </motion.span>
+          </motion.h1>
+
+          {/* Animated description */}
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-xl md:text-2xl text-muted-foreground max-w-2xl leading-relaxed mb-10"
+          >
+            Turn your gaming into rewards. Every match played, every win earned—real value for real skill.
+          </motion.p>
+
+          {/* Animated buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex flex-wrap gap-4"
+          >
             <Link href="/subscription">
-              <Button 
-                size="lg" 
-                className="text-base px-8"
-                data-testid="button-get-started"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <Play className="mr-2 h-5 w-5" />
-                Get Started
-              </Button>
+                <Button 
+                  size="lg" 
+                  className="text-base px-8 relative overflow-hidden group"
+                  data-testid="button-get-started"
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    animate={{
+                      x: ['-100%', '200%'],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 1,
+                    }}
+                  />
+                  <Play className="mr-2 h-5 w-5" />
+                  Get Started
+                </Button>
+              </motion.div>
             </Link>
             
             <Link href="#games">
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="text-base px-8"
-                data-testid="button-explore"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Explore Games
-              </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="text-base px-8 border-primary/30 hover:border-primary/60"
+                  data-testid="button-explore"
+                >
+                  Explore Games
+                </Button>
+              </motion.div>
             </Link>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-wrap gap-8 pt-12 text-sm">
-            <div className="space-y-1">
-              <div className="text-3xl font-bold font-mono text-foreground">500K+</div>
-              <div className="text-muted-foreground uppercase tracking-wide">Players</div>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="text-3xl font-bold font-mono text-foreground">50+</div>
-              <div className="text-muted-foreground uppercase tracking-wide">Games</div>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="text-3xl font-bold font-mono text-primary">$2M+</div>
-              <div className="text-muted-foreground uppercase tracking-wide">Rewards</div>
-            </div>
-          </div>
+          {/* Animated stats */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.8 }}
+            className="flex flex-wrap gap-12 pt-16"
+          >
+            {[
+              { value: "500K+", label: "Players", delay: 0.9 },
+              { value: "50+", label: "Games", delay: 1.0 },
+              { value: "$2M+", label: "Rewards", delay: 1.1 },
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: stat.delay }}
+                whileHover={{ scale: 1.1 }}
+                className="space-y-1"
+              >
+                <motion.div
+                  className="text-4xl font-bold font-mono text-foreground"
+                  animate={{
+                    textShadow: index === 2 ? [
+                      '0 0 10px rgba(255, 140, 66, 0.3)',
+                      '0 0 20px rgba(255, 140, 66, 0.6)',
+                      '0 0 10px rgba(255, 140, 66, 0.3)',
+                    ] : 'none',
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                  }}
+                >
+                  {stat.value}
+                </motion.div>
+                <div className="text-sm text-muted-foreground uppercase tracking-wider">
+                  {stat.label}
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </div>
     </section>
