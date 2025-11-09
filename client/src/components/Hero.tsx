@@ -29,8 +29,8 @@ export default function Hero() {
   }));
 
   return (
-    <section className="relative w-full overflow-hidden min-h-[90vh] flex items-center">
-      {/* Animated Background Layers */}
+    <section className="relative w-full overflow-hidden min-h-[90vh] flex items-center bg-gradient-to-br from-orange-500 via-purple-600 to-pink-500 animate-pulse">
+      {/* MASSIVE FUTURISTIC TRANSFORMATION */}
       <div className="absolute inset-0">
         {/* Animated gradient orbs with parallax */}
         <motion.div
@@ -128,50 +128,60 @@ export default function Hero() {
             <span className="text-sm font-medium text-primary">Real Rewards. Real Gaming.</span>
           </motion.div>
 
-          {/* Animated title with glitch effect */}
+          {/* MEGA FUTURISTIC ANIMATED TITLE */}
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-6xl md:text-7xl lg:text-9xl font-bold leading-none tracking-tighter mb-8"
+            initial={{ opacity: 0, y: 30, scale: 0.3 }}
+            animate={{ 
+              opacity: 1, 
+              y: [0, -20, 0], 
+              scale: [0.3, 1.1, 1],
+              rotate: [0, 2, -2, 0]
+            }}
+            transition={{ duration: 2, delay: 0.2, y: { repeat: Infinity, duration: 3 }, rotate: { repeat: Infinity, duration: 4 } }}
+            className="text-[8rem] md:text-[12rem] lg:text-[20rem] font-black leading-none tracking-tighter mb-8"
           >
             <motion.span
-              className="block text-foreground"
-              whileHover={{ scale: 1.02 }}
+              className="block text-yellow-300 animate-pulse"
+              whileHover={{ scale: 1.1, rotate: 5 }}
               style={{
-                textShadow: '0 0 40px rgba(255, 140, 66, 0.2)',
+                textShadow: '0 0 80px #FFFF00, 0 0 120px #FF8C42, 0 0 160px #FF00FF',
+                WebkitTextStroke: '6px #FF8C42'
               }}
             >
-              Play.{" "}
+              PLAY{" "}
             </motion.span>
             
             <motion.span
-              className="block text-primary"
+              className="block text-purple-400"
               animate={{
                 textShadow: [
-                  '0 0 20px rgba(255, 140, 66, 0.5)',
-                  '0 0 60px rgba(255, 140, 66, 0.8)',
-                  '0 0 20px rgba(255, 140, 66, 0.5)',
+                  '0 0 40px rgba(255, 0, 255, 1)',
+                  '0 0 120px rgba(255, 140, 66, 1)',
+                  '0 0 40px rgba(255, 0, 255, 1)',
                 ],
+                scale: [1, 1.15, 1],
+                rotate: [0, -3, 3, 0]
               }}
               transition={{
-                duration: 2,
+                duration: 1.5,
                 repeat: Infinity,
                 repeatType: "reverse",
               }}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.2 }}
+              style={{ display: 'inline-block' }}
             >
-              Earn.{" "}
+              EARN{" "}
             </motion.span>
             
             <motion.span
-              className="block text-foreground"
-              whileHover={{ scale: 1.02 }}
+              className="block text-orange-500 animate-bounce"
+              whileHover={{ scale: 1.1, rotate: -5 }}
               style={{
-                textShadow: '0 0 40px rgba(255, 140, 66, 0.2)',
+                textShadow: '0 0 100px #FF8C42, 0 0 150px #FFFF00',
+                WebkitTextStroke: '6px #FF00FF'
               }}
             >
-              Loop.
+              LOOP
             </motion.span>
           </motion.h1>
 
