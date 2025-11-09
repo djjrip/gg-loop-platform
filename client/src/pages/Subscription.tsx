@@ -323,12 +323,10 @@ export default function SubscriptionPage() {
                         <Button
                           className="w-full"
                           variant={isPremium ? "default" : "outline"}
-                          asChild
+                          onClick={() => window.location.href = '/api/login'}
                           data-testid={`button-login-${tier.id}`}
                         >
-                          <a href="/api/auth/login">
-                            Log in to Subscribe
-                          </a>
+                          Log in to Subscribe
                         </Button>
                       ) : isCurrentTier ? (
                         <Button

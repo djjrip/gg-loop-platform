@@ -13,6 +13,24 @@ const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-10-29.clover" })
   : null;
 
+const getUserMiddleware = async (req: any, res: any, next: any) => {
+  try {
+    if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const oidcSub = req.user.claims.sub;
+    const dbUser = await storage.getUserByOidcSub(oidcSub);
+    if (!dbUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    req.dbUser = dbUser;
+    next();
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Failed to fetch user" });
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
@@ -21,8 +39,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.isAuthenticated() || !req.user?.claims?.sub) {
         return res.json(null);
       }
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const oidcSub = req.user.claims.sub;
+      const user = await storage.getUserByOidcSub(oidcSub);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -53,9 +71,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/user/games', isAuthenticated, async (req: any, res) => {
+  app.get('/api/user/games', getUserMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.dbUser.id;
       const userGames = await storage.getUserGames(userId);
       res.json(userGames);
     } catch (error) {
@@ -64,9 +82,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/user/games', isAuthenticated, async (req: any, res) => {
+  app.post('/api/user/games', getUserMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.dbUser.id;
       const validated = insertUserGameSchema.parse({ ...req.body, userId });
       const userGame = await storage.connectUserGame(validated);
       res.json(userGame);
@@ -88,9 +106,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/user/achievements', isAuthenticated, async (req: any, res) => {
+  app.get('/api/user/achievements', getUserMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.dbUser.id;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
       const achievements = await storage.getUserAchievements(userId, limit);
       res.json(achievements);
@@ -110,9 +128,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/user/rewards', isAuthenticated, async (req: any, res) => {
+  app.get('/api/user/rewards', getUserMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.dbUser.id;
       const userRewards = await storage.getUserRewards(userId);
       res.json(userRewards);
     } catch (error) {
@@ -121,9 +139,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/user/rewards/redeem', isAuthenticated, async (req: any, res) => {
+  app.post('/api/user/rewards/redeem', getUserMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.dbUser.id;
       const validated = insertUserRewardSchema.parse({ ...req.body, userId });
       const userReward = await storage.redeemReward(validated);
       res.json(userReward);
@@ -133,9 +151,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/points/balance', isAuthenticated, async (req: any, res) => {
+  app.get('/api/points/balance', getUserMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.dbUser.id;
       const balance = await pointsEngine.getUserBalance(userId);
       res.json({ balance });
     } catch (error) {
@@ -144,9 +162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/points/transactions', isAuthenticated, async (req: any, res) => {
+  app.get('/api/points/transactions', getUserMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.dbUser.id;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
       const transactions = await storage.getPointTransactions(userId, limit);
       res.json(transactions);
@@ -156,17 +174,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/create-checkout-session', isAuthenticated, async (req: any, res) => {
+  app.post('/api/create-checkout-session', getUserMiddleware, async (req: any, res) => {
     try {
       if (!stripe) {
         return res.status(503).json({ message: "Stripe not configured. Please add STRIPE_SECRET_KEY." });
       }
 
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      const user = req.dbUser;
 
       const { tier = "basic" } = req.body;
       const priceId = tier === "premium" 
@@ -210,9 +224,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/subscription/status', isAuthenticated, async (req: any, res) => {
+  app.get('/api/subscription/status', getUserMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.dbUser.id;
       const subscription = await storage.getSubscription(userId);
       res.json(subscription || null);
     } catch (error) {
@@ -221,13 +235,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/subscription/cancel', isAuthenticated, async (req: any, res) => {
+  app.post('/api/subscription/cancel', getUserMiddleware, async (req: any, res) => {
     try {
       if (!stripe) {
         return res.status(503).json({ message: "Stripe not configured" });
       }
 
-      const userId = req.user.claims.sub;
+      const userId = req.dbUser.id;
       const subscription = await storage.getSubscription(userId);
       
       if (!subscription || !subscription.stripeSubscriptionId) {

@@ -18,6 +18,7 @@ import { pointsEngine } from "./pointsEngine";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
+  getUserByOidcSub(oidcSub: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: InsertUser): Promise<User>;
   updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string): Promise<User>;
@@ -53,14 +54,22 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
+  async getUserByOidcSub(oidcSub: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.oidcSub, oidcSub)).limit(1);
+    return result[0];
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
-        target: users.id,
+        target: users.oidcSub,
         set: {
-          ...userData,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
           updatedAt: new Date(),
         },
       })
