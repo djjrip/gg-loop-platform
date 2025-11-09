@@ -112,14 +112,14 @@ export const tiktokTemplates: TikTokTemplate[] = [
   },
   {
     id: "10",
-    title: "Stat Flex",
-    category: "Social Proof",
-    hook: "GG Loop stats after 1 week:",
-    body: "→ 847 signups\n→ $2,450 in rewards claimed\n→ 5,230 matches tracked\n→ 94% satisfaction rate\n\nGamers are tired of getting nothing back.\n\nGG Loop changes that.",
-    cta: "Be next → ggloop.io",
-    hashtags: ["#Gaming", "#Startup", "#GGLoop", "#GamingCommunity"],
-    viralScore: 7,
-    duration: "15 sec"
+    title: "Value Proposition",
+    category: "Educational",
+    hook: "Gaming platform where you actually profit:",
+    body: "Traditional subscriptions:\n→ Pay $10/month\n→ Play games\n→ Get nothing\n\nGG Loop:\n→ Pay $5/month\n→ Play the same games\n→ Earn $30-45/month in rewards\n\nYou literally make money gaming.",
+    cta: "Start profiting → ggloop.io",
+    hashtags: ["#Gaming", "#SmartMoney", "#GGLoop", "#GamingTips"],
+    viralScore: 8,
+    duration: "20 sec"
   },
   {
     id: "11",

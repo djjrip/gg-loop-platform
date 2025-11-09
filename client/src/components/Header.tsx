@@ -52,11 +52,13 @@ export default function Header() {
             <a href="#community" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md" data-testid="link-community">
               Community
             </a>
-            <Link href="/tiktok-content">
-              <a className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-tiktok-content">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                TikTok Content
-              </a>
+            <Link 
+              href="/tiktok-content" 
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+              data-testid="link-tiktok-content"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              TikTok Content
             </Link>
           </nav>
         </div>
@@ -134,11 +136,13 @@ export default function Header() {
             <a href="#community" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md" data-testid="link-community-mobile">
               Community
             </a>
-            <Link href="/tiktok-content">
-              <a className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-tiktok-content-mobile">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                TikTok Content
-              </a>
+            <Link 
+              href="/tiktok-content" 
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+              data-testid="link-tiktok-content-mobile"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              TikTok Content
             </Link>
             {isAuthenticated && user ? (
               <Button variant="destructive" size="sm" onClick={handleLogout} data-testid="button-logout-mobile">
