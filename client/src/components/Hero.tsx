@@ -11,11 +11,12 @@ export default function Hero() {
           loop 
           muted 
           playsInline
+          preload="metadata"
           className="h-full w-full object-cover opacity-20"
           data-testid="video-background"
         >
           <source 
-            src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" 
+            src="/assets/basketball-hero.mp4" 
             type="video/mp4" 
           />
         </video>
