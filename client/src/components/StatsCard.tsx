@@ -1,7 +1,5 @@
-import { Card } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
 
 interface StatsCardProps {
   title: string;
@@ -12,111 +10,44 @@ interface StatsCardProps {
 }
 
 export default function StatsCard({ title, value, icon: Icon, subtitle, trend }: StatsCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.6 }}
-      whileHover={{ scale: 1.05, y: -5 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      data-testid={`card-stat-${title.toLowerCase().replace(/\s/g, '-')}`}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ y: -8 }}
+      className="relative group"
+      data-testid={`card-stat-${title.toLowerCase().replace(/\s+/g, '-')}`}
     >
-      <Card className="p-6 border-primary/20 bg-gradient-to-br from-card to-background relative overflow-hidden group">
-        {/* Animated neon border */}
-        <motion.div
-          className="absolute inset-0 rounded-lg"
-          style={{
-            background: 'linear-gradient(90deg, transparent, rgba(255, 140, 66, 0.4), transparent)',
-            backgroundSize: '200% 100%',
-          }}
-          animate={{
-            backgroundPosition: isHovered ? ['0% 0%', '200% 0%'] : '0% 0%',
-          }}
-          transition={{
-            duration: 1.5,
-            repeat: isHovered ? Infinity : 0,
-          }}
-        />
-        
-        {/* Holographic shine effect */}
-        <motion.div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-          style={{
-            background: 'linear-gradient(135deg, transparent 0%, rgba(255, 140, 66, 0.1) 50%, transparent 100%)',
-          }}
-          animate={{
-            x: isHovered ? ['-100%', '100%'] : '0%',
-          }}
-          transition={{
-            duration: 1,
-            repeat: isHovered ? Infinity : 0,
-          }}
-        />
+      {/* Glowing border on hover */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl opacity-0 group-hover:opacity-75 blur transition-all duration-500" />
 
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
-            <motion.div
-              animate={{
-                rotate: isHovered ? 360 : 0,
-                scale: isHovered ? 1.2 : 1,
-              }}
-              transition={{ duration: 0.5 }}
-            >
-              <Icon className="h-5 w-5 text-primary" style={{
-                filter: 'drop-shadow(0 0 8px rgba(255, 140, 66, 0.6))',
-              }} />
-            </motion.div>
-          </div>
+      {/* Main card */}
+      <div className="relative bg-zinc-900/90 backdrop-blur border border-orange-500/20 rounded-xl p-6 overflow-hidden">
+        {/* Animated grid overlay */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: 'linear-gradient(rgba(255, 140, 66, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 140, 66, 0.1) 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+        }} />
+
+        <div className="relative z-10 space-y-3">
+          <motion.div
+            whileHover={{ scale: 1.2, rotate: 360 }}
+            transition={{ duration: 0.6 }}
+            className="w-12 h-12 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center justify-center"
+          >
+            <Icon className="h-6 w-6 text-orange-500" />
+          </motion.div>
           
-          <div className="space-y-1">
-            <motion.p
-              className="text-4xl font-bold font-mono tracking-tight"
-              data-testid={`text-value-${title.toLowerCase().replace(/\s/g, '-')}`}
-              animate={{
-                textShadow: isHovered ? [
-                  '0 0 5px rgba(255, 140, 66, 0.2)',
-                  '0 0 15px rgba(255, 140, 66, 0.6)',
-                  '0 0 5px rgba(255, 140, 66, 0.2)',
-                ] : 'none',
-              }}
-              transition={{
-                duration: 1,
-                repeat: isHovered ? Infinity : 0,
-                repeatType: "reverse",
-              }}
-            >
-              {value}
-            </motion.p>
-            
-            {subtitle && (
-              <p className="text-sm text-muted-foreground" data-testid={`text-subtitle-${title.toLowerCase().replace(/\s/g, '-')}`}>
-                {subtitle}
-              </p>
-            )}
-            
-            {trend && (
-              <motion.p
-                className="text-sm font-medium text-primary"
-                data-testid={`text-trend-${title.toLowerCase().replace(/\s/g, '-')}`}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                {trend}
-              </motion.p>
-            )}
+          <div>
+            <p className="text-xs text-orange-400/70 font-medium uppercase tracking-widest">{title}</p>
+            <p className="text-4xl font-black font-mono mt-2 bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent" data-testid={`text-value-${title.toLowerCase().replace(/\s+/g, '-')}`}>{value}</p>
+            {subtitle && <p className="text-xs text-zinc-500 mt-1" data-testid={`text-subtitle-${title.toLowerCase().replace(/\s+/g, '-')}`}>{subtitle}</p>}
+            {trend && <p className="text-sm text-orange-500 font-semibold mt-2" data-testid={`text-trend-${title.toLowerCase().replace(/\s+/g, '-')}`}>{trend}</p>}
           </div>
         </div>
-
-        {/* Corner accents */}
-        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary/40" />
-        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary/40" />
-      </Card>
+      </div>
     </motion.div>
   );
 }

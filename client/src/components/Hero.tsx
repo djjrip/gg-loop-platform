@@ -29,8 +29,8 @@ export default function Hero() {
   }));
 
   return (
-    <section className="relative w-full overflow-hidden min-h-[90vh] flex items-center bg-gradient-to-br from-orange-500 via-purple-600 to-pink-500 animate-pulse">
-      {/* MASSIVE FUTURISTIC TRANSFORMATION */}
+    <section className="relative w-full overflow-hidden min-h-[90vh] flex items-center bg-gradient-to-b from-black via-zinc-900 to-black">
+      {/* Futuristic animated background */}
       <div className="absolute inset-0">
         {/* Animated gradient orbs with parallax */}
         <motion.div
@@ -128,60 +128,65 @@ export default function Hero() {
             <span className="text-sm font-medium text-primary">Real Rewards. Real Gaming.</span>
           </motion.div>
 
-          {/* MEGA FUTURISTIC ANIMATED TITLE */}
+          {/* Animated title - premium futuristic blend */}
           <motion.h1
-            initial={{ opacity: 0, y: 30, scale: 0.3 }}
-            animate={{ 
-              opacity: 1, 
-              y: [0, -20, 0], 
-              scale: [0.3, 1.1, 1],
-              rotate: [0, 2, -2, 0]
-            }}
-            transition={{ duration: 2, delay: 0.2, y: { repeat: Infinity, duration: 3 }, rotate: { repeat: Infinity, duration: 4 } }}
-            className="text-[8rem] md:text-[12rem] lg:text-[20rem] font-black leading-none tracking-tighter mb-8"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="text-7xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter mb-8"
           >
             <motion.span
-              className="block text-yellow-300 animate-pulse"
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              style={{
-                textShadow: '0 0 80px #FFFF00, 0 0 120px #FF8C42, 0 0 160px #FF00FF',
-                WebkitTextStroke: '6px #FF8C42'
-              }}
-            >
-              PLAY{" "}
-            </motion.span>
-            
-            <motion.span
-              className="block text-purple-400"
+              className="block bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-clip-text text-transparent"
               animate={{
-                textShadow: [
-                  '0 0 40px rgba(255, 0, 255, 1)',
-                  '0 0 120px rgba(255, 140, 66, 1)',
-                  '0 0 40px rgba(255, 0, 255, 1)',
-                ],
-                scale: [1, 1.15, 1],
-                rotate: [0, -3, 3, 0]
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
               }}
               transition={{
-                duration: 1.5,
+                duration: 5,
                 repeat: Infinity,
-                repeatType: "reverse",
+                ease: "linear"
               }}
-              whileHover={{ scale: 1.2 }}
-              style={{ display: 'inline-block' }}
+              style={{
+                backgroundSize: '200% 200%',
+                filter: 'drop-shadow(0 0 30px rgba(255, 140, 66, 0.4))',
+              }}
             >
-              EARN{" "}
+              PLAY.
             </motion.span>
             
             <motion.span
-              className="block text-orange-500 animate-bounce"
-              whileHover={{ scale: 1.1, rotate: -5 }}
+              className="block bg-gradient-to-r from-orange-500 via-orange-400 to-orange-600 bg-clip-text text-transparent"
+              animate={{
+                backgroundPosition: ['100% 50%', '0% 50%', '100% 50%'],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "linear"
+              }}
               style={{
-                textShadow: '0 0 100px #FF8C42, 0 0 150px #FFFF00',
-                WebkitTextStroke: '6px #FF00FF'
+                backgroundSize: '200% 200%',
+                filter: 'drop-shadow(0 0 40px rgba(255, 140, 66, 0.6))',
               }}
             >
-              LOOP
+              EARN.
+            </motion.span>
+            
+            <motion.span
+              className="block bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400 bg-clip-text text-transparent"
+              animate={{
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              style={{
+                backgroundSize: '200% 200%',
+                filter: 'drop-shadow(0 0 50px rgba(255, 140, 66, 0.7))',
+              }}
+            >
+              LOOP.
             </motion.span>
           </motion.h1>
 
