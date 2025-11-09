@@ -12,7 +12,7 @@ export default function Hero() {
           muted 
           playsInline
           preload="metadata"
-          className="h-full w-full object-cover opacity-20"
+          className="h-full w-full object-cover opacity-40"
           data-testid="video-background"
         >
           <source 
@@ -23,12 +23,12 @@ export default function Hero() {
         <div 
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(45deg, rgba(255, 102, 0, 0.05) 0%, transparent 50%, rgba(255, 102, 0, 0.08) 100%)',
+            background: 'linear-gradient(45deg, rgba(255, 102, 0, 0.08) 0%, transparent 50%, rgba(255, 102, 0, 0.12) 100%)',
             animation: 'gradient-shift 8s ease-in-out infinite alternate'
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-primary/5" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-background/60" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-primary/10" />
       </div>
 
       <div className="relative container mx-auto max-w-7xl px-4 py-24 md:py-32">
