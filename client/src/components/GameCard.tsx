@@ -13,7 +13,7 @@ interface GameCardProps {
 
 export default function GameCard({ title, image, category, players, avgScore, challenges }: GameCardProps) {
   return (
-    <Card className="overflow-hidden cursor-pointer hover-elevate active-elevate-2" data-testid={`card-game-${title.toLowerCase().replace(/\s/g, '-')}`}>
+    <Card className="overflow-hidden cursor-pointer hover-elevate active-elevate-2 border-primary/10 hover:border-primary/30 transition-all hover:shadow-[0_0_20px_rgba(255,140,66,0.2)]" data-testid={`card-game-${title.toLowerCase().replace(/\s/g, '-')}`}>
       <div className="relative aspect-video overflow-hidden">
         <img 
           src={image} 

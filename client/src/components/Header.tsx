@@ -32,7 +32,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-primary/5 bg-background/99 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+    <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background/99 backdrop-blur supports-[backdrop-filter]:bg-background/95 shadow-[0_1px_0_0_rgba(255,140,66,0.1)]">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-3 hover-elevate px-2 py-1 rounded-md" data-testid="link-home">
@@ -62,7 +62,7 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
           {isAuthenticated && user && (
-            <div className="hidden md:flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2 border border-primary/20">
+            <div className="hidden md:flex items-center gap-2 rounded-sm bg-primary/10 px-4 py-2 border border-primary/30 shadow-[0_0_10px_rgba(255,140,66,0.15)]">
               <Trophy className="h-4 w-4 text-primary" />
               <span className="font-mono text-sm font-bold text-primary" data-testid="text-points">{user.totalPoints.toLocaleString()}</span>
               <span className="text-xs text-muted-foreground">pts</span>

@@ -140,8 +140,11 @@ export default function Home() {
         <section id="games">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-4xl font-bold font-heading tracking-tight">Featured Games</h2>
-              <p className="text-muted-foreground mt-2">Connect your gameplay and start earning rewards</p>
+              <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
+                <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
+                Featured Games
+              </h2>
+              <p className="text-muted-foreground mt-2 ml-4">Connect your gameplay and start earning rewards</p>
             </div>
             <Button variant="outline" data-testid="button-view-all-games">View All</Button>
           </div>
@@ -194,12 +197,15 @@ export default function Home() {
         <section id="leaderboards">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-4xl font-bold font-heading tracking-tight">Leaderboards</h2>
-              <p className="text-muted-foreground mt-2">See how you stack up against the competition</p>
+              <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
+                <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
+                Leaderboards
+              </h2>
+              <p className="text-muted-foreground mt-2 ml-4">See how you stack up against the competition</p>
             </div>
           </div>
 
-          <Card className="p-6 border-primary/5">
+          <Card className="p-6 border-primary/20 hover:border-primary/30 transition-colors">
             <Tabs 
               defaultValue="weekly" 
               className="w-full"
@@ -259,8 +265,11 @@ export default function Home() {
           {/* Community Feed */}
           <div id="community">
             <div className="mb-8">
-              <h2 className="text-4xl font-bold font-heading tracking-tight">Community Feed</h2>
-              <p className="text-muted-foreground mt-2">Recent achievements and highlights</p>
+              <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
+                <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
+                Community Feed
+              </h2>
+              <p className="text-muted-foreground mt-2 ml-4">Recent achievements and highlights</p>
             </div>
             
             <div className="space-y-4">
@@ -277,8 +286,11 @@ export default function Home() {
           {/* Rewards */}
           <div id="rewards">
             <div className="mb-8">
-              <h2 className="text-4xl font-bold font-heading tracking-tight">Rewards Catalog</h2>
-              <p className="text-muted-foreground mt-2">Redeem your points for amazing prizes</p>
+              <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
+                <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
+                Rewards Catalog
+              </h2>
+              <p className="text-muted-foreground mt-2 ml-4">Redeem your points for amazing prizes</p>
             </div>
             
             <div className="space-y-4">
