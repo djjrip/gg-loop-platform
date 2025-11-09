@@ -11,6 +11,7 @@ import SubscriptionCancel from "@/pages/SubscriptionCancel";
 import TikTokContentGenerator from "@/pages/TikTokContentGenerator";
 import Profile from "@/pages/Profile";
 import BusinessDashboard from "@/pages/BusinessDashboard";
+import ReportMatch from "@/pages/ReportMatch";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/tiktok-content" component={TikTokContentGenerator} />
       <Route path="/profile/:userId" component={Profile} />
       <Route path="/launch-dashboard" component={BusinessDashboard} />
+      <Route path="/report-match" component={ReportMatch} />
       <Route component={NotFound} />
     </Switch>
   );

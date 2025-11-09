@@ -16,6 +16,7 @@ export const sessions = pgTable(
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   oidcSub: varchar("oidc_sub").unique(),
+  username: varchar("username").unique(),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
@@ -171,6 +172,24 @@ export const gamingEvents = pgTable("gaming_events", {
   uniqPartnerEvent: sql`UNIQUE(partner_id, external_event_id)`,
 }));
 
+export const matchSubmissions = pgTable("match_submissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  gameId: varchar("game_id").notNull().references(() => games.id),
+  matchType: varchar("match_type").notNull(),
+  notes: text("notes"),
+  screenshotUrl: text("screenshot_url"),
+  status: varchar("status").notNull().default("pending"),
+  pointsAwarded: integer("points_awarded"),
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewNotes: text("review_notes"),
+  submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+}, (table) => [
+  index("idx_match_submissions_user").on(table.userId),
+  index("idx_match_submissions_status").on(table.status),
+]);
+
 export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, createdAt: true, updatedAt: true });
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, createdAt: true, updatedAt: true });
 export const insertGameSchema = createInsertSchema(games).omit({ id: true, isActive: true });
@@ -184,6 +203,7 @@ export const insertPointTransactionSchema = createInsertSchema(pointTransactions
 export const insertSubscriptionEventSchema = createInsertSchema(subscriptionEvents).omit({ id: true, createdAt: true });
 export const insertApiPartnerSchema = createInsertSchema(apiPartners).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertGamingEventSchema = createInsertSchema(gamingEvents).omit({ id: true, createdAt: true, status: true, retryCount: true, processedAt: true });
+export const insertMatchSubmissionSchema = createInsertSchema(matchSubmissions).omit({ id: true, submittedAt: true, status: true, reviewedAt: true, reviewedBy: true, reviewNotes: true, pointsAwarded: true });
 
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -222,6 +242,9 @@ export type ApiPartner = typeof apiPartners.$inferSelect;
 
 export type InsertGamingEvent = z.infer<typeof insertGamingEventSchema>;
 export type GamingEvent = typeof gamingEvents.$inferSelect;
+
+export type InsertMatchSubmission = z.infer<typeof insertMatchSubmissionSchema>;
+export type MatchSubmission = typeof matchSubmissions.$inferSelect;
 
 export const gamingWebhookBaseSchema = z.object({
   apiKey: z.string().min(1, "API key is required"),

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import { ShareButtons } from "@/components/ShareButtons";
+import TrophyCard from "@/components/TrophyCard";
 
 interface PublicProfile {
   user: {
@@ -161,40 +162,32 @@ export default function Profile() {
           </Card>
         </div>
 
-        {/* Recent Achievements */}
+        {/* Trophy Case - NBA Top Shot Style */}
         {profile.achievements.length > 0 && (
-          <Card className="p-6 mb-6">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              Recent Achievements
-            </h2>
-            <div className="space-y-4">
-              {profile.achievements.slice(0, 5).map((achievement) => (
-                <div 
+          <div className="mb-6">
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold font-heading tracking-tight mb-2">Trophy Case</h2>
+              <p className="text-muted-foreground">Your collection of earned achievements</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {profile.achievements.map((achievement, idx) => (
+                <TrophyCard
                   key={achievement.id}
-                  className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 hover-elevate"
-                  data-testid={`achievement-${achievement.id}`}
-                >
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Trophy className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold mb-1">{achievement.title}</h3>
-                    {achievement.description && (
-                      <p className="text-sm text-muted-foreground mb-2">{achievement.description}</p>
-                    )}
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                      <span>{achievement.gameName}</span>
-                      <span>•</span>
-                      <span className="text-primary font-semibold">+{achievement.pointsAwarded} pts</span>
-                      <span>•</span>
-                      <span>{new Date(achievement.achievedAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
+                  title={achievement.title}
+                  description={achievement.description || undefined}
+                  gameName={achievement.gameName}
+                  pointsAwarded={achievement.pointsAwarded}
+                  achievedAt={achievement.achievedAt}
+                  rarity={
+                    achievement.pointsAwarded >= 100 ? "legendary" :
+                    achievement.pointsAwarded >= 50 ? "epic" :
+                    achievement.pointsAwarded >= 25 ? "rare" : "common"
+                  }
+                  serialNumber={`#${idx + 1}/${profile.achievements.length}`}
+                />
               ))}
             </div>
-          </Card>
+          </div>
         )}
 
         {/* Leaderboard Rankings */}

@@ -54,16 +54,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Public Profile - No auth required
-  app.get('/api/profile/:userId', async (req, res) => {
+  // Public Profile - No auth required (supports both UUID and username)
+  app.get('/api/profile/:userIdOrUsername', async (req, res) => {
     try {
-      const { userId } = req.params;
+      const { userIdOrUsername } = req.params;
       
-      // Get user info
-      const user = await storage.getUser(userId);
+      // Try to find user by UUID first, then by username
+      let user = await storage.getUser(userIdOrUsername);
+      if (!user) {
+        user = await storage.getUserByUsername(userIdOrUsername);
+      }
+      
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
+
+      const userId = user.id;
 
       // Get achievements with game names
       const achievements = await storage.getUserAchievements(userId, 10);
@@ -266,6 +272,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching transactions:", error);
       res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  // Match submission routes
+  app.get('/api/match-submissions', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const submissions = await storage.getUserMatchSubmissions(userId);
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching match submissions:", error);
+      res.status(500).json({ message: "Failed to fetch match submissions" });
+    }
+  });
+
+  app.post('/api/match-submissions', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { gameId, matchType, notes } = req.body;
+      
+      if (!gameId || !matchType) {
+        return res.status(400).json({ message: "Game ID and match type are required" });
+      }
+
+      // For now, auto-approve and award points based on match type
+      // In production, this would require manual review
+      const pointsMap: Record<string, number> = {
+        'win': 10,
+        'ranked': 15,
+        'tournament': 50,
+      };
+      
+      const pointsAwarded = pointsMap[matchType] || 10;
+      
+      // Create submission (auto-approved for MVP)
+      const submission = await storage.createMatchSubmission({
+        userId,
+        gameId,
+        matchType,
+        notes: notes || null,
+        screenshotUrl: null, // File upload will be added later
+      });
+
+      // Auto-approve and award points
+      await storage.updateMatchSubmission(submission.id, {
+        status: 'approved',
+        pointsAwarded,
+        reviewedAt: new Date(),
+      });
+
+      // Award points using points engine
+      await pointsEngine.awardPoints(
+        userId,
+        pointsAwarded,
+        'MATCH_WIN',
+        submission.id,
+        'match_submission',
+        `Match win: ${matchType}`
+      );
+
+      res.json({ success: true, pointsAwarded });
+    } catch (error: any) {
+      console.error("Error creating match submission:", error);
+      res.status(500).json({ message: error.message || "Failed to submit match" });
     }
   });
 

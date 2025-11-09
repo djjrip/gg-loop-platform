@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { 
   users, games, userGames, leaderboardEntries, achievements, rewards, userRewards,
-  subscriptions, subscriptionEvents, pointTransactions, apiPartners, gamingEvents,
+  subscriptions, subscriptionEvents, pointTransactions, apiPartners, gamingEvents, matchSubmissions,
   type User, type InsertUser, type UpsertUser,
   type Game, type InsertGame,
   type UserGame, type InsertUserGame,
@@ -13,7 +13,8 @@ import {
   type SubscriptionEvent, type InsertSubscriptionEvent,
   type PointTransaction,
   type ApiPartner, type InsertApiPartner,
-  type GamingEvent, type InsertGamingEvent
+  type GamingEvent, type InsertGamingEvent,
+  type MatchSubmission, type InsertMatchSubmission
 } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { pointsEngine } from "./pointsEngine";
@@ -21,9 +22,11 @@ import { pointsEngine } from "./pointsEngine";
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByOidcSub(oidcSub: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: InsertUser): Promise<User>;
   updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string): Promise<User>;
+  updateUsername(userId: string, username: string): Promise<User>;
   
   getAllGames(): Promise<Game[]>;
   getGame(id: string): Promise<Game | undefined>;
@@ -56,6 +59,10 @@ export interface IStorage {
   logGamingEvent(event: InsertGamingEvent): Promise<GamingEvent>;
   updateGamingEvent(eventId: string, updates: Partial<{ status: string; pointsAwarded: number | null; transactionId: string | null; errorMessage: string | null; retryCount: number; processedAt: Date }>): Promise<GamingEvent>;
   getEventByExternalId(partnerId: string, externalEventId: string): Promise<GamingEvent | undefined>;
+  
+  getUserMatchSubmissions(userId: string): Promise<(MatchSubmission & { game: Game })[]>;
+  createMatchSubmission(submission: InsertMatchSubmission): Promise<MatchSubmission>;
+  updateMatchSubmission(submissionId: string, updates: Partial<{ status: string; pointsAwarded: number | null; reviewedBy: string | null; reviewNotes: string | null; reviewedAt: Date }>): Promise<MatchSubmission>;
 }
 
 export class DbStorage implements IStorage {
@@ -66,6 +73,11 @@ export class DbStorage implements IStorage {
 
   async getUserByOidcSub(oidcSub: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.oidcSub, oidcSub)).limit(1);
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
     return result[0];
   }
 
@@ -100,6 +112,15 @@ export class DbStorage implements IStorage {
         stripeSubscriptionId: subscriptionId || null,
         updatedAt: new Date() 
       })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateUsername(userId: string, username: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ username, updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
     return user;
@@ -340,6 +361,44 @@ export class DbStorage implements IStorage {
       ))
       .limit(1);
     return result[0];
+  }
+
+  async getUserMatchSubmissions(userId: string): Promise<(MatchSubmission & { game: Game })[]> {
+    const result = await db
+      .select({
+        matchSubmission: matchSubmissions,
+        game: games,
+      })
+      .from(matchSubmissions)
+      .innerJoin(games, eq(matchSubmissions.gameId, games.id))
+      .where(eq(matchSubmissions.userId, userId))
+      .orderBy(desc(matchSubmissions.submittedAt));
+    
+    return result.map(row => ({
+      ...row.matchSubmission,
+      game: row.game,
+      gameName: row.game.title,
+    })) as (MatchSubmission & { game: Game })[];
+  }
+
+  async createMatchSubmission(submission: InsertMatchSubmission): Promise<MatchSubmission> {
+    const [newSubmission] = await db
+      .insert(matchSubmissions)
+      .values(submission)
+      .returning();
+    return newSubmission;
+  }
+
+  async updateMatchSubmission(
+    submissionId: string,
+    updates: Partial<{ status: string; pointsAwarded: number | null; reviewedBy: string | null; reviewNotes: string | null; reviewedAt: Date }>
+  ): Promise<MatchSubmission> {
+    const [submission] = await db
+      .update(matchSubmissions)
+      .set(updates)
+      .where(eq(matchSubmissions.id, submissionId))
+      .returning();
+    return submission;
   }
 }
 
