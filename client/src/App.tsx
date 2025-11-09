@@ -12,6 +12,7 @@ import TikTokContentGenerator from "@/pages/TikTokContentGenerator";
 import Profile from "@/pages/Profile";
 import BusinessDashboard from "@/pages/BusinessDashboard";
 import ReportMatch from "@/pages/ReportMatch";
+import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/profile/:userId" component={Profile} />
       <Route path="/launch-dashboard" component={BusinessDashboard} />
       <Route path="/report-match" component={ReportMatch} />
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );

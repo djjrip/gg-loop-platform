@@ -162,6 +162,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/user/username', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { username } = z.object({ 
+        username: z.string()
+          .min(3, "Username must be at least 3 characters")
+          .max(20, "Username must be at most 20 characters")
+          .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
+      }).parse(req.body);
+      
+      // Check if username is already taken
+      const existing = await storage.getUserByUsername(username);
+      if (existing && existing.id !== userId) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+      
+      const updatedUser = await storage.updateUsername(userId, username);
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error("Error updating username:", error);
+      res.status(400).json({ message: error.message || "Failed to update username" });
+    }
+  });
+
   app.post('/api/user/games', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
