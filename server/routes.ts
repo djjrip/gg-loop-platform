@@ -201,6 +201,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateUserStripeInfo(user.id, customerId);
       }
 
+      const baseUrl = process.env.REPLIT_DOMAINS 
+        ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
+        : 'http://localhost:5000';
+
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
@@ -209,8 +213,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           quantity: 1,
         }],
         mode: 'subscription',
-        success_url: `${process.env.REPLIT_DOMAINS?.split(',')[0] || 'http://localhost:5000'}/subscription/success`,
-        cancel_url: `${process.env.REPLIT_DOMAINS?.split(',')[0] || 'http://localhost:5000'}/subscription/cancel`,
+        success_url: `${baseUrl}/subscription/success`,
+        cancel_url: `${baseUrl}/subscription/cancel`,
         metadata: { userId: user.id, tier },
         subscription_data: {
           metadata: { userId: user.id, tier }
