@@ -69,7 +69,7 @@ export default function Home() {
         <section id="games">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-4xl font-bold tracking-tight">Featured Games</h2>
+              <h2 className="text-4xl font-bold font-heading tracking-tight">Featured Games</h2>
               <p className="text-muted-foreground mt-2">Connect your gameplay and start earning rewards</p>
             </div>
             <Button variant="outline" data-testid="button-view-all-games">View All</Button>
@@ -86,7 +86,7 @@ export default function Home() {
         <section id="leaderboards">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-4xl font-bold tracking-tight">Leaderboards</h2>
+              <h2 className="text-4xl font-bold font-heading tracking-tight">Leaderboards</h2>
               <p className="text-muted-foreground mt-2">See how you stack up against the competition</p>
             </div>
           </div>
@@ -125,7 +125,7 @@ export default function Home() {
           {/* Community Feed */}
           <div id="community">
             <div className="mb-8">
-              <h2 className="text-4xl font-bold tracking-tight">Community Feed</h2>
+              <h2 className="text-4xl font-bold font-heading tracking-tight">Community Feed</h2>
               <p className="text-muted-foreground mt-2">Recent achievements and highlights</p>
             </div>
             
@@ -143,7 +143,7 @@ export default function Home() {
           {/* Rewards */}
           <div id="rewards">
             <div className="mb-8">
-              <h2 className="text-4xl font-bold tracking-tight">Rewards Catalog</h2>
+              <h2 className="text-4xl font-bold font-heading tracking-tight">Rewards Catalog</h2>
               <p className="text-muted-foreground mt-2">Redeem your points for amazing prizes</p>
             </div>
             
@@ -162,7 +162,7 @@ export default function Home() {
         {/* How It Works */}
         <section className="py-16">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold tracking-tight">How It Works</h2>
+            <h2 className="text-4xl font-bold font-heading tracking-tight">How It Works</h2>
             <p className="text-muted-foreground mt-2 text-lg">Start earning rewards in three simple steps</p>
           </div>
 
@@ -196,7 +196,7 @@ export default function Home() {
         {/* CTA Section */}
         <section className="py-16">
           <Card className="p-12 text-center bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <h2 className="text-4xl font-bold tracking-tight mb-4">Ready to Start Earning?</h2>
+            <h2 className="text-4xl font-bold font-heading tracking-tight mb-4">Ready to Start Earning?</h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
               Join thousands of gamers who are already turning their gameplay into real rewards
             </p>
@@ -220,7 +220,7 @@ export default function Home() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Trophy className="h-6 w-6 text-primary" />
-                <span className="text-xl font-bold tracking-tight">GG LOOP</span>
+                <span className="text-xl font-bold font-heading tracking-tight">GG LOOP</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 The premier platform for gamers to earn real-world rewards.

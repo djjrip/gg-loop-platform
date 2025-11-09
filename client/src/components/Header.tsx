@@ -17,7 +17,7 @@ export default function Header() {
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-2">
             <Trophy className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold tracking-tight">GG LOOP</span>
+            <span className="text-xl font-bold font-heading tracking-tight">GG LOOP</span>
           </div>
           
           <nav className="hidden md:flex items-center gap-6">

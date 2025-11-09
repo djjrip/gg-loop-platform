@@ -16,7 +16,7 @@ export default function Hero() {
 
       <div className="relative container mx-auto max-w-7xl px-4 py-24 md:py-32">
         <div className="max-w-3xl space-y-6">
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground">
+          <h1 className="text-5xl md:text-7xl font-bold font-heading tracking-tight text-foreground">
             Play. Earn.{" "}
             <span className="text-primary">Dominate.</span>
           </h1>
