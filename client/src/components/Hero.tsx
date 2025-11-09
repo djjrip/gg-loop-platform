@@ -1,19 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Play, TrendingUp, Users } from "lucide-react";
 import { Link } from "wouter";
-import heroImage from "@assets/generated_images/Esports_arena_hero_background_6461d55f.png";
+import basketballBg from "@assets/stock_images/basketball_game_acti_facb9589.jpg";
 
 export default function Hero() {
   return (
     <section className="relative w-full overflow-hidden">
       <div className="absolute inset-0">
-        <img 
-          src={heroImage} 
-          alt="Esports arena" 
-          className="h-full w-full object-cover opacity-15"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/98 to-background/85" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-primary/3" />
+        <div className="absolute inset-0 animate-pulse-slow">
+          <img 
+            src={basketballBg} 
+            alt="Basketball action" 
+            className="h-full w-full object-cover opacity-20 scale-110"
+            style={{ 
+              animation: 'slow-zoom 20s ease-in-out infinite alternate'
+            }}
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-primary/5" />
       </div>
 
       <div className="relative container mx-auto max-w-7xl px-4 py-24 md:py-32">
