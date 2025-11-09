@@ -1,0 +1,246 @@
+import { useParams } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Trophy, 
+  Target, 
+  Gamepad2, 
+  TrendingUp
+} from "lucide-react";
+import Header from "@/components/Header";
+import { ShareButtons } from "@/components/ShareButtons";
+
+interface PublicProfile {
+  user: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    profileImageUrl: string | null;
+    totalPoints: number;
+    gamesConnected: number;
+    createdAt: string;
+  };
+  achievements: Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    pointsAwarded: number;
+    achievedAt: string;
+    gameName: string;
+  }>;
+  leaderboardRankings: Array<{
+    gameId: string;
+    gameName: string;
+    rank: number;
+    score: number;
+    period: string;
+  }>;
+  stats: {
+    totalAchievements: number;
+    totalMatchesPlayed: number;
+    avgRank: number;
+    joinedDaysAgo: number;
+  };
+}
+
+export default function Profile() {
+  const { userId } = useParams<{ userId: string }>();
+
+  const { data: profile, isLoading } = useQuery<PublicProfile>({
+    queryKey: [`/api/profile/${userId}`],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+            <p className="mt-4 text-muted-foreground">Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-16 max-w-2xl text-center">
+          <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Profile Not Found</h1>
+          <p className="text-muted-foreground">This gamer profile doesn't exist or is private.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const displayName = profile.user.firstName 
+    ? `${profile.user.firstName} ${profile.user.lastName || ''}`.trim()
+    : profile.user.email?.split('@')[0] || 'Gamer';
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <main className="container mx-auto px-4 py-8 max-w-5xl">
+        {/* Profile Header */}
+        <Card className="p-8 mb-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={profile.user.profileImageUrl || undefined} />
+              <AvatarFallback className="text-2xl">
+                {displayName[0]?.toUpperCase() || 'G'}
+              </AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold mb-2" data-testid="text-profile-name">{displayName}</h1>
+              <div className="flex flex-wrap items-center gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  <span className="font-mono text-lg font-bold text-primary" data-testid="text-profile-points">
+                    {profile.user.totalPoints.toLocaleString()}
+                  </span>
+                  <span className="text-sm text-muted-foreground">points</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Gamepad2 className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground" data-testid="text-profile-games">
+                    {profile.user.gamesConnected} games connected
+                  </span>
+                </div>
+              </div>
+              <ShareButtons 
+                title={`${displayName}'s GG Loop Profile`}
+                description={`Check out my GG Loop gaming profile! ${profile.user.totalPoints.toLocaleString()} points earned 🎮🏆`}
+                hashtags={["GGLoop", "Gaming", "Gamer"]}
+              />
+            </div>
+          </div>
+        </Card>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Target className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold">Achievements</h3>
+            </div>
+            <p className="text-3xl font-bold font-mono" data-testid="text-stat-achievements">
+              {profile.stats.totalAchievements}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Unlocked</p>
+          </Card>
+          
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold">Avg Rank</h3>
+            </div>
+            <p className="text-3xl font-bold font-mono" data-testid="text-stat-avgrank">
+              {profile.stats.avgRank > 0 ? `#${profile.stats.avgRank}` : '-'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Across all games</p>
+          </Card>
+          
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Trophy className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold">Member Since</h3>
+            </div>
+            <p className="text-3xl font-bold font-mono" data-testid="text-stat-days">
+              {profile.stats.joinedDaysAgo}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Days ago</p>
+          </Card>
+        </div>
+
+        {/* Recent Achievements */}
+        {profile.achievements.length > 0 && (
+          <Card className="p-6 mb-6">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-primary" />
+              Recent Achievements
+            </h2>
+            <div className="space-y-4">
+              {profile.achievements.slice(0, 5).map((achievement) => (
+                <div 
+                  key={achievement.id}
+                  className="flex items-start gap-4 p-4 rounded-lg bg-muted/30 hover-elevate"
+                  data-testid={`achievement-${achievement.id}`}
+                >
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Trophy className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold mb-1">{achievement.title}</h3>
+                    {achievement.description && (
+                      <p className="text-sm text-muted-foreground mb-2">{achievement.description}</p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                      <span>{achievement.gameName}</span>
+                      <span>•</span>
+                      <span className="text-primary font-semibold">+{achievement.pointsAwarded} pts</span>
+                      <span>•</span>
+                      <span>{new Date(achievement.achievedAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Leaderboard Rankings */}
+        {profile.leaderboardRankings.length > 0 && (
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Leaderboard Rankings
+            </h2>
+            <div className="space-y-3">
+              {profile.leaderboardRankings.map((ranking, idx) => (
+                <div 
+                  key={`${ranking.gameId}-${ranking.period}`}
+                  className="flex items-center justify-between p-4 rounded-lg bg-muted/30"
+                  data-testid={`ranking-${idx}`}
+                >
+                  <div>
+                    <p className="font-semibold">{ranking.gameName}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{ranking.period} period</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Score</p>
+                      <p className="font-mono font-bold">{ranking.score.toLocaleString()}</p>
+                    </div>
+                    <Badge variant={ranking.rank <= 3 ? "default" : "secondary"} className="text-base px-3 py-1">
+                      #{ranking.rank}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Empty States */}
+        {profile.achievements.length === 0 && profile.leaderboardRankings.length === 0 && (
+          <Card className="p-12 text-center">
+            <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Activity Yet</h3>
+            <p className="text-sm text-muted-foreground">
+              This gamer is just getting started. Check back soon!
+            </p>
+          </Card>
+        )}
+      </main>
+    </div>
+  );
+}

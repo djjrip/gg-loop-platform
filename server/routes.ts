@@ -54,6 +54,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public Profile - No auth required
+  app.get('/api/profile/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Get user info
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get achievements with game names
+      const achievements = await storage.getUserAchievements(userId, 10);
+      
+      // Get leaderboard rankings
+      const userGames = await storage.getUserGames(userId);
+      const leaderboardRankings = [];
+      for (const userGame of userGames) {
+        // Get weekly leaderboard for this game
+        const leaderboard = await storage.getLeaderboard(userGame.gameId, 'weekly', 100);
+        const userEntry = leaderboard.find(entry => entry.userId === userId);
+        if (userEntry) {
+          leaderboardRankings.push({
+            gameId: userGame.gameId,
+            gameName: userGame.game.title,
+            rank: userEntry.rank,
+            score: userEntry.score,
+            period: 'weekly'
+          });
+        }
+      }
+
+      // Calculate stats
+      const allAchievements = await storage.getUserAchievements(userId, 1000);
+      const avgRank = leaderboardRankings.length > 0
+        ? Math.round(leaderboardRankings.reduce((sum, r) => sum + r.rank, 0) / leaderboardRankings.length)
+        : 0;
+      
+      const joinedDaysAgo = user.createdAt 
+        ? Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+        : 0;
+
+      res.json({
+        user: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          profileImageUrl: user.profileImageUrl,
+          totalPoints: user.totalPoints,
+          gamesConnected: user.gamesConnected,
+          createdAt: user.createdAt,
+        },
+        achievements,
+        leaderboardRankings,
+        stats: {
+          totalAchievements: allAchievements.length,
+          totalMatchesPlayed: 0, // TODO: Add match tracking
+          avgRank,
+          joinedDaysAgo,
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching public profile:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
   app.get('/api/games', async (req, res) => {
     try {
       const games = await storage.getAllGames();
