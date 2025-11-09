@@ -13,14 +13,15 @@ interface GameCardProps {
 
 export default function GameCard({ title, image, category, players, avgScore, challenges }: GameCardProps) {
   return (
-    <Card className="overflow-hidden hover-elevate active-elevate-2 cursor-pointer group" data-testid={`card-game-${title.toLowerCase().replace(/\s/g, '-')}`}>
+    <Card className="overflow-hidden hover-elevate active-elevate-2 cursor-pointer group border-primary/10" data-testid={`card-game-${title.toLowerCase().replace(/\s/g, '-')}`}>
       <div className="relative aspect-video overflow-hidden">
         <img 
           src={image} 
           alt={title}
-          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform group-hover:scale-105 opacity-80 group-hover:opacity-100"
         />
-        <div className="absolute top-3 left-3">
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-60" />
+        <div className="absolute top-3 left-3 z-10">
           <Badge className="bg-background/90 backdrop-blur-sm" data-testid={`badge-category-${category.toLowerCase()}`}>
             {category}
           </Badge>

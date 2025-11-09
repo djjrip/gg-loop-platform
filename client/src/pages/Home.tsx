@@ -91,7 +91,7 @@ export default function Home() {
             </div>
           </div>
 
-          <Card className="p-6">
+          <Card className="p-6 border-primary/10">
             <Tabs defaultValue="weekly" className="w-full">
               <TabsList className="mb-6">
                 <TabsTrigger value="daily" data-testid="tab-daily">Daily</TabsTrigger>
@@ -167,47 +167,60 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="p-8 text-center">
-              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                <Gamepad2 className="h-8 w-8 text-primary" />
+            <Card className="p-8 text-center border-primary/10 relative overflow-hidden group hover-elevate">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10">
+                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
+                  <Gamepad2 className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Connect Your Games</h3>
+                <p className="text-muted-foreground">Link your gaming accounts from Steam, Epic Games, Xbox, and more</p>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Connect Your Games</h3>
-              <p className="text-muted-foreground">Link your gaming accounts from Steam, Epic Games, Xbox, and more</p>
             </Card>
 
-            <Card className="p-8 text-center">
-              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                <Zap className="h-8 w-8 text-primary" />
+            <Card className="p-8 text-center border-primary/10 relative overflow-hidden group hover-elevate">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10">
+                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
+                  <Zap className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Play & Compete</h3>
+                <p className="text-muted-foreground">Complete challenges, climb leaderboards, and earn points automatically</p>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Play & Compete</h3>
-              <p className="text-muted-foreground">Complete challenges, climb leaderboards, and earn points automatically</p>
             </Card>
 
-            <Card className="p-8 text-center">
-              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                <Trophy className="h-8 w-8 text-primary" />
+            <Card className="p-8 text-center border-primary/10 relative overflow-hidden group hover-elevate">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10">
+                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
+                  <Trophy className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">Claim Rewards</h3>
+                <p className="text-muted-foreground">Redeem your points for gaming gear, gift cards, and exclusive prizes</p>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Claim Rewards</h3>
-              <p className="text-muted-foreground">Redeem your points for gaming gear, gift cards, and exclusive prizes</p>
             </Card>
           </div>
         </section>
 
         {/* CTA Section */}
         <section className="py-16">
-          <Card className="p-12 text-center bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <h2 className="text-4xl font-bold font-heading tracking-tight mb-4">Ready to Start Earning?</h2>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of gamers who are already turning their gameplay into real rewards
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" className="text-base font-semibold" data-testid="button-create-account">
-                <Users className="mr-2 h-5 w-5" />
-                Create Account
-              </Button>
-              <Button size="lg" variant="outline" className="text-base font-semibold" data-testid="button-learn-more">
-                Learn More
-              </Button>
+          <Card className="p-12 text-center relative overflow-hidden border-primary/30">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-tl from-primary/10 via-transparent to-transparent" />
+            <div className="relative z-10">
+              <h2 className="text-4xl font-bold font-heading tracking-tight mb-4">Ready to Start Earning?</h2>
+              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+                Join thousands of gamers who are already turning their gameplay into real rewards
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <Button size="lg" className="text-base font-semibold" data-testid="button-create-account">
+                  <Users className="mr-2 h-5 w-5" />
+                  Create Account
+                </Button>
+                <Button size="lg" variant="outline" className="text-base font-semibold" data-testid="button-learn-more">
+                  Learn More
+                </Button>
+              </div>
             </div>
           </Card>
         </section>

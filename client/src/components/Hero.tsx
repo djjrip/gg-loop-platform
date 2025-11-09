@@ -9,9 +9,10 @@ export default function Hero() {
         <img 
           src={heroImage} 
           alt="Esports arena" 
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover opacity-30"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-primary/5" />
       </div>
 
       <div className="relative container mx-auto max-w-7xl px-4 py-24 md:py-32">
