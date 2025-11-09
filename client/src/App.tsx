@@ -5,6 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "./hooks/useAuth";
 import Home from "@/pages/Home";
+import Subscription from "@/pages/Subscription";
+import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
+import SubscriptionCancel from "@/pages/SubscriptionCancel";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +27,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/subscription" component={Subscription} />
+      <Route path="/subscription/success" component={SubscriptionSuccess} />
+      <Route path="/subscription/cancel" component={SubscriptionCancel} />
       <Route component={NotFound} />
     </Switch>
   );
