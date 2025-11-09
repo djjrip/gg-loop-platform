@@ -1,20 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Play, TrendingUp, Users } from "lucide-react";
 import { Link } from "wouter";
-import basketballBg from "@assets/stock_images/basketball_game_acti_facb9589.jpg";
 
 export default function Hero() {
   return (
     <section className="relative w-full overflow-hidden">
       <div className="absolute inset-0">
-        <img 
-          src={basketballBg} 
-          alt="Basketball action" 
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
           className="h-full w-full object-cover opacity-20"
-          style={{ 
-            animation: 'slow-pan 30s ease-in-out infinite alternate'
-          }}
-        />
+          data-testid="video-background"
+        >
+          <source 
+            src="https://player.vimeo.com/external/371433846.sd.mp4?s=236a2e634c245fc6ce89dcdf0ac0d2b5d8e30b25&profile_id=164&oauth2_token_id=57447761" 
+            type="video/mp4" 
+          />
+        </video>
         <div 
           className="absolute inset-0"
           style={{
