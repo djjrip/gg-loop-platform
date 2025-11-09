@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Play, TrendingUp, Users } from "lucide-react";
+import { Link } from "wouter";
 import heroImage from "@assets/generated_images/Esports_arena_hero_background_6461d55f.png";
 
 export default function Hero() {
@@ -28,18 +29,22 @@ export default function Hero() {
           </p>
 
           <div className="flex flex-wrap gap-4 pt-4">
-            <Button size="lg" className="text-base font-semibold" data-testid="button-get-started">
-              <Play className="mr-2 h-5 w-5" />
-              Get Started
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="text-base font-semibold backdrop-blur-md bg-background/20 border-foreground/20" 
-              data-testid="button-view-leaderboards"
-            >
-              View Leaderboards
-            </Button>
+            <Link href="/subscription">
+              <Button size="lg" className="text-base font-semibold" data-testid="button-get-started">
+                <Play className="mr-2 h-5 w-5" />
+                Get Started
+              </Button>
+            </Link>
+            <Link href="/leaderboards">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="text-base font-semibold backdrop-blur-md bg-background/20 border-foreground/20" 
+                data-testid="button-view-leaderboards"
+              >
+                View Leaderboards
+              </Button>
+            </Link>
           </div>
 
           <div className="flex flex-wrap items-center gap-8 pt-8 text-sm font-medium">
