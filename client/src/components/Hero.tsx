@@ -24,10 +24,11 @@ export default function Hero() {
       <div className="relative container mx-auto max-w-6xl px-6 py-32 md:py-48">
         <div className="max-w-3xl space-y-10">
           <h1 
-            className="text-6xl md:text-7xl lg:text-8xl font-bold leading-none tracking-tight text-foreground"
+            className="text-6xl md:text-7xl lg:text-8xl font-bold leading-none tracking-tighter text-foreground"
+            style={{textShadow: '0 0 30px rgba(255, 140, 66, 0.3)'}}
           >
             Play.{" "}
-            <span className="text-primary">Earn.</span>{" "}
+            <span className="text-primary" style={{textShadow: '0 0 40px rgba(255, 140, 66, 0.6)'}}>Earn.</span>{" "}
             <span className="block mt-2">Loop.</span>
           </h1>
           
