@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import Subscription from "@/pages/Subscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import SubscriptionCancel from "@/pages/SubscriptionCancel";
+import TikTokContentGenerator from "@/pages/TikTokContentGenerator";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/subscription" component={Subscription} />
       <Route path="/subscription/success" component={SubscriptionSuccess} />
       <Route path="/subscription/cancel" component={SubscriptionCancel} />
+      <Route path="/tiktok-content" component={TikTokContentGenerator} />
       <Route component={NotFound} />
     </Switch>
   );
