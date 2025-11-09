@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { Link } from "wouter";
-import logoImage from "@assets/generated_images/GG_Loop_gaming_logo_b792d1a4.png";
+import logoImage from "@assets/DISCORD LOGO_1762728629973.png";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,9 +35,8 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-primary/5 bg-background/99 backdrop-blur supports-[backdrop-filter]:bg-background/95">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2 hover-elevate px-2 py-1 rounded-md" data-testid="link-home">
-            <img src={logoImage} alt="GG LOOP" className="h-8 w-8" />
-            <span className="text-xl font-bold font-heading tracking-tight">GG LOOP</span>
+          <Link href="/" className="flex items-center gap-3 hover-elevate px-2 py-1 rounded-md" data-testid="link-home">
+            <img src={logoImage} alt="GG LOOP" className="h-12 w-12" />
           </Link>
           
           <nav className="hidden md:flex items-center gap-6">
