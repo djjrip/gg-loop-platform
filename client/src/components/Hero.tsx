@@ -7,16 +7,16 @@ export default function Hero() {
   return (
     <section className="relative w-full overflow-hidden">
       <div className="absolute inset-0">
-        <div className="absolute inset-0 animate-pulse-slow">
-          <img 
-            src={basketballBg} 
-            alt="Basketball action" 
-            className="h-full w-full object-cover opacity-20 scale-110"
-            style={{ 
-              animation: 'slow-zoom 20s ease-in-out infinite alternate'
-            }}
-          />
-        </div>
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-full w-full object-cover opacity-25"
+          poster={basketballBg}
+        >
+          <source src="https://assets.mixkit.co/videos/preview/mixkit-basketball-game-in-a-street-court-1421-large.mp4" type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/80" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-primary/5" />
       </div>
