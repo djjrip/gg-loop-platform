@@ -12,13 +12,13 @@ export default function Hero() {
           loop
           muted
           playsInline
-          className="h-full w-full object-cover opacity-25"
+          className="h-full w-full object-cover opacity-30"
           poster={basketballBg}
         >
-          <source src="https://assets.mixkit.co/videos/preview/mixkit-basketball-game-in-a-street-court-1421-large.mp4" type="video/mp4" />
+          <source src="https://player.vimeo.com/external/434045526.sd.mp4?s=fc0da0c5c8352c3d9cd611e71ee4ac30e888bff9&profile_id=164&oauth2_token_id=57447761" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-background/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-primary/5" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/92 to-background/75" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-primary/5" />
       </div>
 
       <div className="relative container mx-auto max-w-7xl px-4 py-24 md:py-32">
