@@ -161,16 +161,21 @@ export class DbStorage implements IStorage {
   }
 
   async createAchievement(insertAchievement: InsertAchievement): Promise<Achievement> {
-    const result = await db.insert(achievements).values(insertAchievement).returning();
-    await pointsEngine.awardPoints(
-      insertAchievement.userId,
-      insertAchievement.pointsAwarded,
-      "ACHIEVEMENT",
-      result[0].id,
-      "achievement",
-      insertAchievement.title
-    );
-    return result[0];
+    return await db.transaction(async (tx) => {
+      const [achievement] = await tx.insert(achievements).values(insertAchievement).returning();
+      
+      await pointsEngine.awardPoints(
+        insertAchievement.userId,
+        insertAchievement.pointsAwarded,
+        "ACHIEVEMENT",
+        achievement.id,
+        "achievement",
+        insertAchievement.title,
+        tx
+      );
+      
+      return achievement;
+    });
   }
 
   async getAllRewards(): Promise<Reward[]> {
