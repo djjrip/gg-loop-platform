@@ -97,6 +97,7 @@ export const userRewards = pgTable("user_rewards", {
 export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  stripeSubscriptionId: varchar("stripe_subscription_id").unique(),
   tier: varchar("tier").notNull().default("basic"),
   status: varchar("status").notNull().default("active"),
   currentPeriodStart: timestamp("current_period_start").notNull(),

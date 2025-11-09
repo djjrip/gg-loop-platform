@@ -261,6 +261,15 @@ export class DbStorage implements IStorage {
   async getPointTransactions(userId: string, limit: number = 50): Promise<PointTransaction[]> {
     return pointsEngine.getTransactionHistory(userId, limit);
   }
+
+  async checkEventProcessed(stripeEventId: string): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(subscriptionEvents)
+      .where(eq(subscriptionEvents.stripeEventId, stripeEventId))
+      .limit(1);
+    return result.length > 0;
+  }
 }
 
 export const storage = new DbStorage();
