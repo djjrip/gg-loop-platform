@@ -41,6 +41,7 @@ export default function Home() {
       setClaimingRewardId(null);
       queryClient.invalidateQueries({ queryKey: ["/api/rewards"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/rewards"] });
       toast({
         title: "Success!",
         description: "Reward claimed successfully!",
@@ -65,6 +66,7 @@ export default function Home() {
       });
       return;
     }
+    
     setClaimingRewardId(rewardId);
     claimRewardMutation.mutate(rewardId);
   };
@@ -94,6 +96,12 @@ export default function Home() {
   // Fetch rewards from API
   const { data: rewards, isLoading: rewardsLoading, error: rewardsError, refetch: refetchRewards } = useQuery<Reward[]>({
     queryKey: ["/api/rewards"],
+  });
+
+  // Fetch user's claimed rewards
+  const { data: userRewards } = useQuery<any[]>({
+    queryKey: ["/api/user/rewards"],
+    enabled: isAuthenticated,
   });
 
   // Mock community feed (as requested to keep this mocked)
@@ -300,20 +308,23 @@ export default function Home() {
                   onRetry={() => refetchRewards()} 
                 />
               ) : rewards && rewards.length > 0 ? (
-                rewards.slice(0, 4).map((reward) => (
-                  <RewardsCard
-                    key={reward.id}
-                    id={reward.id}
-                    title={reward.title}
-                    description={reward.description || ""}
-                    points={reward.pointsCost}
-                    isUnlocked={user ? user.totalPoints >= reward.pointsCost : false}
-                    isClaimed={false}
-                    category={reward.category}
-                    onClaim={handleClaimReward}
-                    isClaimLoading={claimingRewardId === reward.id}
-                  />
-                ))
+                rewards.slice(0, 4).map((reward) => {
+                  const isClaimed = userRewards?.some(ur => ur.rewardId === reward.id) || false;
+                  return (
+                    <RewardsCard
+                      key={reward.id}
+                      id={reward.id}
+                      title={reward.title}
+                      description={reward.description || ""}
+                      points={reward.pointsCost}
+                      isUnlocked={user ? user.totalPoints >= reward.pointsCost : false}
+                      isClaimed={isClaimed}
+                      category={reward.category}
+                      onClaim={handleClaimReward}
+                      isClaimLoading={claimingRewardId === reward.id}
+                    />
+                  );
+                })
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   No rewards available at the moment.

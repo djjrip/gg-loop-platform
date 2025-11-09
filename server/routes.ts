@@ -7,6 +7,7 @@ import {
   insertAchievementSchema, insertUserRewardSchema,
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema
 } from "@shared/schema";
+import { z } from "zod";
 import Stripe from "stripe";
 import { pointsEngine } from "./pointsEngine";
 import { createWebhookSignatureMiddleware } from "./webhookSecurity";
@@ -147,7 +148,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/user/rewards/redeem', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
-      const validated = insertUserRewardSchema.parse({ ...req.body, userId });
+      const { rewardId } = z.object({ rewardId: z.string() }).parse(req.body);
+      
+      // Check if user already claimed this reward
+      const existingClaim = await storage.getUserRewards(userId);
+      if (existingClaim.some(ur => ur.rewardId === rewardId)) {
+        return res.status(400).json({ message: "You have already claimed this reward" });
+      }
+      
+      // Get reward to calculate actual points cost (security: don't trust client)
+      const allRewards = await storage.getAllRewards();
+      const reward = allRewards.find(r => r.id === rewardId);
+      if (!reward) {
+        return res.status(404).json({ message: "Reward not found" });
+      }
+      
+      // Server-side calculation of pointsSpent (security critical)
+      const validated = insertUserRewardSchema.parse({ 
+        userId, 
+        rewardId,
+        pointsSpent: reward.pointsCost
+      });
+      
       const userReward = await storage.redeemReward(validated);
       res.json(userReward);
     } catch (error: any) {
