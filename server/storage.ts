@@ -17,7 +17,6 @@ import {
 } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { pointsEngine } from "./pointsEngine";
-import bcrypt from "bcrypt";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -57,7 +56,6 @@ export interface IStorage {
   logGamingEvent(event: InsertGamingEvent): Promise<GamingEvent>;
   updateGamingEvent(eventId: string, updates: Partial<{ status: string; pointsAwarded: number | null; transactionId: string | null; errorMessage: string | null; retryCount: number; processedAt: Date }>): Promise<GamingEvent>;
   getEventByExternalId(partnerId: string, externalEventId: string): Promise<GamingEvent | undefined>;
-  verifyPartnerSecret(partnerId: string, secret: string): Promise<boolean>;
 }
 
 export class DbStorage implements IStorage {
@@ -298,12 +296,9 @@ export class DbStorage implements IStorage {
   }
 
   async createApiPartner(partner: InsertApiPartner & { apiSecret: string }): Promise<ApiPartner> {
-    const { apiSecret, ...partnerData } = partner;
-    const apiSecretHash = await bcrypt.hash(apiSecret, 10);
-    
     const [newPartner] = await db
       .insert(apiPartners)
-      .values({ ...partnerData, apiSecretHash })
+      .values(partner)
       .returning();
     
     return newPartner;
@@ -345,12 +340,6 @@ export class DbStorage implements IStorage {
       ))
       .limit(1);
     return result[0];
-  }
-
-  async verifyPartnerSecret(partnerId: string, secret: string): Promise<boolean> {
-    const partner = await db.select().from(apiPartners).where(eq(apiPartners.id, partnerId)).limit(1);
-    if (!partner[0]) return false;
-    return await bcrypt.compare(secret, partner[0].apiSecretHash);
   }
 }
 

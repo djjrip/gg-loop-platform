@@ -141,7 +141,7 @@ export const apiPartners = pgTable("api_partners", {
   name: text("name").notNull(),
   description: text("description"),
   apiKey: varchar("api_key").notNull().unique(),
-  apiSecretHash: varchar("api_secret_hash").notNull(),
+  apiSecret: varchar("api_secret").notNull(), // Store plaintext secret for HMAC validation
   isActive: boolean("is_active").notNull().default(true),
   webhookUrl: text("webhook_url"),
   rateLimit: integer("rate_limit").notNull().default(1000),
@@ -182,7 +182,7 @@ export const insertUserRewardSchema = createInsertSchema(userRewards).omit({ id:
 export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPointTransactionSchema = createInsertSchema(pointTransactions).omit({ id: true, isExpired: true, createdAt: true });
 export const insertSubscriptionEventSchema = createInsertSchema(subscriptionEvents).omit({ id: true, createdAt: true });
-export const insertApiPartnerSchema = createInsertSchema(apiPartners).omit({ id: true, createdAt: true, updatedAt: true, apiSecretHash: true });
+export const insertApiPartnerSchema = createInsertSchema(apiPartners).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertGamingEventSchema = createInsertSchema(gamingEvents).omit({ id: true, createdAt: true, status: true, retryCount: true, processedAt: true });
 
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
@@ -225,10 +225,10 @@ export type GamingEvent = typeof gamingEvents.$inferSelect;
 
 export const gamingWebhookBaseSchema = z.object({
   apiKey: z.string().min(1, "API key is required"),
-  apiSecret: z.string().min(1, "API secret is required"),
   userId: z.string().uuid("Invalid user ID"),
   gameId: z.string().uuid("Invalid game ID").optional(),
   externalEventId: z.string().min(1, "External event ID is required"),
+  timestamp: z.number().int().positive("Timestamp must be a positive integer"),
 });
 
 export const matchWinWebhookSchema = gamingWebhookBaseSchema.extend({

@@ -6,12 +6,12 @@ const app = express();
 
 declare module 'http' {
   interface IncomingMessage {
-    rawBody: unknown
+    rawBody: string
   }
 }
 app.use(express.json({
-  verify: (req, _res, buf) => {
-    req.rawBody = buf;
+  verify: (req, _res, buf, encoding) => {
+    req.rawBody = buf.toString((encoding as BufferEncoding) || 'utf8');
   }
 }));
 app.use(express.urlencoded({ extended: false }));

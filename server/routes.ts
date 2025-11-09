@@ -9,6 +9,7 @@ import {
 } from "@shared/schema";
 import Stripe from "stripe";
 import { pointsEngine } from "./pointsEngine";
+import { createWebhookSignatureMiddleware } from "./webhookSecurity";
 
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-10-29.clover" })
@@ -34,6 +35,9 @@ const getUserMiddleware = async (req: any, res: any, next: any) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
+  
+  // HMAC signature validation middleware for gaming webhooks
+  const webhookAuth = createWebhookSignatureMiddleware(storage);
 
   app.get('/api/auth/user', async (req: any, res) => {
     try {
@@ -453,7 +457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/webhooks/gaming/match-win', async (req, res) => {
+  app.post('/api/webhooks/gaming/match-win', webhookAuth, async (req, res) => {
     try {
       const result = matchWinWebhookSchema.safeParse(req.body);
       if (!result.success) {
@@ -462,16 +466,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           issues: result.error.errors 
         });
       }
-      const { apiKey, apiSecret, userId, gameId, externalEventId, matchData } = result.data;
-
+      const { apiKey, userId, gameId, externalEventId, timestamp, matchData } = result.data;
+      
+      // Partner already authenticated by webhookAuth middleware
+      const partnerId = (req as { partnerId: string }).partnerId;
       const partner = await storage.getApiPartner(apiKey);
-      if (!partner || !partner.isActive) {
-        return res.status(401).json({ message: "Invalid API key" });
-      }
-
-      const secretValid = await storage.verifyPartnerSecret(partner.id, apiSecret);
-      if (!secretValid) {
-        return res.status(401).json({ message: "Invalid API secret" });
+      if (!partner || partner.id !== partnerId) {
+        return res.status(401).json({ message: "Partner ID mismatch" });
       }
 
       const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
@@ -542,7 +543,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/webhooks/gaming/achievement', async (req, res) => {
+  app.post('/api/webhooks/gaming/achievement', webhookAuth, async (req, res) => {
     try {
       const result = achievementWebhookSchema.safeParse(req.body);
       if (!result.success) {
@@ -551,16 +552,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           issues: result.error.errors 
         });
       }
-      const { apiKey, apiSecret, userId, gameId, externalEventId, achievementData } = result.data;
-
+      const { apiKey, userId, gameId, externalEventId, timestamp, achievementData } = result.data;
+      
+      // Partner already authenticated by webhookAuth middleware
+      const partnerId = (req as { partnerId: string }).partnerId;
       const partner = await storage.getApiPartner(apiKey);
-      if (!partner || !partner.isActive) {
-        return res.status(401).json({ message: "Invalid API key" });
-      }
-
-      const secretValid = await storage.verifyPartnerSecret(partner.id, apiSecret);
-      if (!secretValid) {
-        return res.status(401).json({ message: "Invalid API secret" });
+      if (!partner || partner.id !== partnerId) {
+        return res.status(401).json({ message: "Partner ID mismatch" });
       }
 
       const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
@@ -629,7 +627,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/webhooks/gaming/tournament', async (req, res) => {
+  app.post('/api/webhooks/gaming/tournament', webhookAuth, async (req, res) => {
     try {
       const result = tournamentWebhookSchema.safeParse(req.body);
       if (!result.success) {
@@ -638,16 +636,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           issues: result.error.errors 
         });
       }
-      const { apiKey, apiSecret, userId, gameId, externalEventId, tournamentData } = result.data;
-
+      const { apiKey, userId, gameId, externalEventId, timestamp, tournamentData } = result.data;
+      
+      // Partner already authenticated by webhookAuth middleware
+      const partnerId = (req as { partnerId: string }).partnerId;
       const partner = await storage.getApiPartner(apiKey);
-      if (!partner || !partner.isActive) {
-        return res.status(401).json({ message: "Invalid API key" });
-      }
-
-      const secretValid = await storage.verifyPartnerSecret(partner.id, apiSecret);
-      if (!secretValid) {
-        return res.status(401).json({ message: "Invalid API secret" });
+      if (!partner || partner.id !== partnerId) {
+        return res.status(401).json({ message: "Partner ID mismatch" });
       }
 
       const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
