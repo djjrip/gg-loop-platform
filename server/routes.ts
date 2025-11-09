@@ -195,10 +195,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!customerId) {
         const customer = await stripe.customers.create({
           email: user.email || undefined,
-          metadata: { userId }
+          metadata: { userId: user.id }
         });
         customerId = customer.id;
-        await storage.updateUserStripeInfo(userId, customerId);
+        await storage.updateUserStripeInfo(user.id, customerId);
       }
 
       const session = await stripe.checkout.sessions.create({
@@ -211,9 +211,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mode: 'subscription',
         success_url: `${process.env.REPLIT_DOMAINS?.split(',')[0] || 'http://localhost:5000'}/subscription/success`,
         cancel_url: `${process.env.REPLIT_DOMAINS?.split(',')[0] || 'http://localhost:5000'}/subscription/cancel`,
-        metadata: { userId, tier },
+        metadata: { userId: user.id, tier },
         subscription_data: {
-          metadata: { userId, tier }
+          metadata: { userId: user.id, tier }
         }
       });
 
