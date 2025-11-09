@@ -490,8 +490,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const { apiKey, userId, gameId, externalEventId, timestamp, matchData } = result.data;
       
-      // Partner already authenticated by webhookAuth middleware
-      const partnerId = (req as { partnerId: string }).partnerId;
+      // Partner already authenticated by webhookAuth middleware (adds partnerId to req)
+      const partnerId = req.partnerId!;
       const partner = await storage.getApiPartner(apiKey);
       if (!partner || partner.id !== partnerId) {
         return res.status(401).json({ message: "Partner ID mismatch" });
@@ -576,8 +576,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const { apiKey, userId, gameId, externalEventId, timestamp, achievementData } = result.data;
       
-      // Partner already authenticated by webhookAuth middleware
-      const partnerId = (req as { partnerId: string }).partnerId;
+      // Partner already authenticated by webhookAuth middleware (adds partnerId to req)
+      const partnerId = req.partnerId!;
       const partner = await storage.getApiPartner(apiKey);
       if (!partner || partner.id !== partnerId) {
         return res.status(401).json({ message: "Partner ID mismatch" });
@@ -660,8 +660,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const { apiKey, userId, gameId, externalEventId, timestamp, tournamentData } = result.data;
       
-      // Partner already authenticated by webhookAuth middleware
-      const partnerId = (req as { partnerId: string }).partnerId;
+      // Partner already authenticated by webhookAuth middleware (adds partnerId to req)
+      const partnerId = req.partnerId!;
       const partner = await storage.getApiPartner(apiKey);
       if (!partner || partner.id !== partnerId) {
         return res.status(401).json({ message: "Partner ID mismatch" });
