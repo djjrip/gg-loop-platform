@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Play, TrendingUp, Users } from "lucide-react";
+import { Play, TrendingUp, Users, Circle, Trophy } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Hero() {
@@ -23,16 +23,56 @@ export default function Hero() {
         <div 
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(45deg, rgba(255, 102, 0, 0.08) 0%, transparent 50%, rgba(255, 102, 0, 0.12) 100%)',
+            background: 'radial-gradient(ellipse at center, rgba(255, 102, 0, 0.15) 0%, transparent 50%, rgba(255, 102, 0, 0.2) 100%)',
             animation: 'gradient-shift 8s ease-in-out infinite alternate'
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-background/60" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-primary/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/30 via-transparent to-primary/15" />
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.4) 100%)',
+            mixBlendMode: 'multiply'
+          }}
+        />
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
+          style={{
+            background: 'linear-gradient(90deg, rgba(255, 102, 0, 0.4) 0%, transparent 50%, rgba(255, 102, 0, 0.4) 100%)',
+            borderTop: '2px solid rgba(255, 102, 0, 0.3)'
+          }}
+        />
       </div>
 
       <div className="relative container mx-auto max-w-7xl px-4 py-24 md:py-32">
+        <div 
+          className="absolute top-8 left-0 right-0 flex items-center justify-between px-8 text-sm font-bold uppercase tracking-wider"
+          data-testid="broadcast-ticker"
+        >
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-2 px-3 py-1 bg-red-600 text-white rounded">
+              <Circle className="h-2 w-2 fill-white animate-pulse" />
+              LIVE
+            </span>
+            <span className="text-foreground/70">GG LOOP ARENA</span>
+          </div>
+          <div className="flex items-center gap-4 text-xs">
+            <span className="text-foreground/50">Q4</span>
+            <span className="font-mono text-primary">12:47</span>
+            <span className="text-foreground/50">|</span>
+            <span className="text-foreground/70">SEASON 2024</span>
+          </div>
+        </div>
+
         <div className="max-w-3xl space-y-6">
+          <div 
+            className="inline-flex items-center gap-2 px-4 py-2 mb-2 bg-gradient-to-r from-primary/20 to-transparent border-l-4 border-primary text-primary font-bold text-sm uppercase tracking-wider"
+            data-testid="broadcast-label"
+          >
+            <Trophy className="h-4 w-4" />
+            <span>Championship Series</span>
+          </div>
           <h1 className="text-5xl md:text-7xl font-bold font-heading tracking-tight text-foreground">
             Play. Earn.{" "}
             <span className="text-primary">Dominate.</span>
