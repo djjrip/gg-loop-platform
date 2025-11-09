@@ -1,172 +1,184 @@
 # GG Loop Design Guidelines
 
-## Design Approach: Reference-Based (Gaming Platform)
+## Design Approach: Reference-Based (Premium Gaming Guild)
 
-**Selected References:** Discord, Twitch, Riot Games, Epic Games Store
-**Key Principle:** Create an energetic, competitive gaming environment that celebrates achievement while maintaining accessibility for performance tracking.
+**Selected References:** Nike SNKRS app, Behance, Dribbble (dark mode), premium streetwear sites, Apple's product pages
+**Key Principle:** Sophisticated gaming guild atmosphere—tribal community with street credibility, grounded earthy aesthetic, exclusive members-club energy.
 
-**Design Direction:** Dark, immersive gaming aesthetic with vibrant accent highlights, bold typography, and data-rich components that emphasize player performance and community competition.
+**Design Direction:** Dark earthy palette with muted warm accents (burnt orange, terracotta, clay), natural textures, premium typography, data-rich dashboards that celebrate streamer growth without casino-like energy.
 
 ---
 
 ## Typography System
 
 **Font Families:**
-- Primary: Inter (600, 700, 800 weights for headings and UI)
-- Secondary: JetBrains Mono (for stats, numbers, codes)
+- Primary: Inter (500, 600, 700 weights)
+- Accent/Numbers: Space Grotesk (for stats, bold statements)
 
 **Hierarchy:**
-- Hero Headlines: text-5xl to text-7xl, font-bold tracking-tight
-- Section Headers: text-3xl to text-4xl, font-semibold
-- Card Titles: text-xl font-semibold
-- Stats/Numbers: text-2xl to text-4xl font-bold (JetBrains Mono)
-- Body Text: text-base to text-lg font-medium
-- Metadata: text-sm to text-xs font-medium, uppercase tracking-wide
+- Hero Headlines: text-6xl md:text-7xl, font-bold, tracking-tight, leading-none
+- Section Headers: text-3xl md:text-5xl, font-semibold
+- Subsections: text-2xl font-semibold
+- Card Titles: text-lg md:text-xl font-semibold
+- Stats/Numbers: text-3xl md:text-5xl font-bold (Space Grotesk)
+- Body Text: text-base md:text-lg font-medium, leading-relaxed
+- Labels/Metadata: text-xs uppercase tracking-wider font-medium
 
 ---
 
 ## Layout System
 
-**Spacing Units:** Tailwind 4, 6, 8, 12, 16 (p-4, gap-6, mt-8, py-12, mb-16)
+**Spacing Units:** Tailwind 4, 6, 8, 12, 16, 20 for consistent rhythm
 
 **Grid Patterns:**
-- Game Cards: grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6
-- Leaderboard: Single column with ranked list items
-- Stats Dashboard: grid-cols-2 md:grid-cols-4 gap-4
-- Community Feed: grid-cols-1 lg:grid-cols-3 (main feed + sidebar)
+- Streamer Cards: grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8
+- Stats Dashboard: grid-cols-2 lg:grid-cols-4 gap-6
+- Tribe/Guild Directory: grid-cols-1 lg:grid-cols-2 gap-6
+- Activity Feed: Single column max-w-3xl centered
 
 **Container Strategy:**
-- Full-width sections with max-w-7xl inner containers
-- Cards and panels: rounded-xl with backdrop effects
-- Dashboard widgets: Varied heights based on content, no forced viewport constraints
+- Full-width sections with max-w-7xl containers
+- Generous padding: py-16 md:py-24 for section breathing room
+- Cards: rounded-2xl with subtle borders, no harsh shadows
 
 ---
 
 ## Component Library
 
 ### Navigation
-- Sticky top header with logo, primary nav links, user avatar/points display
-- Transparent background with blur effect when scrolling
-- Mobile: Hamburger menu with slide-in drawer
+- Sticky header with subtle backdrop blur
+- Logo left, primary nav center, profile/points right
+- Understated with natural dividers (not glowing borders)
+- Mobile: Minimal hamburger with full-screen overlay menu
 
 ### Hero Section
-- Full-width banner showcasing platform value proposition
-- Large hero image: Dynamic gaming montage or featured tournament scene
-- Overlay gradient for text readability
-- Primary CTA buttons with blurred backgrounds (backdrop-blur-md bg-white/20)
-- Stats ticker: "X Players • Y Games • Z Rewards Claimed"
+- **Large Hero Image:** Full-width, 75vh height
+- Image: Cinematic shot of focused streamer in dim-lit setup, warm desk lighting, natural atmosphere—NOT RGB rainbow chaos
+- Treatment: Subtle gradient overlay (earthy dark at bottom for text legibility)
+- Headline: Bold, concise value proposition
+- Subheadline: Supporting context for struggling streamers
+- CTA Buttons: Backdrop-blur with semi-transparent backgrounds, muted warm accent for primary
+- Trust Indicators: "Join 2,400+ streamers building their tribe" in small text
 
-### Game Library Cards
-- Thumbnail image with game logo overlay
-- Title, category badge, player count
-- Quick stats: avg. score, active challenges
-- Hover: Lift effect with glow accent
+### Tribe/Guild Cards
+- Horizontal layout: Guild emblem/badge left, info right
+- Guild name, member count, current challenge
+- Muted terracotta accent line on left edge
+- Entry requirements badge (subtle, not flashy)
+- Hover: Minimal lift, no glow effects
+
+### Streamer Dashboard Widgets
+- Grid of refined metric cards: Followers Growth, Stream Hours, Points Earned, Tribe Rank
+- Large numbers with context labels below
+- Progress bars: Thin, subtle, earthy accent fill
+- Weekly comparison arrows (understated)
+- Recent achievements: Badge icons with natural spacing
 
 ### Leaderboard Component
-- Ranked list with position numbers (large, bold)
-- Player avatar, username, score/points
-- Trophy icons for top 3 positions
-- Time filter tabs (Daily/Weekly/All-Time)
-- Highlight current user's row with accent border
-
-### Stats Dashboard
-- Grid of metric cards (Games Played, Total Points, Rank, Win Rate)
-- Large numbers with labels
-- Progress bars for level/tier advancement
-- Recent achievements carousel
+- Clean ranked list, no excessive decoration
+- Position numbers: Large but refined (Space Grotesk)
+- Avatar, streamer name, tribe affiliation, points
+- Top 3: Subtle burnt orange/terracotta accent borders (no trophies/medals overload)
+- Current user: Highlighted row with muted accent background
 
 ### Community Feed
-- Activity cards with user actions (achievements unlocked, high scores)
-- Timestamp and game context
-- Like/comment interactions
-- Trending section sidebar
+- Activity cards: Streamer unlocked achievement, hit milestone, joined tribe
+- Timestamp, game context, small thumbnail
+- Clean interaction buttons (like/comment) with minimal styling
+- No distracting animations on scroll
 
-### Rewards/Points Display
-- Prominent points counter in header
-- Rewards catalog grid with unlock requirements
-- Badge collection showcase
-- Redemption history
+### Rewards Catalog
+- Grid layout with reward cards
+- Unlock requirements clearly stated
+- Points cost in large numbers
+- Redemption status (locked/unlocked) with subtle visual differentiation
+- No slot-machine aesthetic—premium product showcase instead
 
-### Forms (Profile/Settings)
-- Grouped sections with clear labels
-- Toggle switches for preferences
-- Avatar upload with preview
-- Gaming platform connection buttons (Steam, Epic, etc.)
+### Forms (Profile/Onboarding)
+- Clean input fields with labels inside or above
+- Toggle switches: Refined, not oversized
+- Platform connection: Logo buttons with subtle borders
+- Avatar upload with circular preview
+- Success states: Brief accent flash, no confetti explosions
 
 ---
 
 ## Images
 
 **Hero Section:**
-- Large background image: Epic gaming action shot or esports arena atmosphere
-- Dimensions: Full-width, 70vh height on desktop
-- Treatment: Gradient overlay (dark bottom to transparent top) for text contrast
+- Full-width background: 2400x1350px minimum
+- Content: Intimate streamer workspace with warm practical lighting—desk lamp glow, monitor illumination, natural shadows
+- Mood: Focused, grounded, aspirational without being unattainable
+- Treatment: Dark gradient overlay from bottom (80% opacity) to transparent top
 
-**Game Cards:**
-- Thumbnail images for each supported game
-- Aspect ratio: 16:9
-- Style: Official game artwork or screenshots
+**Streamer/Member Cards:**
+- Profile images: High-quality headshots or streaming setup shots
+- Aspect ratio: 1:1 for avatars, 16:9 for featured streamers
+- Style: Authentic, natural lighting—no overly edited gaming promo aesthetic
 
-**User Avatars:**
-- Circular with border accent
-- Placeholder: Gaming-themed default avatars
+**Tribe/Guild Badges:**
+- Custom emblems/icons representing different gaming communities
+- Style: Minimal, geometric, tribal-inspired symbols
+- Use Heroicons or custom SVG placeholders
 
-**Achievement Badges:**
-- Icon-based with trophy/medal designs
-- Use icon library placeholders or simple SVG shapes
+**Rewards Imagery:**
+- Product shots: Gaming peripherals, branded merch, exclusive items
+- Photography style: Clean, natural, product-focused (not neon-lit)
 
-**Community Feed:**
-- Small game thumbnails alongside activity posts
-- User avatars for social proof
-
----
-
-## Key Interactions
-
-**Minimal Animation Strategy:**
-- Card hover: Subtle lift (translate-y-1) with shadow increase
-- Button states: Opacity changes, no complex transitions
-- Page transitions: Simple fade-in for new content
-- Stats counters: No animated counting on load
-
-**Visual Feedback:**
-- Active states: Accent border glow
-- Loading states: Skeleton screens for data-heavy components
-- Success actions: Brief accent flash, no lengthy animations
+**Community Feed Thumbnails:**
+- Small game thumbnails (64x64px) alongside activity posts
+- Streamer avatars for social proof
 
 ---
 
 ## Page Structures
 
 **Landing Page:**
-1. Hero with platform overview and CTA
-2. Featured games grid (3-column)
-3. How It Works (3-step process with icons)
-4. Live leaderboard preview
-5. Community highlights
-6. Rewards showcase
-7. Final CTA section
+1. Hero with background image, value prop, primary CTA
+2. How It Works: 3-step visual process (icons + descriptions)
+3. Featured Tribes/Guilds: 3-column grid showcasing communities
+4. Streamer Success Stories: 2-column testimonial cards with authentic photos
+5. Leaderboard Preview: Top 10 streamers with muted styling
+6. Rewards Showcase: 3-4 featured rewards in grid
+7. Benefits Section: Community, growth tools, exclusive access
+8. Final CTA: "Join the Tribe" with supporting text
 
 **Dashboard (Logged In):**
-- Top stats overview (4-metric grid)
-- Active challenges panel
-- Recent games played list
-- Leaderboard widget
-- Community feed column
+- Stats Overview: 4-metric grid at top
+- Active Challenges: Horizontal card carousel
+- Tribe Activity Feed: Single column, max-w-3xl
+- Personal Leaderboard Position: Compact widget
+- Recent Streams: List view with thumbnails
+- Upcoming Events: Calendar-style widget
 
-**Game Detail Page:**
-- Game header with image and metadata
-- Active challenges for this game
-- Player's stats for this game
-- Game-specific leaderboard
-- Connect/Link account CTA
+**Tribe/Guild Detail Page:**
+- Guild header: Emblem, name, member count, description
+- Member directory: Grid of member cards
+- Active challenges specific to this tribe
+- Tribe leaderboard: Rankings within community
+- Join/Leave CTA (context-dependent)
+
+---
+
+## Key Interactions
+
+**Minimal Animation:**
+- Card hover: Subtle translate-y-1 lift only
+- Buttons: Opacity/background changes, no transforms
+- Page loads: Simple fade-in
+- No counters, no sparkles, no particle effects
+
+**Visual Feedback:**
+- Active states: Thin accent border or background tint
+- Loading: Skeleton screens with natural gray tones
+- Success: Brief accent color flash
 
 ---
 
 ## Design Priorities
 
-1. **Data Hierarchy:** Performance stats and leaderboards are primary focus
-2. **Achievement Celebration:** Badges and rewards prominently displayed
-3. **Community Presence:** Social proof throughout (player counts, recent activities)
-4. **Clear CTAs:** Game connection and reward redemption paths obvious
-5. **Competitive Energy:** Bold typography and vibrant accents create urgency
+1. **Grounded Sophistication:** Premium but accessible, refined without being sterile
+2. **Tribal Community:** Guild identity central to experience, member connections visible
+3. **Streamer-Focused:** Metrics and tools tailored for content creator growth
+4. **Natural Hierarchy:** Data presented clearly without visual chaos
+5. **Authentic Energy:** Street-credible and professional—exclusive club, not arcade
