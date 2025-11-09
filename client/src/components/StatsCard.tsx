@@ -11,7 +11,7 @@ interface StatsCardProps {
 
 export default function StatsCard({ title, value, icon: Icon, subtitle, trend }: StatsCardProps) {
   return (
-    <Card className="p-6 border-primary/10 bg-gradient-to-br from-card to-card/50" data-testid={`card-stat-${title.toLowerCase().replace(/\s/g, '-')}`}>
+    <Card className="p-6 border-primary/5 bg-gradient-to-br from-card to-background" data-testid={`card-stat-${title.toLowerCase().replace(/\s/g, '-')}`}>
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{title}</p>
         <Icon className="h-5 w-5 text-primary" />

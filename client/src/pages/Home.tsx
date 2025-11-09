@@ -91,7 +91,7 @@ export default function Home() {
             </div>
           </div>
 
-          <Card className="p-6 border-primary/10">
+          <Card className="p-6 border-primary/5">
             <Tabs defaultValue="weekly" className="w-full">
               <TabsList className="mb-6">
                 <TabsTrigger value="daily" data-testid="tab-daily">Daily</TabsTrigger>
@@ -167,8 +167,8 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="p-8 text-center border-primary/10 relative overflow-hidden group hover-elevate">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Card className="p-8 text-center border-primary/5 relative overflow-hidden group hover-elevate">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10">
                 <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
                   <Gamepad2 className="h-8 w-8 text-primary" />
@@ -178,8 +178,8 @@ export default function Home() {
               </div>
             </Card>
 
-            <Card className="p-8 text-center border-primary/10 relative overflow-hidden group hover-elevate">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Card className="p-8 text-center border-primary/5 relative overflow-hidden group hover-elevate">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10">
                 <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
                   <Zap className="h-8 w-8 text-primary" />
@@ -189,8 +189,8 @@ export default function Home() {
               </div>
             </Card>
 
-            <Card className="p-8 text-center border-primary/10 relative overflow-hidden group hover-elevate">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Card className="p-8 text-center border-primary/5 relative overflow-hidden group hover-elevate">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10">
                 <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
                   <Trophy className="h-8 w-8 text-primary" />
@@ -204,9 +204,9 @@ export default function Home() {
 
         {/* CTA Section */}
         <section className="py-16">
-          <Card className="p-12 text-center relative overflow-hidden border-primary/30">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-tl from-primary/10 via-transparent to-transparent" />
+          <Card className="p-12 text-center relative overflow-hidden border-primary/10">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-tl from-primary/5 via-transparent to-transparent" />
             <div className="relative z-10">
               <h2 className="text-4xl font-bold font-heading tracking-tight mb-4">Ready to Start Earning?</h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
