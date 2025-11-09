@@ -1,14 +1,32 @@
-import { Trophy, Menu, User, Moon, Sun } from "lucide-react";
+import { Trophy, Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Header() {
   const [isDark, setIsDark] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated } = useAuth();
 
   const toggleTheme = () => {
     setIsDark(!isDark);
     document.documentElement.classList.toggle("dark");
+  };
+
+  const handleLogin = () => {
+    window.location.href = "/api/login";
+  };
+
+  const handleLogout = () => {
+    window.location.href = "/api/logout";
   };
 
   return (
@@ -37,11 +55,13 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2 border border-primary/20">
-            <Trophy className="h-4 w-4 text-primary" />
-            <span className="font-mono text-sm font-bold text-primary" data-testid="text-points">12,450</span>
-            <span className="text-xs text-muted-foreground">pts</span>
-          </div>
+          {isAuthenticated && user && (
+            <div className="hidden md:flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2 border border-primary/20">
+              <Trophy className="h-4 w-4 text-primary" />
+              <span className="font-mono text-sm font-bold text-primary" data-testid="text-points">{user.totalPoints.toLocaleString()}</span>
+              <span className="text-xs text-muted-foreground">pts</span>
+            </div>
+          )}
           
           <Button
             size="icon"
@@ -56,9 +76,39 @@ export default function Header() {
             <Menu className="h-5 w-5" />
           </Button>
 
-          <Button variant="ghost" size="icon" className="hidden md:flex" data-testid="button-profile">
-            <User className="h-5 w-5" />
-          </Button>
+          {isAuthenticated && user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="hidden md:flex items-center gap-2" data-testid="button-profile">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.profileImageUrl || undefined} />
+                    <AvatarFallback>
+                      {user.firstName?.[0] || user.email?.[0] || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium">
+                    {user.firstName || user.email?.split("@")[0] || "User"}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium">{user.firstName || "User"}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                  <p className="text-xs text-primary font-semibold mt-1">{user.totalPoints} points</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="default" size="sm" className="hidden md:flex" onClick={handleLogin} data-testid="button-sign-in">
+              Sign In
+            </Button>
+          )}
         </div>
       </div>
 
@@ -77,6 +127,16 @@ export default function Header() {
             <a href="#community" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md" data-testid="link-community-mobile">
               Community
             </a>
+            {isAuthenticated && user ? (
+              <Button variant="destructive" size="sm" onClick={handleLogout} data-testid="button-logout-mobile">
+                <LogOut className="mr-2 h-4 w-4" />
+                Log Out
+              </Button>
+            ) : (
+              <Button variant="default" size="sm" onClick={handleLogin} data-testid="button-sign-in-mobile">
+                Sign In
+              </Button>
+            )}
           </nav>
         </div>
       )}

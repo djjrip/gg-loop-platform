@@ -5,35 +5,50 @@ import StatsCard from "@/components/StatsCard";
 import LeaderboardRow from "@/components/LeaderboardRow";
 import CommunityFeedItem from "@/components/CommunityFeedItem";
 import RewardsCard from "@/components/RewardsCard";
+import ErrorDisplay from "@/components/ErrorDisplay";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Gamepad2, Award, TrendingUp, Users, Zap } from "lucide-react";
-
-import fpsImage from "@assets/generated_images/FPS_game_thumbnail_ffb034b2.png";
-import mobaImage from "@assets/generated_images/MOBA_game_thumbnail_79147e70.png";
-import brImage from "@assets/generated_images/Battle_royale_game_thumbnail_05e0c32d.png";
-import racingImage from "@assets/generated_images/Racing_game_thumbnail_ae2f5f31.png";
-import sportsImage from "@assets/generated_images/Sports_game_thumbnail_e284923e.png";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import type { Game, LeaderboardEntryWithUser, Achievement, Reward } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useState } from "react";
 
 export default function Home() {
-  // TODO: Remove mock data - replace with real API calls
-  const games = [
-    { title: "Tactical Warfare", image: fpsImage, category: "FPS", players: "250K", avgScore: "2,450", challenges: 12 },
-    { title: "Arena Legends", image: mobaImage, category: "MOBA", players: "180K", avgScore: "3,200", challenges: 8 },
-    { title: "Battle Grounds", image: brImage, category: "Battle Royale", players: "320K", avgScore: "1,850", challenges: 15 },
-    { title: "Speed Racer", image: racingImage, category: "Racing", players: "95K", avgScore: "4,100", challenges: 6 },
-    { title: "Ultimate Soccer", image: sportsImage, category: "Sports", players: "140K", avgScore: "2,900", challenges: 10 },
-  ];
+  const { user, isAuthenticated } = useAuth();
+  const [selectedPeriod, setSelectedPeriod] = useState<"daily" | "weekly" | "all-time">("weekly");
 
-  const leaderboardData = [
-    { rank: 1, username: "ProGamer99", score: "45,230", games: 342 },
-    { rank: 2, username: "SkillMaster", score: "42,150", games: 318 },
-    { rank: 3, username: "GameChamp", score: "39,890", games: 295 },
-    { rank: 4, username: "ElitePlayer", score: "38,540", games: 281 },
-    { rank: 5, username: "You", score: "35,120", games: 256, isCurrentUser: true },
-  ];
+  // Fetch games from API
+  const { data: games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames } = useQuery<Game[]>({
+    queryKey: ["/api/games"],
+  });
 
+  // Fetch leaderboard data - use first game from the list
+  const firstGameId = games?.[0]?.id;
+  const { data: leaderboardEntries, isLoading: leaderboardLoading, error: leaderboardError, refetch: refetchLeaderboard } = useQuery<LeaderboardEntryWithUser[]>({
+    queryKey: ["/api/leaderboard", firstGameId, selectedPeriod],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/leaderboard/${firstGameId}/${selectedPeriod}`);
+      return res.json();
+    },
+    enabled: !!firstGameId,
+  });
+
+  // Fetch achievements if user is authenticated
+  const { data: achievements, isLoading: achievementsLoading, error: achievementsError, refetch: refetchAchievements } = useQuery<Achievement[]>({
+    queryKey: ["/api/user/achievements"],
+    enabled: isAuthenticated,
+  });
+
+  // Fetch rewards from API
+  const { data: rewards, isLoading: rewardsLoading, error: rewardsError, refetch: refetchRewards } = useQuery<Reward[]>({
+    queryKey: ["/api/rewards"],
+  });
+
+  // Mock community feed (as requested to keep this mocked)
   const communityFeed = [
     { username: "ProGamer99", action: "unlocked achievement", game: "Tactical Warfare", details: "Perfect Victory - Won match without losing a round", time: "2m ago", type: "achievement" as const },
     { username: "SkillMaster", action: "set new high score", game: "Speed Racer", details: "Track Record: Neon City - 1:42.350", time: "15m ago", type: "highscore" as const },
@@ -41,12 +56,12 @@ export default function Home() {
     { username: "ElitePlayer", action: "unlocked achievement", game: "Battle Grounds", details: "Victory Royale - First Place Finish", time: "2h ago", type: "achievement" as const },
   ];
 
-  const rewards = [
-    { title: "Gaming Headset", description: "Premium wireless gaming headset with 7.1 surround sound", points: 15000, isUnlocked: true, category: "Gear" },
-    { title: "$50 Steam Gift Card", description: "Expand your game library with this digital gift card", points: 10000, isUnlocked: true, isClaimed: true, category: "Digital" },
-    { title: "Elite Controller", description: "Pro-grade controller with customizable buttons", points: 25000, isUnlocked: false, category: "Gear" },
-    { title: "Gaming Chair", description: "Ergonomic gaming chair with lumbar support", points: 50000, isUnlocked: false, category: "Furniture" },
-  ];
+  // Helper function to format numbers
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
+    return num.toString();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,9 +91,46 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {games.map((game) => (
-              <GameCard key={game.title} {...game} />
-            ))}
+            {gamesLoading ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="overflow-hidden border-primary/5">
+                    <Skeleton className="aspect-video w-full" />
+                    <div className="p-4 space-y-3">
+                      <Skeleton className="h-6 w-3/4" />
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-20" />
+                      </div>
+                      <Skeleton className="h-4 w-full" />
+                    </div>
+                  </Card>
+                ))}
+              </>
+            ) : gamesError ? (
+              <div className="col-span-full">
+                <ErrorDisplay 
+                  message="Failed to load games. Please try again." 
+                  onRetry={() => refetchGames()} 
+                />
+              </div>
+            ) : games && games.length > 0 ? (
+              games.map((game) => (
+                <GameCard
+                  key={game.id}
+                  title={game.title}
+                  image={game.imageUrl}
+                  category={game.category}
+                  players={formatNumber(game.players)}
+                  avgScore={game.avgScore.toLocaleString()}
+                  challenges={game.challenges}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                No games available at the moment.
+              </div>
+            )}
           </div>
         </section>
 
@@ -92,30 +144,56 @@ export default function Home() {
           </div>
 
           <Card className="p-6 border-primary/5">
-            <Tabs defaultValue="weekly" className="w-full">
+            <Tabs 
+              defaultValue="weekly" 
+              className="w-full"
+              onValueChange={(value) => setSelectedPeriod(value as "daily" | "weekly" | "all-time")}
+            >
               <TabsList className="mb-6">
                 <TabsTrigger value="daily" data-testid="tab-daily">Daily</TabsTrigger>
                 <TabsTrigger value="weekly" data-testid="tab-weekly">Weekly</TabsTrigger>
                 <TabsTrigger value="all-time" data-testid="tab-all-time">All-Time</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="daily" className="space-y-2">
-                {leaderboardData.map((player) => (
-                  <LeaderboardRow key={player.rank} {...player} />
-                ))}
-              </TabsContent>
-              
-              <TabsContent value="weekly" className="space-y-2">
-                {leaderboardData.map((player) => (
-                  <LeaderboardRow key={player.rank} {...player} />
-                ))}
-              </TabsContent>
-              
-              <TabsContent value="all-time" className="space-y-2">
-                {leaderboardData.map((player) => (
-                  <LeaderboardRow key={player.rank} {...player} />
-                ))}
-              </TabsContent>
+              {["daily", "weekly", "all-time"].map((period) => (
+                <TabsContent key={period} value={period} className="space-y-2">
+                  {leaderboardLoading ? (
+                    <>
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className="flex items-center gap-4 p-4 rounded-lg">
+                          <Skeleton className="w-12 h-12 rounded-full" />
+                          <Skeleton className="w-12 h-12 rounded-full" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                          <Skeleton className="h-8 w-24" />
+                        </div>
+                      ))}
+                    </>
+                  ) : leaderboardError ? (
+                    <ErrorDisplay 
+                      message="Failed to load leaderboard. Please try again." 
+                      onRetry={() => refetchLeaderboard()} 
+                    />
+                  ) : leaderboardEntries && leaderboardEntries.length > 0 ? (
+                    leaderboardEntries.map((entry) => (
+                      <LeaderboardRow
+                        key={entry.id}
+                        rank={entry.rank}
+                        username={entry.user.email || entry.user.firstName || `Player ${entry.userId.substring(0, 8)}`}
+                        score={entry.score.toLocaleString()}
+                        games={0}
+                        isCurrentUser={user?.id === entry.userId}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      No leaderboard data available for this period.
+                    </div>
+                  )}
+                </TabsContent>
+              ))}
             </Tabs>
           </Card>
         </section>
@@ -148,9 +226,48 @@ export default function Home() {
             </div>
             
             <div className="space-y-4">
-              {rewards.map((reward) => (
-                <RewardsCard key={reward.title} {...reward} />
-              ))}
+              {rewardsLoading ? (
+                <>
+                  {[1, 2, 3, 4].map((i) => (
+                    <Card key={i} className="p-6">
+                      <div className="space-y-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="space-y-2 flex-1">
+                            <Skeleton className="h-5 w-40" />
+                            <Skeleton className="h-4 w-full" />
+                          </div>
+                          <Skeleton className="h-6 w-16 rounded-full" />
+                        </div>
+                        <div className="flex items-center justify-between pt-4">
+                          <Skeleton className="h-8 w-24" />
+                          <Skeleton className="h-8 w-20 rounded-md" />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </>
+              ) : rewardsError ? (
+                <ErrorDisplay 
+                  message="Failed to load rewards. Please try again." 
+                  onRetry={() => refetchRewards()} 
+                />
+              ) : rewards && rewards.length > 0 ? (
+                rewards.slice(0, 4).map((reward) => (
+                  <RewardsCard
+                    key={reward.id}
+                    title={reward.title}
+                    description={reward.description || ""}
+                    points={reward.pointsCost}
+                    isUnlocked={user ? user.totalPoints >= reward.pointsCost : false}
+                    isClaimed={false}
+                    category={reward.category}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  No rewards available at the moment.
+                </div>
+              )}
             </div>
             
             <Button variant="outline" className="w-full mt-6" data-testid="button-view-all-rewards">

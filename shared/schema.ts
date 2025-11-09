@@ -1,15 +1,28 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, boolean, index, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  email: text("email"),
-  avatarUrl: text("avatar_url"),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
   totalPoints: integer("total_points").notNull().default(0),
   gamesConnected: integer("games_connected").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const games = pgTable("games", {
@@ -72,7 +85,8 @@ export const userRewards = pgTable("user_rewards", {
   status: text("status").notNull().default("pending"),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true });
+export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, createdAt: true, updatedAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, createdAt: true, updatedAt: true });
 export const insertGameSchema = createInsertSchema(games).omit({ id: true, isActive: true });
 export const insertUserGameSchema = createInsertSchema(userGames).omit({ id: true, connectedAt: true });
 export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntries).omit({ id: true, updatedAt: true });
@@ -80,6 +94,7 @@ export const insertAchievementSchema = createInsertSchema(achievements).omit({ i
 export const insertRewardSchema = createInsertSchema(rewards).omit({ id: true, inStock: true });
 export const insertUserRewardSchema = createInsertSchema(userRewards).omit({ id: true, redeemedAt: true, status: true });
 
+export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -91,6 +106,7 @@ export type UserGame = typeof userGames.$inferSelect;
 
 export type InsertLeaderboardEntry = z.infer<typeof insertLeaderboardEntrySchema>;
 export type LeaderboardEntry = typeof leaderboardEntries.$inferSelect;
+export type LeaderboardEntryWithUser = LeaderboardEntry & { user: User };
 
 export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
 export type Achievement = typeof achievements.$inferSelect;
