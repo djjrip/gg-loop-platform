@@ -1,21 +1,26 @@
 import { db } from "./db";
 import { 
   users, games, userGames, leaderboardEntries, achievements, rewards, userRewards,
+  subscriptions, subscriptionEvents, pointTransactions,
   type User, type InsertUser, type UpsertUser,
   type Game, type InsertGame,
   type UserGame, type InsertUserGame,
   type LeaderboardEntry, type InsertLeaderboardEntry,
   type Achievement, type InsertAchievement,
   type Reward, type InsertReward,
-  type UserReward, type InsertUserReward
+  type UserReward, type InsertUserReward,
+  type Subscription, type InsertSubscription,
+  type SubscriptionEvent, type InsertSubscriptionEvent,
+  type PointTransaction
 } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
+import { pointsEngine } from "./pointsEngine";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: InsertUser): Promise<User>;
-  updateUserPoints(userId: string, points: number): Promise<void>;
+  updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string): Promise<User>;
   
   getAllGames(): Promise<Game[]>;
   getGame(id: string): Promise<Game | undefined>;
@@ -33,6 +38,13 @@ export interface IStorage {
   getAllRewards(): Promise<Reward[]>;
   getUserRewards(userId: string): Promise<(UserReward & { reward: Reward })[]>;
   redeemReward(userReward: InsertUserReward): Promise<UserReward>;
+  
+  getSubscription(userId: string): Promise<Subscription | undefined>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  updateSubscription(subscriptionId: string, updates: Partial<InsertSubscription>): Promise<Subscription>;
+  logSubscriptionEvent(event: InsertSubscriptionEvent): Promise<SubscriptionEvent>;
+  
+  getPointTransactions(userId: string, limit?: number): Promise<PointTransaction[]>;
 }
 
 export class DbStorage implements IStorage {
@@ -61,10 +73,17 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
-  async updateUserPoints(userId: string, points: number): Promise<void> {
-    await db.update(users)
-      .set({ totalPoints: sql`${users.totalPoints} + ${points}` })
-      .where(eq(users.id, userId));
+  async updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId || null,
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
   }
 
   async getAllGames(): Promise<Game[]> {
@@ -143,7 +162,14 @@ export class DbStorage implements IStorage {
 
   async createAchievement(insertAchievement: InsertAchievement): Promise<Achievement> {
     const result = await db.insert(achievements).values(insertAchievement).returning();
-    await this.updateUserPoints(insertAchievement.userId, insertAchievement.pointsAwarded);
+    await pointsEngine.awardPoints(
+      insertAchievement.userId,
+      insertAchievement.pointsAwarded,
+      "ACHIEVEMENT",
+      result[0].id,
+      "achievement",
+      insertAchievement.title
+    );
     return result[0];
   }
 
@@ -163,22 +189,71 @@ export class DbStorage implements IStorage {
   }
 
   async redeemReward(insertUserReward: InsertUserReward): Promise<UserReward> {
-    const reward = await db.select().from(rewards).where(eq(rewards.id, insertUserReward.rewardId)).limit(1);
-    if (!reward[0]) {
-      throw new Error("Reward not found");
-    }
-    
-    const user = await this.getUser(insertUserReward.userId);
-    if (!user || user.totalPoints < reward[0].pointsCost) {
-      throw new Error("Insufficient points");
-    }
-    
-    const result = await db.insert(userRewards).values(insertUserReward).returning();
-    await db.update(users)
-      .set({ totalPoints: sql`${users.totalPoints} - ${reward[0].pointsCost}` })
-      .where(eq(users.id, insertUserReward.userId));
-    
+    return await db.transaction(async (tx) => {
+      const reward = await tx.select().from(rewards).where(eq(rewards.id, insertUserReward.rewardId)).limit(1).for("update");
+      if (!reward[0]) {
+        throw new Error("Reward not found");
+      }
+
+      if (!reward[0].inStock) {
+        throw new Error("Reward is out of stock");
+      }
+
+      if (reward[0].stock !== null && reward[0].stock <= 0) {
+        throw new Error("Reward is out of stock");
+      }
+
+      await pointsEngine.spendPoints(
+        insertUserReward.userId,
+        insertUserReward.pointsSpent,
+        "REWARD_REDEMPTION",
+        reward[0].id,
+        "reward",
+        `Redeemed: ${reward[0].title}`
+      );
+
+      const [userReward] = await tx.insert(userRewards).values(insertUserReward).returning();
+
+      if (reward[0].stock !== null) {
+        await tx
+          .update(rewards)
+          .set({ 
+            stock: sql`${rewards.stock} - 1`,
+            inStock: sql`${rewards.stock} > 1`
+          })
+          .where(eq(rewards.id, reward[0].id));
+      }
+
+      return userReward;
+    });
+  }
+
+  async getSubscription(userId: string): Promise<Subscription | undefined> {
+    const result = await db.select().from(subscriptions).where(eq(subscriptions.userId, userId)).limit(1);
     return result[0];
+  }
+
+  async createSubscription(insertSubscription: InsertSubscription): Promise<Subscription> {
+    const [subscription] = await db.insert(subscriptions).values(insertSubscription).returning();
+    return subscription;
+  }
+
+  async updateSubscription(subscriptionId: string, updates: Partial<InsertSubscription>): Promise<Subscription> {
+    const [subscription] = await db
+      .update(subscriptions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(subscriptions.id, subscriptionId))
+      .returning();
+    return subscription;
+  }
+
+  async logSubscriptionEvent(insertEvent: InsertSubscriptionEvent): Promise<SubscriptionEvent> {
+    const [event] = await db.insert(subscriptionEvents).values(insertEvent).returning();
+    return event;
+  }
+
+  async getPointTransactions(userId: string, limit: number = 50): Promise<PointTransaction[]> {
+    return pointsEngine.getTransactionHistory(userId, limit);
   }
 }
 

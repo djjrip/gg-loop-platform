@@ -114,10 +114,24 @@ export const pointTransactions = pgTable("point_transactions", {
   type: varchar("type").notNull(),
   sourceId: varchar("source_id"),
   sourceType: varchar("source_type"),
+  balanceAfter: integer("balance_after").notNull(),
   description: text("description"),
   expiresAt: timestamp("expires_at"),
+  isExpired: boolean("is_expired").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (table) => [index("idx_point_tx_user").on(table.userId)]);
+}, (table) => [
+  index("idx_point_tx_user").on(table.userId),
+  index("idx_point_tx_source").on(table.sourceType, table.sourceId),
+]);
+
+export const subscriptionEvents = pgTable("subscription_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  subscriptionId: varchar("subscription_id").notNull().references(() => subscriptions.id),
+  eventType: varchar("event_type").notNull(),
+  stripeEventId: varchar("stripe_event_id").unique(),
+  eventData: jsonb("event_data"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
 
 export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, createdAt: true, updatedAt: true });
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, createdAt: true, updatedAt: true });
@@ -128,7 +142,8 @@ export const insertAchievementSchema = createInsertSchema(achievements).omit({ i
 export const insertRewardSchema = createInsertSchema(rewards).omit({ id: true, inStock: true, tier: true, stock: true, sku: true, fulfillmentType: true });
 export const insertUserRewardSchema = createInsertSchema(userRewards).omit({ id: true, redeemedAt: true, status: true, fulfillmentData: true });
 export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertPointTransactionSchema = createInsertSchema(pointTransactions).omit({ id: true, createdAt: true });
+export const insertPointTransactionSchema = createInsertSchema(pointTransactions).omit({ id: true, isExpired: true, createdAt: true });
+export const insertSubscriptionEventSchema = createInsertSchema(subscriptionEvents).omit({ id: true, createdAt: true });
 
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -158,3 +173,6 @@ export type Subscription = typeof subscriptions.$inferSelect;
 
 export type InsertPointTransaction = z.infer<typeof insertPointTransactionSchema>;
 export type PointTransaction = typeof pointTransactions.$inferSelect;
+
+export type InsertSubscriptionEvent = z.infer<typeof insertSubscriptionEventSchema>;
+export type SubscriptionEvent = typeof subscriptionEvents.$inferSelect;
