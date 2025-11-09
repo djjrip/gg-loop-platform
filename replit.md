@@ -26,7 +26,7 @@ I prefer detailed explanations. I want iterative development. Ask before making 
 ## System Architecture
 
 ### UI/UX Decisions
-The platform features a dark, "underground" aesthetic inspired by gaming culture, using orange accents (`#FF6600`) on dark backgrounds. Typography includes Inter for headings and JetBrains Mono for numbers and stats, aligning with a gaming-focused, Discord/Twitch-inspired interface. The frontend is built with React, TypeScript, Vite, Tailwind CSS, and shadcn/ui.
+**November 2025 Update**: Complete UI redesign to NBA Top Shot aesthetic with premium collectible card layouts, rarity tiers (Common/Rare/Epic/Legendary), muted terracotta (#B8724D) and sage green (#5F6D4E) color palette, generous white space, and sunset-inspired warm tones. The platform now features a clean, modern design inspired by premium collectibles rather than underground gaming. Typography includes Inter for headings and JetBrains Mono for numbers and stats. The frontend is built with React, TypeScript, Vite, Tailwind CSS, and shadcn/ui.
 
 ### Technical Implementations
 The backend uses Express.js with TypeScript. PostgreSQL (Neon) with Drizzle ORM handles data persistence. Authentication is managed via Replit Auth (OIDC), and Stripe is integrated for subscription payments. TanStack Query v5 is used for state management.
@@ -37,17 +37,28 @@ The backend uses Express.js with TypeScript. PostgreSQL (Neon) with Drizzle ORM 
 *   **Rewards Catalog**: Structured into four tiers (100-350, 400-800, 1200-3000, 5000+ points) offering diverse rewards from gift cards to elite items. Includes automatic inventory management and transactional redemption processes.
 *   **Gaming Webhook Integration**: Securely integrates with gaming platforms using HMAC-SHA256 signature validation. Endpoints for match wins, achievements, and tournament placements automatically award points. Includes robust validation, error handling, and event deduplication to prevent fraudulent or duplicate point awards. API partners are managed with hashed secrets and active status checks.
 *   **TikTok Content Generator**: Static template library with 12 viral script templates for marketing GG Loop on TikTok. Includes hooks, body copy, CTAs, hashtags, pro tips, and trending sounds guidance. Zero automation - manual copy/paste workflow.
+*   **Trophy Case (Public Profiles)**: ✅ LIVE - Premium collectible display system with NBA Top Shot aesthetic. Features TrophyCard component with rarity tiers (Common/Rare/Epic/Legendary), serial numbers, achievement dates, and responsive grid layout. Profile page at `/profile/:username` or `/profile/:userId` shows user stats, trophy collection, and gaming activity.
+*   **Manual Match Reporting**: ✅ LIVE - Self-service match win submission system at `/report-match`. Users select game, match type (Competitive/Ranked/Tournament), add notes, and receive instant point awards. Implements JSON API, auto-approval flow, real-time cache invalidation for immediate header point updates. Includes submission history with status tracking. Database table: `match_submissions`.
+*   **Username System**: ✅ LIVE - Custom username support for better profile URLs. Users can be accessed via `/profile/username` in addition to UUID. Database schema includes `username` field with unique constraint.
 
-### Planned Features (In Development)
-*   **Public Gamer Profiles**: Shareable profile pages showing user stats, achievements, leaderboard rank, and gaming activity to build credibility and portfolio
+### Planned Features (Next Up)
+*   **Screenshot Upload for Match Wins**: Add image upload capability to match submission flow with storage integration
 *   **Referral Program**: Viral growth system where users earn bonus points for bringing friends to the platform
 *   **Free Trial Tier**: Limited free tier to let gamers try the platform before subscribing, removing barrier to entry
 *   **Social Sharing**: One-click share achievements and milestones to Twitter/TikTok for free marketing and social proof
-*   **Business Dashboard**: Real-time progress tracking showing launch readiness percentage and key milestones
+*   **Business Dashboard Enhancement**: Connect to real database metrics for live launch readiness tracking
 *   **SMS Milestone Alerts**: Text notifications for business milestones (first signup, revenue goals, user counts) via Twilio integration
+*   **Real-Time Notifications**: WebSocket integration for instant point updates and achievement notifications
 
 ### System Design Choices
-The database schema includes core tables for users, games, subscriptions, point transactions, rewards, achievements, and leaderboard entries, with appropriate foreign keys and unique constraints for data integrity and performance. Key implementation details include transactional safety for all point operations, idempotency for webhook events and point awards, and comprehensive error handling.
+The database schema includes core tables for users (with username support), games, subscriptions, point transactions, rewards, achievements, leaderboard entries, and match submissions, with appropriate foreign keys and unique constraints for data integrity and performance. Key implementation details include transactional safety for all point operations, idempotency for webhook events and point awards, comprehensive error handling, and real-time cache invalidation for instant UI updates.
+
+### Recent Changes (November 9, 2025)
+*   **Trophy Case UI**: Complete redesign with NBA Top Shot-inspired collectible cards, rarity tier system, serial numbers, and premium aesthetic
+*   **Manual Match Reporting**: Production-ready self-service match win submission with instant point awards and real-time UI updates
+*   **Username System**: Added username field to users table with dual lookup support (UUID or username) for better profile URLs
+*   **Navigation**: Added prominent "Report Win" link in header for easy access to match submission
+*   **Bug Fixes**: Fixed match submission FormData → JSON conversion, auth cache invalidation, UX messaging to reflect instant approval
 
 ## External Dependencies
 *   **Database**: PostgreSQL (via Neon)
