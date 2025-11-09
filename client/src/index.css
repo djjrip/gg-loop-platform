@@ -294,4 +294,24 @@
       transform: scale(1.1);
     }
   }
+
+  @keyframes slow-pan {
+    0% {
+      transform: scale(1.05) translateX(0);
+    }
+    100% {
+      transform: scale(1.05) translateX(-2%);
+    }
+  }
+
+  @keyframes gradient-shift {
+    0% {
+      opacity: 0.3;
+      transform: translateX(0) rotate(0deg);
+    }
+    100% {
+      opacity: 0.5;
+      transform: translateX(5%) rotate(2deg);
+    }
+  }
 }
