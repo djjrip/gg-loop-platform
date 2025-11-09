@@ -51,6 +51,11 @@ export const EARNING_RULES: Record<string, EarningRule> = {
     basePoints: 100,
     tierMultipliers: { basic: 1.0, premium: 1.5 },
   },
+  TOURNAMENT_PLACEMENT: {
+    type: "tournament_placement",
+    basePoints: 50,
+    tierMultipliers: { basic: 1.0, premium: 1.5 },
+  },
 };
 
 export class PointsEngine {

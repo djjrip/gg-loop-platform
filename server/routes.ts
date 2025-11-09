@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
-  insertAchievementSchema, insertUserRewardSchema 
+  insertAchievementSchema, insertUserRewardSchema,
+  matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema
 } from "@shared/schema";
 import Stripe from "stripe";
 import { pointsEngine } from "./pointsEngine";
@@ -449,6 +450,272 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing webhook:", error);
       res.status(500).json({ message: "Webhook processing failed" });
+    }
+  });
+
+  app.post('/api/webhooks/gaming/match-win', async (req, res) => {
+    try {
+      const result = matchWinWebhookSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          issues: result.error.errors 
+        });
+      }
+      const { apiKey, apiSecret, userId, gameId, externalEventId, matchData } = result.data;
+
+      const partner = await storage.getApiPartner(apiKey);
+      if (!partner || !partner.isActive) {
+        return res.status(401).json({ message: "Invalid API key" });
+      }
+
+      const secretValid = await storage.verifyPartnerSecret(partner.id, apiSecret);
+      if (!secretValid) {
+        return res.status(401).json({ message: "Invalid API secret" });
+      }
+
+      const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
+      if (existingEvent) {
+        return res.json({ message: "Event already processed", eventId: existingEvent.id });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const subscription = await storage.getSubscription(userId);
+      if (!subscription || subscription.status !== "active") {
+        return res.status(403).json({ message: "User must have active subscription" });
+      }
+
+      const basePoints = 10;
+      const tierMultiplier = subscription.tier === "premium" ? 1.5 : 1.0;
+      const pointsToAward = Math.floor(basePoints * tierMultiplier);
+
+      const event = await storage.logGamingEvent({
+        partnerId: partner.id,
+        userId,
+        gameId: gameId || null,
+        eventType: "MATCH_WIN",
+        eventData: matchData || {},
+        externalEventId,
+        pointsAwarded: null,
+        transactionId: null,
+        errorMessage: null,
+      });
+
+      try {
+        const transaction = await pointsEngine.awardPoints(
+          userId,
+          pointsToAward,
+          "MATCH_WIN",
+          event.id,
+          "gaming_event",
+          `Match win - ${partner.name}`
+        );
+
+        await storage.updateGamingEvent(event.id, {
+          status: "processed",
+          pointsAwarded: pointsToAward,
+          transactionId: transaction.id,
+          processedAt: new Date(),
+        });
+
+        res.json({ 
+          success: true, 
+          eventId: event.id,
+          pointsAwarded: pointsToAward,
+          newBalance: transaction.balanceAfter
+        });
+      } catch (error: any) {
+        await storage.updateGamingEvent(event.id, {
+          status: "failed",
+          errorMessage: error.message,
+          retryCount: 1,
+        });
+        throw error;
+      }
+    } catch (error: any) {
+      console.error("Error processing match win:", error);
+      res.status(500).json({ message: error.message || "Failed to process match win" });
+    }
+  });
+
+  app.post('/api/webhooks/gaming/achievement', async (req, res) => {
+    try {
+      const result = achievementWebhookSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          issues: result.error.errors 
+        });
+      }
+      const { apiKey, apiSecret, userId, gameId, externalEventId, achievementData } = result.data;
+
+      const partner = await storage.getApiPartner(apiKey);
+      if (!partner || !partner.isActive) {
+        return res.status(401).json({ message: "Invalid API key" });
+      }
+
+      const secretValid = await storage.verifyPartnerSecret(partner.id, apiSecret);
+      if (!secretValid) {
+        return res.status(401).json({ message: "Invalid API secret" });
+      }
+
+      const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
+      if (existingEvent) {
+        return res.json({ message: "Event already processed", eventId: existingEvent.id });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const subscription = await storage.getSubscription(userId);
+      if (!subscription || subscription.status !== "active") {
+        return res.status(403).json({ message: "User must have active subscription" });
+      }
+
+      const pointsToAward = Math.min(achievementData.pointsAwarded, 100);
+
+      const event = await storage.logGamingEvent({
+        partnerId: partner.id,
+        userId,
+        gameId: gameId || null,
+        eventType: "ACHIEVEMENT",
+        eventData: achievementData,
+        externalEventId,
+        pointsAwarded: null,
+        transactionId: null,
+        errorMessage: null,
+      });
+
+      try {
+        const transaction = await pointsEngine.awardPoints(
+          userId,
+          pointsToAward,
+          "ACHIEVEMENT",
+          event.id,
+          "gaming_event",
+          achievementData.title || `Achievement - ${partner.name}`
+        );
+
+        await storage.updateGamingEvent(event.id, {
+          status: "processed",
+          pointsAwarded: pointsToAward,
+          transactionId: transaction.id,
+          processedAt: new Date(),
+        });
+
+        res.json({ 
+          success: true, 
+          eventId: event.id,
+          pointsAwarded: pointsToAward,
+          newBalance: transaction.balanceAfter
+        });
+      } catch (error: any) {
+        await storage.updateGamingEvent(event.id, {
+          status: "failed",
+          errorMessage: error.message,
+          retryCount: 1,
+        });
+        throw error;
+      }
+    } catch (error: any) {
+      console.error("Error processing achievement:", error);
+      res.status(500).json({ message: error.message || "Failed to process achievement" });
+    }
+  });
+
+  app.post('/api/webhooks/gaming/tournament', async (req, res) => {
+    try {
+      const result = tournamentWebhookSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          issues: result.error.errors 
+        });
+      }
+      const { apiKey, apiSecret, userId, gameId, externalEventId, tournamentData } = result.data;
+
+      const partner = await storage.getApiPartner(apiKey);
+      if (!partner || !partner.isActive) {
+        return res.status(401).json({ message: "Invalid API key" });
+      }
+
+      const secretValid = await storage.verifyPartnerSecret(partner.id, apiSecret);
+      if (!secretValid) {
+        return res.status(401).json({ message: "Invalid API secret" });
+      }
+
+      const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
+      if (existingEvent) {
+        return res.json({ message: "Event already processed", eventId: existingEvent.id });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const subscription = await storage.getSubscription(userId);
+      if (!subscription || subscription.status !== "active") {
+        return res.status(403).json({ message: "User must have active subscription" });
+      }
+
+      let pointsToAward = 25;
+      if (tournamentData.placement === 1) pointsToAward = 100;
+      else if (tournamentData.placement === 2) pointsToAward = 75;
+      else if (tournamentData.placement === 3) pointsToAward = 50;
+
+      const event = await storage.logGamingEvent({
+        partnerId: partner.id,
+        userId,
+        gameId: gameId || null,
+        eventType: "TOURNAMENT_PLACEMENT",
+        eventData: tournamentData,
+        externalEventId,
+        pointsAwarded: null,
+        transactionId: null,
+        errorMessage: null,
+      });
+
+      try {
+        const transaction = await pointsEngine.awardPoints(
+          userId,
+          pointsToAward,
+          "TOURNAMENT_PLACEMENT",
+          event.id,
+          "gaming_event",
+          `Tournament placement #${tournamentData.placement} - ${partner.name}`
+        );
+
+        await storage.updateGamingEvent(event.id, {
+          status: "processed",
+          pointsAwarded: pointsToAward,
+          transactionId: transaction.id,
+          processedAt: new Date(),
+        });
+
+        res.json({ 
+          success: true, 
+          eventId: event.id,
+          pointsAwarded: pointsToAward,
+          newBalance: transaction.balanceAfter
+        });
+      } catch (error: any) {
+        await storage.updateGamingEvent(event.id, {
+          status: "failed",
+          errorMessage: error.message,
+          retryCount: 1,
+        });
+        throw error;
+      }
+    } catch (error: any) {
+      console.error("Error processing tournament placement:", error);
+      res.status(500).json({ message: error.message || "Failed to process tournament placement" });
     }
   });
 

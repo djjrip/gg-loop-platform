@@ -136,6 +136,41 @@ export const subscriptionEvents = pgTable("subscription_events", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const apiPartners = pgTable("api_partners", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  apiKey: varchar("api_key").notNull().unique(),
+  apiSecretHash: varchar("api_secret_hash").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  webhookUrl: text("webhook_url"),
+  rateLimit: integer("rate_limit").notNull().default(1000),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const gamingEvents = pgTable("gaming_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerId: varchar("partner_id").notNull().references(() => apiPartners.id),
+  userId: varchar("user_id").references(() => users.id),
+  gameId: varchar("game_id").references(() => games.id),
+  eventType: varchar("event_type").notNull(),
+  eventData: jsonb("event_data"),
+  pointsAwarded: integer("points_awarded"),
+  transactionId: varchar("transaction_id").references(() => pointTransactions.id),
+  externalEventId: varchar("external_event_id").notNull(),
+  status: varchar("status").notNull().default("pending"),
+  errorMessage: text("error_message"),
+  retryCount: integer("retry_count").notNull().default(0),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  idxGamingEventsUser: index("idx_gaming_events_user").on(table.userId),
+  idxGamingEventsPartner: index("idx_gaming_events_partner").on(table.partnerId),
+  idxGamingEventsStatus: index("idx_gaming_events_status").on(table.status),
+  uniqPartnerEvent: sql`UNIQUE(partner_id, external_event_id)`,
+}));
+
 export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, createdAt: true, updatedAt: true });
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, createdAt: true, updatedAt: true });
 export const insertGameSchema = createInsertSchema(games).omit({ id: true, isActive: true });
@@ -147,6 +182,8 @@ export const insertUserRewardSchema = createInsertSchema(userRewards).omit({ id:
 export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPointTransactionSchema = createInsertSchema(pointTransactions).omit({ id: true, isExpired: true, createdAt: true });
 export const insertSubscriptionEventSchema = createInsertSchema(subscriptionEvents).omit({ id: true, createdAt: true });
+export const insertApiPartnerSchema = createInsertSchema(apiPartners).omit({ id: true, createdAt: true, updatedAt: true, apiSecretHash: true });
+export const insertGamingEventSchema = createInsertSchema(gamingEvents).omit({ id: true, createdAt: true, status: true, retryCount: true, processedAt: true });
 
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -179,3 +216,35 @@ export type PointTransaction = typeof pointTransactions.$inferSelect;
 
 export type InsertSubscriptionEvent = z.infer<typeof insertSubscriptionEventSchema>;
 export type SubscriptionEvent = typeof subscriptionEvents.$inferSelect;
+
+export type InsertApiPartner = z.infer<typeof insertApiPartnerSchema>;
+export type ApiPartner = typeof apiPartners.$inferSelect;
+
+export type InsertGamingEvent = z.infer<typeof insertGamingEventSchema>;
+export type GamingEvent = typeof gamingEvents.$inferSelect;
+
+export const gamingWebhookBaseSchema = z.object({
+  apiKey: z.string().min(1, "API key is required"),
+  apiSecret: z.string().min(1, "API secret is required"),
+  userId: z.string().uuid("Invalid user ID"),
+  gameId: z.string().uuid("Invalid game ID").optional(),
+  externalEventId: z.string().min(1, "External event ID is required"),
+});
+
+export const matchWinWebhookSchema = gamingWebhookBaseSchema.extend({
+  matchData: z.record(z.any()).optional(),
+});
+
+export const achievementWebhookSchema = gamingWebhookBaseSchema.extend({
+  achievementData: z.object({
+    title: z.string().optional(),
+    pointsAwarded: z.number().int().min(1).max(100, "Achievement points capped at 100"),
+  }),
+});
+
+export const tournamentWebhookSchema = gamingWebhookBaseSchema.extend({
+  tournamentData: z.object({
+    placement: z.number().int().min(1),
+    tournamentName: z.string().optional(),
+  }),
+});

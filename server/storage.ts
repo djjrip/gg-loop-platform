@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { 
   users, games, userGames, leaderboardEntries, achievements, rewards, userRewards,
-  subscriptions, subscriptionEvents, pointTransactions,
+  subscriptions, subscriptionEvents, pointTransactions, apiPartners, gamingEvents,
   type User, type InsertUser, type UpsertUser,
   type Game, type InsertGame,
   type UserGame, type InsertUserGame,
@@ -11,10 +11,13 @@ import {
   type UserReward, type InsertUserReward,
   type Subscription, type InsertSubscription,
   type SubscriptionEvent, type InsertSubscriptionEvent,
-  type PointTransaction
+  type PointTransaction,
+  type ApiPartner, type InsertApiPartner,
+  type GamingEvent, type InsertGamingEvent
 } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { pointsEngine } from "./pointsEngine";
+import bcrypt from "bcrypt";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -46,6 +49,15 @@ export interface IStorage {
   logSubscriptionEvent(event: InsertSubscriptionEvent): Promise<SubscriptionEvent>;
   
   getPointTransactions(userId: string, limit?: number): Promise<PointTransaction[]>;
+  
+  getApiPartner(apiKey: string): Promise<ApiPartner | undefined>;
+  createApiPartner(partner: InsertApiPartner & { apiSecret: string }): Promise<ApiPartner>;
+  updateApiPartner(partnerId: string, updates: Partial<InsertApiPartner>): Promise<ApiPartner>;
+  
+  logGamingEvent(event: InsertGamingEvent): Promise<GamingEvent>;
+  updateGamingEvent(eventId: string, updates: Partial<{ status: string; pointsAwarded: number | null; transactionId: string | null; errorMessage: string | null; retryCount: number; processedAt: Date }>): Promise<GamingEvent>;
+  getEventByExternalId(partnerId: string, externalEventId: string): Promise<GamingEvent | undefined>;
+  verifyPartnerSecret(partnerId: string, secret: string): Promise<boolean>;
 }
 
 export class DbStorage implements IStorage {
@@ -278,6 +290,67 @@ export class DbStorage implements IStorage {
       .where(eq(subscriptionEvents.stripeEventId, stripeEventId))
       .limit(1);
     return result.length > 0;
+  }
+
+  async getApiPartner(apiKey: string): Promise<ApiPartner | undefined> {
+    const result = await db.select().from(apiPartners).where(eq(apiPartners.apiKey, apiKey)).limit(1);
+    return result[0];
+  }
+
+  async createApiPartner(partner: InsertApiPartner & { apiSecret: string }): Promise<ApiPartner> {
+    const { apiSecret, ...partnerData } = partner;
+    const apiSecretHash = await bcrypt.hash(apiSecret, 10);
+    
+    const [newPartner] = await db
+      .insert(apiPartners)
+      .values({ ...partnerData, apiSecretHash })
+      .returning();
+    
+    return newPartner;
+  }
+
+  async updateApiPartner(partnerId: string, updates: Partial<InsertApiPartner>): Promise<ApiPartner> {
+    const [partner] = await db
+      .update(apiPartners)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(apiPartners.id, partnerId))
+      .returning();
+    return partner;
+  }
+
+  async logGamingEvent(event: InsertGamingEvent): Promise<GamingEvent> {
+    const [gamingEvent] = await db.insert(gamingEvents).values(event).returning();
+    return gamingEvent;
+  }
+
+  async updateGamingEvent(
+    eventId: string,
+    updates: Partial<{ status: string; pointsAwarded: number | null; transactionId: string | null; errorMessage: string | null; retryCount: number; processedAt: Date }>
+  ): Promise<GamingEvent> {
+    const [event] = await db
+      .update(gamingEvents)
+      .set(updates)
+      .where(eq(gamingEvents.id, eventId))
+      .returning();
+    return event;
+  }
+
+  async getEventByExternalId(partnerId: string, externalEventId: string): Promise<GamingEvent | undefined> {
+    const result = await db
+      .select()
+      .from(gamingEvents)
+      .where(and(
+        eq(gamingEvents.partnerId, partnerId),
+        eq(gamingEvents.externalEventId, externalEventId)
+      ))
+      .limit(1);
+    return result[0];
+  }
+
+  async verifyPartnerSecret(partnerId: string, secret: string): Promise<boolean> {
+    const partner = await db.select().from(apiPartners).where(eq(apiPartners.id, partnerId)).limit(1);
+    if (!partner[0]) return false;
+    return await bcrypt.compare(secret, partner[0].apiSecretHash);
   }
 }
 
