@@ -3,6 +3,8 @@ import { users, pointTransactions, subscriptions } from "@shared/schema";
 import type { InsertPointTransaction, PointTransaction } from "@shared/schema";
 import { eq, and, sql, gte } from "drizzle-orm";
 
+type DbOrTx = typeof db | any;
+
 export interface EarningRule {
   type: string;
   basePoints: number;
@@ -52,17 +54,17 @@ export const EARNING_RULES: Record<string, EarningRule> = {
 };
 
 export class PointsEngine {
-  async getUserBalance(userId: string): Promise<number> {
-    const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  async getUserBalance(userId: string, dbOrTx: DbOrTx = db): Promise<number> {
+    const user = await dbOrTx.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!user[0]) throw new Error("User not found");
     
-    const expiredPoints = await this.getExpiredUnclaimedPoints(userId);
+    const expiredPoints = await this.getExpiredUnclaimedPoints(userId, dbOrTx);
     return user[0].totalPoints - expiredPoints;
   }
 
-  async getExpiredUnclaimedPoints(userId: string): Promise<number> {
+  async getExpiredUnclaimedPoints(userId: string, dbOrTx: DbOrTx = db): Promise<number> {
     const now = new Date();
-    const result = await db
+    const result = await dbOrTx
       .select({ total: sql<number>`COALESCE(SUM(${pointTransactions.amount}), 0)` })
       .from(pointTransactions)
       .where(
@@ -84,34 +86,37 @@ export class PointsEngine {
     type: string,
     sourceId?: string,
     sourceType?: string,
-    description?: string
+    description?: string,
+    dbOrTx?: DbOrTx
   ): Promise<PointTransaction> {
     if (amount <= 0) throw new Error("Amount must be positive");
 
     const rule = EARNING_RULES[type.toUpperCase()];
     if (!rule) throw new Error("Invalid earning type");
 
-    const userSub = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.userId, userId))
-      .limit(1);
+    const executeAward = async (tx: DbOrTx) => {
+      const userSub = await tx
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, userId))
+        .limit(1);
 
-    const tier = userSub[0]?.tier || "basic";
-    const multiplier = rule.tierMultipliers[tier] || 1.0;
-    const finalAmount = Math.floor(amount * multiplier);
+      const tier = userSub[0]?.tier || "basic";
+      const multiplier = rule.tierMultipliers[tier] || 1.0;
+      const finalAmount = Math.floor(amount * multiplier);
 
-    if (rule.dailyCap) {
-      const dailyTotal = await this.getDailyEarnings(userId, type);
-      if (dailyTotal + finalAmount > rule.dailyCap) {
-        throw new Error(`Daily cap of ${rule.dailyCap} points reached for ${type}`);
+      if (rule.dailyCap) {
+        const dailyTotal = await this.getDailyEarnings(userId, type, tx);
+        if (dailyTotal + finalAmount > rule.dailyCap) {
+          throw new Error(`Daily cap of ${rule.dailyCap} points reached for ${type}`);
+        }
       }
-    }
 
-    return await db.transaction(async (tx) => {
       const user = await tx.select().from(users).where(eq(users.id, userId)).limit(1).for("update");
       if (!user[0]) throw new Error("User not found");
 
+      const expiredPoints = await this.getExpiredUnclaimedPoints(userId, tx);
+      const effectiveBalance = user[0].totalPoints - expiredPoints;
       const newBalance = user[0].totalPoints + finalAmount;
 
       const expiresAt = new Date();
@@ -137,7 +142,13 @@ export class PointsEngine {
         .where(eq(users.id, userId));
 
       return transaction;
-    });
+    };
+
+    if (dbOrTx) {
+      return executeAward(dbOrTx);
+    } else {
+      return await db.transaction(executeAward);
+    }
   }
 
   async spendPoints(
@@ -146,20 +157,23 @@ export class PointsEngine {
     type: string,
     sourceId?: string,
     sourceType?: string,
-    description?: string
+    description?: string,
+    dbOrTx?: DbOrTx
   ): Promise<PointTransaction> {
     if (amount <= 0) throw new Error("Amount must be positive");
 
-    return await db.transaction(async (tx) => {
+    const executeSpend = async (tx: DbOrTx) => {
       const user = await tx.select().from(users).where(eq(users.id, userId)).limit(1).for("update");
       if (!user[0]) throw new Error("User not found");
 
-      const currentBalance = user[0].totalPoints;
-      if (currentBalance < amount) {
-        throw new Error(`Insufficient points. Have: ${currentBalance}, Need: ${amount}`);
+      const expiredPoints = await this.getExpiredUnclaimedPoints(userId, tx);
+      const effectiveBalance = user[0].totalPoints - expiredPoints;
+
+      if (effectiveBalance < amount) {
+        throw new Error(`Insufficient points. Have: ${effectiveBalance}, Need: ${amount}`);
       }
 
-      const newBalance = currentBalance - amount;
+      const newBalance = user[0].totalPoints - amount;
 
       const [transaction] = await tx
         .insert(pointTransactions)
@@ -180,7 +194,13 @@ export class PointsEngine {
         .where(eq(users.id, userId));
 
       return transaction;
-    });
+    };
+
+    if (dbOrTx) {
+      return executeSpend(dbOrTx);
+    } else {
+      return await db.transaction(executeSpend);
+    }
   }
 
   async getTransactionHistory(userId: string, limit: number = 50): Promise<PointTransaction[]> {
@@ -192,11 +212,11 @@ export class PointsEngine {
       .limit(limit);
   }
 
-  async getDailyEarnings(userId: string, type: string): Promise<number> {
+  async getDailyEarnings(userId: string, type: string, dbOrTx: DbOrTx = db): Promise<number> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const result = await db
+    const result = await dbOrTx
       .select({ total: sql<number>`COALESCE(SUM(${pointTransactions.amount}), 0)` })
       .from(pointTransactions)
       .where(

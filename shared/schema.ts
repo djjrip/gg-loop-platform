@@ -122,6 +122,7 @@ export const pointTransactions = pgTable("point_transactions", {
 }, (table) => [
   index("idx_point_tx_user").on(table.userId),
   index("idx_point_tx_source").on(table.sourceType, table.sourceId),
+  sql`UNIQUE NULLS NOT DISTINCT(user_id, source_type, source_id)`,
 ]);
 
 export const subscriptionEvents = pgTable("subscription_events", {

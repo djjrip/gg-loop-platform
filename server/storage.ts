@@ -209,7 +209,8 @@ export class DbStorage implements IStorage {
         "REWARD_REDEMPTION",
         reward[0].id,
         "reward",
-        `Redeemed: ${reward[0].title}`
+        `Redeemed: ${reward[0].title}`,
+        tx
       );
 
       const [userReward] = await tx.insert(userRewards).values(insertUserReward).returning();
