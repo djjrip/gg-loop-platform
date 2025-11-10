@@ -38,6 +38,9 @@ export interface IStorage {
   
   getUserGames(userId: string): Promise<(UserGame & { game: Game })[]>;
   connectUserGame(userGame: InsertUserGame): Promise<UserGame>;
+  linkRiotAccount(userId: string, gameId: string, riotData: { puuid: string; gameName: string; tagLine: string; region: string }): Promise<UserGame>;
+  getRiotAccount(userId: string, gameId: string): Promise<UserGame | undefined>;
+  verifyRiotAccount(userId: string, gameId: string): Promise<boolean>;
   
   getLeaderboard(gameId: string, period: string, limit?: number): Promise<(LeaderboardEntry & { user: User })[]>;
   upsertLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
@@ -209,6 +212,61 @@ export class DbStorage implements IStorage {
       .set({ gamesConnected: sql`${users.gamesConnected} + 1` })
       .where(eq(users.id, insertUserGame.userId));
     return result[0];
+  }
+
+  async linkRiotAccount(userId: string, gameId: string, riotData: { puuid: string; gameName: string; tagLine: string; region: string }): Promise<UserGame> {
+    const existing = await db.select().from(userGames)
+      .where(and(eq(userGames.userId, userId), eq(userGames.gameId, gameId)))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const [updated] = await db.update(userGames)
+        .set({
+          riotPuuid: riotData.puuid,
+          riotGameName: riotData.gameName,
+          riotTagLine: riotData.tagLine,
+          riotRegion: riotData.region,
+          verifiedAt: new Date(),
+        })
+        .where(eq(userGames.id, existing[0].id))
+        .returning();
+      return updated;
+    }
+
+    const [created] = await db.insert(userGames)
+      .values({
+        userId,
+        gameId,
+        accountName: `${riotData.gameName}#${riotData.tagLine}`,
+        riotPuuid: riotData.puuid,
+        riotGameName: riotData.gameName,
+        riotTagLine: riotData.tagLine,
+        riotRegion: riotData.region,
+        verifiedAt: new Date(),
+      })
+      .returning();
+
+    await db.update(users)
+      .set({ gamesConnected: sql`${users.gamesConnected} + 1` })
+      .where(eq(users.id, userId));
+
+    return created;
+  }
+
+  async getRiotAccount(userId: string, gameId: string): Promise<UserGame | undefined> {
+    const result = await db.select().from(userGames)
+      .where(and(
+        eq(userGames.userId, userId),
+        eq(userGames.gameId, gameId),
+        sql`${userGames.riotPuuid} IS NOT NULL`
+      ))
+      .limit(1);
+    return result[0];
+  }
+
+  async verifyRiotAccount(userId: string, gameId: string): Promise<boolean> {
+    const account = await this.getRiotAccount(userId, gameId);
+    return account !== undefined && account.riotPuuid !== null;
   }
 
   async getLeaderboard(gameId: string, period: string, limit: number = 10): Promise<(LeaderboardEntry & { user: User })[]> {

@@ -72,6 +72,13 @@ export const userGames = pgTable("user_games", {
   userId: varchar("user_id").notNull().references(() => users.id),
   gameId: varchar("game_id").notNull().references(() => games.id),
   accountName: text("account_name"),
+  riotPuuid: varchar("riot_puuid", { length: 78 }),
+  riotGameName: varchar("riot_game_name"),
+  riotTagLine: varchar("riot_tag_line"),
+  riotRegion: varchar("riot_region"),
+  steamId: varchar("steam_id"),
+  verifiedAt: timestamp("verified_at"),
+  lastMatchCheck: timestamp("last_match_check"),
   connectedAt: timestamp("connected_at").notNull().defaultNow(),
 });
 
