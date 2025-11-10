@@ -32,11 +32,15 @@ export const users = pgTable("users", {
   twitchConnectedAt: timestamp("twitch_connected_at"),
   referralCode: varchar("referral_code", { length: 10 }).unique(),
   referredBy: varchar("referred_by").references((): any => users.id),
+  isFounder: boolean("is_founder").notNull().default(false),
+  founderNumber: integer("founder_number"),
   freeTrialStartedAt: timestamp("free_trial_started_at"),
   freeTrialEndsAt: timestamp("free_trial_ends_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  founderNumberUnique: sql`UNIQUE(founder_number) WHERE founder_number IS NOT NULL`,
+}));
 
 export const referrals = pgTable("referrals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

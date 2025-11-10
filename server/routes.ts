@@ -227,6 +227,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           profileImageUrl: user.profileImageUrl,
           totalPoints: user.totalPoints,
           gamesConnected: user.gamesConnected,
+          isFounder: user.isFounder,
+          founderNumber: user.founderNumber,
           createdAt: user.createdAt,
         },
         achievements,

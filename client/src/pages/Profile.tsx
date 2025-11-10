@@ -33,6 +33,8 @@ interface PublicProfile {
     profileImageUrl: string | null;
     totalPoints: number;
     gamesConnected: number;
+    isFounder: boolean;
+    founderNumber: number | null;
     createdAt: string;
   };
   achievements: Array<{
@@ -114,7 +116,18 @@ export default function Profile() {
             </Avatar>
             
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2" data-testid="text-profile-name">{displayName}</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold" data-testid="text-profile-name">{displayName}</h1>
+                {profile.user.isFounder && profile.user.founderNumber && (
+                  <Badge 
+                    variant="default" 
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 px-3 py-1 text-sm font-bold shadow-lg"
+                    data-testid="badge-founder"
+                  >
+                    ⭐ FOUNDER #{profile.user.founderNumber}
+                  </Badge>
+                )}
+              </div>
               <div className="flex flex-wrap items-center gap-4 mb-4">
                 <div className="flex items-center gap-2">
                   <Trophy className="h-5 w-5 text-primary" />

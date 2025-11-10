@@ -109,20 +109,53 @@ export class DbStorage implements IStorage {
       codeExists = !!existing;
     }
 
+    // Check if this is a new user (skip founder logic for existing users)
+    const existingUser = userData.oidcSub ? await this.getUserByOidcSub(userData.oidcSub) : undefined;
+
+    // For new users only, use transaction to safely assign founder status
+    if (!existingUser) {
+      return db.transaction(async (tx) => {
+        // Advisory lock (id=1001) to serialize founder assignment even when table is empty
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(1001)`);
+        
+        // Get next founder number (safe now that we have advisory lock)
+        const [lastFounder] = await tx
+          .select({ founderNumber: users.founderNumber })
+          .from(users)
+          .where(sql`${users.founderNumber} IS NOT NULL`)
+          .orderBy(sql`${users.founderNumber} DESC`)
+          .limit(1);
+        
+        const nextFounderNumber = (lastFounder?.founderNumber || 0) + 1;
+        const isFounder = nextFounderNumber <= 100;
+        const founderNumber = isFounder ? nextFounderNumber : undefined;
+
+        const [user] = await tx
+          .insert(users)
+          .values({ ...userData, referralCode, isFounder, founderNumber })
+          .returning();
+        
+        return user;
+      });
+    }
+
+    // Existing user - just update profile info
+    if (!userData.oidcSub) {
+      throw new Error("Cannot update user without OIDC sub");
+    }
+    
     const [user] = await db
-      .insert(users)
-      .values({ ...userData, referralCode })
-      .onConflictDoUpdate({
-        target: users.oidcSub,
-        set: {
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          profileImageUrl: userData.profileImageUrl,
-          updatedAt: new Date(),
-        },
+      .update(users)
+      .set({
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        profileImageUrl: userData.profileImageUrl,
+        updatedAt: new Date(),
       })
+      .where(eq(users.oidcSub, userData.oidcSub))
       .returning();
+    
     return user;
   }
 
