@@ -170,6 +170,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Riot Account - Verify and Link
+  app.post('/api/riot/:gameId/verify', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+    try {
+      const { gameId } = req.params;
+      const { riotId, region = 'na' } = req.body;
+
+      if (!riotId || !riotId.includes('#')) {
+        return res.status(400).json({ 
+          message: 'Invalid Riot ID format. Use: GameName#TAG (e.g., Faker#NA1)' 
+        });
+      }
+
+      const [gameName, tagLine] = riotId.split('#');
+      
+      // Verify account exists via Riot API
+      const { RiotApiService } = await import('./riotApi');
+      const riotApi = new RiotApiService();
+      
+      const account = await riotApi.verifyAccount(gameName.trim(), tagLine.trim(), region);
+      
+      // Link to user's account
+      await storage.linkRiotAccount(req.dbUser.id, gameId, {
+        puuid: account.puuid,
+        gameName: account.gameName,
+        tagLine: account.tagLine,
+        region: region
+      });
+
+      res.json({ 
+        success: true,
+        account: {
+          gameName: account.gameName,
+          tagLine: account.tagLine,
+          region: region
+        }
+      });
+    } catch (error: any) {
+      console.error('Error verifying Riot account:', error);
+      res.status(500).json({ 
+        message: error.message || 'Failed to verify Riot account. Please check your Riot ID and try again.' 
+      });
+    }
+  });
+
+  // Riot Account - Disconnect
+  app.post('/api/riot/:gameId/disconnect', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+    try {
+      const { gameId } = req.params;
+      const userId = req.dbUser.id;
+
+      // Remove Riot account link (set fields to null)
+      const account = await storage.getRiotAccount(userId, gameId);
+      if (account) {
+        await storage.linkRiotAccount(userId, gameId, {
+          puuid: '',
+          gameName: '',
+          tagLine: '',
+          region: ''
+        });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error disconnecting Riot account:', error);
+      res.status(500).json({ message: 'Failed to disconnect Riot account' });
+    }
+  });
+
+  // Riot Account - Get Status
+  app.get('/api/riot/:gameId/status', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+    try {
+      const { gameId } = req.params;
+      const account = await storage.getRiotAccount(req.dbUser.id, gameId);
+      
+      if (account && account.riotPuuid) {
+        res.json({
+          linked: true,
+          gameName: account.riotGameName,
+          tagLine: account.riotTagLine,
+          region: account.riotRegion,
+          verifiedAt: account.verifiedAt
+        });
+      } else {
+        res.json({ linked: false });
+      }
+    } catch (error) {
+      console.error('Error fetching Riot account status:', error);
+      res.status(500).json({ message: 'Failed to fetch account status' });
+    }
+  });
+
   // Public Profile - No auth required (supports both UUID and username)
   app.get('/api/profile/:userIdOrUsername', async (req, res) => {
     try {
