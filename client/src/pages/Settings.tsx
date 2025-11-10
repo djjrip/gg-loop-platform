@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { User, Save, ExternalLink, Twitch, Unlink, CheckCircle2 } from "lucide-react";
+import { User, Save, ExternalLink, Twitch, Unlink, CheckCircle2, Gamepad2, Shield, Copy } from "lucide-react";
 import { useLocation } from "wouter";
 
 type UserData = {
@@ -19,10 +20,43 @@ type UserData = {
   twitchConnectedAt: string | null;
 };
 
+type RiotAccountStatus = {
+  linked: boolean;
+  gameName?: string;
+  tagLine?: string;
+  region?: string;
+  verifiedAt?: string;
+};
+
+const LEAGUE_GAME_ID = '4cf0e30a-7969-4572-a8f5-29ad5935dc00';
+const VALORANT_GAME_ID = '36f728c6-8143-4be3-9e94-54c549a48d7f';
+
+const REGIONS = [
+  { value: 'na', label: 'North America' },
+  { value: 'euw', label: 'Europe West' },
+  { value: 'eune', label: 'Europe Nordic & East' },
+  { value: 'kr', label: 'Korea' },
+  { value: 'br', label: 'Brazil' },
+  { value: 'lan', label: 'Latin America North' },
+  { value: 'las', label: 'Latin America South' },
+  { value: 'oce', label: 'Oceania' },
+  { value: 'ru', label: 'Russia' },
+  { value: 'tr', label: 'Turkey' },
+  { value: 'jp', label: 'Japan' },
+];
+
 export default function Settings() {
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [location] = useLocation();
+  
+  // Riot account linking state
+  const [leagueRiotId, setLeagueRiotId] = useState("");
+  const [leagueRegion, setLeagueRegion] = useState("na");
+  const [leagueVerificationCode, setLeagueVerificationCode] = useState("");
+  const [valorantRiotId, setValorantRiotId] = useState("");
+  const [valorantRegion, setValorantRegion] = useState("na");
+  const [valorantVerificationCode, setValorantVerificationCode] = useState("");
 
   const { data: user, isLoading } = useQuery<UserData>({
     queryKey: ['/api/auth/user'],
@@ -94,6 +128,148 @@ export default function Settings() {
     onError: (error: any) => {
       toast({
         title: "Failed to disconnect Twitch",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Riot Account Status Queries
+  const { data: leagueStatus } = useQuery<RiotAccountStatus>({
+    queryKey: ['/api/riot', LEAGUE_GAME_ID, 'status'],
+  });
+
+  const { data: valorantStatus } = useQuery<RiotAccountStatus>({
+    queryKey: ['/api/riot', VALORANT_GAME_ID, 'status'],
+  });
+
+  // Riot Account Request Code Mutation
+  const requestLeagueCodeMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(`/api/riot/${LEAGUE_GAME_ID}/request-code`, "POST", {
+        riotId: leagueRiotId,
+        region: leagueRegion,
+      });
+    },
+    onSuccess: (data: any) => {
+      setLeagueVerificationCode(data.verificationCode);
+      toast({
+        title: "Verification code generated!",
+        description: `Enter ${data.verificationCode} in your League client.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to request code",
+        description: error.message || "Please check your Riot ID and try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const requestValorantCodeMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(`/api/riot/${VALORANT_GAME_ID}/request-code`, "POST", {
+        riotId: valorantRiotId,
+        region: valorantRegion,
+      });
+    },
+    onSuccess: (data: any) => {
+      setValorantVerificationCode(data.verificationCode);
+      toast({
+        title: "Verification code generated!",
+        description: `Add ${data.verificationCode} to your Valorant profile.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to request code",
+        description: error.message || "Please check your Riot ID and try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Riot Account Verify Mutations
+  const verifyLeagueMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(`/api/riot/${LEAGUE_GAME_ID}/verify`, "POST", {});
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/riot', LEAGUE_GAME_ID, 'status'] });
+      setLeagueRiotId("");
+      setLeagueVerificationCode("");
+      toast({
+        title: "League account verified!",
+        description: `Successfully linked ${data.account.gameName}#${data.account.tagLine}`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Verification failed",
+        description: error.message || "Make sure you entered the code in your League client",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const verifyValorantMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(`/api/riot/${VALORANT_GAME_ID}/verify`, "POST", {});
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/riot', VALORANT_GAME_ID, 'status'] });
+      setValorantRiotId("");
+      setValorantVerificationCode("");
+      toast({
+        title: "Valorant account verified!",
+        description: `Successfully linked ${data.account.gameName}#${data.account.tagLine}`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Verification failed",
+        description: error.message || "Make sure you added the code to your Valorant profile",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Riot Account Disconnect Mutations
+  const disconnectLeagueMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(`/api/riot/${LEAGUE_GAME_ID}/disconnect`, "POST", {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/riot', LEAGUE_GAME_ID, 'status'] });
+      toast({
+        title: "League account disconnected",
+        description: "Your League of Legends account has been unlinked.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to disconnect",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const disconnectValorantMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(`/api/riot/${VALORANT_GAME_ID}/disconnect`, "POST", {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/riot', VALORANT_GAME_ID, 'status'] });
+      toast({
+        title: "Valorant account disconnected",
+        description: "Your Valorant account has been unlinked.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to disconnect",
         description: error.message || "Please try again",
         variant: "destructive",
       });
@@ -260,6 +436,280 @@ export default function Settings() {
                   <Twitch className="h-4 w-4" />
                   {connectTwitchMutation.isPending ? "Connecting..." : "Connect Twitch Account"}
                 </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card data-testid="card-league-integration">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Gamepad2 className="h-5 w-5" />
+              League of Legends
+            </CardTitle>
+            <CardDescription>
+              Link your League account to enable automatic match win verification
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {leagueStatus?.linked ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <div className="flex-1">
+                    <p className="font-medium" data-testid="text-connected-league">
+                      {leagueStatus.gameName}#{leagueStatus.tagLine}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Region: {REGIONS.find(r => r.value === leagueStatus.region)?.label || leagueStatus.region}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => disconnectLeagueMutation.mutate()}
+                    disabled={disconnectLeagueMutation.isPending}
+                    className="gap-2"
+                    data-testid="button-disconnect-league"
+                  >
+                    <Unlink className="h-4 w-4" />
+                    Disconnect
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {!leagueVerificationCode ? (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="league-riot-id">Riot ID</Label>
+                      <Input
+                        id="league-riot-id"
+                        value={leagueRiotId}
+                        onChange={(e) => setLeagueRiotId(e.target.value)}
+                        placeholder="Faker#NA1"
+                        data-testid="input-league-riot-id"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Your Riot ID (GameName#TAG). Find it in your League client.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="league-region">Region</Label>
+                      <Select value={leagueRegion} onValueChange={setLeagueRegion}>
+                        <SelectTrigger id="league-region" data-testid="select-league-region">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {REGIONS.map(region => (
+                            <SelectItem key={region.value} value={region.value}>
+                              {region.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      onClick={() => requestLeagueCodeMutation.mutate()}
+                      disabled={requestLeagueCodeMutation.isPending || !leagueRiotId.includes('#')}
+                      className="gap-2 w-full"
+                      data-testid="button-request-league-code"
+                    >
+                      <Shield className="h-4 w-4" />
+                      {requestLeagueCodeMutation.isPending ? "Generating..." : "Generate Verification Code"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-muted rounded-lg space-y-3">
+                      <p className="font-medium">Step 1: Copy verification code</p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 px-3 py-2 bg-background rounded font-mono text-lg font-bold" data-testid="text-league-verification-code">
+                          {leagueVerificationCode}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            navigator.clipboard.writeText(leagueVerificationCode);
+                            toast({ title: "Code copied!" });
+                          }}
+                          data-testid="button-copy-league-code"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="font-medium mb-2">Step 2: Enter in League client</p>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground ml-2">
+                        <li>Open League of Legends client</li>
+                        <li>Click Settings (gear icon)</li>
+                        <li>Go to "Verification" tab</li>
+                        <li>Paste the code above and save</li>
+                        <li>Come back here and click "Verify Now"</li>
+                      </ol>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => verifyLeagueMutation.mutate()}
+                        disabled={verifyLeagueMutation.isPending}
+                        className="gap-2 flex-1"
+                        data-testid="button-verify-league"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        {verifyLeagueMutation.isPending ? "Verifying..." : "Verify Now"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setLeagueVerificationCode("");
+                          setLeagueRiotId("");
+                        }}
+                        data-testid="button-cancel-league"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card data-testid="card-valorant-integration">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Valorant
+            </CardTitle>
+            <CardDescription>
+              Link your Valorant account to enable automatic match win verification
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {valorantStatus?.linked ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <div className="flex-1">
+                    <p className="font-medium" data-testid="text-connected-valorant">
+                      {valorantStatus.gameName}#{valorantStatus.tagLine}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Region: {REGIONS.find(r => r.value === valorantStatus.region)?.label || valorantStatus.region}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => disconnectValorantMutation.mutate()}
+                    disabled={disconnectValorantMutation.isPending}
+                    className="gap-2"
+                    data-testid="button-disconnect-valorant"
+                  >
+                    <Unlink className="h-4 w-4" />
+                    Disconnect
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {!valorantVerificationCode ? (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="valorant-riot-id">Riot ID</Label>
+                      <Input
+                        id="valorant-riot-id"
+                        value={valorantRiotId}
+                        onChange={(e) => setValorantRiotId(e.target.value)}
+                        placeholder="TenZ#NA1"
+                        data-testid="input-valorant-riot-id"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Your Riot ID (GameName#TAG). Find it in your Valorant profile.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="valorant-region">Region</Label>
+                      <Select value={valorantRegion} onValueChange={setValorantRegion}>
+                        <SelectTrigger id="valorant-region" data-testid="select-valorant-region">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {REGIONS.map(region => (
+                            <SelectItem key={region.value} value={region.value}>
+                              {region.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      onClick={() => requestValorantCodeMutation.mutate()}
+                      disabled={requestValorantCodeMutation.isPending || !valorantRiotId.includes('#')}
+                      className="gap-2 w-full"
+                      data-testid="button-request-valorant-code"
+                    >
+                      <Shield className="h-4 w-4" />
+                      {requestValorantCodeMutation.isPending ? "Generating..." : "Generate Verification Code"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-muted rounded-lg space-y-3">
+                      <p className="font-medium">Step 1: Copy verification code</p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 px-3 py-2 bg-background rounded font-mono text-lg font-bold" data-testid="text-valorant-verification-code">
+                          {valorantVerificationCode}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            navigator.clipboard.writeText(valorantVerificationCode);
+                            toast({ title: "Code copied!" });
+                          }}
+                          data-testid="button-copy-valorant-code"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="font-medium mb-2">Step 2: Add to Valorant profile</p>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground ml-2">
+                        <li>Open Valorant client</li>
+                        <li>Click on your profile (top right)</li>
+                        <li>Click "Account" → "Profile" → "About Me"</li>
+                        <li>Paste the code above in the description</li>
+                        <li>Come back here and click "Verify Now"</li>
+                      </ol>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => verifyValorantMutation.mutate()}
+                        disabled={verifyValorantMutation.isPending}
+                        className="gap-2 flex-1"
+                        data-testid="button-verify-valorant"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        {verifyValorantMutation.isPending ? "Verifying..." : "Verify Now"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setValorantVerificationCode("");
+                          setValorantRiotId("");
+                        }}
+                        data-testid="button-cancel-valorant"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

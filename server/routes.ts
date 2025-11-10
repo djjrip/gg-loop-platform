@@ -1,6 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { userGames } from "@shared/schema";
+import { and, eq } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
@@ -170,8 +173,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Riot Account - Verify and Link
-  app.post('/api/riot/:gameId/verify', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+  // Riot Account - Step 1: Request Verification Code
+  app.post('/api/riot/:gameId/request-code', isAuthenticated, getUserMiddleware, async (req: any, res) => {
     try {
       const { gameId } = req.params;
       const { riotId, region = 'na' } = req.body;
@@ -179,6 +182,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!riotId || !riotId.includes('#')) {
         return res.status(400).json({ 
           message: 'Invalid Riot ID format. Use: GameName#TAG (e.g., Faker#NA1)' 
+        });
+      }
+
+      if (!region) {
+        return res.status(400).json({
+          message: 'Region is required. Please select your region.'
         });
       }
 
@@ -190,26 +199,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const account = await riotApi.verifyAccount(gameName.trim(), tagLine.trim(), region);
       
-      // Link to user's account
-      await storage.linkRiotAccount(req.dbUser.id, gameId, {
+      // Generate 8-character alphanumeric code
+      const verificationCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+      
+      // Store pending verification (expires in 10 minutes)
+      // Store platform region (na, euw, kr) NOT routing cluster (americas, europe)
+      req.session.riotVerification = {
+        userId: req.dbUser.id,
+        gameId,
         puuid: account.puuid,
         gameName: account.gameName,
         tagLine: account.tagLine,
-        region: region
+        region, // This is the platform region (na, euw, kr, etc.)
+        code: verificationCode,
+        expiresAt: Date.now() + 10 * 60 * 1000
+      };
+
+      res.json({ 
+        success: true,
+        verificationCode,
+        riotId: `${account.gameName}#${account.tagLine}`,
+        instructions: gameId.includes('league') 
+          ? 'Enter this code in League client: Settings → Verification'
+          : 'Add this code to your Valorant profile (Account → Profile → About Me)'
       });
+    } catch (error: any) {
+      console.error('Error requesting Riot verification:', error);
+      res.status(500).json({ 
+        message: error.message || 'Failed to verify Riot account. Please check your Riot ID and try again.' 
+      });
+    }
+  });
+
+  // Riot Account - Step 2: Verify Code and Link
+  app.post('/api/riot/:gameId/verify', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+    try {
+      const { gameId } = req.params;
+      
+      // Check if there's a pending verification
+      const pending = req.session.riotVerification;
+      if (!pending || pending.gameId !== gameId || pending.userId !== req.dbUser.id) {
+        return res.status(400).json({ 
+          message: 'No pending verification found. Please request a new verification code.' 
+        });
+      }
+
+      // Check if expired
+      if (Date.now() > pending.expiresAt) {
+        delete req.session.riotVerification;
+        return res.status(400).json({ 
+          message: 'Verification code expired. Please request a new code.' 
+        });
+      }
+
+      // Verify the code via Riot API third-party endpoint
+      const { RiotApiService } = await import('./riotApi');
+      const riotApi = new RiotApiService();
+      
+      const verified = await riotApi.verifyThirdPartyCode(pending.puuid, pending.code, pending.region);
+      
+      if (!verified) {
+        return res.status(400).json({ 
+          message: 'Verification code not found. Make sure you entered it in your Riot client.' 
+        });
+      }
+
+      // Link the account (code verified!)
+      await storage.linkRiotAccount(req.dbUser.id, gameId, {
+        puuid: pending.puuid,
+        gameName: pending.gameName,
+        tagLine: pending.tagLine,
+        region: pending.region
+      });
+
+      // Clear pending verification
+      delete req.session.riotVerification;
 
       res.json({ 
         success: true,
         account: {
-          gameName: account.gameName,
-          tagLine: account.tagLine,
-          region: region
+          gameName: pending.gameName,
+          tagLine: pending.tagLine,
+          region: pending.region
         }
       });
     } catch (error: any) {
       console.error('Error verifying Riot account:', error);
       res.status(500).json({ 
-        message: error.message || 'Failed to verify Riot account. Please check your Riot ID and try again.' 
+        message: error.message || 'Failed to verify account. Please try again.' 
       });
     }
   });
@@ -220,15 +297,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { gameId } = req.params;
       const userId = req.dbUser.id;
 
-      // Remove Riot account link (set fields to null)
+      // Remove Riot account link by deleting the userGame record
       const account = await storage.getRiotAccount(userId, gameId);
       if (account) {
-        await storage.linkRiotAccount(userId, gameId, {
-          puuid: '',
-          gameName: '',
-          tagLine: '',
-          region: ''
-        });
+        await db.delete(userGames)
+          .where(and(
+            eq(userGames.userId, userId),
+            eq(userGames.gameId, gameId)
+          ));
       }
 
       res.json({ success: true });

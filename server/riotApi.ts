@@ -211,4 +211,38 @@ export class RiotApiService {
 
     return wins;
   }
+
+  /**
+   * Verify third-party code for account ownership proof
+   * Uses Riot's third-party code API to confirm the user entered the code in their game client
+   * https://developer.riotgames.com/apis#league-of-legends-v4/GET_getThirdPartyCode
+   */
+  async verifyThirdPartyCode(puuid: string, expectedCode: string, region: string = 'na'): Promise<boolean> {
+    const platformEndpoint = PLATFORM_ENDPOINTS[region] || 'na1';
+    const url = `https://${platformEndpoint}.api.riotgames.com/lol/platform/v4/third-party-code/by-puuid/${puuid}`;
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'X-Riot-Token': this.apiKey,
+        },
+      });
+
+      if (response.status === 404) {
+        // Code not set in client yet
+        return false;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to verify code: ${response.status}`);
+      }
+
+      const actualCode = await response.text();
+      // Response is just the plain text code
+      return actualCode.trim().toUpperCase() === expectedCode.trim().toUpperCase();
+    } catch (error) {
+      console.error('Error verifying third-party code:', error);
+      return false;
+    }
+  }
 }
