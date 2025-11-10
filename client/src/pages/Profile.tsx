@@ -3,15 +3,26 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   Trophy, 
   Target, 
   Gamepad2, 
-  TrendingUp
+  TrendingUp,
+  Share2
 } from "lucide-react";
 import Header from "@/components/Header";
 import { ShareButtons } from "@/components/ShareButtons";
 import TrophyCard from "@/components/TrophyCard";
+import ShareableCard from "@/components/ShareableCard";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 interface PublicProfile {
   user: {
@@ -49,6 +60,8 @@ interface PublicProfile {
 
 export default function Profile() {
   const { userId } = useParams<{ userId: string }>();
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState<any>(null);
 
   const { data: profile, isLoading } = useQuery<PublicProfile>({
     queryKey: [`/api/profile/${userId}`],
@@ -171,20 +184,33 @@ export default function Profile() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {profile.achievements.map((achievement, idx) => (
-                <TrophyCard
-                  key={achievement.id}
-                  title={achievement.title}
-                  description={achievement.description || undefined}
-                  gameName={achievement.gameName}
-                  pointsAwarded={achievement.pointsAwarded}
-                  achievedAt={achievement.achievedAt}
-                  rarity={
-                    achievement.pointsAwarded >= 100 ? "legendary" :
-                    achievement.pointsAwarded >= 50 ? "epic" :
-                    achievement.pointsAwarded >= 25 ? "rare" : "common"
-                  }
-                  serialNumber={`#${idx + 1}/${profile.achievements.length}`}
-                />
+                <div key={achievement.id} className="space-y-3">
+                  <TrophyCard
+                    title={achievement.title}
+                    description={achievement.description || undefined}
+                    gameName={achievement.gameName}
+                    pointsAwarded={achievement.pointsAwarded}
+                    achievedAt={achievement.achievedAt}
+                    rarity={
+                      achievement.pointsAwarded >= 100 ? "legendary" :
+                      achievement.pointsAwarded >= 50 ? "epic" :
+                      achievement.pointsAwarded >= 25 ? "rare" : "common"
+                    }
+                    serialNumber={`#${idx + 1}/${profile.achievements.length}`}
+                  />
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      setSelectedAchievement(achievement);
+                      setShareDialogOpen(true);
+                    }}
+                    data-testid={`button-share-achievement-${idx}`}
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share Achievement
+                  </Button>
+                </div>
               ))}
             </div>
           </div>
@@ -234,6 +260,32 @@ export default function Profile() {
           </Card>
         )}
       </main>
+
+      {/* Share Achievement Dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Your Achievement</DialogTitle>
+          </DialogHeader>
+          {selectedAchievement && (
+            <ShareableCard
+              type="achievement"
+              title={selectedAchievement.title}
+              subtitle={selectedAchievement.description || selectedAchievement.gameName}
+              points={selectedAchievement.pointsAwarded}
+              stat1Label="GAME"
+              stat1Value={selectedAchievement.gameName}
+              rarity={
+                selectedAchievement.pointsAwarded >= 100 ? "legendary" :
+                selectedAchievement.pointsAwarded >= 50 ? "epic" :
+                selectedAchievement.pointsAwarded >= 25 ? "rare" : "common"
+              }
+              username={displayName}
+              onShare={() => setShareDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
