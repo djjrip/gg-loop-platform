@@ -5,12 +5,12 @@ import { Link } from "wouter";
 export default function Hero() {
   return (
     <section className="relative w-full min-h-[90vh] flex items-center bg-background overflow-hidden">
-      <div className="absolute inset-0 opacity-5" style={{
+      <div className="absolute inset-0 opacity-20" style={{
         backgroundImage: `
-          linear-gradient(rgba(255, 140, 66, 0.3) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 140, 66, 0.3) 1px, transparent 1px)
+          linear-gradient(rgba(255, 140, 66, 0.5) 2px, transparent 2px),
+          linear-gradient(90deg, rgba(255, 140, 66, 0.5) 2px, transparent 2px)
         `,
-        backgroundSize: '50px 50px',
+        backgroundSize: '40px 40px',
       }} />
       
       <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
@@ -19,7 +19,7 @@ export default function Hero() {
         <div className="max-w-4xl">
           <h1 className="text-7xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter mb-8">
             <span className="block text-foreground">Play.</span>
-            <span className="block text-primary drop-shadow-[0_0_25px_rgba(255,140,66,0.5)]">Earn.</span>
+            <span className="block text-primary drop-shadow-[0_0_50px_rgba(255,140,66,1)] animate-pulse-slow">Earn.</span>
             <span className="block text-foreground">Loop.</span>
           </h1>
 

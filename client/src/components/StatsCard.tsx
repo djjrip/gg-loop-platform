@@ -11,7 +11,7 @@ interface StatsCardProps {
 
 export default function StatsCard({ title, value, icon: Icon, subtitle, trend }: StatsCardProps) {
   return (
-    <Card className="p-6 border-primary/20 hover:border-primary/40 transition-colors hover:shadow-[0_0_15px_rgba(255,140,66,0.15)]" data-testid={`card-stat-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+    <Card className="p-6 border-primary/40 hover:border-primary/80 transition-all hover:shadow-[0_0_30px_rgba(255,140,66,0.4)]" data-testid={`card-stat-${title.toLowerCase().replace(/\s+/g, '-')}`}>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">{title}</p>

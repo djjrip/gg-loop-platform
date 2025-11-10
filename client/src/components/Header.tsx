@@ -62,7 +62,7 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
           {isAuthenticated && user && (
-            <div className="hidden md:flex items-center gap-2 rounded-sm bg-primary/10 px-4 py-2 border border-primary/30 shadow-[0_0_10px_rgba(255,140,66,0.15)]">
+            <div className="hidden md:flex items-center gap-2 rounded-sm bg-primary/20 px-4 py-2 border-2 border-primary/60 shadow-[0_0_20px_rgba(255,140,66,0.5)]">
               <Trophy className="h-4 w-4 text-primary" />
               <span className="font-mono text-sm font-bold text-primary" data-testid="text-points">{user.totalPoints.toLocaleString()}</span>
               <span className="text-xs text-muted-foreground">pts</span>
