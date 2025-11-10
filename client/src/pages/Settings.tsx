@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { User, Save, ExternalLink } from "lucide-react";
+import { User, Save, ExternalLink, Twitch, Unlink, CheckCircle2 } from "lucide-react";
+import { useLocation } from "wouter";
 
 type UserData = {
   id: string;
@@ -14,15 +15,29 @@ type UserData = {
   firstName: string;
   lastName: string;
   email: string;
+  twitchUsername: string | null;
+  twitchConnectedAt: string | null;
 };
 
 export default function Settings() {
   const { toast } = useToast();
   const [username, setUsername] = useState("");
+  const [location] = useLocation();
 
   const { data: user, isLoading } = useQuery<UserData>({
     queryKey: ['/api/auth/user'],
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('twitch') === 'connected') {
+      toast({
+        title: "Twitch connected!",
+        description: "Your Twitch account has been linked successfully.",
+      });
+      window.history.replaceState({}, '', '/settings');
+    }
+  }, [toast]);
 
   const updateUsernameMutation = useMutation({
     mutationFn: async (newUsername: string) => {
@@ -39,6 +54,46 @@ export default function Settings() {
     onError: (error: any) => {
       toast({
         title: "Failed to update username",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const connectTwitchMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/twitch/auth', {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      return data.authUrl;
+    },
+    onSuccess: (authUrl: string) => {
+      window.location.href = authUrl;
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to connect Twitch",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const disconnectTwitchMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/twitch/disconnect", "POST", {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      toast({
+        title: "Twitch disconnected",
+        description: "Your Twitch account has been unlinked.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to disconnect Twitch",
         description: error.message || "Please try again",
         variant: "destructive",
       });
@@ -138,6 +193,75 @@ export default function Settings() {
                 {updateUsernameMutation.isPending ? "Saving..." : "Save Username"}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card data-testid="card-twitch-integration">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Twitch className="h-5 w-5" />
+              Twitch Integration
+            </CardTitle>
+            <CardDescription>
+              Connect your Twitch account to earn points automatically while streaming
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {user?.twitchUsername ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <div className="flex-1">
+                    <p className="font-medium" data-testid="text-connected-twitch">
+                      Connected as @{user.twitchUsername}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Connected {new Date(user.twitchConnectedAt!).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => disconnectTwitchMutation.mutate()}
+                    disabled={disconnectTwitchMutation.isPending}
+                    className="gap-2"
+                    data-testid="button-disconnect-twitch"
+                  >
+                    <Unlink className="h-4 w-4" />
+                    Disconnect
+                  </Button>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium mb-2">Earn points while streaming:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li>5 points per hour of live streaming</li>
+                    <li>Bonus points for viewer milestones</li>
+                    <li>Automatic verification every 10 minutes</li>
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium mb-2">Benefits of connecting Twitch:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li>Earn 5 points per hour of live streaming</li>
+                    <li>Get bonus points for viewer milestones</li>
+                    <li>Automatic verification - no manual reporting needed</li>
+                    <li>Build credibility with verified streaming hours</li>
+                  </ul>
+                </div>
+                <Button
+                  onClick={() => connectTwitchMutation.mutate()}
+                  disabled={connectTwitchMutation.isPending}
+                  className="gap-2"
+                  data-testid="button-connect-twitch"
+                >
+                  <Twitch className="h-4 w-4" />
+                  {connectTwitchMutation.isPending ? "Connecting..." : "Connect Twitch Account"}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
