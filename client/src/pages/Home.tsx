@@ -8,6 +8,7 @@ import RewardsCard from "@/components/RewardsCard";
 import ErrorDisplay from "@/components/ErrorDisplay";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Gamepad2, Award, TrendingUp, Users, Zap } from "lucide-react";
@@ -104,6 +105,26 @@ export default function Home() {
     enabled: isAuthenticated,
   });
 
+  // Fetch recent match submissions (earnings)
+  interface MatchSubmission {
+    id: string;
+    gameId: string;
+    matchType: string;
+    notes: string | null;
+    screenshotUrl: string | null;
+    status: string;
+    pointsAwarded: number | null;
+    submittedAt: string;
+    reviewedAt: string | null;
+    gameName: string;
+    game?: Game;
+  }
+
+  const { data: recentEarnings, isLoading: earningsLoading, error: earningsError } = useQuery<MatchSubmission[]>({
+    queryKey: ["/api/match-submissions"],
+    enabled: isAuthenticated,
+  });
+
   // Mock community feed (as requested to keep this mocked)
   const communityFeed = [
     { username: "ProGamer99", action: "unlocked achievement", game: "Tactical Warfare", details: "Perfect Victory - Won match without losing a round", time: "2m ago", type: "achievement" as const },
@@ -179,6 +200,105 @@ export default function Home() {
             )}
           </div>
         </section>
+
+        {/* Recent Earnings - Show earning activity */}
+        {isAuthenticated && (
+          <section className="scroll-mt-20">
+            <div className="mb-8">
+              <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
+                <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
+                Your Recent Earnings
+              </h2>
+              <p className="text-muted-foreground mt-2 ml-4">Track your verified match wins and points earned</p>
+            </div>
+            
+            <Card className="p-6 border-primary/20">{earningsLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-4 p-4">
+                    <Skeleton className="w-12 h-12 rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <Skeleton className="h-8 w-16" />
+                  </div>
+                ))}
+              </div>
+            ) : earningsError ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Trophy className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>Failed to load earnings. Please try again later.</p>
+              </div>
+            ) : !recentEarnings || recentEarnings.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Trophy className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p className="mb-2">No earnings yet!</p>
+                <p className="text-sm">Report your first win to start earning points.</p>
+                <Button variant="default" asChild className="mt-4" data-testid="button-report-first-win">
+                  <a href="/report-match">Report Win</a>
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  {recentEarnings.slice(0, 5).map((earning) => {
+                    const earnedDate = new Date(earning.submittedAt);
+                    const now = new Date();
+                    const diffMs = now.getTime() - earnedDate.getTime();
+                    const diffMins = Math.floor(diffMs / 60000);
+                    const diffHours = Math.floor(diffMs / 3600000);
+                    const diffDays = Math.floor(diffMs / 86400000);
+                    
+                    let timeAgo = "";
+                    if (diffMins < 1) timeAgo = "Just now";
+                    else if (diffMins < 60) timeAgo = `${diffMins}m ago`;
+                    else if (diffHours < 24) timeAgo = `${diffHours}h ago`;
+                    else timeAgo = `${diffDays}d ago`;
+
+                    return (
+                      <div 
+                        key={earning.id}
+                        className="flex items-center justify-between p-4 rounded-lg bg-primary/5 border border-primary/10 hover-elevate"
+                        data-testid={`earning-${earning.id}`}
+                      >
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/30">
+                            <Trophy className="h-6 w-6 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-semibold">{earning.gameName || earning.game?.title || "Unknown Game"}</span>
+                              <Badge variant="secondary" className="text-xs">
+                                {earning.matchType}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{timeAgo}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-primary font-mono" data-testid={`text-earning-points-${earning.id}`}>
+                            +{earning.pointsAwarded || 0}
+                          </div>
+                          <p className="text-xs text-muted-foreground">points</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {recentEarnings.length > 5 && (
+                  <div className="flex justify-center mt-6">
+                    <Button variant="outline" asChild data-testid="button-view-all-earnings">
+                      <a href="/report-match">View All Matches</a>
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+            </Card>
+          </section>
+        )}
 
         {/* Featured Games */}
         <section id="games">
