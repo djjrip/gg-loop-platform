@@ -15,6 +15,7 @@ import { createWebhookSignatureMiddleware } from "./webhookSecurity";
 import { twitchAPI } from "./lib/twitch";
 import { calculateReferralReward, FREE_TRIAL_DURATION_DAYS } from "./lib/referral";
 import crypto from 'crypto';
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-10-29.clover" })
@@ -43,6 +44,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // HMAC signature validation middleware for gaming webhooks
   const webhookAuth = createWebhookSignatureMiddleware(storage);
+
+  // Object Storage Routes
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(
+        req.path,
+      );
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error generating upload URL:", error);
+      res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  });
 
   app.get('/api/auth/user', async (req: any, res) => {
     try {
@@ -376,10 +405,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/match-submissions', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
-      const { gameId, matchType, notes } = req.body;
+      const { gameId, matchType, notes, screenshotUrl } = req.body;
       
       if (!gameId || !matchType) {
         return res.status(400).json({ message: "Game ID and match type are required" });
+      }
+
+      // Normalize screenshot URL if provided
+      let normalizedScreenshotUrl = null;
+      if (screenshotUrl) {
+        const objectStorageService = new ObjectStorageService();
+        normalizedScreenshotUrl = objectStorageService.normalizeObjectEntityPath(screenshotUrl);
       }
 
       // For now, auto-approve and award points based on match type
@@ -398,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         gameId,
         matchType,
         notes: notes || null,
-        screenshotUrl: null, // File upload will be added later
+        screenshotUrl: normalizedScreenshotUrl,
       });
 
       // Auto-approve and award points
