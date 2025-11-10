@@ -4,15 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Trophy, Zap, Star, Flame } from "lucide-react";
+import { Check, X, Trophy, Zap, Star, Flame, Gift, Sparkles } from "lucide-react";
 import type { Subscription } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
+import { useState } from "react";
 
 export default function SubscriptionPage() {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const [referralCode, setReferralCode] = useState("");
 
   const { data: subscription, isLoading: subLoading } = useQuery<Subscription | null>({
     queryKey: ["/api/subscription/status"],
@@ -21,6 +25,11 @@ export default function SubscriptionPage() {
 
   const { data: pointsData } = useQuery<{ balance: number }>({
     queryKey: ["/api/points/balance"],
+    enabled: isAuthenticated,
+  });
+
+  const { data: userData } = useQuery<{ freeTrial: boolean; freeTrialEndsAt?: string }>({
+    queryKey: ["/api/user"],
     enabled: isAuthenticated,
   });
 
@@ -59,6 +68,30 @@ export default function SubscriptionPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to cancel subscription",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const freeTrialMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/referral/start-trial", { 
+        referralCode: referralCode.trim() || undefined 
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Free Trial Started!",
+        description: "You now have 7 days to explore GG Loop. Start earning points by reporting match wins!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start free trial",
         variant: "destructive",
       });
     },
@@ -238,6 +271,135 @@ export default function SubscriptionPage() {
                     </Button>
                   )}
                 </CardFooter>
+              </Card>
+            )}
+
+            {/* Free Trial Card - Show if authenticated, no subscription, and hasn't used trial */}
+            {isAuthenticated && !hasActiveSubscription && !userData?.freeTrial && (
+              <Card className="mb-8 border-primary/50 bg-gradient-to-br from-primary/10 to-primary/5" data-testid="card-free-trial">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-primary/20">
+                      <Gift className="w-6 h-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="flex items-center gap-2">
+                        Start Your Free Trial
+                        <Badge variant="default" className="animate-pulse">
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          7 Days Free
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription>
+                        Try GG Loop risk-free. No credit card required.
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid md:grid-cols-3 gap-4 mb-4">
+                      <div className="bg-background/50 rounded-lg p-4">
+                        <div className="text-2xl font-bold text-primary mb-1">7 Days</div>
+                        <p className="text-xs text-muted-foreground">Full Access</p>
+                      </div>
+                      <div className="bg-background/50 rounded-lg p-4">
+                        <div className="text-2xl font-bold text-primary mb-1">50 Points</div>
+                        <p className="text-xs text-muted-foreground">Bonus Starter</p>
+                      </div>
+                      <div className="bg-background/50 rounded-lg p-4">
+                        <div className="text-2xl font-bold text-primary mb-1">$0</div>
+                        <p className="text-xs text-muted-foreground">No Card Needed</p>
+                      </div>
+                    </div>
+
+                    <ul className="space-y-2 mb-4">
+                      <li className="flex items-start gap-2">
+                        <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <span className="text-sm">Earn points by reporting match wins</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <span className="text-sm">Access Tier 1 rewards catalog</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <span className="text-sm">Share achievements on social media</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <span className="text-sm">Invite friends and earn referral rewards</span>
+                      </li>
+                    </ul>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="referral-code" className="text-sm">
+                        Have a Referral Code? (Optional)
+                      </Label>
+                      <Input
+                        id="referral-code"
+                        placeholder="Enter code..."
+                        value={referralCode}
+                        onChange={(e) => setReferralCode(e.target.value)}
+                        disabled={freeTrialMutation.isPending}
+                        data-testid="input-referral-code"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Using a referral code gives bonus points to you and your friend!
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+
+                <CardFooter>
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={() => freeTrialMutation.mutate()}
+                    disabled={freeTrialMutation.isPending}
+                    data-testid="button-start-free-trial"
+                  >
+                    {freeTrialMutation.isPending ? "Starting Trial..." : "Start 7-Day Free Trial"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            )}
+
+            {/* Active Free Trial Status - Show if user is on trial */}
+            {isAuthenticated && userData?.freeTrial && userData?.freeTrialEndsAt && (
+              <Card className="mb-8 bg-primary/5 border-primary/20" data-testid="card-trial-active">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        Free Trial Active
+                      </CardTitle>
+                      <CardDescription>
+                        Enjoying GG Loop? Subscribe to keep earning rewards!
+                      </CardDescription>
+                    </div>
+                    <Badge variant="default">
+                      Trial Active
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-background/50 rounded-lg p-4">
+                    <p className="text-sm text-muted-foreground mb-1">Trial Ends On</p>
+                    <p className="text-xl font-bold" data-testid="text-trial-end-date">
+                      {new Date(userData.freeTrialEndsAt).toLocaleDateString('en-US', { 
+                        month: 'long', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Subscribe before your trial ends to keep your points and continue earning rewards!
+                    </p>
+                  </div>
+                </CardContent>
               </Card>
             )}
 

@@ -50,7 +50,7 @@ export default function ShareableCard({
 
   const downloadAsImage = async () => {
     // For now, just copy the share text
-    const text = `🏆 ${title}\n\n${subtitle || ''}\n${points ? `${points} points earned` : ''}\n\nJoin me on GG Loop! #GGLoop #Gaming`;
+    const text = `${title}\n\n${subtitle || ''}\n${points ? `${points} points earned on GG Loop!` : ''}\n\nJoin me on GG Loop! #GGLoop #Gaming`;
     
     try {
       await navigator.clipboard.writeText(text);
@@ -61,7 +61,7 @@ export default function ShareableCard({
   };
 
   const shareToTwitter = () => {
-    const text = `🏆 ${title}\n\n${subtitle || ''}\n${points ? `${points} points on GG Loop!` : ''}\n\n#GGLoop #Gaming #Achievement`;
+    const text = `${title}\n\n${subtitle || ''}\n${points ? `${points} points on GG Loop!` : ''}\n\n#GGLoop #Gaming #Achievement`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
     onShare?.();

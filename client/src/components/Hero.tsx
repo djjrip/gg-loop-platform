@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Play, Trophy, Zap } from "lucide-react";
+import { Trophy, Gift, Users } from "lucide-react";
 import { Link } from "wouter";
+import { Badge } from "@/components/ui/badge";
 
 export default function Hero() {
   return (
@@ -27,9 +28,9 @@ export default function Hero() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16 animate-fade-in">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full mb-8 backdrop-blur-sm">
-              <Zap className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">Live Rewards Platform</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full mb-8 backdrop-blur-sm animate-pulse">
+              <Gift className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">7-Day Free Trial • No Credit Card Required</span>
             </div>
             
             {/* Main headline with staggered animation */}
@@ -40,33 +41,44 @@ export default function Hero() {
               <span className="block text-foreground hover:text-primary transition-colors duration-500">Loop.</span>
             </h1>
 
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-12 font-medium">
-              Turn every match, every achievement, every stream into real rewards. 
-              <span className="text-foreground font-semibold"> $5/month</span> subscription → earn up to 
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8 font-medium">
+              Turn every match into real rewards. Try GG Loop free for 7 days, then just
+              <span className="text-foreground font-semibold"> $5/month</span> to earn up to 
               <span className="text-primary font-semibold"> $45/month</span> in gift cards and gaming gear.
             </p>
+
+            <div className="flex items-center justify-center gap-6 mb-12">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Users className="h-5 w-5 text-primary" />
+                <span>Invite friends, both earn <span className="font-bold text-foreground">bonus points</span></span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Trophy className="h-5 w-5 text-primary" />
+                <span>Share achievements on <span className="font-bold text-foreground">Twitter & TikTok</span></span>
+              </div>
+            </div>
 
             {/* CTA Buttons with subtle hover effects */}
             <div className="flex flex-wrap gap-4 justify-center items-center mb-16">
               <Link href="/subscription">
                 <Button 
                   size="lg" 
-                  className="text-lg font-bold gap-3 px-10 py-7 h-auto shadow-lg hover:shadow-xl transition-all duration-300" 
+                  className="text-lg font-bold gap-3 px-10 py-7 h-auto shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse" 
                   data-testid="button-get-started"
                 >
-                  <Play className="h-6 w-6" fill="currentColor" />
-                  Start Earning
+                  <Gift className="h-6 w-6" />
+                  Start Free Trial
                 </Button>
               </Link>
-              <Link href="/profile/demo">
+              <Link href="/referrals">
                 <Button 
                   size="lg" 
                   variant="outline" 
                   className="text-lg font-bold px-10 py-7 h-auto backdrop-blur-sm hover:bg-card/50 border-2 transition-all duration-300" 
-                  data-testid="button-view-trophy-case"
+                  data-testid="button-referral-program"
                 >
-                  <Trophy className="h-5 w-5" />
-                  View Trophy Case
+                  <Users className="h-5 w-5" />
+                  Referral Program
                 </Button>
               </Link>
             </div>
