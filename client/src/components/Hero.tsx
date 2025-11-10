@@ -34,38 +34,36 @@ export default function Hero() {
       <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
       
       <div className="relative container mx-auto max-w-7xl px-6 py-20">
-        <div className="max-w-4xl">
-          <h1 className="text-7xl md:text-8xl lg:text-9xl font-black leading-none tracking-tighter mb-8">
-            <span className="block text-foreground">Play.</span>
-            <span className="block text-primary drop-shadow-[0_0_50px_rgba(255,140,66,1)] animate-pulse-slow">Earn.</span>
+        <div className="max-w-5xl mx-auto text-center">
+          <h1 className="text-8xl md:text-9xl font-black leading-none tracking-tighter mb-12">
+            <span className="block text-foreground mb-4">Play.</span>
+            <span className="block text-primary drop-shadow-[0_0_50px_rgba(255,140,66,1)] animate-pulse-slow mb-4">Earn.</span>
             <span className="block text-foreground">Loop.</span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl leading-relaxed mb-10">
+          <p className="text-2xl md:text-3xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-12 font-medium">
             Turn your gaming into rewards. Every match played, every win earned—real value for real skill.
           </p>
 
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-6 justify-center items-center mb-8">
             <Link href="/subscription">
-              <Button size="lg" className="text-base font-semibold gap-2" data-testid="button-get-started">
-                <Play className="h-5 w-5" />
+              <Button size="lg" className="text-lg font-bold gap-2 px-8 py-6 h-auto" data-testid="button-get-started">
+                <Play className="h-6 w-6" />
                 Get Started
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="text-base font-semibold" data-testid="button-learn-more">
+            <Button size="lg" variant="outline" className="text-lg font-bold px-8 py-6 h-auto" data-testid="button-learn-more">
               Learn More
             </Button>
           </div>
 
-          <div className="mt-12 flex items-center gap-6 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                <div className="w-8 h-8 rounded-full bg-primary/20 border-2 border-background" />
-                <div className="w-8 h-8 rounded-full bg-primary/30 border-2 border-background" />
-                <div className="w-8 h-8 rounded-full bg-primary/40 border-2 border-background" />
-              </div>
-              <span>Join 2,400+ streamers</span>
+          <div className="mt-16 flex items-center justify-center gap-3 text-base text-muted-foreground">
+            <div className="flex -space-x-3">
+              <div className="w-10 h-10 rounded-full bg-primary/20 border-2 border-background" />
+              <div className="w-10 h-10 rounded-full bg-primary/30 border-2 border-background" />
+              <div className="w-10 h-10 rounded-full bg-primary/40 border-2 border-background" />
             </div>
+            <span className="font-medium">Join 2,400+ streamers</span>
           </div>
         </div>
       </div>
