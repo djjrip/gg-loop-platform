@@ -221,10 +221,11 @@ export const matchSubmissions = pgTable("match_submissions", {
   reviewNotes: text("review_notes"),
   submittedAt: timestamp("submitted_at").notNull().defaultNow(),
   reviewedAt: timestamp("reviewed_at"),
-}, (table) => [
-  index("idx_match_submissions_user").on(table.userId),
-  index("idx_match_submissions_status").on(table.status),
-]);
+}, (table) => ({
+  idxMatchSubmissionsUser: index("idx_match_submissions_user").on(table.userId),
+  idxMatchSubmissionsStatus: index("idx_match_submissions_status").on(table.status),
+  uniqUserRiotMatch: sql`UNIQUE(user_id, riot_match_id) WHERE riot_match_id IS NOT NULL`,
+}));
 
 export const streamingSessions = pgTable("streaming_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

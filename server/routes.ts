@@ -314,6 +314,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Link Riot account for LoL/Valorant verification
+  app.post('/api/riot/link-account', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { gameId, gameName, tagLine, region = 'na' } = req.body;
+      
+      if (!gameId || !gameName || !tagLine) {
+        return res.status(400).json({ 
+          message: "Game ID, Riot ID (GameName#Tag), and region are required" 
+        });
+      }
+
+      // Verify account exists via Riot API
+      const { RiotApiService } = await import('./riotApi');
+      const riotApi = new RiotApiService();
+      
+      const riotAccount = await riotApi.verifyAccount(gameName, tagLine, region);
+      
+      // Store PUUID and account info
+      const linkedAccount = await storage.linkRiotAccount(userId, gameId, {
+        puuid: riotAccount.puuid,
+        gameName: riotAccount.gameName,
+        tagLine: riotAccount.tagLine,
+        region,
+      });
+
+      res.json({ 
+        success: true, 
+        account: {
+          gameName: riotAccount.gameName,
+          tagLine: riotAccount.tagLine,
+          region,
+          verified: true,
+        }
+      });
+    } catch (error: any) {
+      console.error("Error linking Riot account:", error);
+      res.status(400).json({ 
+        message: error.message || "Failed to link Riot account. Check your Riot ID format (GameName#Tag)" 
+      });
+    }
+  });
+
+  // Get user's linked Riot account
+  app.get('/api/riot/account/:gameId', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { gameId } = req.params;
+      
+      const riotAccount = await storage.getRiotAccount(userId, gameId);
+      
+      if (!riotAccount) {
+        return res.status(404).json({ message: "No Riot account linked for this game" });
+      }
+
+      res.json({
+        gameName: riotAccount.riotGameName,
+        tagLine: riotAccount.riotTagLine,
+        region: riotAccount.riotRegion,
+        verified: !!riotAccount.verifiedAt,
+      });
+    } catch (error: any) {
+      console.error("Error fetching Riot account:", error);
+      res.status(500).json({ message: "Failed to fetch Riot account" });
+    }
+  });
+
   app.get('/api/leaderboard/:gameId/:period', async (req, res) => {
     try {
       const { gameId, period } = req.params;
@@ -490,8 +557,6 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
         normalizedScreenshotUrl = objectStorageService.normalizeObjectEntityPath(screenshotUrl);
       }
 
-      // For now, auto-approve and award points based on match type
-      // In production, this would require manual review
       const pointsMap: Record<string, number> = {
         'win': 10,
         'ranked': 15,
@@ -500,7 +565,7 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
       
       const pointsAwarded = pointsMap[matchType] || 10;
       
-      // Create submission (auto-approved for MVP)
+      // Create submission first (pending verification)
       const submission = await storage.createMatchSubmission({
         userId,
         gameId,
@@ -509,24 +574,77 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
         screenshotUrl: normalizedScreenshotUrl,
       });
 
-      // Auto-approve and award points
-      await storage.updateMatchSubmission(submission.id, {
-        status: 'approved',
-        pointsAwarded,
-        reviewedAt: new Date(),
-      });
+      // Check if user has linked Riot account for LoL/Valorant
+      const riotAccount = await storage.getRiotAccount(userId, gameId);
+      
+      if (riotAccount && riotAccount.riotPuuid) {
+        // AUTO-VERIFY via Riot API
+        try {
+          const { RiotApiService } = await import('./riotApi');
+          const riotApi = new RiotApiService();
+          
+          // Check for recent wins in last 24 hours
+          const recentWins = await riotApi.getRecentWins(
+            riotAccount.riotPuuid, 
+            riotAccount.riotRegion || 'na',
+            24
+          );
 
-      // Award points using points engine
-      await pointsEngine.awardPoints(
-        userId,
-        pointsAwarded,
-        'MATCH_WIN',
-        submission.id,
-        'match_submission',
-        `Match win: ${matchType}`
-      );
+          if (recentWins.length > 0) {
+            // VERIFIED WIN - Auto-approve and award points
+            await storage.updateMatchSubmission(submission.id, {
+              status: 'approved',
+              pointsAwarded,
+              reviewedAt: new Date(),
+            });
 
-      res.json({ success: true, pointsAwarded });
+            await pointsEngine.awardPoints(
+              userId,
+              pointsAwarded,
+              'MATCH_WIN',
+              submission.id,
+              'match_submission',
+              `Verified match win: ${matchType}`
+            );
+
+            return res.json({ 
+              success: true, 
+              pointsAwarded,
+              verified: true,
+              message: 'Match verified via Riot API!'
+            });
+          } else {
+            // NO RECENT WINS FOUND
+            await storage.updateMatchSubmission(submission.id, {
+              status: 'rejected',
+              reviewedAt: new Date(),
+            });
+
+            return res.status(400).json({ 
+              message: 'No recent wins found in your match history. Play a match and try again!' 
+            });
+          }
+        } catch (apiError: any) {
+          console.error("Riot API verification error:", apiError);
+          // Fall back to pending manual review
+          return res.json({ 
+            success: true, 
+            pointsAwarded: 0,
+            verified: false,
+            message: 'Submission pending manual review (API error)'
+          });
+        }
+      } else {
+        // NO RIOT ACCOUNT LINKED - Reject submission
+        await storage.updateMatchSubmission(submission.id, {
+          status: 'rejected',
+          reviewedAt: new Date(),
+        });
+
+        return res.status(400).json({ 
+          message: 'Please link your Riot account first to auto-verify wins and earn points!' 
+        });
+      }
     } catch (error: any) {
       console.error("Error creating match submission:", error);
       res.status(500).json({ message: error.message || "Failed to submit match" });
