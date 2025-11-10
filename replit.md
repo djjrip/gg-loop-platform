@@ -40,6 +40,8 @@ The backend uses Express.js with TypeScript. PostgreSQL (Neon) with Drizzle ORM 
 *   **Trophy Case (Public Profiles)**: ✅ LIVE - Premium collectible display system with NBA Top Shot aesthetic. Features TrophyCard component with rarity tiers (Common/Rare/Epic/Legendary), serial numbers, achievement dates, and responsive grid layout. Profile page at `/profile/:username` or `/profile/:userId` shows user stats, trophy collection, and gaming activity.
 *   **Manual Match Reporting**: ✅ LIVE - Self-service match win submission system at `/report-match`. Users select game, match type (Competitive/Ranked/Tournament), add notes, and receive instant point awards. Implements JSON API, auto-approval flow, real-time cache invalidation for immediate header point updates. Includes submission history with status tracking. Database table: `match_submissions`.
 *   **Username System**: ✅ LIVE - Custom username support for better profile URLs. Users can be accessed via `/profile/username` in addition to UUID. Database schema includes `username` field with unique constraint.
+*   **Founder's Badge**: ✅ LIVE - Automatic founder status for first 100 users. Race-safe assignment via PostgreSQL advisory locks (lock ID 1001), sequential numbering (#1-#100), +500 bonus points per founder. UNIQUE index prevents duplicates. Visible on profiles with gold gradient badge. Database fields: `is_founder`, `founder_number`.
+*   **Recent Earnings**: ✅ LIVE - Homepage activity feed showing last 5 match wins across all users with game name, points earned, and relative timestamps ("2 hours ago"). Updates in real-time as new matches are reported.
 
 ### Planned Features (Next Up)
 *   **Screenshot Upload for Match Wins**: Add image upload capability to match submission flow with storage integration
@@ -51,7 +53,17 @@ The backend uses Express.js with TypeScript. PostgreSQL (Neon) with Drizzle ORM 
 *   **Real-Time Notifications**: WebSocket integration for instant point updates and achievement notifications
 
 ### System Design Choices
-The database schema includes core tables for users (with username support), games, subscriptions, point transactions, rewards, achievements, leaderboard entries, and match submissions, with appropriate foreign keys and unique constraints for data integrity and performance. Key implementation details include transactional safety for all point operations, idempotency for webhook events and point awards, comprehensive error handling, and real-time cache invalidation for instant UI updates.
+The database schema includes core tables for users (with username and founder support), games, subscriptions, point transactions, rewards, achievements, leaderboard entries, and match submissions, with appropriate foreign keys and unique constraints for data integrity and performance. Key implementation details include transactional safety for all point operations (including founder assignment with advisory locks), idempotency for webhook events and point awards, comprehensive error handling, and real-time cache invalidation for instant UI updates.
+
+### Documentation Files
+*   **KICKSTARTER_STRATEGY.md**: Complete campaign guide with budget ($25K-$50K), reward tiers ($10-$250), marketing timeline, and launch strategy
+*   **DISCORD_PITCH.md**: Step-by-step guide for pitching to Riot Games Developer Relations community
+
+### Recent Changes (November 10, 2025)
+*   **Recent Earnings Feed**: Homepage now displays real-time activity feed showing last 5 match wins across all users with game name, points earned, and time-ago display
+*   **Founder's Badge System**: ✅ LIVE & PRODUCTION-READY - First 100 users automatically receive founder status with sequential badge numbers (#1-#100) and +500 bonus points. Features race-safe assignment using PostgreSQL advisory locks (pg_advisory_xact_lock), transactional integrity, and UNIQUE index safeguard. All 15 existing users awarded founder status (#1-#15)
+*   **Kickstarter Strategy**: Created comprehensive campaign documentation (KICKSTARTER_STRATEGY.md) with $25K-$50K goal, reward tiers, marketing timeline, and February 2025 launch plan
+*   **Discord Pitch Guide**: Created step-by-step guide (DISCORD_PITCH.md) for applying to Riot Games Developer Relations community with prototype requirements and messaging strategy
 
 ### Recent Changes (November 9, 2025)
 *   **Trophy Case UI**: Complete redesign with NBA Top Shot-inspired collectible cards, rarity tier system, serial numbers, and premium aesthetic
