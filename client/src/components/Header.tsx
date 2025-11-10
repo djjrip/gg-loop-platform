@@ -35,9 +35,9 @@ export default function Header() {
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 hover-elevate px-2 py-1 rounded-md" data-testid="link-home">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-7 w-7 text-primary" />
-              <span className="font-bold text-xl tracking-tight">GG LOOP</span>
+            <div className="flex items-center gap-3">
+              <Trophy className="h-8 w-8 text-primary" />
+              <span className="font-bold text-3xl tracking-tight">GG LOOP</span>
             </div>
           </Link>
           
