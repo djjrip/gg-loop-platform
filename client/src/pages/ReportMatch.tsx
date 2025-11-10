@@ -48,10 +48,8 @@ export default function ReportMatch() {
 
   const submitMutation = useMutation({
     mutationFn: async (data: { gameId: string; matchType: string; notes: string; screenshotUrl?: string }) => {
-      return await apiRequest("/api/match-submissions", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      const res = await apiRequest("POST", "/api/match-submissions", data);
+      return await res.json();
     },
     onSuccess: (data: any) => {
       toast({
@@ -118,9 +116,8 @@ export default function ReportMatch() {
     if (screenshot) {
       setIsUploading(true);
       try {
-        const uploadData: any = await apiRequest("/api/objects/upload", {
-          method: "POST",
-        });
+        const uploadRes = await apiRequest("POST", "/api/objects/upload");
+        const uploadData: any = await uploadRes.json();
 
         const uploadResponse = await fetch(uploadData.uploadURL, {
           method: "PUT",
