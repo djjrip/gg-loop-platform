@@ -27,6 +27,8 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string): Promise<User>;
   updateUsername(userId: string, username: string): Promise<User>;
+  connectTwitchAccount(oidcSub: string, twitchData: { twitchId: string; twitchUsername: string; accessToken: string; refreshToken: string }): Promise<User>;
+  disconnectTwitchAccount(userId: string): Promise<User>;
   
   getAllGames(): Promise<Game[]>;
   getGame(id: string): Promise<Game | undefined>;
@@ -121,6 +123,38 @@ export class DbStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({ username, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async connectTwitchAccount(oidcSub: string, twitchData: { twitchId: string; twitchUsername: string; accessToken: string; refreshToken: string }): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        twitchId: twitchData.twitchId,
+        twitchUsername: twitchData.twitchUsername,
+        twitchAccessToken: twitchData.accessToken,
+        twitchRefreshToken: twitchData.refreshToken,
+        twitchConnectedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.oidcSub, oidcSub))
+      .returning();
+    return user;
+  }
+
+  async disconnectTwitchAccount(userId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        twitchId: null,
+        twitchUsername: null,
+        twitchAccessToken: null,
+        twitchRefreshToken: null,
+        twitchConnectedAt: null,
+        updatedAt: new Date(),
+      })
       .where(eq(users.id, userId))
       .returning();
     return user;

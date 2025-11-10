@@ -11,6 +11,8 @@ import { z } from "zod";
 import Stripe from "stripe";
 import { pointsEngine } from "./pointsEngine";
 import { createWebhookSignatureMiddleware } from "./webhookSecurity";
+import { twitchAPI } from "./lib/twitch";
+import crypto from 'crypto';
 
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-10-29.clover" })
@@ -51,6 +53,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Twitch OAuth - Initiate authorization
+  app.get('/api/twitch/auth', isAuthenticated, (req: any, res) => {
+    try {
+      const state = crypto.randomBytes(16).toString('hex');
+      req.session.twitchState = state;
+      
+      const redirectUri = `${process.env.REPL_ID ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : 'http://localhost:5000'}/api/twitch/callback`;
+      const authUrl = twitchAPI.getAuthorizationUrl(redirectUri, state);
+      
+      res.json({ authUrl });
+    } catch (error) {
+      console.error('Error initiating Twitch auth:', error);
+      res.status(500).json({ message: 'Failed to initiate Twitch authorization' });
+    }
+  });
+
+  // Twitch OAuth - Handle callback
+  app.get('/api/twitch/callback', isAuthenticated, async (req: any, res) => {
+    try {
+      const { code, state } = req.query;
+      
+      if (!code || !state || state !== req.session.twitchState) {
+        return res.redirect('/?error=invalid_twitch_auth');
+      }
+      
+      delete req.session.twitchState;
+      
+      const redirectUri = `${process.env.REPL_ID ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : 'http://localhost:5000'}/api/twitch/callback`;
+      const tokens = await twitchAPI.exchangeCodeForTokens(code as string, redirectUri);
+      const twitchUser = await twitchAPI.getUserInfo(twitchAPI.encryptToken(tokens.access_token));
+      
+      const oidcSub = req.user.claims.sub;
+      await storage.connectTwitchAccount(oidcSub, {
+        twitchId: twitchUser.id,
+        twitchUsername: twitchUser.login,
+        accessToken: twitchAPI.encryptToken(tokens.access_token),
+        refreshToken: twitchAPI.encryptToken(tokens.refresh_token),
+      });
+      
+      res.redirect('/settings?twitch=connected');
+    } catch (error) {
+      console.error('Error handling Twitch callback:', error);
+      res.redirect('/?error=twitch_connection_failed');
+    }
+  });
+
+  // Twitch - Disconnect account
+  app.post('/api/twitch/disconnect', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+    try {
+      const user = req.dbUser;
+      await storage.disconnectTwitchAccount(user.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error disconnecting Twitch:', error);
+      res.status(500).json({ message: 'Failed to disconnect Twitch account' });
     }
   });
 

@@ -25,6 +25,11 @@ export const users = pgTable("users", {
   gamesConnected: integer("games_connected").notNull().default(0),
   stripeCustomerId: varchar("stripe_customer_id").unique(),
   stripeSubscriptionId: varchar("stripe_subscription_id").unique(),
+  twitchId: varchar("twitch_id").unique(),
+  twitchUsername: varchar("twitch_username"),
+  twitchAccessToken: text("twitch_access_token"),
+  twitchRefreshToken: text("twitch_refresh_token"),
+  twitchConnectedAt: timestamp("twitch_connected_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -190,8 +195,27 @@ export const matchSubmissions = pgTable("match_submissions", {
   index("idx_match_submissions_status").on(table.status),
 ]);
 
-export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, createdAt: true, updatedAt: true });
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, createdAt: true, updatedAt: true });
+export const streamingSessions = pgTable("streaming_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  gameId: varchar("game_id").references(() => games.id),
+  gameName: text("game_name"),
+  streamStartedAt: timestamp("stream_started_at").notNull(),
+  streamEndedAt: timestamp("stream_ended_at"),
+  durationMinutes: integer("duration_minutes"),
+  viewerCount: integer("viewer_count"),
+  pointsAwarded: integer("points_awarded").default(0),
+  twitchStreamId: varchar("twitch_stream_id"),
+  status: varchar("status").notNull().default("active"),
+  lastCheckedAt: timestamp("last_checked_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_streaming_sessions_user").on(table.userId),
+  index("idx_streaming_sessions_status").on(table.status),
+]);
+
+export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, createdAt: true, updatedAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, createdAt: true, updatedAt: true });
 export const insertGameSchema = createInsertSchema(games).omit({ id: true, isActive: true });
 export const insertUserGameSchema = createInsertSchema(userGames).omit({ id: true, connectedAt: true });
 export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntries).omit({ id: true, updatedAt: true });
@@ -204,6 +228,7 @@ export const insertSubscriptionEventSchema = createInsertSchema(subscriptionEven
 export const insertApiPartnerSchema = createInsertSchema(apiPartners).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertGamingEventSchema = createInsertSchema(gamingEvents).omit({ id: true, createdAt: true, status: true, retryCount: true, processedAt: true });
 export const insertMatchSubmissionSchema = createInsertSchema(matchSubmissions).omit({ id: true, submittedAt: true, status: true, reviewedAt: true, reviewedBy: true, reviewNotes: true, pointsAwarded: true });
+export const insertStreamingSessionSchema = createInsertSchema(streamingSessions).omit({ id: true, createdAt: true, status: true, lastCheckedAt: true, pointsAwarded: true });
 
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -245,6 +270,9 @@ export type GamingEvent = typeof gamingEvents.$inferSelect;
 
 export type InsertMatchSubmission = z.infer<typeof insertMatchSubmissionSchema>;
 export type MatchSubmission = typeof matchSubmissions.$inferSelect;
+
+export type InsertStreamingSession = z.infer<typeof insertStreamingSessionSchema>;
+export type StreamingSession = typeof streamingSessions.$inferSelect;
 
 export const gamingWebhookBaseSchema = z.object({
   apiKey: z.string().min(1, "API key is required"),
