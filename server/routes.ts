@@ -5,13 +5,15 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
   insertAchievementSchema, insertUserRewardSchema,
-  matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema
+  matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
+  insertReferralSchema
 } from "@shared/schema";
 import { z } from "zod";
 import Stripe from "stripe";
 import { pointsEngine } from "./pointsEngine";
 import { createWebhookSignatureMiddleware } from "./webhookSecurity";
 import { twitchAPI } from "./lib/twitch";
+import { calculateReferralReward, FREE_TRIAL_DURATION_DAYS } from "./lib/referral";
 import crypto from 'crypto';
 
 const stripe = process.env.STRIPE_SECRET_KEY 
@@ -588,6 +590,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
             eventData: event.data.object as any
           });
 
+          // Complete referrals when user subscribes
+          if (subscription.status === 'active') {
+            const user = await storage.getUser(userId);
+            if (user?.referredBy) {
+              const referral = await storage.getReferralByUsers(user.referredBy, userId);
+              if (referral && referral.status === 'pending') {
+                const allReferrals = await storage.getReferralsByReferrer(user.referredBy);
+                const completedCount = allReferrals.filter(r => r.status === 'completed').length + 1;
+                
+                const { tier, totalPoints } = calculateReferralReward(completedCount);
+                const previousReward = calculateReferralReward(completedCount - 1);
+                const pointsForThisReferral = totalPoints - previousReward.totalPoints;
+
+                await pointsEngine.awardPoints(
+                  user.referredBy,
+                  pointsForThisReferral,
+                  "REFERRAL",
+                  referral.id,
+                  "referral",
+                  `Referral bonus - ${user.username || 'user'} subscribed`
+                );
+
+                await storage.updateReferral(referral.id, {
+                  status: 'completed',
+                  pointsAwarded: pointsForThisReferral,
+                  tier: tier?.minReferrals || 0,
+                  completionReason: 'subscription_started',
+                  completedAt: new Date(),
+                });
+              }
+            }
+          }
+
           break;
         }
 
@@ -955,6 +990,157 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error processing tournament placement:", error);
       res.status(500).json({ message: error.message || "Failed to process tournament placement" });
+    }
+  });
+
+  // Referral System Routes
+  app.post('/api/referrals/start-trial', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { referralCode } = req.body;
+
+      // Check if user already has trial or subscription
+      if (req.dbUser.freeTrialStartedAt) {
+        return res.status(400).json({ message: "You've already started a free trial" });
+      }
+
+      const subscription = await storage.getSubscription(userId);
+      if (subscription && subscription.status === "active") {
+        return res.status(400).json({ message: "You already have an active subscription" });
+      }
+
+      // Start free trial
+      const updatedUser = await storage.startFreeTrial(userId);
+
+      // If user was referred, create referral record
+      if (referralCode && referralCode.trim()) {
+        const referrer = await storage.getUserByReferralCode(referralCode);
+        if (referrer && referrer.id !== userId) {
+          // Check if referral already exists
+          const existingReferral = await storage.getReferralByUsers(referrer.id, userId);
+          if (!existingReferral) {
+            await storage.createReferral({
+              referrerId: referrer.id,
+              referredUserId: userId,
+              activatedAt: new Date(),
+            });
+          }
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        trialEndsAt: updatedUser.freeTrialEndsAt,
+        message: `Welcome! Your ${FREE_TRIAL_DURATION_DAYS}-day trial has started.`
+      });
+    } catch (error: any) {
+      console.error("Error starting trial:", error);
+      res.status(500).json({ message: error.message || "Failed to start trial" });
+    }
+  });
+
+  app.get('/api/referrals/my-stats', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      
+      const referrals = await storage.getReferralsByReferrer(userId);
+      const completedCount = referrals.filter(r => r.status === 'completed').length;
+      const pendingCount = referrals.filter(r => r.status === 'pending').length;
+      
+      const { tier, totalPoints } = calculateReferralReward(completedCount);
+
+      res.json({
+        referralCode: req.dbUser.referralCode,
+        totalReferrals: referrals.length,
+        completedReferrals: completedCount,
+        pendingReferrals: pendingCount,
+        currentTier: tier,
+        totalPointsEarned: totalPoints,
+        referrals: referrals.map(r => ({
+          id: r.id,
+          status: r.status,
+          username: r.referredUser.username || 'Anonymous',
+          createdAt: r.createdAt,
+          completedAt: r.completedAt,
+          pointsAwarded: r.pointsAwarded,
+        })),
+      });
+    } catch (error: any) {
+      console.error("Error fetching referral stats:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch referral stats" });
+    }
+  });
+
+  app.get('/api/referrals/leaderboard', async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const leaderboard = await storage.getReferralLeaderboard(limit);
+      
+      res.json({
+        leaderboard: leaderboard.map((entry, index) => ({
+          rank: index + 1,
+          username: entry.user.username || 'Anonymous',
+          referralCount: entry.referralCount,
+          totalPoints: entry.totalPoints,
+        })),
+      });
+    } catch (error: any) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch leaderboard" });
+    }
+  });
+
+  // Webhook to complete referrals when user subscribes
+  app.post('/api/referrals/complete/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Find all pending referrals for this user
+      const user = await storage.getUser(userId);
+      if (!user || !user.referredBy) {
+        return res.json({ message: "No referrals to complete" });
+      }
+
+      const referral = await storage.getReferralByUsers(user.referredBy, userId);
+      if (!referral || referral.status !== 'pending') {
+        return res.json({ message: "Referral already completed or not found" });
+      }
+
+      // Get referrer's total completed referrals
+      const allReferrals = await storage.getReferralsByReferrer(user.referredBy);
+      const completedCount = allReferrals.filter(r => r.status === 'completed').length + 1; // +1 for this new completion
+      
+      const { tier, totalPoints } = calculateReferralReward(completedCount);
+      const previousReward = calculateReferralReward(completedCount - 1);
+      const pointsForThisReferral = totalPoints - previousReward.totalPoints;
+
+      // Award points to referrer
+      const transaction = await pointsEngine.awardPoints(
+        user.referredBy,
+        pointsForThisReferral,
+        "REFERRAL",
+        referral.id,
+        "referral",
+        `Referral bonus - ${user.username || 'user'} subscribed`
+      );
+
+      // Update referral status
+      await storage.updateReferral(referral.id, {
+        status: 'completed',
+        pointsAwarded: pointsForThisReferral,
+        tier: tier?.minReferrals || 0,
+        completionReason: 'subscription_started',
+        completedAt: new Date(),
+      });
+
+      res.json({ 
+        success: true, 
+        pointsAwarded: pointsForThisReferral,
+        message: "Referral completed successfully"
+      });
+    } catch (error: any) {
+      console.error("Error completing referral:", error);
+      res.status(500).json({ message: error.message || "Failed to complete referral" });
     }
   });
 
