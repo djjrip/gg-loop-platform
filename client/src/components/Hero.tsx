@@ -63,7 +63,7 @@ export default function Hero() {
               <Link href="/subscription">
                 <Button 
                   size="lg" 
-                  className="text-lg font-bold gap-3 px-10 py-7 h-auto shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse" 
+                  className="text-lg font-bold gap-3 px-10 py-7 h-auto shadow-lg hover:shadow-xl transition-all duration-300" 
                   data-testid="button-get-started"
                 >
                   <Gift className="h-6 w-6" />
