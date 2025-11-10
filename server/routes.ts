@@ -360,6 +360,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const userReward = await storage.redeemReward(validated);
+      
+      // IMPORTANT: Notification for fulfillment
+      console.log(`
+🎁 REWARD REDEMPTION ALERT 🎁
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+User: ${req.dbUser.email} (${req.dbUser.firstName || 'Unknown'})
+Reward: ${reward.title}
+Points Spent: ${reward.pointsCost}
+Real Value: $${reward.realValue}
+Fulfillment Type: ${reward.fulfillmentType}
+Time: ${new Date().toLocaleString()}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
+      `);
+      
+      // TODO: Add email notification - see Replit docs for email integration
+      
       res.json(userReward);
     } catch (error: any) {
       console.error("Error redeeming reward:", error);
