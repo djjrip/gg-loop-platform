@@ -126,13 +126,57 @@ export default function Home() {
       <Hero />
 
       <main className="container mx-auto max-w-7xl px-4 py-16 space-y-24">
-        {/* Stats Overview */}
-        <section>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard title="Total Points" value="12,450" icon={Trophy} subtitle="All-time earnings" trend="+15% this week" />
-            <StatsCard title="Games Played" value="156" icon={Gamepad2} subtitle="Across all platforms" />
-            <StatsCard title="Rank" value="#247" icon={TrendingUp} subtitle="Global ranking" trend="↑ 23 positions" />
-            <StatsCard title="Win Rate" value="68%" icon={Award} subtitle="Last 30 days" />
+        {/* REWARDS CATALOG - PRIORITY #1 */}
+        <section id="rewards" className="scroll-mt-20">
+          <div className="mb-8 text-center">
+            <h2 className="text-5xl font-bold font-heading tracking-tight flex items-center justify-center gap-3">
+              <span className="w-1 h-10 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
+              Earn Real Rewards
+            </h2>
+            <p className="text-muted-foreground mt-3 text-lg max-w-2xl mx-auto">
+              Turn your gaming skills into gift cards, subscriptions, and exclusive perks. Start earning today.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {rewardsLoading ? (
+              <>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Card key={i} className="p-6">
+                    <Skeleton className="h-48 w-full" />
+                  </Card>
+                ))}
+              </>
+            ) : rewardsError ? (
+              <div className="col-span-full">
+                <ErrorDisplay 
+                  message="Failed to load rewards. Please try again." 
+                  onRetry={() => refetchRewards()} 
+                />
+              </div>
+            ) : rewards && rewards.length > 0 ? (
+              rewards.slice(0, 9).map((reward) => {
+                const isClaimed = userRewards?.some(ur => ur.rewardId === reward.id) || false;
+                return (
+                  <RewardsCard
+                    key={reward.id}
+                    id={reward.id}
+                    title={reward.title}
+                    description={reward.description || ""}
+                    points={reward.pointsCost}
+                    isUnlocked={user ? user.totalPoints >= reward.pointsCost : false}
+                    isClaimed={isClaimed}
+                    category={reward.category}
+                    onClaim={handleClaimReward}
+                    isClaimLoading={claimingRewardId === reward.id}
+                  />
+                );
+              })
+            ) : (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                No rewards available at the moment.
+              </div>
+            )}
           </div>
         </section>
 
@@ -260,92 +304,25 @@ export default function Home() {
           </Card>
         </section>
 
-        {/* Community & Rewards Grid */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Community Feed */}
-          <div id="community">
-            <div className="mb-8">
-              <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
-                <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
-                Community Feed
-              </h2>
-              <p className="text-muted-foreground mt-2 ml-4">Recent achievements and highlights</p>
-            </div>
-            
-            <div className="space-y-4">
-              {communityFeed.map((item, idx) => (
-                <CommunityFeedItem key={idx} {...item} />
-              ))}
-            </div>
-            
-            <Button variant="outline" className="w-full mt-6" data-testid="button-load-more-feed">
-              Load More
-            </Button>
+        {/* Community Feed */}
+        <section id="community">
+          <div className="mb-8">
+            <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
+              <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
+              Community Feed
+            </h2>
+            <p className="text-muted-foreground mt-2 ml-4">Recent achievements and highlights</p>
           </div>
-
-          {/* Rewards */}
-          <div id="rewards">
-            <div className="mb-8">
-              <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
-                <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
-                Rewards Catalog
-              </h2>
-              <p className="text-muted-foreground mt-2 ml-4">Redeem your points for amazing prizes</p>
-            </div>
-            
-            <div className="space-y-4">
-              {rewardsLoading ? (
-                <>
-                  {[1, 2, 3, 4].map((i) => (
-                    <Card key={i} className="p-6">
-                      <div className="space-y-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="space-y-2 flex-1">
-                            <Skeleton className="h-5 w-40" />
-                            <Skeleton className="h-4 w-full" />
-                          </div>
-                          <Skeleton className="h-6 w-16 rounded-full" />
-                        </div>
-                        <div className="flex items-center justify-between pt-4">
-                          <Skeleton className="h-8 w-24" />
-                          <Skeleton className="h-8 w-20 rounded-md" />
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </>
-              ) : rewardsError ? (
-                <ErrorDisplay 
-                  message="Failed to load rewards. Please try again." 
-                  onRetry={() => refetchRewards()} 
-                />
-              ) : rewards && rewards.length > 0 ? (
-                rewards.slice(0, 4).map((reward) => {
-                  const isClaimed = userRewards?.some(ur => ur.rewardId === reward.id) || false;
-                  return (
-                    <RewardsCard
-                      key={reward.id}
-                      id={reward.id}
-                      title={reward.title}
-                      description={reward.description || ""}
-                      points={reward.pointsCost}
-                      isUnlocked={user ? user.totalPoints >= reward.pointsCost : false}
-                      isClaimed={isClaimed}
-                      category={reward.category}
-                      onClaim={handleClaimReward}
-                      isClaimLoading={claimingRewardId === reward.id}
-                    />
-                  );
-                })
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  No rewards available at the moment.
-                </div>
-              )}
-            </div>
-            
-            <Button variant="outline" className="w-full mt-6" data-testid="button-view-all-rewards">
-              View All Rewards
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {communityFeed.map((item, idx) => (
+              <CommunityFeedItem key={idx} {...item} />
+            ))}
+          </div>
+          
+          <div className="flex justify-center mt-8">
+            <Button variant="outline" data-testid="button-load-more-feed">
+              Load More
             </Button>
           </div>
         </section>
