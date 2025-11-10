@@ -544,54 +544,109 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
   app.post('/api/match-submissions', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
-      const { gameId, matchType, notes, screenshotUrl } = req.body;
+      const { gameId, notes, screenshotUrl } = req.body;
       
-      if (!gameId || !matchType) {
-        return res.status(400).json({ message: "Game ID and match type are required" });
+      if (!gameId) {
+        return res.status(400).json({ message: "Game ID is required" });
       }
-
-      // Normalize screenshot URL if provided
-      let normalizedScreenshotUrl = null;
-      if (screenshotUrl) {
-        const objectStorageService = new ObjectStorageService();
-        normalizedScreenshotUrl = objectStorageService.normalizeObjectEntityPath(screenshotUrl);
-      }
-
-      const pointsMap: Record<string, number> = {
-        'win': 10,
-        'ranked': 15,
-        'tournament': 50,
-      };
-      
-      const pointsAwarded = pointsMap[matchType] || 10;
-      
-      // Create submission first (pending verification)
-      const submission = await storage.createMatchSubmission({
-        userId,
-        gameId,
-        matchType,
-        notes: notes || null,
-        screenshotUrl: normalizedScreenshotUrl,
-      });
 
       // Check if user has linked Riot account for LoL/Valorant
       const riotAccount = await storage.getRiotAccount(userId, gameId);
       
-      if (riotAccount && riotAccount.riotPuuid) {
-        // AUTO-VERIFY via Riot API
-        try {
-          const { RiotApiService } = await import('./riotApi');
-          const riotApi = new RiotApiService();
-          
-          // Check for recent wins in last 24 hours
-          const recentWins = await riotApi.getRecentWins(
-            riotAccount.riotPuuid, 
-            riotAccount.riotRegion || 'na',
-            24
-          );
+      if (!riotAccount || !riotAccount.riotPuuid) {
+        return res.status(400).json({ 
+          message: 'Please link your Riot account first to verify wins and earn points!' 
+        });
+      }
 
-          if (recentWins.length > 0) {
-            // VERIFIED WIN - Auto-approve and award points
+      // AUTO-VERIFY via Riot API
+      try {
+        const { RiotApiService } = await import('./riotApi');
+        const riotApi = new RiotApiService();
+        
+        // Get recent match IDs (last 24 hours)
+        const matchIds = await riotApi.getRecentMatchIds(
+          riotAccount.riotPuuid, 
+          riotAccount.riotRegion || 'na',
+          20
+        );
+
+        if (matchIds.length === 0) {
+          return res.status(400).json({ 
+            message: 'No recent matches found. Play a match and try again!' 
+          });
+        }
+
+        // Check each match until we find an unredeemed win
+        const cutoffTime = Date.now() - (24 * 60 * 60 * 1000);
+        
+        for (const matchId of matchIds) {
+          // Check if this match was already redeemed
+          const existingSubmission = await storage.getMatchSubmissionByRiotMatchId(userId, matchId);
+          if (existingSubmission) {
+            continue; // Skip already redeemed matches
+          }
+
+          // Fetch and verify this specific match
+          const matchDetails = await riotApi.getMatchDetails(matchId, riotAccount.riotRegion || 'na');
+          
+          // Check if match is within 24 hours
+          if (matchDetails.info.gameEndTimestamp < cutoffTime) {
+            break; // Matches are ordered newest first, so we can stop
+          }
+
+          // Find player's data in this match
+          const participant = matchDetails.info.participants.find(p => p.puuid === riotAccount.riotPuuid);
+          
+          if (participant && participant.win) {
+            // FOUND AN UNREDEEMED WIN!
+            // Determine match type and points from game metadata
+            const gameMode = matchDetails.info.gameMode || 'CLASSIC';
+            const queueId = matchDetails.info.queueId || 0;
+            
+            // Map queue types to point values
+            let matchType = 'win';
+            let pointsAwarded = 10;
+            
+            // Ranked queues (420 = Ranked Solo, 440 = Ranked Flex)
+            if (queueId === 420 || queueId === 440) {
+              matchType = 'ranked';
+              pointsAwarded = 15;
+            }
+            // Tournament queues
+            else if (queueId === 700 || queueId === 710 || queueId === 720) {
+              matchType = 'tournament';
+              pointsAwarded = 50;
+            }
+
+            // Normalize screenshot URL if provided
+            let normalizedScreenshotUrl = null;
+            if (screenshotUrl) {
+              const objectStorageService = new ObjectStorageService();
+              normalizedScreenshotUrl = objectStorageService.normalizeObjectEntityPath(screenshotUrl);
+            }
+
+            // Create verified submission with match ID
+            const submission = await storage.createMatchSubmission({
+              userId,
+              gameId,
+              matchType,
+              notes: notes || null,
+              screenshotUrl: normalizedScreenshotUrl,
+              riotMatchId: matchId,
+              verifiedViaRiot: true,
+              matchData: {
+                championName: participant.championName,
+                kills: participant.kills,
+                deaths: participant.deaths,
+                assists: participant.assists,
+                gameMode,
+                queueId,
+                gameDuration: matchDetails.info.gameDuration,
+              },
+            });
+
+            // Auto-approve and award points
             await storage.updateMatchSubmission(submission.id, {
               status: 'approved',
               pointsAwarded,
@@ -604,49 +659,42 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
               'MATCH_WIN',
               submission.id,
               'match_submission',
-              `Verified match win: ${matchType}`
+              `Verified ${matchType} win - ${participant.championName}`
             );
 
             return res.json({ 
               success: true, 
               pointsAwarded,
               verified: true,
-              message: 'Match verified via Riot API!'
-            });
-          } else {
-            // NO RECENT WINS FOUND
-            await storage.updateMatchSubmission(submission.id, {
-              status: 'rejected',
-              reviewedAt: new Date(),
-            });
-
-            return res.status(400).json({ 
-              message: 'No recent wins found in your match history. Play a match and try again!' 
+              matchType,
+              championName: participant.championName,
+              kda: `${participant.kills}/${participant.deaths}/${participant.assists}`,
+              message: `Victory verified! +${pointsAwarded} points`
             });
           }
-        } catch (apiError: any) {
-          console.error("Riot API verification error:", apiError);
-          // Fall back to pending manual review
-          return res.json({ 
-            success: true, 
-            pointsAwarded: 0,
-            verified: false,
-            message: 'Submission pending manual review (API error)'
-          });
         }
-      } else {
-        // NO RIOT ACCOUNT LINKED - Reject submission
-        await storage.updateMatchSubmission(submission.id, {
-          status: 'rejected',
-          reviewedAt: new Date(),
+
+        // No unredeemed wins found
+        return res.status(400).json({ 
+          message: 'No new wins found in your recent matches. All recent wins have already been redeemed!' 
         });
 
-        return res.status(400).json({ 
-          message: 'Please link your Riot account first to auto-verify wins and earn points!' 
+      } catch (apiError: any) {
+        console.error("Riot API verification error:", apiError);
+        return res.status(500).json({ 
+          message: 'Unable to verify match with Riot API. Please try again later.' 
         });
       }
     } catch (error: any) {
       console.error("Error creating match submission:", error);
+      
+      // Check for duplicate match ID error
+      if (error.message?.includes('unique') || error.code === '23505') {
+        return res.status(400).json({ 
+          message: 'This match has already been redeemed!' 
+        });
+      }
+      
       res.status(500).json({ message: error.message || "Failed to submit match" });
     }
   });

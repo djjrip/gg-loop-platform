@@ -42,6 +42,8 @@ interface MatchDetails {
     participants: string[];
   };
   info: {
+    gameMode: string;
+    queueId: number;
     gameDuration: number;
     gameEndTimestamp: number;
     participants: Array<{

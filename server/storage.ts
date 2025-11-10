@@ -72,6 +72,7 @@ export interface IStorage {
   getUserMatchSubmissions(userId: string): Promise<(MatchSubmission & { game: Game })[]>;
   createMatchSubmission(submission: InsertMatchSubmission): Promise<MatchSubmission>;
   updateMatchSubmission(submissionId: string, updates: Partial<{ status: string; pointsAwarded: number | null; reviewedBy: string | null; reviewNotes: string | null; reviewedAt: Date }>): Promise<MatchSubmission>;
+  getMatchSubmissionByRiotMatchId(userId: string, riotMatchId: string): Promise<MatchSubmission | undefined>;
   
   getUserByReferralCode(referralCode: string): Promise<User | undefined>;
   createReferral(referral: InsertReferral): Promise<Referral>;
@@ -536,6 +537,18 @@ export class DbStorage implements IStorage {
       .where(eq(matchSubmissions.id, submissionId))
       .returning();
     return submission;
+  }
+
+  async getMatchSubmissionByRiotMatchId(userId: string, riotMatchId: string): Promise<MatchSubmission | undefined> {
+    const result = await db
+      .select()
+      .from(matchSubmissions)
+      .where(and(
+        eq(matchSubmissions.userId, userId),
+        eq(matchSubmissions.riotMatchId, riotMatchId)
+      ))
+      .limit(1);
+    return result[0];
   }
 
   async getUserByReferralCode(referralCode: string): Promise<User | undefined> {
