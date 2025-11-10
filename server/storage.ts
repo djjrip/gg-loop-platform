@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { 
   users, games, userGames, leaderboardEntries, achievements, rewards, userRewards,
-  subscriptions, subscriptionEvents, pointTransactions, apiPartners, gamingEvents, matchSubmissions,
+  subscriptions, subscriptionEvents, pointTransactions, apiPartners, gamingEvents, matchSubmissions, referrals,
   type User, type InsertUser, type UpsertUser,
   type Game, type InsertGame,
   type UserGame, type InsertUserGame,
@@ -14,10 +14,12 @@ import {
   type PointTransaction,
   type ApiPartner, type InsertApiPartner,
   type GamingEvent, type InsertGamingEvent,
-  type MatchSubmission, type InsertMatchSubmission
+  type MatchSubmission, type InsertMatchSubmission,
+  type Referral, type InsertReferral
 } from "@shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { pointsEngine } from "./pointsEngine";
+import { generateReferralCode } from "./lib/referral";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -65,6 +67,14 @@ export interface IStorage {
   getUserMatchSubmissions(userId: string): Promise<(MatchSubmission & { game: Game })[]>;
   createMatchSubmission(submission: InsertMatchSubmission): Promise<MatchSubmission>;
   updateMatchSubmission(submissionId: string, updates: Partial<{ status: string; pointsAwarded: number | null; reviewedBy: string | null; reviewNotes: string | null; reviewedAt: Date }>): Promise<MatchSubmission>;
+  
+  getUserByReferralCode(referralCode: string): Promise<User | undefined>;
+  createReferral(referral: InsertReferral): Promise<Referral>;
+  getReferralsByReferrer(referrerId: string): Promise<(Referral & { referredUser: User })[]>;
+  getReferralByUsers(referrerId: string, referredUserId: string): Promise<Referral | undefined>;
+  updateReferral(referralId: string, updates: Partial<{ status: string; pointsAwarded: number; tier: number; completionReason: string | null; activatedAt: Date | null; completedAt: Date | null }>): Promise<Referral>;
+  getReferralLeaderboard(limit?: number): Promise<{ user: User; referralCount: number; totalPoints: number }[]>;
+  startFreeTrial(userId: string): Promise<User>;
 }
 
 export class DbStorage implements IStorage {
@@ -84,9 +94,18 @@ export class DbStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    let referralCode: string | undefined;
+    let codeExists = true;
+    
+    while (codeExists) {
+      referralCode = generateReferralCode();
+      const existing = await this.getUserByReferralCode(referralCode);
+      codeExists = !!existing;
+    }
+
     const [user] = await db
       .insert(users)
-      .values(userData)
+      .values({ ...userData, referralCode })
       .onConflictDoUpdate({
         target: users.oidcSub,
         set: {
@@ -433,6 +452,95 @@ export class DbStorage implements IStorage {
       .where(eq(matchSubmissions.id, submissionId))
       .returning();
     return submission;
+  }
+
+  async getUserByReferralCode(referralCode: string): Promise<User | undefined> {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.referralCode, referralCode))
+      .limit(1);
+    return result[0];
+  }
+
+  async createReferral(referral: InsertReferral): Promise<Referral> {
+    const [newReferral] = await db.insert(referrals).values(referral).returning();
+    return newReferral;
+  }
+
+  async getReferralsByReferrer(referrerId: string): Promise<(Referral & { referredUser: User })[]> {
+    const result = await db
+      .select({
+        referral: referrals,
+        referredUser: users,
+      })
+      .from(referrals)
+      .innerJoin(users, eq(referrals.referredUserId, users.id))
+      .where(eq(referrals.referrerId, referrerId))
+      .orderBy(desc(referrals.createdAt));
+    
+    return result.map(row => ({
+      ...row.referral,
+      referredUser: row.referredUser,
+    })) as (Referral & { referredUser: User })[];
+  }
+
+  async getReferralByUsers(referrerId: string, referredUserId: string): Promise<Referral | undefined> {
+    const result = await db
+      .select()
+      .from(referrals)
+      .where(and(
+        eq(referrals.referrerId, referrerId),
+        eq(referrals.referredUserId, referredUserId)
+      ))
+      .limit(1);
+    return result[0];
+  }
+
+  async updateReferral(
+    referralId: string,
+    updates: Partial<{ status: string; pointsAwarded: number; tier: number; completionReason: string | null; activatedAt: Date | null; completedAt: Date | null }>
+  ): Promise<Referral> {
+    const [referral] = await db
+      .update(referrals)
+      .set(updates)
+      .where(eq(referrals.id, referralId))
+      .returning();
+    return referral;
+  }
+
+  async getReferralLeaderboard(limit = 50): Promise<{ user: User; referralCount: number; totalPoints: number }[]> {
+    const result = await db
+      .select({
+        user: users,
+        referralCount: sql<number>`COUNT(${referrals.id})::int`,
+        totalPoints: sql<number>`COALESCE(SUM(${referrals.pointsAwarded}), 0)::int`,
+      })
+      .from(users)
+      .leftJoin(referrals, eq(users.id, referrals.referrerId))
+      .groupBy(users.id)
+      .having(sql`COUNT(${referrals.id}) > 0`)
+      .orderBy(desc(sql`COUNT(${referrals.id})`))
+      .limit(limit);
+    
+    return result;
+  }
+
+  async startFreeTrial(userId: string): Promise<User> {
+    const trialStartDate = new Date();
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 7);
+
+    const [user] = await db
+      .update(users)
+      .set({
+        freeTrialStartedAt: trialStartDate,
+        freeTrialEndsAt: trialEndDate,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
   }
 }
 

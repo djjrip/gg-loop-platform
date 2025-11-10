@@ -45,11 +45,14 @@ export const referrals = pgTable("referrals", {
   status: varchar("status").notNull().default("pending"),
   pointsAwarded: integer("points_awarded").default(0),
   tier: integer("tier").default(0),
+  completionReason: varchar("completion_reason"),
+  activatedAt: timestamp("activated_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   completedAt: timestamp("completed_at"),
 }, (table) => [
   index("idx_referrals_referrer").on(table.referrerId),
   index("idx_referrals_referred").on(table.referredUserId),
+  sql`UNIQUE(referrer_id, referred_user_id)`,
 ]);
 
 export const games = pgTable("games", {
