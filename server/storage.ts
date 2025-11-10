@@ -50,6 +50,8 @@ export interface IStorage {
   
   getAllRewards(): Promise<Reward[]>;
   getUserRewards(userId: string): Promise<(UserReward & { reward: Reward })[]>;
+  getAllPendingRewards(): Promise<(UserReward & { reward: Reward; user: User })[]>;
+  updateUserRewardStatus(userRewardId: string, status: string, fulfillmentData?: any): Promise<UserReward>;
   redeemReward(userReward: InsertUserReward): Promise<UserReward>;
   
   getSubscription(userId: string): Promise<Subscription | undefined>;
@@ -342,6 +344,30 @@ export class DbStorage implements IStorage {
       .orderBy(desc(userRewards.redeemedAt));
     
     return result.map(r => ({ ...r.user_rewards, reward: r.rewards }));
+  }
+
+  async getAllPendingRewards(): Promise<(UserReward & { reward: Reward; user: User })[]> {
+    const result = await db
+      .select()
+      .from(userRewards)
+      .innerJoin(rewards, eq(userRewards.rewardId, rewards.id))
+      .innerJoin(users, eq(userRewards.userId, users.id))
+      .where(eq(userRewards.status, "pending"))
+      .orderBy(desc(userRewards.redeemedAt));
+    
+    return result.map(r => ({ ...r.user_rewards, reward: r.rewards, user: r.users }));
+  }
+
+  async updateUserRewardStatus(userRewardId: string, status: string, fulfillmentData?: any): Promise<UserReward> {
+    const [userReward] = await db
+      .update(userRewards)
+      .set({ 
+        status,
+        fulfillmentData: fulfillmentData || null
+      })
+      .where(eq(userRewards.id, userRewardId))
+      .returning();
+    return userReward;
   }
 
   async redeemReward(insertUserReward: InsertUserReward): Promise<UserReward> {

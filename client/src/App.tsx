@@ -14,6 +14,9 @@ import BusinessDashboard from "@/pages/BusinessDashboard";
 import ReportMatch from "@/pages/ReportMatch";
 import Referrals from "@/pages/Referrals";
 import Settings from "@/pages/Settings";
+import FulfillmentDashboard from "@/pages/FulfillmentDashboard";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -42,6 +45,9 @@ function Router() {
       <Route path="/report-match" component={ReportMatch} />
       <Route path="/referrals" component={Referrals} />
       <Route path="/settings" component={Settings} />
+      <Route path="/fulfillment" component={FulfillmentDashboard} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Privacy} />
       <Route component={NotFound} />
     </Switch>
   );

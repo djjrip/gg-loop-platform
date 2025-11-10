@@ -39,6 +39,31 @@ const getUserMiddleware = async (req: any, res: any, next: any) => {
   }
 };
 
+const adminMiddleware = async (req: any, res: any, next: any) => {
+  try {
+    if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const oidcSub = req.user.claims.sub;
+    const dbUser = await storage.getUserByOidcSub(oidcSub);
+    if (!dbUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // MVP: Owner email check (replace with proper admin flag later)
+    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
+    if (!ADMIN_EMAILS.includes(dbUser.email || '')) {
+      return res.status(403).json({ message: "Forbidden: Admin access required" });
+    }
+    
+    req.dbUser = dbUser;
+    next();
+  } catch (error) {
+    console.error("Error in admin middleware:", error);
+    res.status(500).json({ message: "Failed to authenticate admin" });
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   
@@ -331,6 +356,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user rewards:", error);
       res.status(500).json({ message: "Failed to fetch user rewards" });
+    }
+  });
+
+  app.get('/api/admin/pending-rewards', adminMiddleware, async (req: any, res) => {
+    try {
+      const pendingRewards = await storage.getAllPendingRewards();
+      res.json(pendingRewards);
+    } catch (error) {
+      console.error("Error fetching pending rewards:", error);
+      res.status(500).json({ message: "Failed to fetch pending rewards" });
+    }
+  });
+
+  app.post('/api/admin/rewards/fulfill', adminMiddleware, async (req: any, res) => {
+    try {
+      const { userRewardId, giftCardCode } = z.object({ 
+        userRewardId: z.string(),
+        giftCardCode: z.string().optional()
+      }).parse(req.body);
+      
+      const userReward = await storage.updateUserRewardStatus(
+        userRewardId, 
+        'fulfilled',
+        giftCardCode ? { giftCardCode, fulfilledAt: new Date() } : { fulfilledAt: new Date() }
+      );
+      
+      res.json(userReward);
+    } catch (error: any) {
+      console.error("Error fulfilling reward:", error);
+      res.status(400).json({ message: error.message || "Failed to fulfill reward" });
     }
   });
 
