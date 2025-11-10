@@ -30,9 +30,27 @@ export const users = pgTable("users", {
   twitchAccessToken: text("twitch_access_token"),
   twitchRefreshToken: text("twitch_refresh_token"),
   twitchConnectedAt: timestamp("twitch_connected_at"),
+  referralCode: varchar("referral_code", { length: 10 }).unique(),
+  referredBy: varchar("referred_by").references((): any => users.id),
+  freeTrialStartedAt: timestamp("free_trial_started_at"),
+  freeTrialEndsAt: timestamp("free_trial_ends_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const referrals = pgTable("referrals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referrerId: varchar("referrer_id").notNull().references(() => users.id),
+  referredUserId: varchar("referred_user_id").notNull().references(() => users.id),
+  status: varchar("status").notNull().default("pending"),
+  pointsAwarded: integer("points_awarded").default(0),
+  tier: integer("tier").default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+}, (table) => [
+  index("idx_referrals_referrer").on(table.referrerId),
+  index("idx_referrals_referred").on(table.referredUserId),
+]);
 
 export const games = pgTable("games", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -214,8 +232,9 @@ export const streamingSessions = pgTable("streaming_sessions", {
   index("idx_streaming_sessions_status").on(table.status),
 ]);
 
-export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, createdAt: true, updatedAt: true });
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, createdAt: true, updatedAt: true });
+export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, createdAt: true, updatedAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, createdAt: true, updatedAt: true });
+export const insertReferralSchema = createInsertSchema(referrals).omit({ id: true, createdAt: true, completedAt: true, pointsAwarded: true, tier: true, status: true });
 export const insertGameSchema = createInsertSchema(games).omit({ id: true, isActive: true });
 export const insertUserGameSchema = createInsertSchema(userGames).omit({ id: true, connectedAt: true });
 export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntries).omit({ id: true, updatedAt: true });
@@ -233,6 +252,9 @@ export const insertStreamingSessionSchema = createInsertSchema(streamingSessions
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+export type InsertReferral = z.infer<typeof insertReferralSchema>;
+export type Referral = typeof referrals.$inferSelect;
 
 export type InsertGame = z.infer<typeof insertGameSchema>;
 export type Game = typeof games.$inferSelect;
