@@ -1,72 +1,151 @@
 import { Button } from "@/components/ui/button";
-import { Play } from "lucide-react";
+import { Play, Trophy, Zap } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Hero() {
   return (
-    <section className="relative w-full min-h-[90vh] flex items-center bg-background overflow-hidden">
-      <div className="absolute inset-0 opacity-20 animate-pulse-slower" style={{
-        backgroundImage: `
-          linear-gradient(rgba(255, 140, 66, 0.5) 2px, transparent 2px),
-          linear-gradient(90deg, rgba(255, 140, 66, 0.5) 2px, transparent 2px)
-        `,
-        backgroundSize: '40px 40px',
-      }} />
+    <section className="relative w-full min-h-screen flex items-center bg-gradient-to-b from-background via-background to-card overflow-hidden">
+      {/* Animated gradient orbs - subtle, premium feel */}
+      <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-3xl animate-float opacity-40" />
+      <div className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-gradient-to-br from-primary/15 to-transparent rounded-full blur-3xl animate-float-delayed opacity-30" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl animate-pulse-slower opacity-20" />
       
-      <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
-      <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-slower" />
-      
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-        <div className="animate-orbit">
-          <div className="w-4 h-4 bg-primary/60 rounded-full shadow-[0_0_10px_rgba(255,140,66,0.6)] animate-pulse-slower" />
+      {/* Floating achievement cards in background */}
+      <div className="absolute top-20 right-1/4 opacity-10 hover:opacity-20 transition-opacity duration-700">
+        <div className="animate-float">
+          <div className="w-32 h-40 bg-gradient-to-br from-card to-muted rounded-xl shadow-2xl border border-border" />
         </div>
       </div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-        <div className="animate-reverse-orbit" style={{ animationDelay: '5s' }}>
-          <div className="w-3 h-3 bg-primary/40 rounded-full shadow-[0_0_8px_rgba(255,140,66,0.4)] animate-pulse-slow" />
+      <div className="absolute bottom-32 left-1/4 opacity-10 hover:opacity-20 transition-opacity duration-700">
+        <div className="animate-float-delayed">
+          <div className="w-28 h-36 bg-gradient-to-br from-card to-muted rounded-xl shadow-2xl border border-border" />
         </div>
       </div>
       
-      <div className="absolute top-1/4 right-1/3 w-3 h-3 bg-primary rounded-full animate-ping" style={{ animationDelay: '0s' }} />
-      <div className="absolute top-1/3 left-1/4 w-2 h-2 bg-primary rounded-full animate-ping" style={{ animationDelay: '1s' }} />
-      <div className="absolute bottom-1/3 right-1/4 w-2 h-2 bg-primary rounded-full animate-ping" style={{ animationDelay: '2s' }} />
-      
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
-      
-      <div className="relative container mx-auto max-w-7xl px-6 py-20">
-        <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-8xl md:text-9xl font-black leading-none tracking-tighter mb-12">
-            <span className="block text-foreground mb-4">Play.</span>
-            <span className="block text-primary drop-shadow-[0_0_50px_rgba(255,140,66,1)] animate-pulse-slow mb-4">Earn.</span>
-            <span className="block text-foreground">Loop.</span>
-          </h1>
-
-          <p className="text-2xl md:text-3xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-12 font-medium">
-            Turn your gaming into rewards. Every match played, every win earned—real value for real skill.
-          </p>
-
-          <div className="flex flex-wrap gap-6 justify-center items-center mb-8">
-            <Link href="/subscription">
-              <Button size="lg" className="text-lg font-bold gap-2 px-8 py-6 h-auto" data-testid="button-get-started">
-                <Play className="h-6 w-6" />
-                Get Started
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="text-lg font-bold px-8 py-6 h-auto" data-testid="button-learn-more">
-              Learn More
-            </Button>
-          </div>
-
-          <div className="mt-16 flex items-center justify-center gap-3 text-base text-muted-foreground">
-            <div className="flex -space-x-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 border-2 border-background" />
-              <div className="w-10 h-10 rounded-full bg-primary/30 border-2 border-background" />
-              <div className="w-10 h-10 rounded-full bg-primary/40 border-2 border-background" />
+      {/* Main content */}
+      <div className="relative container mx-auto max-w-7xl px-6 py-24">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16 animate-fade-in">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full mb-8 backdrop-blur-sm">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">Live Rewards Platform</span>
             </div>
-            <span className="font-medium">Join 2,400+ streamers</span>
+            
+            {/* Main headline with staggered animation */}
+            <h1 className="text-7xl md:text-9xl font-black leading-none tracking-tighter mb-6">
+              <span className="block text-foreground mb-2 hover:text-primary transition-colors duration-500">Play.</span>
+              <span className="block bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent mb-2 
+                             hover:scale-105 transition-transform duration-500 inline-block">Earn.</span>
+              <span className="block text-foreground hover:text-primary transition-colors duration-500">Loop.</span>
+            </h1>
+
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-12 font-medium">
+              Turn every match, every achievement, every stream into real rewards. 
+              <span className="text-foreground font-semibold"> $5/month</span> subscription → earn up to 
+              <span className="text-primary font-semibold"> $45/month</span> in gift cards and gaming gear.
+            </p>
+
+            {/* CTA Buttons with subtle hover effects */}
+            <div className="flex flex-wrap gap-4 justify-center items-center mb-16">
+              <Link href="/subscription">
+                <Button 
+                  size="lg" 
+                  className="text-lg font-bold gap-3 px-10 py-7 h-auto shadow-lg hover:shadow-xl transition-all duration-300" 
+                  data-testid="button-get-started"
+                >
+                  <Play className="h-6 w-6" fill="currentColor" />
+                  Start Earning
+                </Button>
+              </Link>
+              <Link href="/profile/demo">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="text-lg font-bold px-10 py-7 h-auto backdrop-blur-sm hover:bg-card/50 border-2 transition-all duration-300" 
+                  data-testid="button-view-trophy-case"
+                >
+                  <Trophy className="h-5 w-5" />
+                  View Trophy Case
+                </Button>
+              </Link>
+            </div>
+
+            {/* Stats bar - premium collectible feel */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="group bg-card/50 backdrop-blur-md border border-border rounded-2xl p-6 hover:border-primary/30 transition-all duration-300">
+                <div className="text-4xl md:text-5xl font-black text-primary mb-2 transition-colors">2,400+</div>
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Streamers</div>
+              </div>
+              <div className="group bg-card/50 backdrop-blur-md border border-border rounded-2xl p-6 hover:border-primary/30 transition-all duration-300">
+                <div className="text-4xl md:text-5xl font-black text-primary mb-2 transition-colors">$89K+</div>
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Rewards Earned</div>
+              </div>
+              <div className="group bg-card/50 backdrop-blur-md border border-border rounded-2xl p-6 hover:border-primary/30 transition-all duration-300">
+                <div className="text-4xl md:text-5xl font-black text-primary mb-2 transition-colors">10:1</div>
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Points to Value</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Featured moments preview - NBA Top Shot style */}
+          <div className="mt-20">
+            <h2 className="text-3xl font-bold text-center mb-10">Your Achievements Become Collectibles</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Sample trophy card 1 */}
+              <div className="group relative bg-gradient-to-b from-card to-card/50 rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-500">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-bold uppercase tracking-widest text-primary">Common</span>
+                    <span className="text-xs font-mono text-muted-foreground">#/1000</span>
+                  </div>
+                  <div className="aspect-square bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl mb-4 flex items-center justify-center transition-transform duration-300">
+                    <Trophy className="h-20 w-20 text-primary/60" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-1">First Win</h3>
+                  <p className="text-sm text-muted-foreground">Victory in competitive match</p>
+                </div>
+              </div>
+
+              {/* Sample trophy card 2 - Rare */}
+              <div className="group relative bg-gradient-to-b from-card to-card/50 rounded-2xl border-2 border-primary/30 overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all duration-500">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary to-primary opacity-50 group-hover:opacity-100 transition-opacity" />
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-bold uppercase tracking-widest text-primary">Rare</span>
+                    <span className="text-xs font-mono text-muted-foreground">#/100</span>
+                  </div>
+                  <div className="aspect-square bg-gradient-to-br from-primary/30 to-primary/10 rounded-xl mb-4 flex items-center justify-center transition-transform duration-300">
+                    <Trophy className="h-20 w-20 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-1">Tournament Top 10</h3>
+                  <p className="text-sm text-muted-foreground">Ranked finish in major event</p>
+                </div>
+              </div>
+
+              {/* Sample trophy card 3 - Epic */}
+              <div className="group relative bg-gradient-to-b from-card to-card/50 rounded-2xl border-2 border-primary/50 overflow-hidden shadow-lg hover:shadow-xl hover:border-primary transition-all duration-500">
+                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-primary to-primary" />
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-bold uppercase tracking-widest text-primary">Epic</span>
+                    <span className="text-xs font-mono text-muted-foreground">#/25</span>
+                  </div>
+                  <div className="aspect-square bg-gradient-to-br from-primary/40 to-primary/15 rounded-xl mb-4 flex items-center justify-center transition-transform duration-300 shadow-inner">
+                    <Trophy className="h-20 w-20 text-primary drop-shadow-lg" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-1">100 Stream Hours</h3>
+                  <p className="text-sm text-muted-foreground">Verified streaming milestone</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Bottom gradient fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-card to-transparent pointer-events-none" />
     </section>
   );
 }
