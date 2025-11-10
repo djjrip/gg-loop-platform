@@ -2,9 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Trophy, Users, TrendingUp, Share2 } from "lucide-react";
+import { Copy, Trophy, Users, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SiX, SiTiktok, SiDiscord, SiYoutube, SiTwitch } from "react-icons/si";
 
 interface ReferralStats {
   referralCode: string;
@@ -55,8 +56,16 @@ export default function Referrals() {
   });
 
   const copyReferralLink = () => {
+    if (!stats?.referralCode) {
+      toast({
+        title: "Error",
+        description: "Referral code not available. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
     const baseUrl = window.location.origin;
-    const referralLink = `${baseUrl}?ref=${stats?.referralCode}`;
+    const referralLink = `${baseUrl}?ref=${stats.referralCode}`;
     navigator.clipboard.writeText(referralLink);
     toast({
       title: "Copied!",
@@ -65,13 +74,31 @@ export default function Referrals() {
   };
 
   const copyReferralCode = () => {
-    if (stats?.referralCode) {
-      navigator.clipboard.writeText(stats.referralCode);
+    if (!stats?.referralCode) {
       toast({
-        title: "Copied!",
-        description: "Referral code copied to clipboard",
+        title: "Error",
+        description: "Referral code not available. Please try again.",
+        variant: "destructive",
       });
+      return;
     }
+    navigator.clipboard.writeText(stats.referralCode);
+    toast({
+      title: "Copied!",
+      description: "Referral code copied to clipboard",
+    });
+  };
+
+  const validateReferralCode = (): boolean => {
+    if (!stats?.referralCode) {
+      toast({
+        title: "Error",
+        description: "Referral code not available. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
   };
 
   const getNextTier = () => {
@@ -170,23 +197,38 @@ export default function Referrals() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2 mb-8">
-        <Card data-testid="card-referral-code" className="hover-elevate">
+        <Card data-testid="card-referral-code" className="hover-elevate border-primary/30 bg-gradient-to-br from-primary/5 to-background">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Share2 className="w-5 h-5" />
-              Share Your Code
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Users className="w-6 h-6 text-primary" />
+              Share with Your Community
             </CardTitle>
-            <CardDescription>Invite friends to join GG Loop</CardDescription>
+            <CardDescription>Build your fanbase and earn rewards together</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {statsLoading ? (
               <Skeleton className="h-20 w-full" />
             ) : (
               <>
-                <div className="p-4 bg-muted rounded-md">
-                  <div className="text-sm text-muted-foreground mb-1">Your Referral Code</div>
+                {/* Mutual Benefit Callout */}
+                <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <TrendingUp className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-semibold text-foreground mb-1">Everyone Wins</p>
+                      <p className="text-muted-foreground">
+                        Your fans get <span className="font-bold text-primary">50 bonus points</span> when they join with your code. 
+                        You earn <span className="font-bold text-primary">points for each referral</span> that can level up to {REFERRAL_TIERS[REFERRAL_TIERS.length - 1].pointsPerReferral} pts per friend!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Referral Code Display */}
+                <div className="p-4 bg-muted rounded-lg border border-border">
+                  <div className="text-sm text-muted-foreground mb-2">Your Unique Referral Code</div>
                   <div className="flex items-center gap-2">
-                    <code className="text-2xl font-mono font-bold flex-1" data-testid="text-referral-code">
+                    <code className="text-3xl font-mono font-bold flex-1 text-primary" data-testid="text-referral-code">
                       {stats?.referralCode}
                     </code>
                     <Button
@@ -194,32 +236,143 @@ export default function Referrals() {
                       variant="ghost"
                       onClick={copyReferralCode}
                       data-testid="button-copy-code"
+                      className="hover-elevate"
                     >
-                      <Copy className="w-4 h-4" />
+                      <Copy className="w-5 h-5" />
+                    </Button>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Share this code in your stream overlays, video descriptions, and Discord server
+                  </div>
+                </div>
+
+                {/* Quick Copy Link */}
+                <div>
+                  <div className="text-sm font-medium mb-2">Referral Link</div>
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    onClick={copyReferralLink}
+                    disabled={statsLoading || !stats?.referralCode}
+                    data-testid="button-copy-link"
+                  >
+                    <Copy className="w-5 h-5 mr-2" />
+                    Copy Link to Clipboard
+                  </Button>
+                </div>
+
+                {/* Social Platform Sharing */}
+                <div>
+                  <div className="text-sm font-medium mb-3">Share on Social Media</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Twitter/X */}
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2 justify-start"
+                      onClick={() => {
+                        if (!validateReferralCode()) return;
+                        const text = `Join me on GG Loop and turn your gaming into rewards! Use my code ${stats.referralCode} to get 50 bonus points when you sign up.`;
+                        const url = `${window.location.origin}?ref=${stats.referralCode}`;
+                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                      }}
+                      disabled={statsLoading || !stats?.referralCode}
+                      data-testid="button-share-twitter"
+                    >
+                      <SiX className="w-4 h-4" />
+                      X / Twitter
+                    </Button>
+
+                    {/* TikTok - Copy caption */}
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2 justify-start"
+                      onClick={() => {
+                        if (!validateReferralCode()) return;
+                        const caption = `Gaming just got BETTER! Join me on GG Loop - earn real rewards just by playing.\n\nUse code: ${stats.referralCode}\nLink: ${window.location.origin}?ref=${stats.referralCode}\n\nBoth of us get bonus points! #GGLoop #GamingRewards #Gamer`;
+                        navigator.clipboard.writeText(caption);
+                        toast({
+                          title: "TikTok Caption Copied!",
+                          description: "Paste this into your TikTok video caption",
+                        });
+                      }}
+                      disabled={statsLoading || !stats?.referralCode}
+                      data-testid="button-share-tiktok"
+                    >
+                      <SiTiktok className="w-4 h-4" />
+                      TikTok
+                    </Button>
+
+                    {/* Discord */}
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2 justify-start"
+                      onClick={() => {
+                        if (!validateReferralCode()) return;
+                        const message = `Hey everyone! I'm earning rewards for my gaming on GG Loop. Join me and we both get bonus points!\n\nUse my code: **${stats.referralCode}**\nSign up: ${window.location.origin}?ref=${stats.referralCode}\n\nLet's build this together!`;
+                        navigator.clipboard.writeText(message);
+                        toast({
+                          title: "Discord Message Copied!",
+                          description: "Paste this in your Discord server",
+                        });
+                      }}
+                      disabled={statsLoading || !stats?.referralCode}
+                      data-testid="button-share-discord"
+                    >
+                      <SiDiscord className="w-4 h-4" />
+                      Discord
+                    </Button>
+
+                    {/* YouTube */}
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2 justify-start"
+                      onClick={() => {
+                        if (!validateReferralCode()) return;
+                        const description = `SUPPORT THE CHANNEL & EARN REWARDS!\n\nJoin me on GG Loop - turn your gaming into real rewards (gift cards, gaming gear, etc.)\n\nUse my code: ${stats.referralCode}\nSign up here: ${window.location.origin}?ref=${stats.referralCode}\n\nYou get 50 bonus points when you use my code!\n#GGLoop #GamingRewards`;
+                        navigator.clipboard.writeText(description);
+                        toast({
+                          title: "YouTube Description Copied!",
+                          description: "Paste this in your video description",
+                        });
+                      }}
+                      disabled={statsLoading || !stats?.referralCode}
+                      data-testid="button-share-youtube"
+                    >
+                      <SiYoutube className="w-4 h-4" />
+                      YouTube
+                    </Button>
+
+                    {/* Twitch */}
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2 justify-start col-span-2"
+                      onClick={() => {
+                        if (!validateReferralCode()) return;
+                        const panelText = `Join me on GG Loop and earn rewards for gaming!\n\nUse code: ${stats.referralCode}\nLink: ${window.location.origin}?ref=${stats.referralCode}\n\nBoth of us get bonus points when you sign up!`;
+                        navigator.clipboard.writeText(panelText);
+                        toast({
+                          title: "Twitch Panel Text Copied!",
+                          description: "Add this to your Twitch panels or !commands",
+                        });
+                      }}
+                      disabled={statsLoading || !stats?.referralCode}
+                      data-testid="button-share-twitch"
+                    >
+                      <SiTwitch className="w-5 h-5" />
+                      Twitch Panel / Commands
                     </Button>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    className="flex-1"
-                    onClick={copyReferralLink}
-                    data-testid="button-copy-link"
-                  >
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy Referral Link
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      const text = `Join me on GG Loop! Use my code ${stats?.referralCode} to get started 🎮`;
-                      const url = `${window.location.origin}?ref=${stats?.referralCode}`;
-                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
-                    }}
-                    data-testid="button-share-twitter"
-                  >
-                    Share on X
-                  </Button>
+                {/* Creator Tips */}
+                <div className="p-3 bg-muted/50 rounded-lg border border-border">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">Pro Tips for Creators:</div>
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    <li>• Add your code to stream overlays and going live posts</li>
+                    <li>• Pin your referral link in Discord announcements</li>
+                    <li>• Include it in video descriptions and TikTok bios</li>
+                    <li>• Create a !ggloop chat command with your code</li>
+                  </ul>
                 </div>
               </>
             )}
