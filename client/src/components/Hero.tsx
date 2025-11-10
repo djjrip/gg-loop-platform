@@ -5,13 +5,31 @@ import { Link } from "wouter";
 export default function Hero() {
   return (
     <section className="relative w-full min-h-[90vh] flex items-center bg-background overflow-hidden">
-      <div className="absolute inset-0 opacity-20" style={{
+      <div className="absolute inset-0 opacity-20 animate-pulse-slower" style={{
         backgroundImage: `
           linear-gradient(rgba(255, 140, 66, 0.5) 2px, transparent 2px),
           linear-gradient(90deg, rgba(255, 140, 66, 0.5) 2px, transparent 2px)
         `,
         backgroundSize: '40px 40px',
       }} />
+      
+      <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
+      <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-slower" />
+      
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="animate-orbit">
+          <div className="w-4 h-4 bg-primary/60 rounded-full shadow-[0_0_10px_rgba(255,140,66,0.6)] animate-pulse-slower" />
+        </div>
+      </div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="animate-reverse-orbit" style={{ animationDelay: '5s' }}>
+          <div className="w-3 h-3 bg-primary/40 rounded-full shadow-[0_0_8px_rgba(255,140,66,0.4)] animate-pulse-slow" />
+        </div>
+      </div>
+      
+      <div className="absolute top-1/4 right-1/3 w-3 h-3 bg-primary rounded-full animate-ping" style={{ animationDelay: '0s' }} />
+      <div className="absolute top-1/3 left-1/4 w-2 h-2 bg-primary rounded-full animate-ping" style={{ animationDelay: '1s' }} />
+      <div className="absolute bottom-1/3 right-1/4 w-2 h-2 bg-primary rounded-full animate-ping" style={{ animationDelay: '2s' }} />
       
       <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
       
