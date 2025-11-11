@@ -28,6 +28,7 @@ The backend is powered by Express.js with TypeScript. Data persistence is handle
 *   **Founder's Badge**: Automatically assigned to the first 100 users, providing a sequential badge number and bonus points, secured by PostgreSQL advisory locks.
 *   **Recent Earnings**: A homepage activity feed displaying the last 5 match wins across all users in real-time.
 *   **Sponsored Challenges**: Enables users to earn bonus points beyond monthly caps through brand-sponsored challenges. Features automatic progress tracking, claim flows, and race-safe completion tracking.
+*   **Twitch Account Linking**: Secure OAuth integration allowing users to link Twitch accounts (Settings page). Features CSRF state validation, encrypted token storage via twitchAPI.encryptToken, and displays linked username as a purple badge on public profiles. Implements proper unlink functionality with database user resolution.
 
 ### System Design Choices
 The database schema includes core tables for users, games, subscriptions, point transactions, rewards, achievements, leaderboards, and match submissions, with appropriate foreign keys and unique constraints. Key design principles include transactional safety for all point operations, idempotency for webhook events, comprehensive error handling, and real-time cache invalidation.
