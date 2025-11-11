@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { userGames } from "@shared/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
