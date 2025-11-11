@@ -250,6 +250,38 @@ export const streamingSessions = pgTable("streaming_sessions", {
   index("idx_streaming_sessions_status").on(table.status),
 ]);
 
+export const riotAccounts = pgTable("riot_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  puuid: text("puuid").notNull(),
+  gameName: text("game_name").notNull(),
+  tagLine: text("tag_line").notNull(),
+  region: varchar("region").notNull(),
+  game: varchar("game").notNull(),
+  lastSyncedAt: timestamp("last_synced_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  idxRiotAccountsUser: index("idx_riot_accounts_user").on(table.userId),
+  idxRiotAccountsPuuid: index("idx_riot_accounts_puuid").on(table.puuid),
+  uniqUserGame: sql`UNIQUE(user_id, game)`,
+  gameCheck: sql`CHECK (game IN ('league', 'valorant'))`,
+}));
+
+export const processedRiotMatches = pgTable("processed_riot_matches", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  riotAccountId: varchar("riot_account_id").notNull().references(() => riotAccounts.id),
+  matchId: text("match_id").notNull(),
+  gameEndedAt: timestamp("game_ended_at").notNull(),
+  isWin: boolean("is_win").notNull(),
+  pointsAwarded: integer("points_awarded").notNull(),
+  transactionId: varchar("transaction_id").references(() => pointTransactions.id),
+  processedAt: timestamp("processed_at").notNull().defaultNow(),
+}, (table) => ({
+  idxProcessedRiotMatchesAccount: index("idx_processed_riot_matches_account").on(table.riotAccountId),
+  uniqAccountMatch: sql`UNIQUE(riot_account_id, match_id)`,
+}));
+
 export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, createdAt: true, updatedAt: true });
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, createdAt: true, updatedAt: true });
 export const insertReferralSchema = createInsertSchema(referrals).omit({ id: true, createdAt: true, completedAt: true, pointsAwarded: true, tier: true, status: true });
@@ -266,6 +298,8 @@ export const insertApiPartnerSchema = createInsertSchema(apiPartners).omit({ id:
 export const insertGamingEventSchema = createInsertSchema(gamingEvents).omit({ id: true, createdAt: true, status: true, retryCount: true, processedAt: true });
 export const insertMatchSubmissionSchema = createInsertSchema(matchSubmissions).omit({ id: true, submittedAt: true, status: true, reviewedAt: true, reviewedBy: true, reviewNotes: true, pointsAwarded: true });
 export const insertStreamingSessionSchema = createInsertSchema(streamingSessions).omit({ id: true, createdAt: true, status: true, lastCheckedAt: true, pointsAwarded: true });
+export const insertRiotAccountSchema = createInsertSchema(riotAccounts).omit({ id: true, lastSyncedAt: true, createdAt: true, updatedAt: true });
+export const insertProcessedRiotMatchSchema = createInsertSchema(processedRiotMatches).omit({ id: true, processedAt: true });
 
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -313,6 +347,12 @@ export type MatchSubmission = typeof matchSubmissions.$inferSelect;
 
 export type InsertStreamingSession = z.infer<typeof insertStreamingSessionSchema>;
 export type StreamingSession = typeof streamingSessions.$inferSelect;
+
+export type InsertRiotAccount = z.infer<typeof insertRiotAccountSchema>;
+export type RiotAccount = typeof riotAccounts.$inferSelect;
+
+export type InsertProcessedRiotMatch = z.infer<typeof insertProcessedRiotMatchSchema>;
+export type ProcessedRiotMatch = typeof processedRiotMatches.$inferSelect;
 
 export const challenges = pgTable("challenges", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

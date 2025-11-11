@@ -42,9 +42,9 @@ export default function Hero() {
             </h1>
 
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8 font-medium">
-              Turn every match into real rewards. Subscribe from
-              <span className="text-foreground font-semibold"> $5/month</span> to earn gift cards and gaming gear, 
-              <span className="text-primary font-semibold"> PLUS unlimited bonus earnings</span> from sponsored challenges.
+              Turn every match into real rewards. Try GG Loop free for 7 days, then just
+              <span className="text-foreground font-semibold"> $5/month</span> to earn up to
+              <span className="text-primary font-semibold"> $45/month</span> in gift cards and gaming gear.
             </p>
 
             <div className="flex items-center justify-center gap-6 mb-12">
