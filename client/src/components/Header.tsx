@@ -1,9 +1,10 @@
-import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift } from "lucide-react";
+import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,11 @@ export default function Header() {
   const [isDark, setIsDark] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
+
+  const { data: freeTierData } = useQuery<{ ggCoins: number; canRedeemTrial: boolean }>({
+    queryKey: ["/api/free-tier/status"],
+    enabled: isAuthenticated,
+  });
 
   const toggleTheme = () => {
     setIsDark(!isDark);
@@ -72,10 +78,19 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
           {isAuthenticated && user && (
-            <div className="hidden md:flex items-center gap-2 rounded-sm bg-primary/20 px-4 py-2 border-2 border-primary/60 shadow-[0_0_20px_rgba(255,140,66,0.5)]">
-              <Trophy className="h-4 w-4 text-primary" />
-              <span className="font-mono text-sm font-bold text-primary" data-testid="text-points">{user.totalPoints.toLocaleString()}</span>
-              <span className="text-xs text-muted-foreground">pts</span>
+            <div className="hidden md:flex items-center gap-3">
+              <div className="flex items-center gap-2 rounded-sm bg-primary/20 px-3 py-1.5 border-2 border-primary/60 shadow-[0_0_20px_rgba(255,140,66,0.5)]">
+                <Trophy className="h-4 w-4 text-primary" />
+                <span className="font-mono text-sm font-bold text-primary" data-testid="text-points">{user.totalPoints.toLocaleString()}</span>
+                <span className="text-xs text-muted-foreground">pts</span>
+              </div>
+              {freeTierData && freeTierData.ggCoins > 0 && (
+                <div className="flex items-center gap-2 rounded-sm bg-accent/20 px-3 py-1.5 border-2 border-accent/60">
+                  <Coins className="h-4 w-4 text-accent-foreground" />
+                  <span className="font-mono text-sm font-bold" data-testid="text-gg-coins">{freeTierData.ggCoins.toLocaleString()}</span>
+                  <span className="text-xs text-muted-foreground">GG</span>
+                </div>
+              )}
             </div>
           )}
           
@@ -111,7 +126,12 @@ export default function Header() {
                 <div className="px-2 py-1.5">
                   <p className="text-sm font-medium">{user.firstName || "User"}</p>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
-                  <p className="text-xs text-primary font-semibold mt-1">{user.totalPoints} points</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <p className="text-xs text-primary font-semibold">{user.totalPoints} points</p>
+                    {freeTierData && freeTierData.ggCoins > 0 && (
+                      <p className="text-xs text-accent-foreground font-semibold">{freeTierData.ggCoins} GG Coins</p>
+                    )}
+                  </div>
                 </div>
                 <DropdownMenuSeparator />
                 <Link href={`/profile/${user.id}`}>

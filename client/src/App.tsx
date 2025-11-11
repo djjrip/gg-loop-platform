@@ -29,6 +29,7 @@ import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Login from "@/pages/Login";
 import Stats from "@/pages/Stats";
+import FreeTier from "@/pages/FreeTier";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -72,6 +73,7 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/login" component={Login} />
       <Route path="/stats" component={Stats} />
+      <Route path="/free-tier" component={FreeTier} />
       <Route component={NotFound} />
     </Switch>
   );

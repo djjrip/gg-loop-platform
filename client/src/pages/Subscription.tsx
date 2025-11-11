@@ -7,11 +7,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Trophy, Zap, Star, Flame, Gift, Sparkles } from "lucide-react";
+import { Check, X, Trophy, Zap, Star, Flame, Gift, Sparkles, Coins } from "lucide-react";
 import type { Subscription } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
+import { Link } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -32,6 +33,17 @@ export default function SubscriptionPage() {
 
   const { data: userData } = useQuery<{ freeTrial: boolean; freeTrialEndsAt?: string }>({
     queryKey: ["/api/user"],
+    enabled: isAuthenticated,
+  });
+
+  const { data: freeTierData } = useQuery<{ 
+    ggCoins: number; 
+    coinsNeeded: number; 
+    canRedeemTrial: boolean;
+    hasActiveTrial: boolean; 
+    currentStreak: number;
+  }>({
+    queryKey: ["/api/free-tier/status"],
     enabled: isAuthenticated,
   });
 
@@ -94,6 +106,29 @@ export default function SubscriptionPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to start free trial",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const redeemTrialMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/free-tier/redeem-trial", {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Trial Unlocked! 🎉",
+        description: "7 days of Basic tier activated! Start earning points from your wins.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/free-tier/status"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Unable to Redeem",
+        description: error.message || "Failed to redeem trial",
         variant: "destructive",
       });
     },
@@ -521,23 +556,63 @@ export default function SubscriptionPage() {
 
                     <CardFooter>
                       {isFree ? (
-                        <Button
-                          className="w-full"
-                          variant="outline"
-                          onClick={() => window.location.href = isAuthenticated ? '/stats' : '/login'}
-                          data-testid={`button-free-${tier.id}`}
-                        >
-                          {isAuthenticated ? "View Stats Dashboard" : "Get Started Free"}
-                        </Button>
+                        <div className="w-full space-y-3">
+                          {isAuthenticated && freeTierData && (
+                            <>
+                              <div className="bg-muted/50 p-3 rounded-lg">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm text-muted-foreground">Your GG Coins</span>
+                                  <div className="flex items-center gap-1">
+                                    <Coins className="h-4 w-4 text-accent-foreground" />
+                                    <span className="text-lg font-bold">{freeTierData.ggCoins}</span>
+                                    <span className="text-xs text-muted-foreground">/ 500</span>
+                                  </div>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-2">
+                                  <div 
+                                    className="bg-accent h-2 rounded-full transition-all" 
+                                    style={{ width: `${Math.min(100, (freeTierData.ggCoins / 500) * 100)}%` }}
+                                  />
+                                </div>
+                                {freeTierData.coinsNeeded > 0 && (
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    {freeTierData.coinsNeeded} more coins to unlock trial
+                                  </p>
+                                )}
+                              </div>
+                              {freeTierData.canRedeemTrial && !freeTierData.hasActiveTrial && (
+                                <Button
+                                  className="w-full"
+                                  variant="default"
+                                  onClick={() => redeemTrialMutation.mutate()}
+                                  disabled={redeemTrialMutation.isPending}
+                                  data-testid="button-redeem-trial"
+                                >
+                                  {redeemTrialMutation.isPending ? "Unlocking..." : "Unlock 7-Day Trial"}
+                                </Button>
+                              )}
+                            </>
+                          )}
+                          <Link href={isAuthenticated ? '/stats' : '/login'}>
+                            <Button
+                              className="w-full"
+                              variant={isAuthenticated && freeTierData?.canRedeemTrial ? "outline" : "default"}
+                              data-testid={`button-free-${tier.id}`}
+                            >
+                              {isAuthenticated ? "View Stats Dashboard" : "Get Started Free"}
+                            </Button>
+                          </Link>
+                        </div>
                       ) : !isAuthenticated ? (
-                        <Button
-                          className="w-full"
-                          variant={isElite ? "default" : "outline"}
-                          onClick={() => window.location.href = '/login'}
-                          data-testid={`button-login-${tier.id}`}
-                        >
-                          Log in to Subscribe
-                        </Button>
+                        <Link href="/login">
+                          <Button
+                            className="w-full"
+                            variant={isElite ? "default" : "outline"}
+                            data-testid={`button-login-${tier.id}`}
+                          >
+                            Log in to Subscribe
+                          </Button>
+                        </Link>
                       ) : isCurrentTier ? (
                         <Button
                           className="w-full"
