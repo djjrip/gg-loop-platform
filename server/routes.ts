@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
-import { userGames } from "@shared/schema";
+import { userGames, riotAccounts } from "@shared/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupTwitchAuth } from "./twitchAuth";
@@ -502,26 +502,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/riot/link-account', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
-      const { gameId, gameName, tagLine, region = 'na' } = req.body;
+      const { game, gameName, tagLine, region = 'na1' } = req.body;
       
-      if (!gameId || !gameName || !tagLine) {
+      if (!game || !gameName || !tagLine) {
         return res.status(400).json({ 
-          message: "Game ID, Riot ID (GameName#Tag), and region are required" 
+          message: "Game, Riot ID (GameName#Tag), and region are required" 
         });
       }
 
       // Verify account exists via Riot API
-      const { RiotApiService } = await import('./riotApi');
-      const riotApi = new RiotApiService();
+      const { getRiotAPI } = await import('./lib/riot');
+      const riotAPI = getRiotAPI();
       
-      const riotAccount = await riotApi.verifyAccount(gameName, tagLine, region);
+      // Get routing region for Account API (americas, europe, asia, sea)
+      const routingRegion = region.startsWith('na') || region.startsWith('br') || region.startsWith('la') ? 'americas' :
+                           region.startsWith('kr') || region.startsWith('jp') ? 'asia' :
+                           region.startsWith('oc') || region.startsWith('ph') || region.startsWith('sg') || region.startsWith('th') || region.startsWith('tw') || region.startsWith('vn') ? 'sea' :
+                           'europe';
       
-      // Store PUUID and account info
-      const linkedAccount = await storage.linkRiotAccount(userId, gameId, {
+      const riotAccount = await riotAPI.getAccountByRiotId(gameName, tagLine, routingRegion);
+      
+      // Save to database
+      await db.insert(riotAccounts).values({
+        userId,
         puuid: riotAccount.puuid,
         gameName: riotAccount.gameName,
         tagLine: riotAccount.tagLine,
         region,
+        game: game === 'league' ? 'league' : 'valorant',
+      }).onConflictDoUpdate({
+        target: [riotAccounts.userId, riotAccounts.game],
+        set: {
+          puuid: riotAccount.puuid,
+          gameName: riotAccount.gameName,
+          tagLine: riotAccount.tagLine,
+          region,
+          updatedAt: new Date(),
+        },
       });
 
       res.json({ 
@@ -542,22 +559,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's linked Riot account
-  app.get('/api/riot/account/:gameId', getUserMiddleware, async (req: any, res) => {
+  app.get('/api/riot/account/:game', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
-      const { gameId } = req.params;
+      const { game } = req.params;
       
-      const riotAccount = await storage.getRiotAccount(userId, gameId);
+      const [riotAccount] = await db.select().from(riotAccounts).where(
+        and(eq(riotAccounts.userId, userId), eq(riotAccounts.game, game))
+      );
       
       if (!riotAccount) {
-        return res.status(404).json({ message: "No Riot account linked for this game" });
+        return res.json({ linked: false });
       }
 
       res.json({
-        gameName: riotAccount.riotGameName,
-        tagLine: riotAccount.riotTagLine,
-        region: riotAccount.riotRegion,
-        verified: !!riotAccount.verifiedAt,
+        linked: true,
+        gameName: riotAccount.gameName,
+        tagLine: riotAccount.tagLine,
+        region: riotAccount.region,
+        verifiedAt: riotAccount.createdAt,
       });
     } catch (error: any) {
       console.error("Error fetching Riot account:", error);
