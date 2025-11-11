@@ -74,7 +74,7 @@ export default function LaunchChecklist() {
             Everything you need to go live TODAY and validate GG Loop in 6 weeks.
           </p>
 
-          <Card className="border-l-4 border-l-green-600 bg-green-50 dark:bg-green-950/20">
+          <Card className="border-2 border-green-600 bg-green-50 dark:bg-green-950/20">
             <CardContent className="pt-6">
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
@@ -97,9 +97,9 @@ export default function LaunchChecklist() {
               data-testid={`section-${idx}`}
               className={
                 section.status === 'complete'
-                  ? 'border-l-4 border-l-green-600'
+                  ? 'border-2 border-green-600'
                   : section.status === 'action'
-                  ? 'border-l-4 border-l-primary'
+                  ? 'border-2 border-primary'
                   : ''
               }
             >

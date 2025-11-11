@@ -19,7 +19,7 @@ export default function TwitchOutreach() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const twitchMessage = `Hey [Name]! 👋
+  const twitchMessage = `Hey [Name]!
 
 I'm building GG Loop - a platform where competitive League/VALORANT players like you can earn real rewards (gift cards, gaming gear) for verified match wins.
 
@@ -41,7 +41,7 @@ Would love to have you in the founding cohort!`;
 
   const discordMessage = `@everyone 
 
-🎮 **Earn Real Rewards for Your League/VALORANT Wins**
+**Earn Real Rewards for Your League/VALORANT Wins**
 
 GG Loop is a new platform where competitive players can turn match wins into real money.
 
