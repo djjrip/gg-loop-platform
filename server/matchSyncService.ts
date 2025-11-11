@@ -10,6 +10,20 @@ const MATCHES_TO_CHECK = 5; // Only check last 5 matches per sync
 
 let syncInterval: NodeJS.Timeout | null = null;
 
+/**
+ * Check if a date is from today (same calendar day in UTC)
+ */
+function isToday(date: Date): boolean {
+  const today = new Date();
+  const targetDate = new Date(date);
+  
+  return (
+    targetDate.getUTCFullYear() === today.getUTCFullYear() &&
+    targetDate.getUTCMonth() === today.getUTCMonth() &&
+    targetDate.getUTCDate() === today.getUTCDate()
+  );
+}
+
 export async function startMatchSyncService() {
   console.log('[MatchSync] Starting match sync service...');
   
@@ -110,6 +124,22 @@ async function syncLeagueAccount(account: typeof riotAccounts.$inferSelect) {
     
     const didWin = participant.win;
     const gameEndedAt = new Date(matchData.info.gameEndTimestamp);
+    
+    // Only award rewards for matches played today
+    if (!isToday(gameEndedAt)) {
+      console.log(`[MatchSync] - Match ${matchId} is from ${gameEndedAt.toLocaleDateString()}. Only same-day matches earn rewards.`);
+      
+      // Still record as processed to avoid re-checking
+      await db.insert(processedRiotMatches).values({
+        riotAccountId: account.id,
+        matchId,
+        gameEndedAt,
+        isWin: didWin,
+        pointsAwarded: 0,
+        transactionId: null,
+      });
+      continue;
+    }
     
     // Award points or GG Coins based on subscription status
     let pointsAwarded = 0;
@@ -224,6 +254,22 @@ async function syncValorantAccount(account: typeof riotAccounts.$inferSelect) {
     const gameStartMillis = matchData.matchInfo?.gameStartMillis || Date.now();
     const gameLengthMillis = matchData.matchInfo?.gameLengthMillis || 0;
     const gameEndedAt = new Date(gameStartMillis + gameLengthMillis);
+    
+    // Only award rewards for matches played today
+    if (!isToday(gameEndedAt)) {
+      console.log(`[MatchSync] - Match ${matchId} is from ${gameEndedAt.toLocaleDateString()}. Only same-day matches earn rewards.`);
+      
+      // Still record as processed to avoid re-checking
+      await db.insert(processedRiotMatches).values({
+        riotAccountId: account.id,
+        matchId,
+        gameEndedAt,
+        isWin: didWin,
+        pointsAwarded: 0,
+        transactionId: null,
+      });
+      continue;
+    }
     
     // Award points or GG Coins based on subscription status
     let pointsAwarded = 0;
