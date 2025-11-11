@@ -42,7 +42,7 @@ export default function Hero() {
             </h1>
 
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8 font-medium">
-              Turn every match into <span className="text-primary font-semibold">real rewards</span>. Start free for 7 days, then choose your tier. <span className="text-primary font-semibold">Earn points</span> from wins, unlock <span className="text-primary font-semibold">bonus challenges</span> from sponsors, and redeem for gift cards and gaming gear.
+              Turn every match into <span className="text-primary font-semibold">real rewards</span>. Start free for 7 days, then choose your tier. <span className="text-primary font-semibold">Earn points</span> from wins, unlock <span className="text-primary font-semibold">bonus challenges</span> from sponsors, and redeem for gaming peripherals, gear, and subscriptions.
             </p>
 
             <div className="flex items-center justify-center gap-6 mb-12">
