@@ -10,7 +10,7 @@ import {
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
   insertReferralSchema
 } from "@shared/schema";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, sql, inArray } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./oauth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { z } from "zod";
@@ -2086,6 +2086,132 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
     } catch (error: any) {
       console.error("Error syncing sponsor budgets:", error);
       res.status(500).json({ message: error.message || "Sync failed" });
+    }
+  });
+
+  // Sponsor Analytics
+  app.get('/api/admin/sponsors/:id/analytics', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Get sponsor
+      const [sponsor] = await db.select()
+        .from(sponsors)
+        .where(eq(sponsors.id, id))
+        .limit(1);
+      
+      if (!sponsor) {
+        return res.status(404).json({ message: "Sponsor not found" });
+      }
+      
+      // Get all challenges for this sponsor
+      const sponsorChallenges = await db.select()
+        .from(challenges)
+        .where(eq(challenges.sponsorId, id));
+      
+      // Calculate aggregate metrics
+      const totalChallenges = sponsorChallenges.length;
+      const activeChallenges = sponsorChallenges.filter(c => c.isActive).length;
+      const totalBudgetAllocated = sponsorChallenges.reduce((sum, c) => sum + c.totalBudget, 0);
+      const totalPointsDistributed = sponsorChallenges.reduce((sum, c) => sum + c.pointsDistributed, 0);
+      
+      // Get completion stats for all sponsor challenges
+      const challengeIds = sponsorChallenges.map(c => c.id);
+      const completions = challengeIds.length > 0 
+        ? await db.select()
+            .from(challengeCompletions)
+            .where(inArray(challengeCompletions.challengeId, challengeIds))
+        : [];
+      
+      const totalParticipants = new Set(completions.map(c => c.userId)).size;
+      
+      // Count unique users who completed (met requirement)
+      const completedUsers = new Set(
+        completions
+          .filter(c => {
+            const challenge = sponsorChallenges.find(ch => ch.id === c.challengeId);
+            return challenge && c.progress >= challenge.requirementCount;
+          })
+          .map(c => c.userId)
+      );
+      const totalCompletions = completedUsers.size;
+      
+      // Count unique users who claimed
+      const claimedUsers = new Set(
+        completions
+          .filter(c => c.claimed)
+          .map(c => c.userId)
+      );
+      const totalClaims = claimedUsers.size;
+      
+      // Build per-challenge analytics from completions data (no N+1 queries)
+      const challengeAnalytics = sponsorChallenges.map((challenge) => {
+        const challengeCompletionData = completions.filter(c => c.challengeId === challenge.id);
+        
+        // Unique participants for this challenge
+        const participants = new Set(challengeCompletionData.map(c => c.userId)).size;
+        
+        // Unique users who completed (met requirement)
+        const completed = new Set(
+          challengeCompletionData
+            .filter(c => c.progress >= challenge.requirementCount)
+            .map(c => c.userId)
+        ).size;
+        
+        // Unique users who claimed
+        const claimed = new Set(
+          challengeCompletionData
+            .filter(c => c.claimed)
+            .map(c => c.userId)
+        ).size;
+        
+        const completionRate = participants > 0 ? (completed / participants) * 100 : 0;
+        const claimRate = completed > 0 ? (claimed / completed) * 100 : 0;
+        
+        return {
+          challengeId: challenge.id,
+          title: challenge.title,
+          isActive: challenge.isActive,
+          budget: challenge.totalBudget,
+          distributed: challenge.pointsDistributed,
+          participants,
+          completed,
+          claimed,
+          completionRate: Math.round(completionRate),
+          claimRate: Math.round(claimRate),
+          costPerClaim: claimed > 0 ? Math.round(challenge.pointsDistributed / claimed) : 0
+        };
+      });
+      
+      res.json({
+        sponsor: {
+          id: sponsor.id,
+          name: sponsor.name,
+          status: sponsor.status
+        },
+        overview: {
+          totalBudget: sponsor.totalBudget,
+          spentBudget: sponsor.spentBudget,
+          remainingBudget: sponsor.totalBudget - sponsor.spentBudget,
+          totalChallenges,
+          activeChallenges,
+          totalBudgetAllocated,
+          totalPointsDistributed,
+          totalParticipants,
+          totalCompletions,
+          totalClaims,
+          avgCompletionRate: totalParticipants > 0 
+            ? Math.round((totalCompletions / totalParticipants) * 100) 
+            : 0,
+          avgClaimRate: totalCompletions > 0 
+            ? Math.round((totalClaims / totalCompletions) * 100) 
+            : 0
+        },
+        challenges: challengeAnalytics
+      });
+    } catch (error: any) {
+      console.error("Error fetching sponsor analytics:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch analytics" });
     }
   });
 

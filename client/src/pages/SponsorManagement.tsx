@@ -24,7 +24,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
-  Globe
+  Globe,
+  BarChart3
 } from "lucide-react";
 
 interface Sponsor {
@@ -61,10 +62,22 @@ export default function SponsorManagement() {
   const [editingSponsor, setEditingSponsor] = useState<Sponsor | null>(null);
   const [addingBudgetTo, setAddingBudgetTo] = useState<string | null>(null);
   const [budgetAmount, setBudgetAmount] = useState("");
+  const [viewingAnalytics, setViewingAnalytics] = useState<string | null>(null);
 
   // Fetch sponsors
   const { data: sponsors = [], isLoading } = useQuery<Sponsor[]>({
     queryKey: ['/api/admin/sponsors'],
+  });
+
+  // Fetch sponsor analytics
+  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+    queryKey: ['/api/admin/sponsors', viewingAnalytics, 'analytics'],
+    queryFn: async () => {
+      if (!viewingAnalytics) return null;
+      const res = await apiRequest(`/api/admin/sponsors/${viewingAnalytics}/analytics`, 'GET');
+      return res.json();
+    },
+    enabled: !!viewingAnalytics,
   });
 
   // Create sponsor mutation
@@ -581,6 +594,15 @@ export default function SponsorManagement() {
                       <Button
                         size="sm"
                         variant="outline"
+                        onClick={() => setViewingAnalytics(sponsor.id)}
+                        data-testid={`button-analytics-${sponsor.id}`}
+                      >
+                        <BarChart3 className="mr-1 h-3 w-3" />
+                        Analytics
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => setEditingSponsor(sponsor)}
                         data-testid={`button-edit-${sponsor.id}`}
                       >
@@ -738,6 +760,149 @@ export default function SponsorManagement() {
                 </div>
               </form>
             </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Analytics Dialog */}
+        <Dialog open={!!viewingAnalytics} onOpenChange={(open) => !open && setViewingAnalytics(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Sponsor Analytics - {analytics?.sponsor.name}</DialogTitle>
+              <DialogDescription>
+                Detailed performance metrics and ROI tracking
+              </DialogDescription>
+            </DialogHeader>
+            
+            {analyticsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : analytics ? (
+              <div className="space-y-6">
+                {/* Overview Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-xs text-muted-foreground mb-1">Total Budget</div>
+                      <div className="text-2xl font-bold">{analytics.overview.totalBudget.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">pts</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-xs text-muted-foreground mb-1">Spent</div>
+                      <div className="text-2xl font-bold text-orange-600">{analytics.overview.spentBudget.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">pts</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-xs text-muted-foreground mb-1">Participants</div>
+                      <div className="text-2xl font-bold text-blue-600">{analytics.overview.totalParticipants.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">users</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-xs text-muted-foreground mb-1">Claims</div>
+                      <div className="text-2xl font-bold text-green-600">{analytics.overview.totalClaims.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">completed</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Key Metrics */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-xs text-muted-foreground mb-1">Active Challenges</div>
+                      <div className="text-xl font-semibold">{analytics.overview.activeChallenges} / {analytics.overview.totalChallenges}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-xs text-muted-foreground mb-1">Completion Rate</div>
+                      <div className="text-xl font-semibold">{analytics.overview.avgCompletionRate}%</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-xs text-muted-foreground mb-1">Claim Rate</div>
+                      <div className="text-xl font-semibold">{analytics.overview.avgClaimRate}%</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Per-Challenge Analytics */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Challenge Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {analytics.challenges.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No challenges created yet for this sponsor
+                        </p>
+                      ) : (
+                        analytics.challenges.map((challenge: any) => (
+                          <div key={challenge.challengeId} className="border rounded-lg p-4 space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <h4 className="font-semibold">{challenge.title}</h4>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant={challenge.isActive ? 'default' : 'secondary'}>
+                                    {challenge.isActive ? 'Active' : 'Inactive'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-3 md:grid-cols-5 gap-3 text-sm">
+                              <div>
+                                <div className="text-xs text-muted-foreground">Budget</div>
+                                <div className="font-semibold">{challenge.budget.toLocaleString()} pts</div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-muted-foreground">Distributed</div>
+                                <div className="font-semibold text-orange-600">{challenge.distributed.toLocaleString()} pts</div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-muted-foreground">Participants</div>
+                                <div className="font-semibold">{challenge.participants}</div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-muted-foreground">Completed</div>
+                                <div className="font-semibold">{challenge.completed}</div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-muted-foreground">Claimed</div>
+                                <div className="font-semibold text-green-600">{challenge.claimed}</div>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm pt-2 border-t">
+                              <div>
+                                <div className="text-xs text-muted-foreground">Completion Rate</div>
+                                <div className="font-semibold">{challenge.completionRate}%</div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-muted-foreground">Claim Rate</div>
+                                <div className="font-semibold">{challenge.claimRate}%</div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-muted-foreground">Cost Per Claim</div>
+                                <div className="font-semibold">{challenge.costPerClaim.toLocaleString()} pts</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : null}
           </DialogContent>
         </Dialog>
       </main>
