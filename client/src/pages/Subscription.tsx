@@ -100,6 +100,24 @@ export default function SubscriptionPage() {
 
   const tiers = [
     {
+      id: "free",
+      name: "Free",
+      price: 0,
+      icon: Gift,
+      description: "Start earning today, no payment required",
+      badge: "Always Free",
+      features: [
+        { text: "Earn 10 GG Coins per win", included: true },
+        { text: "Login streak bonuses", included: true },
+        { text: "100 points per month cap", included: true },
+        { text: "Redeem for gift cards & rewards", included: true },
+        { text: "Auto-sync League & Valorant matches", included: true },
+        { text: "Access to stats dashboard", included: true },
+        { text: "Unlock 7-day trial with 500 GG Coins", included: true },
+        { text: "Higher earning caps", included: false },
+      ],
+    },
+    {
       id: "basic",
       name: "Basic",
       price: 5,
@@ -422,11 +440,12 @@ export default function SubscriptionPage() {
               </Card>
             )}
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {tiers.map((tier) => {
                 const TierIcon = tier.icon;
                 const isCurrentTier = subscription?.tier === tier.id;
                 const isElite = tier.id === "elite";
+                const isFree = tier.id === "free";
 
                 return (
                   <Card
@@ -500,11 +519,20 @@ export default function SubscriptionPage() {
                     </CardContent>
 
                     <CardFooter>
-                      {!isAuthenticated ? (
+                      {isFree ? (
+                        <Button
+                          className="w-full"
+                          variant="outline"
+                          onClick={() => window.location.href = isAuthenticated ? '/stats' : '/login'}
+                          data-testid={`button-free-${tier.id}`}
+                        >
+                          {isAuthenticated ? "View Stats Dashboard" : "Get Started Free"}
+                        </Button>
+                      ) : !isAuthenticated ? (
                         <Button
                           className="w-full"
                           variant={isElite ? "default" : "outline"}
-                          onClick={() => window.location.href = '/api/login'}
+                          onClick={() => window.location.href = '/login'}
                           data-testid={`button-login-${tier.id}`}
                         >
                           Log in to Subscribe
