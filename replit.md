@@ -3,6 +3,16 @@
 ## Overview
 GG Loop is a web platform that enables gamers to earn real-world rewards through a subscription model. It features a performance-based points economy, a tiered rewards catalog, leaderboards, and achievement tracking to incentivize engagement and reward player skill. The platform aims to bridge the gap between gaming achievements and tangible value, offering a unique value proposition for dedicated gamers.
 
+**Sustainable Economics (100:1 Point Ratio):**
+- **Point-to-Dollar Conversion**: 100 points = $1 in reward value
+- **Tier Structure**: Basic ($5/mo), Pro ($12/mo), Elite ($25/mo)
+- **Monthly Earning Caps** (prevents users from exceeding subscription value):
+  - Basic: 400 points max ($4 in rewards) = $1 profit (20% margin)
+  - Pro: 800 points max ($8 in rewards) = $4 profit (33% margin)
+  - Elite: 1500 points max ($15 in rewards) = $10 profit (40% margin)
+- **Tier Multipliers**: Basic 1x, Pro 2x, Elite 3x on all earning activities
+- **Subscription Bonuses**: Basic 100pts/month, Pro 200pts/month, Elite 300pts/month (included in monthly cap)
+
 ## Target User Persona
 **"The Struggling Streamer" - Core User Profile:**
 - **Demographics**: 18-30 years old, passionate gamer, aspiring content creator
@@ -32,9 +42,9 @@ I prefer detailed explanations. I want iterative development. Ask before making 
 The backend uses Express.js with TypeScript. PostgreSQL (Neon) with Drizzle ORM handles data persistence. Authentication is managed via Replit Auth (OIDC), and Stripe is integrated for subscription payments. TanStack Query v5 is used for state management.
 
 ### Feature Specifications
-*   **Subscription System**: Offers a Basic tier ($5/month) with a 10:1 points-to-value ratio (10 points = $1 reward value). Includes base and performance-based monthly points. Payments are processed via Stripe Checkout, with webhooks automating point awards.
-*   **Points Engine**: Defines rules for earning points (e.g., subscription, match wins, achievements, daily challenges, tournament placements). Points expire after 12 months, and daily caps are enforced for certain activities. All point operations ensure transactional integrity.
-*   **Rewards Catalog**: Structured into four tiers (100-350, 400-800, 1200-3000, 5000+ points) offering diverse rewards from gift cards to elite items. Includes automatic inventory management and transactional redemption processes.
+*   **Subscription System**: Three tiers with sustainable economics - Basic ($5/month), Pro ($12/month), Elite ($25/month). Uses 100:1 point ratio (100 points = $1 reward value). Includes tier-specific multipliers (1x/2x/3x) and monthly subscription bonuses. Payments processed via Stripe Checkout with webhooks automating point awards.
+*   **Points Engine**: Defines rules for earning points (match wins: 5pts base, achievements: 15pts, tournaments: 50pts). Features monthly earning caps per tier (Basic: 400pts, Pro: 800pts, Elite: 1500pts) to ensure profitability. Daily caps enforced for certain activities (match wins: 50pts/day). Points expire after 12 months. All operations ensure transactional integrity with race-safe PostgreSQL advisory locks.
+*   **Rewards Catalog**: All rewards priced at sustainable 100:1 ratio. Range from low-tier (500pts = $5 badge) to elite items (50000pts = $500 laptop fund). Includes gift cards (Steam, PlayStation, Xbox, Amazon), gaming gear (mouse, keyboard, chair), and exclusive perks. Automatic inventory management with transactional redemption processes.
 *   **Gaming Webhook Integration**: Securely integrates with gaming platforms using HMAC-SHA256 signature validation. Endpoints for match wins, achievements, and tournament placements automatically award points. Includes robust validation, error handling, and event deduplication to prevent fraudulent or duplicate point awards. API partners are managed with hashed secrets and active status checks.
 *   **TikTok Content Generator**: Static template library with 12 viral script templates for marketing GG Loop on TikTok. Includes hooks, body copy, CTAs, hashtags, pro tips, and trending sounds guidance. Zero automation - manual copy/paste workflow.
 *   **Trophy Case (Public Profiles)**: ✅ LIVE - Premium collectible display system with NBA Top Shot aesthetic. Features TrophyCard component with rarity tiers (Common/Rare/Epic/Legendary), serial numbers, achievement dates, and responsive grid layout. Profile page at `/profile/:username` or `/profile/:userId` shows user stats, trophy collection, and gaming activity.
@@ -60,10 +70,17 @@ The database schema includes core tables for users (with username and founder su
 *   **DISCORD_PITCH.md**: Step-by-step guide for pitching to Riot Games Developer Relations community
 
 ### Recent Changes (November 11, 2025)
-*   **Riot Account Linking (In Progress)**: Built secure 2-step verification system for League of Legends. Users enter Riot ID → get verification code → enter in League client → account verified. Backend uses Riot's official third-party code API for ownership proof. Session-based with 10-minute expiration. Settings page UI complete with region selector, copy-to-clipboard, step-by-step instructions.
+*   **🚨 CRITICAL FIX - Sustainable Economics Implemented**: Fixed catastrophic financial model that would have bankrupted the platform. Changed from 10:1 to 100:1 point ratio, added monthly earning caps per tier, and updated all 18 rewards to sustainable pricing.
+    - **Old Model (BROKEN)**: Users could earn 1500pts/month ($150 in rewards) for $5 subscription = **$145 loss per user** 💸
+    - **New Model (SUSTAINABLE)**: Basic tier capped at 400pts/month ($4 in rewards) on $5 subscription = **$1 profit (20% margin)** ✅
+    - Monthly caps: Basic 400pts ($4), Pro 800pts ($8), Elite 1500pts ($15)
+    - Tier multipliers: Basic 1x, Pro 2x, Elite 3x
+    - All rewards now priced at 100:1 ratio (Steam $10 = 1000pts, Gaming Mouse $50 = 5000pts)
+    - Subscription bonuses count toward monthly cap to prevent loopholes
+*   **Riot Account Linking**: Built secure 2-step verification system for League of Legends. Users enter Riot ID → get verification code → enter in League client → account verified. Backend uses Riot's official third-party code API for ownership proof. Session-based with 10-minute expiration. Settings page UI complete with region selector, copy-to-clipboard, step-by-step instructions.
 *   **Security Fixes**: Fixed critical vulnerability where anyone could claim any Riot account. Now requires proof of ownership via in-game verification code.
-*   **Blockers Discovered**: Valorant verification won't work (Riot doesn't provide third-party code API for Valorant). Missing rate limiting on verification endpoints (security risk). Valorant card needs to be removed before launch.
-*   **Next Steps**: Remove Valorant card, add rate limiting to protect API key, test League linking end-to-end, then ship automatic verified match wins for League players.
+*   **Known Issues**: Valorant verification won't work (Riot doesn't provide third-party code API for Valorant). Missing rate limiting on verification endpoints. OAuth consent popup blocks verification flow.
+*   **Next Steps**: Remove Valorant card, add rate limiting to protect API key, fix OAuth popup blocking, test League linking end-to-end, then ship automatic verified match wins for League players.
 
 ### Recent Changes (November 10, 2025)
 *   **Recent Earnings Feed**: Homepage now displays real-time activity feed showing last 5 match wins across all users with game name, points earned, and time-ago display
