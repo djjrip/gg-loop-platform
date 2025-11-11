@@ -2,6 +2,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 // @ts-ignore - no type definitions available for passport-twitch-new
 import { Strategy as TwitchStrategy } from "passport-twitch-new";
+import { Strategy as DiscordStrategy } from "passport-discord";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import connectPg from "connect-pg-simple";
@@ -30,9 +31,9 @@ export function getSession() {
 }
 
 interface AuthUser {
-  provider: 'google' | 'twitch';
+  provider: 'google' | 'twitch' | 'discord';
   providerId: string;
-  oidcSub: string; // Format: "google:12345" or "twitch:67890"
+  oidcSub: string; // Format: "google:12345", "twitch:67890", or "discord:abc123"
   email: string;
   displayName: string;
   profileImage?: string;
@@ -126,6 +127,47 @@ export async function setupAuth(app: Express) {
     }));
   }
 
+  // Discord OAuth Strategy
+  if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
+    passport.use(new DiscordStrategy({
+      clientID: process.env.DISCORD_CLIENT_ID,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET,
+      callbackURL: "/api/auth/discord/callback",
+      scope: ['identify', 'email'],
+    }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+      try {
+        const email = profile.email;
+        if (!email) {
+          return done(new Error("No email from Discord"));
+        }
+
+        const oidcSub = `discord:${profile.id}`;
+        const authUser: AuthUser = {
+          provider: 'discord',
+          providerId: profile.id,
+          oidcSub,
+          email,
+          displayName: profile.username,
+          profileImage: profile.avatar 
+            ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
+            : undefined,
+        };
+
+        await storage.upsertUser({
+          oidcSub,
+          email: authUser.email,
+          firstName: profile.username,
+          lastName: '',
+          profileImageUrl: authUser.profileImage,
+        });
+
+        done(null, authUser);
+      } catch (error) {
+        done(error as Error);
+      }
+    }));
+  }
+
   // Google OAuth routes
   app.get("/api/auth/google",
     passport.authenticate("google", { scope: ["profile", "email"] })
@@ -175,6 +217,48 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/auth/twitch/callback",
     passport.authenticate("twitch", { failureRedirect: "/" }),
+    async (req, res) => {
+      // Regenerate session for security
+      const user = req.user;
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error('Session regeneration error:', err);
+          return res.redirect("/");
+        }
+        req.login(user!, async (err) => {
+          if (err) {
+            console.error('Login error:', err);
+            return res.redirect("/");
+          }
+          
+          // Update login streak and award GG Coins
+          try {
+            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
+            if (dbUser) {
+              const { updateLoginStreak } = await import('./lib/freeTier');
+              const streakResult = await updateLoginStreak(dbUser.id);
+              if (streakResult.coinsAwarded > 0) {
+                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+              }
+            }
+          } catch (error) {
+            console.error('[Login] Failed to update streak:', error);
+            // Don't block login on streak error
+          }
+          
+          res.redirect("/");
+        });
+      });
+    }
+  );
+
+  // Discord OAuth routes
+  app.get("/api/auth/discord",
+    passport.authenticate("discord")
+  );
+
+  app.get("/api/auth/discord/callback",
+    passport.authenticate("discord", { failureRedirect: "/" }),
     async (req, res) => {
       // Regenerate session for security
       const user = req.user;

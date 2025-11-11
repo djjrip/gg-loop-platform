@@ -76,7 +76,7 @@ export default function SubscriptionPage() {
 
   const freeTrialMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/referral/start-trial", { 
+      const response = await apiRequest("POST", "/api/referrals/start-trial", { 
         referralCode: referralCode.trim() || undefined 
       });
       return response.json();
