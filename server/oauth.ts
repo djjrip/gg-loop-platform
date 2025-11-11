@@ -133,7 +133,7 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/auth/google/callback",
     passport.authenticate("google", { failureRedirect: "/" }),
-    (req, res) => {
+    async (req, res) => {
       // Regenerate session for security
       const user = req.user;
       req.session.regenerate((err) => {
@@ -141,11 +141,27 @@ export async function setupAuth(app: Express) {
           console.error('Session regeneration error:', err);
           return res.redirect("/");
         }
-        req.login(user!, (err) => {
+        req.login(user!, async (err) => {
           if (err) {
             console.error('Login error:', err);
             return res.redirect("/");
           }
+          
+          // Update login streak and award GG Coins
+          try {
+            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
+            if (dbUser) {
+              const { updateLoginStreak } = await import('./lib/freeTier');
+              const streakResult = await updateLoginStreak(dbUser.id);
+              if (streakResult.coinsAwarded > 0) {
+                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+              }
+            }
+          } catch (error) {
+            console.error('[Login] Failed to update streak:', error);
+            // Don't block login on streak error
+          }
+          
           res.redirect("/");
         });
       });
@@ -159,7 +175,7 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/auth/twitch/callback",
     passport.authenticate("twitch", { failureRedirect: "/" }),
-    (req, res) => {
+    async (req, res) => {
       // Regenerate session for security
       const user = req.user;
       req.session.regenerate((err) => {
@@ -167,11 +183,27 @@ export async function setupAuth(app: Express) {
           console.error('Session regeneration error:', err);
           return res.redirect("/");
         }
-        req.login(user!, (err) => {
+        req.login(user!, async (err) => {
           if (err) {
             console.error('Login error:', err);
             return res.redirect("/");
           }
+          
+          // Update login streak and award GG Coins
+          try {
+            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
+            if (dbUser) {
+              const { updateLoginStreak } = await import('./lib/freeTier');
+              const streakResult = await updateLoginStreak(dbUser.id);
+              if (streakResult.coinsAwarded > 0) {
+                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+              }
+            }
+          } catch (error) {
+            console.error('[Login] Failed to update streak:', error);
+            // Don't block login on streak error
+          }
+          
           res.redirect("/");
         });
       });
