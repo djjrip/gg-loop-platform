@@ -13,9 +13,10 @@ interface RewardsCardProps {
   category: string;
   onClaim?: (rewardId: string) => void;
   isClaimLoading?: boolean;
+  canAfford?: boolean;
 }
 
-export default function RewardsCard({ id, title, description, points, isUnlocked, isClaimed, category, onClaim, isClaimLoading }: RewardsCardProps) {
+export default function RewardsCard({ id, title, description, points, isUnlocked, isClaimed, category, onClaim, isClaimLoading, canAfford = true }: RewardsCardProps) {
   return (
     <Card className="p-6 relative overflow-hidden" data-testid={`card-reward-${title.toLowerCase().replace(/\s/g, '-')}`}>
       {!isUnlocked && (
@@ -50,7 +51,7 @@ export default function RewardsCard({ id, title, description, points, isUnlocked
           {isUnlocked && (
             <Button 
               size="sm" 
-              disabled={isClaimed || isClaimLoading}
+              disabled={isClaimed || isClaimLoading || !canAfford}
               onClick={() => onClaim?.(id)}
               data-testid={`button-claim-${title.toLowerCase().replace(/\s/g, '-')}`}
             >
@@ -61,6 +62,8 @@ export default function RewardsCard({ id, title, description, points, isUnlocked
                 </>
               ) : isClaimLoading ? (
                 "Claiming..."
+              ) : !canAfford ? (
+                "Not Enough Points"
               ) : (
                 "Claim"
               )}

@@ -297,6 +297,7 @@ export default function Home() {
             ) : rewards && rewards.length > 0 ? (
               rewards.slice(0, 9).map((reward) => {
                 const isClaimed = userRewards?.some(ur => ur.rewardId === reward.id) || false;
+                const canAfford = user ? user.totalPoints >= reward.pointsCost : false;
                 return (
                   <RewardsCard
                     key={reward.id}
@@ -304,11 +305,12 @@ export default function Home() {
                     title={reward.title}
                     description={reward.description || ""}
                     points={reward.pointsCost}
-                    isUnlocked={user ? user.totalPoints >= reward.pointsCost : false}
+                    isUnlocked={true}
                     isClaimed={isClaimed}
                     category={reward.category}
                     onClaim={handleClaimReward}
                     isClaimLoading={claimingRewardId === reward.id}
+                    canAfford={canAfford}
                   />
                 );
               })
