@@ -1852,6 +1852,30 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
     }
   });
 
+  // Admin endpoint to manually trigger stream verification (for testing)
+  app.post('/api/admin/verify-streams', adminMiddleware, async (req: any, res) => {
+    try {
+      const { streamingVerifier } = await import("./streamingVerifier");
+      await streamingVerifier.checkActiveStreams();
+      res.json({ success: true, message: "Stream verification triggered" });
+    } catch (error: any) {
+      console.error("Error verifying streams:", error);
+      res.status(500).json({ message: error.message || "Failed to verify streams" });
+    }
+  });
+
+  // Admin endpoint to check specific user's stream
+  app.post('/api/admin/verify-user-stream/:userId', adminMiddleware, async (req: any, res) => {
+    try {
+      const { streamingVerifier } = await import("./streamingVerifier");
+      await streamingVerifier.checkUserStream(req.params.userId);
+      res.json({ success: true, message: "User stream verified" });
+    } catch (error: any) {
+      console.error("Error verifying user stream:", error);
+      res.status(500).json({ message: error.message || "Failed to verify user stream" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

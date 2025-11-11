@@ -77,5 +77,12 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Start streaming verification monitoring
+    import("./streamingVerifier").then(({ streamingVerifier }) => {
+      streamingVerifier.startMonitoring();
+    }).catch((err) => {
+      console.error("Failed to start streaming verifier:", err);
+    });
   });
 })();
