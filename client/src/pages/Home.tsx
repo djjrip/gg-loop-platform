@@ -312,6 +312,7 @@ export default function Home() {
                     isClaimLoading={claimingRewardId === reward.id}
                     canAfford={canAfford}
                     currentPoints={user?.totalPoints || 0}
+                    imageUrl={reward.imageUrl}
                   />
                 );
               })

@@ -16,9 +16,10 @@ interface RewardsCardProps {
   isClaimLoading?: boolean;
   canAfford?: boolean;
   currentPoints?: number;
+  imageUrl?: string | null;
 }
 
-export default function RewardsCard({ id, title, description, points, isUnlocked, isClaimed, category, onClaim, isClaimLoading, canAfford = true, currentPoints = 0 }: RewardsCardProps) {
+export default function RewardsCard({ id, title, description, points, isUnlocked, isClaimed, category, onClaim, isClaimLoading, canAfford = true, currentPoints = 0, imageUrl }: RewardsCardProps) {
   const progress = Math.min((currentPoints / points) * 100, 100);
   const pointsNeeded = Math.max(points - currentPoints, 0);
   
@@ -31,6 +32,17 @@ export default function RewardsCard({ id, title, description, points, isUnlocked
       )}
 
       <div className="space-y-4">
+        {imageUrl && (
+          <div className="aspect-video w-full rounded-lg overflow-hidden bg-muted">
+            <img 
+              src={imageUrl} 
+              alt={title}
+              className="w-full h-full object-cover"
+              data-testid={`img-reward-${title.toLowerCase().replace(/\s/g, '-')}`}
+            />
+          </div>
+        )}
+        
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1 flex-1">
             <h3 className="font-semibold text-lg" data-testid={`text-reward-title-${title.toLowerCase().replace(/\s/g, '-')}`}>
