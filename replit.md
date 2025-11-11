@@ -59,6 +59,12 @@ The database schema includes core tables for users (with username and founder su
 *   **KICKSTARTER_STRATEGY.md**: Complete campaign guide with budget ($25K-$50K), reward tiers ($10-$250), marketing timeline, and launch strategy
 *   **DISCORD_PITCH.md**: Step-by-step guide for pitching to Riot Games Developer Relations community
 
+### Recent Changes (November 11, 2025)
+*   **Riot Account Linking (In Progress)**: Built secure 2-step verification system for League of Legends. Users enter Riot ID → get verification code → enter in League client → account verified. Backend uses Riot's official third-party code API for ownership proof. Session-based with 10-minute expiration. Settings page UI complete with region selector, copy-to-clipboard, step-by-step instructions.
+*   **Security Fixes**: Fixed critical vulnerability where anyone could claim any Riot account. Now requires proof of ownership via in-game verification code.
+*   **Blockers Discovered**: Valorant verification won't work (Riot doesn't provide third-party code API for Valorant). Missing rate limiting on verification endpoints (security risk). Valorant card needs to be removed before launch.
+*   **Next Steps**: Remove Valorant card, add rate limiting to protect API key, test League linking end-to-end, then ship automatic verified match wins for League players.
+
 ### Recent Changes (November 10, 2025)
 *   **Recent Earnings Feed**: Homepage now displays real-time activity feed showing last 5 match wins across all users with game name, points earned, and time-ago display
 *   **Founder's Badge System**: ✅ LIVE & PRODUCTION-READY - First 100 users automatically receive founder status with sequential badge numbers (#1-#100) and +500 bonus points. Features race-safe assignment using PostgreSQL advisory locks (pg_advisory_xact_lock), transactional integrity, and UNIQUE index safeguard. All 15 existing users awarded founder status (#1-#15)
