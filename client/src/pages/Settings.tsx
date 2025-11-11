@@ -51,11 +51,12 @@ export default function Settings() {
   const [username, setUsername] = useState("");
   const [location] = useLocation();
   
-  // Riot account linking state (simplified - no verification codes needed)
+  // Riot account linking state
   const [leagueRiotId, setLeagueRiotId] = useState(""); // Format: GameName#TAG
   const [leagueRegion, setLeagueRegion] = useState("na1");
   const [valorantRiotId, setValorantRiotId] = useState(""); // Format: GameName#TAG
   const [valorantRegion, setValorantRegion] = useState("na");
+  const [valorantVerificationCode, setValorantVerificationCode] = useState("");
 
   const { data: user, isLoading } = useQuery<UserData>({
     queryKey: ['/api/auth/user'],
@@ -185,6 +186,105 @@ export default function Settings() {
       toast({
         title: "Failed to link account",
         description: error.message || "Please check your Riot ID format (GameName#TAG)",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const disconnectLeagueMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/riot/unlink-account", "POST", { game: "league" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/riot/account/league'] });
+      toast({
+        title: "League account disconnected",
+        description: "Your League of Legends account has been unlinked.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to disconnect",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const disconnectValorantMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/riot/unlink-account", "POST", { game: "valorant" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/riot/account/valorant'] });
+      setValorantVerificationCode("");
+      toast({
+        title: "Valorant account disconnected",
+        description: "Your Valorant account has been unlinked.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to disconnect",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const requestValorantCodeMutation = useMutation({
+    mutationFn: async () => {
+      const [gameName, tagLine] = valorantRiotId.split('#');
+      if (!gameName || !tagLine) {
+        throw new Error("Please enter your Riot ID in the format: GameName#TAG");
+      }
+      return await apiRequest("/api/riot/request-verification-code", "POST", {
+        game: "valorant",
+        gameName,
+        tagLine,
+        region: valorantRegion,
+      });
+    },
+    onSuccess: (data: any) => {
+      setValorantVerificationCode(data.verificationCode);
+      toast({
+        title: "Verification code generated",
+        description: "Copy the code and add it to your Valorant profile.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to generate code",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const verifyValorantMutation = useMutation({
+    mutationFn: async () => {
+      const [gameName, tagLine] = valorantRiotId.split('#');
+      return await apiRequest("/api/riot/verify-account", "POST", {
+        game: "valorant",
+        gameName,
+        tagLine,
+        region: valorantRegion,
+        verificationCode: valorantVerificationCode,
+      });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/riot/account/valorant'] });
+      setValorantRiotId("");
+      setValorantVerificationCode("");
+      toast({
+        title: "Valorant account verified!",
+        description: `Successfully linked ${data.account.gameName}#${data.account.tagLine}`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Verification failed",
+        description: error.message || "Please ensure the code is in your Valorant profile",
         variant: "destructive",
       });
     },
