@@ -1,4 +1,4 @@
-import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard } from "lucide-react";
+import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -118,6 +118,12 @@ export default function Header() {
                   <DropdownMenuItem data-testid="link-my-profile">
                     <Trophy className="mr-2 h-4 w-4" />
                     My Profile
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/my-rewards">
+                  <DropdownMenuItem data-testid="link-my-rewards">
+                    <Gift className="mr-2 h-4 w-4" />
+                    My Rewards
                   </DropdownMenuItem>
                 </Link>
                 <Link href="/subscription">

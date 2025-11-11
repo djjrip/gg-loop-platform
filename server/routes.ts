@@ -386,6 +386,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24))
         : 0;
 
+      // Get claimed badges (only completed automatic badges that show on profile)
+      const claimedRewards = await storage.getUserRewards(userId);
+      const claimedBadges = claimedRewards
+        .filter(cr => cr.reward.fulfillmentType === "automatic" && cr.status === "pending")
+        .map(cr => ({
+          id: cr.id,
+          title: cr.reward.title,
+          redeemedAt: cr.redeemedAt
+        }));
+
       res.json({
         user: {
           id: user.id,
@@ -406,7 +416,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalMatchesPlayed: 0, // TODO: Add match tracking
           avgRank,
           joinedDaysAgo,
-        }
+        },
+        claimedBadges
       });
     } catch (error) {
       console.error("Error fetching public profile:", error);

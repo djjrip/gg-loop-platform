@@ -58,6 +58,11 @@ interface PublicProfile {
     avgRank: number;
     joinedDaysAgo: number;
   };
+  claimedBadges: Array<{
+    id: string;
+    title: string;
+    redeemedAt: string;
+  }>;
 }
 
 export default function Profile() {
@@ -116,7 +121,7 @@ export default function Profile() {
             </Avatar>
             
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
                 <h1 className="text-3xl font-bold" data-testid="text-profile-name">{displayName}</h1>
                 {profile.user.isFounder && profile.user.founderNumber && (
                   <Badge 
@@ -127,6 +132,16 @@ export default function Profile() {
                     ⭐ FOUNDER #{profile.user.founderNumber}
                   </Badge>
                 )}
+                {profile.claimedBadges && profile.claimedBadges.length > 0 && profile.claimedBadges.map((claimedBadge) => (
+                  <Badge 
+                    key={claimedBadge.id}
+                    variant="default" 
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 px-3 py-1 text-sm font-bold shadow-lg"
+                    data-testid={`badge-claimed-${claimedBadge.title.toLowerCase().replace(/\s/g, '-')}`}
+                  >
+                    {claimedBadge.title}
+                  </Badge>
+                ))}
               </div>
               <div className="flex flex-wrap items-center gap-4 mb-4">
                 <div className="flex items-center gap-2">
