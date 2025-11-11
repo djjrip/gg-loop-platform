@@ -12,8 +12,12 @@ let syncInterval: NodeJS.Timeout | null = null;
 export async function startMatchSyncService() {
   console.log('[MatchSync] Starting match sync service...');
   
-  // Run immediately on startup
-  await syncAllAccounts();
+  // Run immediately on startup (with error protection)
+  try {
+    await syncAllAccounts();
+  } catch (error) {
+    console.error('[MatchSync] Error during initial sync, will retry on next interval:', error);
+  }
   
   // Then run every 10 minutes
   syncInterval = setInterval(async () => {
@@ -155,9 +159,13 @@ async function syncValorantAccount(account: typeof riotAccounts.$inferSelect) {
                        account.region.startsWith('ap') ? 'ap' : 'na';
   
   // Fetch recent match IDs
+  // NOTE: Unlike League's match API, Valorant's matchlist endpoint does NOT support
+  // a 'count' parameter to limit results. We must fetch the full history and slice
+  // client-side. This is acceptable for small limits (5 matches) but could hit rate
+  // limits for users with very large match histories. Consider adding pagination if needed.
   const matchIds = await riotAPI.getValorantMatchIds(account.puuid, routingRegion);
   
-  // Only check the most recent matches
+  // Only check the most recent matches (client-side limit due to API limitation)
   const recentMatchIds = matchIds.slice(0, MATCHES_TO_CHECK);
   
   console.log(`[MatchSync] Found ${recentMatchIds.length} recent Valorant matches for ${account.gameName}#${account.tagLine}`);

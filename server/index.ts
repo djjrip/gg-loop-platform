@@ -86,8 +86,23 @@ app.use((req, res, next) => {
     });
     
     // Start Riot match sync service
-    import("./matchSyncService").then(({ startMatchSyncService }) => {
+    import("./matchSyncService").then(({ startMatchSyncService, stopMatchSyncService }) => {
       startMatchSyncService();
+      
+      // Graceful shutdown handlers
+      process.on('SIGTERM', () => {
+        log('SIGTERM received, stopping match sync service...');
+        stopMatchSyncService();
+      });
+      
+      process.on('SIGINT', () => {
+        log('SIGINT received, stopping match sync service...');
+        stopMatchSyncService();
+      });
+      
+      server.on('close', () => {
+        stopMatchSyncService();
+      });
     }).catch((err) => {
       console.error("Failed to start match sync service:", err);
     });
