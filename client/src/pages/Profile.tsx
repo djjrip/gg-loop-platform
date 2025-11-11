@@ -35,6 +35,7 @@ interface PublicProfile {
     gamesConnected: number;
     isFounder: boolean;
     founderNumber: number | null;
+    twitchUsername: string | null;
     createdAt: string;
   };
   achievements: Array<{
@@ -142,6 +143,15 @@ export default function Profile() {
                     {claimedBadge.title}
                   </Badge>
                 ))}
+                {profile.user.twitchUsername && (
+                  <Badge 
+                    variant="default" 
+                    className="bg-gradient-to-r from-purple-500 to-purple-700 text-white border-0 px-3 py-1 text-sm font-bold shadow-lg"
+                    data-testid="badge-twitch"
+                  >
+                    💜 {profile.user.twitchUsername}
+                  </Badge>
+                )}
               </div>
               <div className="flex flex-wrap items-center gap-4 mb-4">
                 <div className="flex items-center gap-2">

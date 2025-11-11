@@ -96,27 +96,14 @@ export default function Settings() {
 
   const connectTwitchMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/twitch/auth', {
-        credentials: 'include',
-      });
-      const data = await response.json();
-      return data.authUrl;
-    },
-    onSuccess: (authUrl: string) => {
-      window.location.href = authUrl;
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to connect Twitch",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
+      // Redirect to Twitch OAuth flow
+      window.location.href = '/api/auth/twitch/link';
     },
   });
 
   const disconnectTwitchMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/twitch/disconnect", "POST", {});
+      return await apiRequest("/api/auth/twitch/unlink", "POST", {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });

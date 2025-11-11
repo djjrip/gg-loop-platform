@@ -5,6 +5,7 @@ import { db } from "./db";
 import { userGames } from "@shared/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupTwitchAuth } from "./twitchAuth";
 import { 
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
   insertAchievementSchema, insertUserRewardSchema,
@@ -70,6 +71,7 @@ const adminMiddleware = async (req: any, res: any, next: any) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
+  setupTwitchAuth(app);
   
   // HMAC signature validation middleware for gaming webhooks
   const webhookAuth = createWebhookSignatureMiddleware(storage);
@@ -407,6 +409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gamesConnected: user.gamesConnected,
           isFounder: user.isFounder,
           founderNumber: user.founderNumber,
+          twitchUsername: user.twitchUsername,
           createdAt: user.createdAt,
         },
         achievements,
