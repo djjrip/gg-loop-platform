@@ -13,6 +13,7 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export default function SubscriptionPage() {
   const { user, isAuthenticated } = useAuth();
@@ -110,7 +111,7 @@ export default function SubscriptionPage() {
         { text: "Earn 10 GG Coins per win", included: true },
         { text: "Login streak bonuses", included: true },
         { text: "100 points per month cap", included: true },
-        { text: "Redeem for gift cards & rewards", included: true },
+        { text: "Redeem for gaming gear & rewards", included: true },
         { text: "Auto-sync League & Valorant matches", included: true },
         { text: "Access to stats dashboard", included: true },
         { text: "Unlock 7-day trial with 500 GG Coins", included: true },
@@ -600,12 +601,13 @@ export default function SubscriptionPage() {
                 Redeem Rewards
               </h3>
               <p className="text-sm text-muted-foreground" data-testid="text-step-3-desc">
-                Exchange points for gift cards, gaming gear, and more
+                Exchange points for gaming peripherals, gear, and subscriptions
               </p>
             </div>
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

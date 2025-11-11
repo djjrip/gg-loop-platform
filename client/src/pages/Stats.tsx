@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Target, TrendingUp, Calendar, CheckCircle, XCircle, Link as LinkIcon } from "lucide-react";
@@ -54,6 +55,7 @@ export default function Stats() {
           <h1 className="text-2xl font-bold mb-2">Login Required</h1>
           <p className="text-muted-foreground">Please log in to view your performance stats.</p>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -238,6 +240,7 @@ export default function Stats() {
           </CardContent>
         </Card>
       </main>
+      <Footer />
     </div>
   );
 }

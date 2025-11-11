@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
 import GameCard from "@/components/GameCard";
 import StatsCard from "@/components/StatsCard";
@@ -276,7 +277,7 @@ export default function Home() {
               Earn Real Rewards
             </h2>
             <p className="text-muted-foreground mt-3 text-lg max-w-2xl mx-auto">
-              Turn your gaming skills into gift cards, subscriptions, and exclusive perks. Start earning today.
+              Turn your gaming skills into rewards - gaming gear, subscriptions, and exclusive perks. Start earning today.
             </p>
           </div>
           
@@ -609,7 +610,7 @@ export default function Home() {
                   <Trophy className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">Claim Rewards</h3>
-                <p className="text-muted-foreground">Redeem your points for gaming gear, gift cards, and exclusive prizes</p>
+                <p className="text-muted-foreground">Redeem your points for gaming peripherals, subscriptions, and exclusive prizes</p>
               </div>
             </Card>
           </div>
@@ -638,54 +639,7 @@ export default function Home() {
           </Card>
         </section>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t py-12 mt-24">
-        <div className="container mx-auto max-w-7xl px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Trophy className="h-6 w-6 text-primary" />
-                <span className="text-xl font-bold font-heading tracking-tight">GG LOOP</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                The premier platform for gamers to earn real-world rewards.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Platform</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#games" className="hover:text-foreground">Games</a></li>
-                <li><a href="#leaderboards" className="hover:text-foreground">Leaderboards</a></li>
-                <li><a href="#rewards" className="hover:text-foreground">Rewards</a></li>
-                <li><a href="#community" className="hover:text-foreground">Community</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">Help Center</a></li>
-                <li><a href="#" className="hover:text-foreground">FAQ</a></li>
-                <li><a href="#" className="hover:text-foreground">Contact Us</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="/privacy" className="hover:text-foreground" data-testid="link-privacy">Privacy Policy</a></li>
-                <li><a href="/terms" className="hover:text-foreground" data-testid="link-terms">Terms of Service</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 GG Loop. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
