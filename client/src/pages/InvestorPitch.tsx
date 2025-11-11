@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { 
   TrendingUp, 
   Users, 
@@ -11,7 +12,9 @@ import {
   ArrowRight,
   Gamepad2,
   Trophy,
-  Zap
+  Zap,
+  Home,
+  Briefcase
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -106,6 +109,28 @@ export default function InvestorPitch() {
 
   return (
     <div className="min-h-screen bg-background">
+      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between max-w-6xl">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-6 w-6 text-primary" />
+            <span className="font-bold text-xl">GG LOOP</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" data-testid="button-business-hub">
+              <Link href="/business">
+                <Briefcase className="h-4 w-4 mr-2" />
+                Business Hub
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm" data-testid="button-home">
+              <Link href="/">
+                <Home className="h-4 w-4 mr-2" />
+                Home
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
       <main className="container mx-auto px-4 py-12 max-w-6xl space-y-12">
         {/* Hero */}
         <div className="text-center space-y-6">

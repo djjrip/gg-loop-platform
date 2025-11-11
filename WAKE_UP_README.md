@@ -161,6 +161,7 @@ You have:
 
 All pages are live and ready:
 
+- **/business** - Business Hub (access all founder resources)
 - **/launch** - Start here (master checklist)
 - **/twitch-outreach** - Invite users TODAY
 - **/sponsor-outreach** - Email brands Monday

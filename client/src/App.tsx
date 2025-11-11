@@ -19,6 +19,7 @@ import SponsorOutreach from "@/pages/SponsorOutreach";
 import InvestorOutreach from "@/pages/InvestorOutreach";
 import TwitchOutreach from "@/pages/TwitchOutreach";
 import LaunchChecklist from "@/pages/LaunchChecklist";
+import BusinessHub from "@/pages/BusinessHub";
 import ReportMatch from "@/pages/ReportMatch";
 import Referrals from "@/pages/Referrals";
 import Settings from "@/pages/Settings";
@@ -59,6 +60,7 @@ function Router() {
       <Route path="/investor-outreach" component={InvestorOutreach} />
       <Route path="/twitch-outreach" component={TwitchOutreach} />
       <Route path="/launch" component={LaunchChecklist} />
+      <Route path="/business" component={BusinessHub} />
       <Route path="/report-match" component={ReportMatch} />
       <Route path="/referrals" component={Referrals} />
       <Route path="/my-rewards" component={MyRewards} />
