@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { userGames, riotAccounts } from "@shared/schema";
 import { and, eq, sql } from "drizzle-orm";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./oauth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { 
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
@@ -28,10 +28,10 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 const getUserMiddleware = async (req: any, res: any, next: any) => {
   try {
-    if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+    if (!req.isAuthenticated() || !req.user?.oidcSub) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const oidcSub = req.user.claims.sub;
+    const oidcSub = req.user.oidcSub;
     const dbUser = await storage.getUserByOidcSub(oidcSub);
     if (!dbUser) {
       return res.status(404).json({ message: "User not found" });
@@ -46,10 +46,10 @@ const getUserMiddleware = async (req: any, res: any, next: any) => {
 
 const adminMiddleware = async (req: any, res: any, next: any) => {
   try {
-    if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+    if (!req.isAuthenticated() || !req.user?.oidcSub) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const oidcSub = req.user.claims.sub;
+    const oidcSub = req.user.oidcSub;
     const dbUser = await storage.getUserByOidcSub(oidcSub);
     if (!dbUser) {
       return res.status(404).json({ message: "User not found" });
@@ -106,10 +106,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/auth/user', async (req: any, res) => {
     try {
-      if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+      if (!req.isAuthenticated() || !req.user?.oidcSub) {
         return res.json(null);
       }
-      const oidcSub = req.user.claims.sub;
+      const oidcSub = req.user.oidcSub;
       const user = await storage.getUserByOidcSub(oidcSub);
       res.json(user);
     } catch (error) {
@@ -149,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tokens = await twitchAPI.exchangeCodeForTokens(code as string, redirectUri);
       const twitchUser = await twitchAPI.getUserInfo(twitchAPI.encryptToken(tokens.access_token));
       
-      const oidcSub = req.user.claims.sub;
+      const oidcSub = req.user.oidcSub;
       await storage.connectTwitchAccount(oidcSub, {
         twitchId: twitchUser.id,
         twitchUsername: twitchUser.login,
