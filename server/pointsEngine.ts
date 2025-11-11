@@ -13,48 +13,60 @@ export interface EarningRule {
   monthlyCap?: number;
 }
 
+// Point-to-Dollar Conversion: 100 points = $1
+// This sustainable ratio ensures profitability while rewarding players
+export const POINTS_PER_DOLLAR = 100;
+
+// Monthly earning caps per tier (in points)
+// Prevents users from exceeding their subscription value in rewards
+export const MONTHLY_EARNING_CAPS = {
+  basic: 400,    // $4 max rewards/month on $5 subscription
+  pro: 800,      // $8 max rewards/month on $12 subscription
+  elite: 1500,   // $15 max rewards/month on $25 subscription (with manual review)
+};
+
 export const EARNING_RULES: Record<string, EarningRule> = {
   SUBSCRIPTION_MONTHLY: {
     type: "subscription_monthly",
     basePoints: 100,
-    tierMultipliers: { basic: 1.0, premium: 2.0 },
+    tierMultipliers: { basic: 1.0, pro: 2.0, elite: 3.0 },
   },
   MATCH_WIN: {
     type: "match_win",
     basePoints: 5,
-    tierMultipliers: { basic: 1.0, premium: 1.5 },
+    tierMultipliers: { basic: 1.0, pro: 2.0, elite: 3.0 },
     dailyCap: 50,
   },
   DAILY_CHALLENGE: {
     type: "daily_challenge",
     basePoints: 10,
-    tierMultipliers: { basic: 1.0, premium: 1.5 },
+    tierMultipliers: { basic: 1.0, pro: 2.0, elite: 3.0 },
     dailyCap: 30,
   },
   WEEKLY_CHALLENGE: {
     type: "weekly_challenge",
     basePoints: 25,
-    tierMultipliers: { basic: 1.0, premium: 1.5 },
+    tierMultipliers: { basic: 1.0, pro: 2.0, elite: 3.0 },
   },
   RANK_UP: {
     type: "rank_up",
     basePoints: 20,
-    tierMultipliers: { basic: 1.0, premium: 1.5 },
+    tierMultipliers: { basic: 1.0, pro: 2.0, elite: 3.0 },
   },
   ACHIEVEMENT: {
     type: "achievement",
     basePoints: 15,
-    tierMultipliers: { basic: 1.0, premium: 1.5 },
+    tierMultipliers: { basic: 1.0, pro: 2.0, elite: 3.0 },
   },
   LEADERBOARD_TOP: {
     type: "leaderboard_top",
     basePoints: 100,
-    tierMultipliers: { basic: 1.0, premium: 1.5 },
+    tierMultipliers: { basic: 1.0, pro: 2.0, elite: 3.0 },
   },
   TOURNAMENT_PLACEMENT: {
     type: "tournament_placement",
     basePoints: 50,
-    tierMultipliers: { basic: 1.0, premium: 1.5 },
+    tierMultipliers: { basic: 1.0, pro: 2.0, elite: 3.0 },
   },
 };
 
@@ -114,6 +126,15 @@ export class PointsEngine {
         const dailyTotal = await this.getDailyEarnings(userId, type, tx);
         if (dailyTotal + finalAmount > rule.dailyCap) {
           throw new Error(`Daily cap of ${rule.dailyCap} points reached for ${type}`);
+        }
+      }
+
+      // Check monthly earning cap per tier
+      const monthlyCap = MONTHLY_EARNING_CAPS[tier as keyof typeof MONTHLY_EARNING_CAPS];
+      if (monthlyCap) {
+        const monthlyTotal = await this.getMonthlyEarnings(userId, tx);
+        if (monthlyTotal + finalAmount > monthlyCap) {
+          throw new Error(`Monthly earning cap of ${monthlyCap} points (${monthlyCap / POINTS_PER_DOLLAR} in rewards) reached for ${tier} tier. Upgrade to earn more!`);
         }
       }
 
@@ -230,6 +251,26 @@ export class PointsEngine {
           eq(pointTransactions.type, type),
           gte(pointTransactions.createdAt, today),
           gte(pointTransactions.amount, 0)
+        )
+      );
+
+    return Number(result[0]?.total || 0);
+  }
+
+  async getMonthlyEarnings(userId: string, dbOrTx: DbOrTx = db): Promise<number> {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const result = await dbOrTx
+      .select({ total: sql<number>`COALESCE(SUM(${pointTransactions.amount}), 0)` })
+      .from(pointTransactions)
+      .where(
+        and(
+          eq(pointTransactions.userId, userId),
+          gte(pointTransactions.amount, 0),
+          gte(pointTransactions.createdAt, startOfMonth),
+          sql`${pointTransactions.type} != 'subscription_monthly'`
         )
       );
 
