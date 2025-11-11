@@ -84,5 +84,12 @@ app.use((req, res, next) => {
     }).catch((err) => {
       console.error("Failed to start streaming verifier:", err);
     });
+    
+    // Start Riot match sync service
+    import("./matchSyncService").then(({ startMatchSyncService }) => {
+      startMatchSyncService();
+    }).catch((err) => {
+      console.error("Failed to start match sync service:", err);
+    });
   });
 })();

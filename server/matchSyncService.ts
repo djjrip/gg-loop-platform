@@ -75,7 +75,7 @@ async function syncLeagueAccount(account: typeof riotAccounts.$inferSelect) {
                        'europe';
   
   // Fetch recent match IDs
-  const matchIds = await riotAPI.getLeagueMatchIds(account.puuid, routingRegion, MATCHES_TO_CHECK);
+  const matchIds = await riotAPI.getLeagueMatchIds(account.puuid, platformRegion, { count: MATCHES_TO_CHECK });
   
   console.log(`[MatchSync] Found ${matchIds.length} recent League matches for ${account.gameName}#${account.tagLine}`);
   
@@ -155,11 +155,14 @@ async function syncValorantAccount(account: typeof riotAccounts.$inferSelect) {
                        account.region.startsWith('ap') ? 'ap' : 'na';
   
   // Fetch recent match IDs
-  const matchIds = await riotAPI.getValorantMatchIds(account.puuid, routingRegion, MATCHES_TO_CHECK);
+  const matchIds = await riotAPI.getValorantMatchIds(account.puuid, routingRegion);
   
-  console.log(`[MatchSync] Found ${matchIds.length} recent Valorant matches for ${account.gameName}#${account.tagLine}`);
+  // Only check the most recent matches
+  const recentMatchIds = matchIds.slice(0, MATCHES_TO_CHECK);
   
-  for (const matchId of matchIds) {
+  console.log(`[MatchSync] Found ${recentMatchIds.length} recent Valorant matches for ${account.gameName}#${account.tagLine}`);
+  
+  for (const matchId of recentMatchIds) {
     // Check if already processed
     const [existing] = await db.select().from(processedRiotMatches).where(
       and(
