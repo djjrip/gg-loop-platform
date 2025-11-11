@@ -177,6 +177,53 @@ export class PointsEngine {
     }
   }
 
+  async awardSponsoredPoints(
+    userId: string,
+    amount: number,
+    challengeId: string,
+    challengeTitle: string,
+    dbOrTx?: DbOrTx
+  ): Promise<PointTransaction> {
+    if (amount <= 0) throw new Error("Amount must be positive");
+
+    const executeAward = async (tx: DbOrTx) => {
+      const user = await tx.select().from(users).where(eq(users.id, userId)).limit(1).for("update");
+      if (!user[0]) throw new Error("User not found");
+
+      const newBalance = user[0].totalPoints + amount;
+
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 12);
+
+      const [transaction] = await tx
+        .insert(pointTransactions)
+        .values({
+          userId,
+          amount,
+          type: "sponsored_challenge",
+          sourceId: challengeId,
+          sourceType: "challenge",
+          balanceAfter: newBalance,
+          description: `Bonus from challenge: ${challengeTitle}`,
+          expiresAt,
+        })
+        .returning();
+
+      await tx
+        .update(users)
+        .set({ totalPoints: newBalance, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+
+      return transaction;
+    };
+
+    if (dbOrTx) {
+      return executeAward(dbOrTx);
+    } else {
+      return await db.transaction(executeAward);
+    }
+  }
+
   async spendPoints(
     userId: string,
     amount: number,

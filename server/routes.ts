@@ -9,7 +9,8 @@ import {
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
   insertAchievementSchema, insertUserRewardSchema,
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
-  insertReferralSchema
+  insertReferralSchema,
+  challenges, challengeCompletions, insertChallengeSchema, insertChallengeCompletionSchema
 } from "@shared/schema";
 import { z } from "zod";
 import Stripe from "stripe";
@@ -865,6 +866,200 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
       }
       
       res.status(500).json({ message: error.message || "Failed to submit match" });
+    }
+  });
+
+  // ============================================
+  // SPONSORED CHALLENGES API
+  // ============================================
+
+  // GET /api/challenges - List active challenges with user progress
+  app.get('/api/challenges', async (req: any, res) => {
+    try {
+      const userId = req.isAuthenticated() && req.user?.claims?.sub 
+        ? (await storage.getUserByOidcSub(req.user.claims.sub))?.id
+        : null;
+
+      const now = new Date();
+      const activeChallenges = await db
+        .select()
+        .from(challenges)
+        .where(
+          and(
+            eq(challenges.isActive, true),
+            sql`${challenges.startDate} <= ${now}`,
+            sql`${challenges.endDate} >= ${now}`
+          )
+        );
+
+      // Enrich with user progress if authenticated
+      const enriched = await Promise.all(activeChallenges.map(async (challenge) => {
+        if (!userId) {
+          return { ...challenge, userProgress: null, canClaim: false };
+        }
+
+        const [completion] = await db
+          .select()
+          .from(challengeCompletions)
+          .where(
+            and(
+              eq(challengeCompletions.userId, userId),
+              eq(challengeCompletions.challengeId, challenge.id)
+            )
+          )
+          .limit(1);
+
+        return {
+          ...challenge,
+          userProgress: completion?.progress || 0,
+          canClaim: completion ? 
+            (completion.progress >= challenge.requirementCount && !completion.claimed) : 
+            false,
+          claimed: completion?.claimed || false
+        };
+      }));
+
+      res.json(enriched);
+    } catch (error) {
+      console.error("Error fetching challenges:", error);
+      res.status(500).json({ message: "Failed to fetch challenges" });
+    }
+  });
+
+  // POST /api/challenges/:id/claim - Claim reward (TRANSACTIONAL)
+  app.post('/api/challenges/:id/claim', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const challengeId = req.params.id;
+
+      // Execute claim in transaction
+      const result = await db.transaction(async (tx) => {
+        // SELECT FOR UPDATE - lock the completion row
+        const [completion] = await tx
+          .select()
+          .from(challengeCompletions)
+          .where(
+            and(
+              eq(challengeCompletions.userId, userId),
+              eq(challengeCompletions.challengeId, challengeId)
+            )
+          )
+          .for("update")
+          .limit(1);
+
+        if (!completion) {
+          throw new Error("Challenge not started");
+        }
+
+        if (completion.claimed) {
+          throw new Error("Challenge already claimed");
+        }
+
+        // SELECT FOR UPDATE - lock the challenge
+        const [challenge] = await tx
+          .select()
+          .from(challenges)
+          .where(eq(challenges.id, challengeId))
+          .for("update")
+          .limit(1);
+
+        if (!challenge) {
+          throw new Error("Challenge not found");
+        }
+
+        // Verify completion
+        if (completion.progress < challenge.requirementCount) {
+          throw new Error(`Progress incomplete: ${completion.progress}/${challenge.requirementCount}`);
+        }
+
+        // Check budget (even though DB has CHECK constraint)
+        const budgetRemaining = challenge.totalBudget - challenge.pointsDistributed;
+        if (budgetRemaining < challenge.bonusPoints) {
+          throw new Error("Challenge budget exhausted");
+        }
+
+        // Check completion limit
+        if (challenge.maxCompletions && challenge.currentCompletions >= challenge.maxCompletions) {
+          throw new Error("Challenge completion limit reached");
+        }
+
+        // Award sponsored points (bypasses monthly cap!)
+        const transaction = await pointsEngine.awardSponsoredPoints(
+          userId,
+          challenge.bonusPoints,
+          challenge.id,
+          challenge.title,
+          tx
+        );
+
+        // Update completion record
+        await tx
+          .update(challengeCompletions)
+          .set({
+            claimed: true,
+            claimedAt: new Date(),
+            pointsAwarded: challenge.bonusPoints,
+            transactionId: transaction.id,
+            ipAddress: req.ip || req.headers['x-forwarded-for'] as string,
+            userAgent: req.headers['user-agent'] as string,
+            updatedAt: new Date()
+          })
+          .where(eq(challengeCompletions.id, completion.id));
+
+        // Update challenge aggregates
+        await tx
+          .update(challenges)
+          .set({
+            pointsDistributed: challenge.pointsDistributed + challenge.bonusPoints,
+            currentCompletions: challenge.currentCompletions + 1,
+            updatedAt: new Date()
+          })
+          .where(eq(challenges.id, challenge.id));
+
+        return {
+          pointsAwarded: challenge.bonusPoints,
+          newBalance: transaction.balanceAfter,
+          challengeTitle: challenge.title
+        };
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error claiming challenge:", error);
+      
+      if (error.message?.includes("already claimed")) {
+        return res.status(409).json({ message: error.message });
+      }
+      if (error.message?.includes("budget exhausted") || error.message?.includes("limit reached")) {
+        return res.status(422).json({ message: error.message });
+      }
+      if (error.message?.includes("not started") || error.message?.includes("incomplete")) {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      res.status(500).json({ message: "Failed to claim challenge" });
+    }
+  });
+
+  // POST /api/admin/challenges - Create new challenge (ADMIN ONLY)
+  app.post('/api/admin/challenges', adminMiddleware, async (req: any, res) => {
+    try {
+      const challengeData = insertChallengeSchema.parse(req.body);
+
+      const [challenge] = await db
+        .insert(challenges)
+        .values(challengeData)
+        .returning();
+
+      res.json(challenge);
+    } catch (error: any) {
+      console.error("Error creating challenge:", error);
+      
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid challenge data", errors: error.errors });
+      }
+      
+      res.status(500).json({ message: error.message || "Failed to create challenge" });
     }
   });
 
