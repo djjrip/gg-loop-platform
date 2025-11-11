@@ -22,6 +22,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   totalPoints: integer("total_points").notNull().default(0),
+  ggCoins: integer("gg_coins").notNull().default(0), // Virtual currency for unlocking trials
   gamesConnected: integer("games_connected").notNull().default(0),
   stripeCustomerId: varchar("stripe_customer_id").unique(),
   stripeSubscriptionId: varchar("stripe_subscription_id").unique(),
@@ -36,6 +37,11 @@ export const users = pgTable("users", {
   founderNumber: integer("founder_number"),
   freeTrialStartedAt: timestamp("free_trial_started_at"),
   freeTrialEndsAt: timestamp("free_trial_ends_at"),
+  lastLoginAt: timestamp("last_login_at"),
+  loginStreak: integer("login_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  xpLevel: integer("xp_level").notNull().default(1),
+  xpPoints: integer("xp_points").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -282,8 +288,42 @@ export const processedRiotMatches = pgTable("processed_riot_matches", {
   uniqAccountMatch: sql`UNIQUE(riot_account_id, match_id)`,
 }));
 
-export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, createdAt: true, updatedAt: true });
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, createdAt: true, updatedAt: true });
+export const virtualBadges = pgTable("virtual_badges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  iconUrl: text("icon_url"),
+  rarity: varchar("rarity").notNull().default("common"), // common, rare, epic, legendary
+  unlockCondition: text("unlock_condition").notNull(),
+  ggCoinsRequired: integer("gg_coins_required").default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userBadges = pgTable("user_badges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  badgeId: varchar("badge_id").notNull().references(() => virtualBadges.id),
+  unlockedAt: timestamp("unlocked_at").notNull().defaultNow(),
+}, (table) => ({
+  uniqUserBadge: sql`UNIQUE(user_id, badge_id)`,
+}));
+
+export const ggCoinTransactions = pgTable("gg_coin_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  amount: integer("amount").notNull(),
+  reason: text("reason").notNull(),
+  sourceType: varchar("source_type"), // win, streak, referral, etc
+  sourceId: varchar("source_id"),
+  balanceAfter: integer("balance_after").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_gg_coin_tx_user").on(table.userId),
+]);
+
+export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, ggCoins: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, lastLoginAt: true, loginStreak: true, longestStreak: true, xpLevel: true, xpPoints: true, createdAt: true, updatedAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, ggCoins: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, lastLoginAt: true, loginStreak: true, longestStreak: true, xpLevel: true, xpPoints: true, createdAt: true, updatedAt: true });
 export const insertReferralSchema = createInsertSchema(referrals).omit({ id: true, createdAt: true, completedAt: true, pointsAwarded: true, tier: true, status: true });
 export const insertGameSchema = createInsertSchema(games).omit({ id: true, isActive: true });
 export const insertUserGameSchema = createInsertSchema(userGames).omit({ id: true, connectedAt: true });
@@ -300,6 +340,9 @@ export const insertMatchSubmissionSchema = createInsertSchema(matchSubmissions).
 export const insertStreamingSessionSchema = createInsertSchema(streamingSessions).omit({ id: true, createdAt: true, status: true, lastCheckedAt: true, pointsAwarded: true });
 export const insertRiotAccountSchema = createInsertSchema(riotAccounts).omit({ id: true, lastSyncedAt: true, createdAt: true, updatedAt: true });
 export const insertProcessedRiotMatchSchema = createInsertSchema(processedRiotMatches).omit({ id: true, processedAt: true });
+export const insertVirtualBadgeSchema = createInsertSchema(virtualBadges).omit({ id: true, createdAt: true });
+export const insertUserBadgeSchema = createInsertSchema(userBadges).omit({ id: true, unlockedAt: true });
+export const insertGgCoinTransactionSchema = createInsertSchema(ggCoinTransactions).omit({ id: true, createdAt: true });
 
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -353,6 +396,15 @@ export type RiotAccount = typeof riotAccounts.$inferSelect;
 
 export type InsertProcessedRiotMatch = z.infer<typeof insertProcessedRiotMatchSchema>;
 export type ProcessedRiotMatch = typeof processedRiotMatches.$inferSelect;
+
+export type InsertVirtualBadge = z.infer<typeof insertVirtualBadgeSchema>;
+export type VirtualBadge = typeof virtualBadges.$inferSelect;
+
+export type InsertUserBadge = z.infer<typeof insertUserBadgeSchema>;
+export type UserBadge = typeof userBadges.$inferSelect;
+
+export type InsertGgCoinTransaction = z.infer<typeof insertGgCoinTransactionSchema>;
+export type GgCoinTransaction = typeof ggCoinTransactions.$inferSelect;
 
 export const challenges = pgTable("challenges", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

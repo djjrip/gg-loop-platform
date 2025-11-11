@@ -958,8 +958,8 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
   // GET /api/challenges - List active challenges with user progress
   app.get('/api/challenges', async (req: any, res) => {
     try {
-      const userId = req.isAuthenticated() && req.user?.claims?.sub 
-        ? (await storage.getUserByOidcSub(req.user.claims.sub))?.id
+      const userId = req.isAuthenticated() && req.user?.oidcSub 
+        ? (await storage.getUserByOidcSub(req.user.oidcSub))?.id
         : null;
 
       const now = new Date();

@@ -1,5 +1,6 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+// @ts-ignore - no type definitions available for passport-twitch-new
 import { Strategy as TwitchStrategy } from "passport-twitch-new";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
@@ -93,7 +94,7 @@ export async function setupAuth(app: Express) {
       callbackURL: "/api/auth/twitch/callback",
       scope: ['user:read:email'],
       state: true, // Enable CSRF protection
-    }, async (accessToken, refreshToken, profile, done) => {
+    }, async (accessToken: any, refreshToken: any, profile: any, done: any) => {
       try {
         const email = profile.email;
         if (!email) {
