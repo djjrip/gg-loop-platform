@@ -133,6 +133,7 @@ export default function Home() {
     title: string;
     description: string;
     sponsorName: string;
+    sponsorLogo?: string;
     requirementCount: number;
     bonusPoints: number;
     endDate: string;
@@ -248,6 +249,7 @@ export default function Home() {
                   title={challenge.title}
                   description={challenge.description}
                   sponsorName={challenge.sponsorName}
+                  sponsorLogo={challenge.sponsorLogo}
                   requirementCount={challenge.requirementCount}
                   bonusPoints={challenge.bonusPoints}
                   userProgress={challenge.userProgress || 0}
