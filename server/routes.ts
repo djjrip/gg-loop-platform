@@ -823,14 +823,62 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
               reviewedAt: new Date(),
             });
 
-            await pointsEngine.awardPoints(
-              userId,
-              pointsAwarded,
-              'MATCH_WIN',
-              submission.id,
-              'match_submission',
-              `Verified ${matchType} win - ${participant.championName}`
-            );
+            // Award points AND track challenge progress in single transaction
+            await db.transaction(async (tx) => {
+              // Award points
+              await pointsEngine.awardPoints(
+                userId,
+                pointsAwarded,
+                'MATCH_WIN',
+                submission.id,
+                'match_submission',
+                `Verified ${matchType} win - ${participant.championName}`,
+                tx
+              );
+
+              // Auto-track challenge progress (atomic)
+              const now = new Date();
+              const activeChallenges = await tx
+                .select()
+                .from(challenges)
+                .where(
+                  and(
+                    eq(challenges.isActive, true),
+                    eq(challenges.requirementType, 'match_wins'),
+                    sql`${challenges.startDate} <= ${now}`,
+                    sql`${challenges.endDate} >= ${now}`
+                  )
+                );
+
+              for (const challenge of activeChallenges) {
+                // Atomic upsert with ON CONFLICT to prevent race conditions
+                await tx
+                  .insert(challengeCompletions)
+                  .values({
+                    userId,
+                    challengeId: challenge.id,
+                    progress: 1,
+                    completedAt: challenge.requirementCount === 1 ? new Date() : null
+                  })
+                  .onConflictDoUpdate({
+                    target: [challengeCompletions.userId, challengeCompletions.challengeId],
+                    set: {
+                      progress: sql`CASE 
+                        WHEN ${challengeCompletions.claimed} = true THEN ${challengeCompletions.progress}
+                        ELSE LEAST(${challengeCompletions.progress} + 1, ${challenge.requirementCount})
+                      END`,
+                      completedAt: sql`COALESCE(
+                        ${challengeCompletions.completedAt},
+                        CASE 
+                          WHEN ${challengeCompletions.progress} + 1 >= ${challenge.requirementCount} 
+                          THEN NOW() 
+                        END
+                      )`,
+                      updatedAt: new Date()
+                    }
+                  });
+              }
+            });
 
             return res.json({ 
               success: true, 
