@@ -407,11 +407,40 @@ export type UserBadge = typeof userBadges.$inferSelect;
 export type InsertGgCoinTransaction = z.infer<typeof insertGgCoinTransactionSchema>;
 export type GgCoinTransaction = typeof ggCoinTransactions.$inferSelect;
 
+export const sponsors = pgTable("sponsors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  logo: text("logo"),
+  website: text("website"),
+  contactEmail: varchar("contact_email"),
+  contactName: varchar("contact_name"),
+  totalBudget: integer("total_budget").notNull().default(0),
+  spentBudget: integer("spent_budget").notNull().default(0),
+  status: varchar("status").notNull().default('active'),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  statusCheck: sql`CHECK (status IN ('active', 'paused', 'inactive'))`,
+  budgetCheck: sql`CHECK (spent_budget <= total_budget)`,
+}));
+
+export const insertSponsorSchema = createInsertSchema(sponsors).omit({
+  id: true,
+  spentBudget: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertSponsor = z.infer<typeof insertSponsorSchema>;
+export type Sponsor = typeof sponsors.$inferSelect;
+
 export const challenges = pgTable("challenges", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sponsorId: varchar("sponsor_id").references(() => sponsors.id),
   title: text("title").notNull(),
   description: text("description"),
-  sponsorName: varchar("sponsor_name").notNull(),
+  sponsorName: varchar("sponsor_name"),
   sponsorLogo: text("sponsor_logo"),
   gameId: varchar("game_id").references(() => games.id),
   requirementType: varchar("requirement_type").notNull(),

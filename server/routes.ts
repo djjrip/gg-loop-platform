@@ -2,17 +2,17 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
-import { userGames, riotAccounts } from "@shared/schema";
-import { and, eq, sql } from "drizzle-orm";
-import { setupAuth, isAuthenticated } from "./oauth";
-import { setupTwitchAuth } from "./twitchAuth";
 import { 
+  userGames, riotAccounts, sponsors, insertSponsorSchema, challenges, 
+  challengeCompletions, insertChallengeSchema, insertChallengeCompletionSchema,
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
   insertAchievementSchema, insertUserRewardSchema,
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
-  insertReferralSchema,
-  challenges, challengeCompletions, insertChallengeSchema, insertChallengeCompletionSchema
+  insertReferralSchema
 } from "@shared/schema";
+import { and, eq, sql } from "drizzle-orm";
+import { setupAuth, isAuthenticated } from "./oauth";
+import { setupTwitchAuth } from "./twitchAuth";
 import { z } from "zod";
 import Stripe from "stripe";
 import { pointsEngine } from "./pointsEngine";
@@ -1129,9 +1129,48 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
     try {
       const challengeData = insertChallengeSchema.parse(req.body);
 
+      // DUAL-WRITE: If sponsorId provided, populate legacy sponsorName/Logo from sponsor
+      let finalChallengeData = { ...challengeData };
+      
+      if (challengeData.sponsorId) {
+        const [sponsor] = await db.select()
+          .from(sponsors)
+          .where(eq(sponsors.id, challengeData.sponsorId))
+          .limit(1);
+        
+        if (!sponsor) {
+          return res.status(400).json({ message: "Sponsor not found" });
+        }
+        
+        // Populate legacy fields for backward compatibility
+        finalChallengeData.sponsorName = sponsor.name;
+        finalChallengeData.sponsorLogo = sponsor.logo;
+        
+        // Validate sponsor has enough budget (including reserved funds from active challenges)
+        const activeChallenges = await db.select()
+          .from(challenges)
+          .where(and(
+            eq(challenges.sponsorId, challengeData.sponsorId),
+            eq(challenges.isActive, true)
+          ));
+        
+        // Reserved budget = sum of (totalBudget - pointsDistributed) for active challenges
+        const reservedBudget = activeChallenges.reduce((sum, c) => 
+          sum + (c.totalBudget - c.pointsDistributed), 0
+        );
+        
+        const availableBudget = sponsor.totalBudget - sponsor.spentBudget - reservedBudget;
+        
+        if (challengeData.totalBudget > availableBudget) {
+          return res.status(400).json({ 
+            message: `Insufficient sponsor budget. Available: ${availableBudget} pts (Total: ${sponsor.totalBudget}, Spent: ${sponsor.spentBudget}, Reserved: ${reservedBudget}), Required: ${challengeData.totalBudget} pts` 
+          });
+        }
+      }
+
       const [challenge] = await db
         .insert(challenges)
-        .values(challengeData)
+        .values(finalChallengeData)
         .returning();
 
       res.json(challenge);
@@ -1920,6 +1959,133 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
     } catch (error: any) {
       console.error("Error redeeming trial:", error);
       res.status(400).json({ message: error.message || "Failed to redeem trial" });
+    }
+  });
+
+  // Sponsor Management Routes (Admin Only)
+  app.get('/api/admin/sponsors', adminMiddleware, async (req: any, res) => {
+    try {
+      const allSponsors = await db.select().from(sponsors);
+      res.json(allSponsors);
+    } catch (error: any) {
+      console.error("Error fetching sponsors:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch sponsors" });
+    }
+  });
+
+  app.post('/api/admin/sponsors', adminMiddleware, async (req: any, res) => {
+    try {
+      const validatedData = insertSponsorSchema.parse(req.body);
+      const [newSponsor] = await db.insert(sponsors)
+        .values(validatedData)
+        .returning();
+      res.json(newSponsor);
+    } catch (error: any) {
+      console.error("Error creating sponsor:", error);
+      res.status(400).json({ message: error.message || "Failed to create sponsor" });
+    }
+  });
+
+  app.patch('/api/admin/sponsors/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertSponsorSchema.partial().parse(req.body);
+      
+      const [updatedSponsor] = await db.update(sponsors)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(sponsors.id, id))
+        .returning();
+      
+      if (!updatedSponsor) {
+        return res.status(404).json({ message: "Sponsor not found" });
+      }
+      
+      res.json(updatedSponsor);
+    } catch (error: any) {
+      console.error("Error updating sponsor:", error);
+      res.status(400).json({ message: error.message || "Failed to update sponsor" });
+    }
+  });
+
+  app.delete('/api/admin/sponsors/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Check if sponsor has ANY challenges (active or historical)
+      const allChallenges = await db.select()
+        .from(challenges)
+        .where(eq(challenges.sponsorId, id));
+      
+      if (allChallenges.length > 0) {
+        return res.status(400).json({ 
+          message: `Cannot delete sponsor with ${allChallenges.length} linked challenges. Set sponsor to 'inactive' instead.` 
+        });
+      }
+      
+      await db.delete(sponsors).where(eq(sponsors.id, id));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting sponsor:", error);
+      res.status(500).json({ message: error.message || "Failed to delete sponsor" });
+    }
+  });
+
+  // Sponsor budget management
+  app.post('/api/admin/sponsors/:id/add-budget', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { amount } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Amount must be positive" });
+      }
+      
+      const [sponsor] = await db.select().from(sponsors).where(eq(sponsors.id, id));
+      if (!sponsor) {
+        return res.status(404).json({ message: "Sponsor not found" });
+      }
+      
+      const [updated] = await db.update(sponsors)
+        .set({ 
+          totalBudget: sponsor.totalBudget + amount,
+          updatedAt: new Date()
+        })
+        .where(eq(sponsors.id, id))
+        .returning();
+      
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error adding sponsor budget:", error);
+      res.status(500).json({ message: error.message || "Failed to add budget" });
+    }
+  });
+
+  // Migration utility endpoints
+  app.post('/api/admin/sponsors/migrate', adminMiddleware, async (req: any, res) => {
+    try {
+      const { backfillSponsors } = await import('./lib/sponsorMigration');
+      const result = await backfillSponsors();
+      res.json({ 
+        success: true, 
+        message: `Created ${result.created} sponsors and linked ${result.linked} challenges` 
+      });
+    } catch (error: any) {
+      console.error("Error migrating sponsors:", error);
+      res.status(500).json({ message: error.message || "Migration failed" });
+    }
+  });
+
+  app.post('/api/admin/sponsors/sync-budgets', adminMiddleware, async (req: any, res) => {
+    try {
+      const { syncSponsorBudgets } = await import('./lib/sponsorMigration');
+      const updated = await syncSponsorBudgets();
+      res.json({ 
+        success: true, 
+        message: `Synced budgets for ${updated} sponsors` 
+      });
+    } catch (error: any) {
+      console.error("Error syncing sponsor budgets:", error);
+      res.status(500).json({ message: error.message || "Sync failed" });
     }
   });
 
