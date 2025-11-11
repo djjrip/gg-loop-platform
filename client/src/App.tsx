@@ -12,6 +12,7 @@ import TikTokContentGenerator from "@/pages/TikTokContentGenerator";
 import Profile from "@/pages/Profile";
 import BusinessDashboard from "@/pages/BusinessDashboard";
 import SponsorManagement from "@/pages/SponsorManagement";
+import SponsorPitch from "@/pages/SponsorPitch";
 import ReportMatch from "@/pages/ReportMatch";
 import Referrals from "@/pages/Referrals";
 import Settings from "@/pages/Settings";
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/profile/:userId" component={Profile} />
       <Route path="/launch-dashboard" component={BusinessDashboard} />
       <Route path="/admin/sponsors" component={SponsorManagement} />
+      <Route path="/sponsor-pitch" component={SponsorPitch} />
       <Route path="/report-match" component={ReportMatch} />
       <Route path="/referrals" component={Referrals} />
       <Route path="/my-rewards" component={MyRewards} />
