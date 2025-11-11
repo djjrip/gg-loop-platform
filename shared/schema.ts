@@ -314,6 +314,79 @@ export type MatchSubmission = typeof matchSubmissions.$inferSelect;
 export type InsertStreamingSession = z.infer<typeof insertStreamingSessionSchema>;
 export type StreamingSession = typeof streamingSessions.$inferSelect;
 
+export const challenges = pgTable("challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  sponsorName: varchar("sponsor_name").notNull(),
+  sponsorLogo: text("sponsor_logo"),
+  gameId: varchar("game_id").references(() => games.id),
+  requirementType: varchar("requirement_type").notNull(),
+  requirementCount: integer("requirement_count").notNull(),
+  bonusPoints: integer("bonus_points").notNull(),
+  totalBudget: integer("total_budget").notNull(),
+  pointsDistributed: integer("points_distributed").notNull().default(0),
+  maxCompletions: integer("max_completions"),
+  currentCompletions: integer("current_completions").notNull().default(0),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  requirementTypeCheck: sql`CHECK (requirement_type IN ('match_wins', 'hours_played', 'rank_achieved', 'achievement_unlock'))`,
+  budgetCheck: sql`CHECK (points_distributed <= total_budget)`,
+  completionsCheck: sql`CHECK (current_completions <= COALESCE(max_completions, current_completions))`,
+  positiveCountCheck: sql`CHECK (requirement_count > 0 AND bonus_points > 0 AND total_budget > 0)`,
+}));
+
+export const insertChallengeSchema = createInsertSchema(challenges).omit({
+  id: true,
+  pointsDistributed: true,
+  currentCompletions: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const challengeCompletions = pgTable("challenge_completions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  challengeId: varchar("challenge_id").notNull().references(() => challenges.id),
+  progress: integer("progress").notNull().default(0),
+  completedAt: timestamp("completed_at"),
+  claimed: boolean("claimed").notNull().default(false),
+  claimedAt: timestamp("claimed_at"),
+  pointsAwarded: integer("points_awarded").notNull(),
+  transactionId: varchar("transaction_id").references(() => pointTransactions.id),
+  fraudCheckPassed: boolean("fraud_check_passed").default(true),
+  fraudReason: text("fraud_reason"),
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  userChallengeUnique: sql`UNIQUE(user_id, challenge_id)`,
+  progressCheck: sql`CHECK (progress >= 0)`,
+  pointsAwardedCheck: sql`CHECK (points_awarded >= 0)`,
+}));
+
+export const insertChallengeCompletionSchema = createInsertSchema(challengeCompletions).omit({
+  id: true,
+  transactionId: true,
+  fraudCheckPassed: true,
+  fraudReason: true,
+  ipAddress: true,
+  userAgent: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+export type Challenge = typeof challenges.$inferSelect;
+
+export type InsertChallengeCompletion = z.infer<typeof insertChallengeCompletionSchema>;
+export type ChallengeCompletion = typeof challengeCompletions.$inferSelect;
+
 export const gamingWebhookBaseSchema = z.object({
   apiKey: z.string().min(1, "API key is required"),
   userId: z.string().uuid("Invalid user ID"),
