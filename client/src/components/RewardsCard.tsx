@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Lock, Check } from "lucide-react";
 
 interface RewardsCardProps {
@@ -14,9 +15,13 @@ interface RewardsCardProps {
   onClaim?: (rewardId: string) => void;
   isClaimLoading?: boolean;
   canAfford?: boolean;
+  currentPoints?: number;
 }
 
-export default function RewardsCard({ id, title, description, points, isUnlocked, isClaimed, category, onClaim, isClaimLoading, canAfford = true }: RewardsCardProps) {
+export default function RewardsCard({ id, title, description, points, isUnlocked, isClaimed, category, onClaim, isClaimLoading, canAfford = true, currentPoints = 0 }: RewardsCardProps) {
+  const progress = Math.min((currentPoints / points) * 100, 100);
+  const pointsNeeded = Math.max(points - currentPoints, 0);
+  
   return (
     <Card className="p-6 relative overflow-hidden" data-testid={`card-reward-${title.toLowerCase().replace(/\s/g, '-')}`}>
       {!isUnlocked && (
@@ -39,6 +44,16 @@ export default function RewardsCard({ id, title, description, points, isUnlocked
             {category}
           </Badge>
         </div>
+
+        {!isClaimed && currentPoints > 0 && (
+          <div className="space-y-2">
+            <Progress value={progress} className="h-2" />
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>{currentPoints.toLocaleString()} / {points.toLocaleString()} pts</span>
+              {!canAfford && <span className="text-primary font-semibold">{pointsNeeded.toLocaleString()} more needed</span>}
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between pt-4 border-t">
           <div className="flex items-center gap-2">

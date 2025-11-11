@@ -311,6 +311,7 @@ export default function Home() {
                     onClaim={handleClaimReward}
                     isClaimLoading={claimingRewardId === reward.id}
                     canAfford={canAfford}
+                    currentPoints={user?.totalPoints || 0}
                   />
                 );
               })
