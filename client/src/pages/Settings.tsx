@@ -50,13 +50,11 @@ export default function Settings() {
   const [username, setUsername] = useState("");
   const [location] = useLocation();
   
-  // Riot account linking state
-  const [leagueRiotId, setLeagueRiotId] = useState("");
-  const [leagueRegion, setLeagueRegion] = useState("na");
-  const [leagueVerificationCode, setLeagueVerificationCode] = useState("");
-  const [valorantRiotId, setValorantRiotId] = useState("");
+  // Riot account linking state (simplified - no verification codes needed)
+  const [leagueRiotId, setLeagueRiotId] = useState(""); // Format: GameName#TAG
+  const [leagueRegion, setLeagueRegion] = useState("na1");
+  const [valorantRiotId, setValorantRiotId] = useState(""); // Format: GameName#TAG
   const [valorantRegion, setValorantRegion] = useState("na");
-  const [valorantVerificationCode, setValorantVerificationCode] = useState("");
 
   const { data: user, isLoading } = useQuery<UserData>({
     queryKey: ['/api/auth/user'],
@@ -123,141 +121,69 @@ export default function Settings() {
 
   // Riot Account Status Queries
   const { data: leagueStatus } = useQuery<RiotAccountStatus>({
-    queryKey: ['/api/riot', LEAGUE_GAME_ID, 'status'],
+    queryKey: ['/api/riot/account/league'],
   });
 
   const { data: valorantStatus } = useQuery<RiotAccountStatus>({
-    queryKey: ['/api/riot', VALORANT_GAME_ID, 'status'],
+    queryKey: ['/api/riot/account/valorant'],
   });
 
-  // Riot Account Request Code Mutation
-  const requestLeagueCodeMutation = useMutation({
+  // Riot Account Link Mutations (simplified - direct linking)
+  const linkLeagueMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest(`/api/riot/${LEAGUE_GAME_ID}/request-code`, "POST", {
-        riotId: leagueRiotId,
+      const [gameName, tagLine] = leagueRiotId.split('#');
+      if (!gameName || !tagLine) {
+        throw new Error("Please enter your Riot ID in the format: GameName#TAG");
+      }
+      return await apiRequest("/api/riot/link-account", "POST", {
+        game: "league",
+        gameName,
+        tagLine,
         region: leagueRegion,
       });
     },
     onSuccess: (data: any) => {
-      setLeagueVerificationCode(data.verificationCode);
+      queryClient.invalidateQueries({ queryKey: ['/api/riot/account/league'] });
+      setLeagueRiotId("");
       toast({
-        title: "Verification code generated!",
-        description: `Enter ${data.verificationCode} in your League client.`,
+        title: "League account linked!",
+        description: `Successfully linked ${data.account.gameName}#${data.account.tagLine}`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to request code",
-        description: error.message || "Please check your Riot ID and try again",
+        title: "Failed to link account",
+        description: error.message || "Please check your Riot ID format (GameName#TAG)",
         variant: "destructive",
       });
     },
   });
 
-  const requestValorantCodeMutation = useMutation({
+  const linkValorantMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest(`/api/riot/${VALORANT_GAME_ID}/request-code`, "POST", {
-        riotId: valorantRiotId,
+      const [gameName, tagLine] = valorantRiotId.split('#');
+      if (!gameName || !tagLine) {
+        throw new Error("Please enter your Riot ID in the format: GameName#TAG");
+      }
+      return await apiRequest("/api/riot/link-account", "POST", {
+        game: "valorant",
+        gameName,
+        tagLine,
         region: valorantRegion,
       });
     },
     onSuccess: (data: any) => {
-      setValorantVerificationCode(data.verificationCode);
-      toast({
-        title: "Verification code generated!",
-        description: `Add ${data.verificationCode} to your Valorant profile.`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to request code",
-        description: error.message || "Please check your Riot ID and try again",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Riot Account Verify Mutations
-  const verifyLeagueMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest(`/api/riot/${LEAGUE_GAME_ID}/verify`, "POST", {});
-    },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/riot', LEAGUE_GAME_ID, 'status'] });
-      setLeagueRiotId("");
-      setLeagueVerificationCode("");
-      toast({
-        title: "League account verified!",
-        description: `Successfully linked ${data.account.gameName}#${data.account.tagLine}`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Verification failed",
-        description: error.message || "Make sure you entered the code in your League client",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const verifyValorantMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest(`/api/riot/${VALORANT_GAME_ID}/verify`, "POST", {});
-    },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/riot', VALORANT_GAME_ID, 'status'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/riot/account/valorant'] });
       setValorantRiotId("");
-      setValorantVerificationCode("");
       toast({
-        title: "Valorant account verified!",
+        title: "Valorant account linked!",
         description: `Successfully linked ${data.account.gameName}#${data.account.tagLine}`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Verification failed",
-        description: error.message || "Make sure you added the code to your Valorant profile",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Riot Account Disconnect Mutations
-  const disconnectLeagueMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest(`/api/riot/${LEAGUE_GAME_ID}/disconnect`, "POST", {});
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/riot', LEAGUE_GAME_ID, 'status'] });
-      toast({
-        title: "League account disconnected",
-        description: "Your League of Legends account has been unlinked.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to disconnect",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const disconnectValorantMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest(`/api/riot/${VALORANT_GAME_ID}/disconnect`, "POST", {});
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/riot', VALORANT_GAME_ID, 'status'] });
-      toast({
-        title: "Valorant account disconnected",
-        description: "Your Valorant account has been unlinked.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to disconnect",
-        description: error.message || "Please try again",
+        title: "Failed to link account",
+        description: error.message || "Please check your Riot ID format (GameName#TAG)",
         variant: "destructive",
       });
     },
@@ -466,100 +392,43 @@ export default function Settings() {
               </div>
             ) : (
               <div className="space-y-4">
-                {!leagueVerificationCode ? (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="league-riot-id">Riot ID</Label>
-                      <Input
-                        id="league-riot-id"
-                        value={leagueRiotId}
-                        onChange={(e) => setLeagueRiotId(e.target.value)}
-                        placeholder="Faker#NA1"
-                        data-testid="input-league-riot-id"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Your Riot ID (GameName#TAG). Find it in your League client.
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="league-region">Region</Label>
-                      <Select value={leagueRegion} onValueChange={setLeagueRegion}>
-                        <SelectTrigger id="league-region" data-testid="select-league-region">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {REGIONS.map(region => (
-                            <SelectItem key={region.value} value={region.value}>
-                              {region.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      onClick={() => requestLeagueCodeMutation.mutate()}
-                      disabled={requestLeagueCodeMutation.isPending || !leagueRiotId.includes('#')}
-                      className="gap-2 w-full"
-                      data-testid="button-request-league-code"
-                    >
-                      <Shield className="h-4 w-4" />
-                      {requestLeagueCodeMutation.isPending ? "Generating..." : "Generate Verification Code"}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-muted rounded-lg space-y-3">
-                      <p className="font-medium">Step 1: Copy verification code</p>
-                      <div className="flex items-center gap-2">
-                        <code className="flex-1 px-3 py-2 bg-background rounded font-mono text-lg font-bold" data-testid="text-league-verification-code">
-                          {leagueVerificationCode}
-                        </code>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            navigator.clipboard.writeText(leagueVerificationCode);
-                            toast({ title: "Code copied!" });
-                          }}
-                          data-testid="button-copy-league-code"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-muted rounded-lg">
-                      <p className="font-medium mb-2">Step 2: Enter in League client</p>
-                      <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground ml-2">
-                        <li>Open League of Legends client</li>
-                        <li>Click Settings (gear icon)</li>
-                        <li>Go to "Verification" tab</li>
-                        <li>Paste the code above and save</li>
-                        <li>Come back here and click "Verify Now"</li>
-                      </ol>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => verifyLeagueMutation.mutate()}
-                        disabled={verifyLeagueMutation.isPending}
-                        className="gap-2 flex-1"
-                        data-testid="button-verify-league"
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        {verifyLeagueMutation.isPending ? "Verifying..." : "Verify Now"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setLeagueVerificationCode("");
-                          setLeagueRiotId("");
-                        }}
-                        data-testid="button-cancel-league"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="league-riot-id">Riot ID</Label>
+                  <Input
+                    id="league-riot-id"
+                    value={leagueRiotId}
+                    onChange={(e) => setLeagueRiotId(e.target.value)}
+                    placeholder="Faker#NA1"
+                    data-testid="input-league-riot-id"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your Riot ID (GameName#TAG). Find it in your League client.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="league-region">Region</Label>
+                  <Select value={leagueRegion} onValueChange={setLeagueRegion}>
+                    <SelectTrigger id="league-region" data-testid="select-league-region">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {REGIONS.map(region => (
+                        <SelectItem key={region.value} value={region.value}>
+                          {region.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={() => linkLeagueMutation.mutate()}
+                  disabled={linkLeagueMutation.isPending || !leagueRiotId.includes('#')}
+                  className="gap-2 w-full"
+                  data-testid="button-link-league"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {linkLeagueMutation.isPending ? "Linking..." : "Link Account"}
+                </Button>
               </div>
             )}
           </CardContent>
