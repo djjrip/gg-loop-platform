@@ -296,6 +296,7 @@ export const virtualBadges = pgTable("virtual_badges", {
   rarity: varchar("rarity").notNull().default("common"), // common, rare, epic, legendary
   unlockCondition: text("unlock_condition").notNull(),
   ggCoinsRequired: integer("gg_coins_required").default(0),
+  ggCoinsReward: integer("gg_coins_reward").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

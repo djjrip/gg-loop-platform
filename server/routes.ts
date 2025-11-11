@@ -892,6 +892,7 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
                     userId,
                     challengeId: challenge.id,
                     progress: 1,
+                    pointsAwarded: 0,
                     completedAt: challenge.requirementCount === 1 ? new Date() : null
                   })
                   .onConflictDoUpdate({

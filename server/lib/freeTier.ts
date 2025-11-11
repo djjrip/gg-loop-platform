@@ -148,6 +148,17 @@ export async function unlockBadgeByCondition(
     badgeId: badge.id,
   });
 
+  // Award GG Coins if badge has a reward
+  if (badge.ggCoinsReward > 0) {
+    await awardGgCoins(
+      userId,
+      badge.ggCoinsReward,
+      `Badge unlocked: ${badge.name}`,
+      'badge_unlock',
+      badge.id
+    );
+  }
+
   return badge.name;
 }
 
@@ -170,22 +181,21 @@ export async function redeemBasicTrial(userId: string): Promise<boolean> {
   const now = new Date();
   const trialEnd = new Date(now.getTime() + BASIC_TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000);
 
-  // Deduct coins and activate trial
-  await db.update(users)
-    .set({
-      ggCoins: user.ggCoins - GG_COINS_FOR_BASIC_TRIAL,
-      freeTrialStartedAt: now,
-      freeTrialEndsAt: trialEnd,
-    })
-    .where(eq(users.id, userId));
-
-  // Record the redemption
+  // Deduct coins via awardGgCoins (single source of truth for balance)
   await awardGgCoins(
     userId,
     -GG_COINS_FOR_BASIC_TRIAL,
     `Redeemed ${BASIC_TRIAL_DURATION_DAYS}-day Basic trial`,
     'trial_redemption'
   );
+
+  // Activate trial
+  await db.update(users)
+    .set({
+      freeTrialStartedAt: now,
+      freeTrialEndsAt: trialEnd,
+    })
+    .where(eq(users.id, userId));
 
   return true;
 }
