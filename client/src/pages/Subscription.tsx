@@ -12,6 +12,7 @@ import type { Subscription } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
+import Header from "@/components/Header";
 
 export default function SubscriptionPage() {
   const { user, isAuthenticated } = useAuth();
@@ -157,6 +158,7 @@ export default function SubscriptionPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold tracking-tight mb-4" data-testid="heading-subscription">
@@ -210,7 +212,7 @@ export default function SubscriptionPage() {
                         {subscription.status === "active" ? "Current Subscription" : "Subscription Status"}
                       </CardTitle>
                       <CardDescription>
-                        {subscription.tier === "premium" ? "Premium" : "Basic"} Plan
+                        {subscription.tier === "elite" ? "Elite" : subscription.tier === "pro" ? "Pro" : "Basic"} Plan
                       </CardDescription>
                     </div>
                     <Badge 
@@ -232,9 +234,9 @@ export default function SubscriptionPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Monthly Points</p>
+                      <p className="text-muted-foreground">Monthly Points Cap</p>
                       <p className="font-semibold" data-testid="text-monthly-points">
-                        {subscription.tier === "premium" ? "300-600" : "150-300"} points
+                        {subscription.tier === "elite" ? "1500" : subscription.tier === "pro" ? "800" : "400"} points
                       </p>
                     </div>
                   </div>
