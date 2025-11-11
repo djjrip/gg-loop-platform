@@ -105,32 +105,49 @@ export default function SubscriptionPage() {
       icon: Trophy,
       description: "Start earning rewards from your gameplay",
       features: [
-        { text: "150 base points per month", included: true },
-        { text: "150-300 performance bonus points", included: true },
-        { text: "Access to Tier 1-2 rewards", included: true },
+        { text: "400 points per month (1x multiplier)", included: true },
+        { text: "100 point subscription bonus", included: true },
+        { text: "Earn from match wins & achievements", included: true },
+        { text: "Access to rewards catalog", included: true },
         { text: "Leaderboard rankings", included: true },
         { text: "Achievement tracking", included: true },
-        { text: "Performance multipliers", included: false },
+        { text: "2x or 3x point multiplier", included: false },
         { text: "Priority support", included: false },
-        { text: "Exclusive tournaments", included: false },
       ],
     },
     {
-      id: "premium",
-      name: "Premium",
-      price: 10,
+      id: "pro",
+      name: "Pro",
+      price: 12,
       icon: Flame,
-      description: "Maximize your earning potential",
-      badge: "Coming Soon",
+      description: "Double your earning potential",
       features: [
-        { text: "300 base points per month", included: true },
-        { text: "300-600 performance bonus points", included: true },
-        { text: "Access to all reward tiers", included: true },
+        { text: "800 points per month (2x multiplier)", included: true },
+        { text: "200 point subscription bonus", included: true },
+        { text: "Double points on all activities", included: true },
+        { text: "Access to rewards catalog", included: true },
         { text: "Leaderboard rankings", included: true },
         { text: "Achievement tracking", included: true },
-        { text: "1.5-2x performance multipliers", included: true },
         { text: "Priority support", included: true },
-        { text: "Exclusive tournaments", included: true },
+        { text: "Exclusive Pro badge", included: true },
+      ],
+    },
+    {
+      id: "elite",
+      name: "Elite",
+      price: 25,
+      icon: Star,
+      description: "Maximum earning power",
+      badge: "Best Value",
+      features: [
+        { text: "1500 points per month (3x multiplier)", included: true },
+        { text: "300 point subscription bonus", included: true },
+        { text: "Triple points on all activities", included: true },
+        { text: "Access to rewards catalog", included: true },
+        { text: "Leaderboard rankings", included: true },
+        { text: "Achievement tracking", included: true },
+        { text: "Priority support", included: true },
+        { text: "Exclusive Elite badge & perks", included: true },
       ],
     },
   ];
@@ -403,17 +420,17 @@ export default function SubscriptionPage() {
               </Card>
             )}
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-3 gap-8">
               {tiers.map((tier) => {
                 const TierIcon = tier.icon;
                 const isCurrentTier = subscription?.tier === tier.id;
-                const isPremium = tier.id === "premium";
+                const isElite = tier.id === "elite";
 
                 return (
                   <Card
                     key={tier.id}
                     className={`relative ${
-                      isPremium ? "border-primary/50 bg-primary/5" : ""
+                      isElite ? "border-primary/50 bg-primary/5" : ""
                     }`}
                     data-testid={`card-tier-${tier.id}`}
                   >
@@ -429,12 +446,12 @@ export default function SubscriptionPage() {
                       <div className="flex items-center gap-3 mb-2">
                         <div
                           className={`p-2 rounded-lg ${
-                            isPremium ? "bg-primary/20" : "bg-muted"
+                            isElite ? "bg-primary/20" : "bg-muted"
                           }`}
                         >
                           <TierIcon
                             className={`w-6 h-6 ${
-                              isPremium ? "text-primary" : "text-muted-foreground"
+                              isElite ? "text-primary" : "text-muted-foreground"
                             }`}
                           />
                         </div>
@@ -484,7 +501,7 @@ export default function SubscriptionPage() {
                       {!isAuthenticated ? (
                         <Button
                           className="w-full"
-                          variant={isPremium ? "default" : "outline"}
+                          variant={isElite ? "default" : "outline"}
                           onClick={() => window.location.href = '/api/login'}
                           data-testid={`button-login-${tier.id}`}
                         >
@@ -499,18 +516,10 @@ export default function SubscriptionPage() {
                         >
                           Current Plan
                         </Button>
-                      ) : isPremium ? (
-                        <Button
-                          className="w-full"
-                          variant="outline"
-                          disabled
-                          data-testid={`button-disabled-${tier.id}`}
-                        >
-                          Coming Soon
-                        </Button>
                       ) : (
                         <Button
                           className="w-full"
+                          variant={isElite ? "default" : "outline"}
                           onClick={() => checkoutMutation.mutate(tier.id)}
                           disabled={checkoutMutation.isPending || hasActiveSubscription}
                           data-testid={`button-subscribe-${tier.id}`}

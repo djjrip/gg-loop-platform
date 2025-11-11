@@ -1120,9 +1120,17 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
       const user = req.dbUser;
 
       const { tier = "basic" } = req.body;
-      const priceId = tier === "premium" 
-        ? process.env.STRIPE_PREMIUM_PRICE_ID 
-        : process.env.STRIPE_BASIC_PRICE_ID;
+      
+      let priceId: string | undefined;
+      if (tier === "basic") {
+        priceId = process.env.STRIPE_BASIC_PRICE_ID;
+      } else if (tier === "pro") {
+        priceId = process.env.STRIPE_PRO_PRICE_ID;
+      } else if (tier === "elite") {
+        priceId = process.env.STRIPE_ELITE_PRICE_ID;
+      } else {
+        return res.status(400).json({ message: `Invalid tier: ${tier}` });
+      }
 
       if (!priceId) {
         return res.status(400).json({ message: `Price ID not configured for ${tier} tier` });
