@@ -195,6 +195,17 @@ export async function setupAuth(app: Express) {
             if (dbUser) {
               const { updateLoginStreak } = await import('./lib/freeTier');
               const streakResult = await updateLoginStreak(dbUser.id);
+              
+              // Store notification in session for frontend to display
+              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+                req.session.loginNotification = {
+                  streak: streakResult.currentStreak,
+                  coinsAwarded: streakResult.coinsAwarded,
+                  badgeUnlocked: streakResult.badgeUnlocked,
+                  timestamp: Date.now(),
+                };
+              }
+              
               if (streakResult.coinsAwarded > 0) {
                 console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
               }
@@ -237,6 +248,17 @@ export async function setupAuth(app: Express) {
             if (dbUser) {
               const { updateLoginStreak } = await import('./lib/freeTier');
               const streakResult = await updateLoginStreak(dbUser.id);
+              
+              // Store notification in session for frontend to display
+              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+                req.session.loginNotification = {
+                  streak: streakResult.currentStreak,
+                  coinsAwarded: streakResult.coinsAwarded,
+                  badgeUnlocked: streakResult.badgeUnlocked,
+                  timestamp: Date.now(),
+                };
+              }
+              
               if (streakResult.coinsAwarded > 0) {
                 console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
               }
@@ -279,6 +301,17 @@ export async function setupAuth(app: Express) {
             if (dbUser) {
               const { updateLoginStreak } = await import('./lib/freeTier');
               const streakResult = await updateLoginStreak(dbUser.id);
+              
+              // Store notification in session for frontend to display
+              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+                req.session.loginNotification = {
+                  streak: streakResult.currentStreak,
+                  coinsAwarded: streakResult.coinsAwarded,
+                  badgeUnlocked: streakResult.badgeUnlocked,
+                  timestamp: Date.now(),
+                };
+              }
+              
               if (streakResult.coinsAwarded > 0) {
                 console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
               }

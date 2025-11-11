@@ -118,6 +118,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get and clear login notification
+  app.get('/api/auth/login-notification', async (req: any, res) => {
+    try {
+      const notification = req.session.loginNotification;
+      
+      if (notification) {
+        // Clear notification after retrieving (one-time display)
+        delete req.session.loginNotification;
+      }
+      
+      res.json(notification || null);
+    } catch (error) {
+      console.error("Error fetching login notification:", error);
+      res.status(500).json({ message: "Failed to fetch notification" });
+    }
+  });
+
   // Twitch OAuth - Initiate authorization
   app.get('/api/twitch/auth', isAuthenticated, (req: any, res) => {
     try {
