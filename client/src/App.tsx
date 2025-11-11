@@ -14,6 +14,11 @@ import BusinessDashboard from "@/pages/BusinessDashboard";
 import SponsorManagement from "@/pages/SponsorManagement";
 import SponsorPitch from "@/pages/SponsorPitch";
 import InvestorPitch from "@/pages/InvestorPitch";
+import FounderRoadmap from "@/pages/FounderRoadmap";
+import SponsorOutreach from "@/pages/SponsorOutreach";
+import InvestorOutreach from "@/pages/InvestorOutreach";
+import TwitchOutreach from "@/pages/TwitchOutreach";
+import LaunchChecklist from "@/pages/LaunchChecklist";
 import ReportMatch from "@/pages/ReportMatch";
 import Referrals from "@/pages/Referrals";
 import Settings from "@/pages/Settings";
@@ -49,6 +54,11 @@ function Router() {
       <Route path="/admin/sponsors" component={SponsorManagement} />
       <Route path="/sponsor-pitch" component={SponsorPitch} />
       <Route path="/investor-pitch" component={InvestorPitch} />
+      <Route path="/roadmap" component={FounderRoadmap} />
+      <Route path="/sponsor-outreach" component={SponsorOutreach} />
+      <Route path="/investor-outreach" component={InvestorOutreach} />
+      <Route path="/twitch-outreach" component={TwitchOutreach} />
+      <Route path="/launch" component={LaunchChecklist} />
       <Route path="/report-match" component={ReportMatch} />
       <Route path="/referrals" component={Referrals} />
       <Route path="/my-rewards" component={MyRewards} />
