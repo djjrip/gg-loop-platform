@@ -5,6 +5,7 @@ import StatsCard from "@/components/StatsCard";
 import LeaderboardRow from "@/components/LeaderboardRow";
 import CommunityFeedItem from "@/components/CommunityFeedItem";
 import RewardsCard from "@/components/RewardsCard";
+import ChallengeCard from "@/components/ChallengeCard";
 import ErrorDisplay from "@/components/ErrorDisplay";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -24,7 +25,8 @@ export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState<"daily" | "weekly" | "all-time">("weekly");
   const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [claimingChallengeId, setClaimingChallengeId] = useState<string | null>(null);
+  const { toast} = useToast();
 
   const claimRewardMutation = useMutation({
     mutationFn: async (rewardId: string) => {
@@ -125,6 +127,69 @@ export default function Home() {
     enabled: isAuthenticated,
   });
 
+  // Fetch active challenges
+  interface Challenge {
+    id: string;
+    title: string;
+    description: string;
+    sponsorName: string;
+    requirementCount: number;
+    bonusPoints: number;
+    endDate: string;
+    userProgress: number | null;
+    canClaim: boolean;
+    claimed: boolean;
+  }
+
+  const { data: challenges, isLoading: challengesLoading, error: challengesError, refetch: refetchChallenges } = useQuery<Challenge[]>({
+    queryKey: ["/api/challenges"],
+  });
+
+  const claimChallengeMutation = useMutation({
+    mutationFn: async (challengeId: string) => {
+      try {
+        const res = await apiRequest("POST", `/api/challenges/${challengeId}/claim`, {});
+        return await res.json();
+      } catch (error: any) {
+        const errorMessage = error.response
+          ? await error.response.json().then((data: any) => data.message).catch(() => "Failed to claim challenge")
+          : error.message || "Failed to claim challenge";
+        throw new Error(errorMessage);
+      }
+    },
+    onSuccess: (data) => {
+      setClaimingChallengeId(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/challenges"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Success!",
+        description: `Claimed ${data.pointsAwarded} bonus points! Your balance has been updated.`,
+      });
+    },
+    onError: (error: Error) => {
+      setClaimingChallengeId(null);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to claim challenge",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleClaimChallenge = (challengeId: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to claim challenge rewards",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setClaimingChallengeId(challengeId);
+    claimChallengeMutation.mutate(challengeId);
+  };
+
   // Mock community feed (as requested to keep this mocked)
   const communityFeed = [
     { username: "ProGamer99", action: "unlocked achievement", game: "Tactical Warfare", details: "Perfect Victory - Won match without losing a round", time: "2m ago", type: "achievement" as const },
@@ -147,6 +212,60 @@ export default function Home() {
       <Hero />
 
       <main className="container mx-auto max-w-7xl px-4 py-16 space-y-24">
+        {/* SPONSORED CHALLENGES - Enable users to actually EARN money! */}
+        <section id="challenges" className="scroll-mt-20">
+          <div className="mb-8 text-center">
+            <h2 className="text-5xl font-bold font-heading tracking-tight flex items-center justify-center gap-3">
+              <Zap className="w-10 h-10 text-primary" />
+              Sponsored Challenges
+            </h2>
+            <p className="text-muted-foreground mt-3 text-lg max-w-2xl mx-auto">
+              Complete challenges to earn bonus points that bypass your monthly earning cap. Real sponsors, real rewards.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {challengesLoading ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="p-6">
+                    <Skeleton className="h-64 w-full" />
+                  </Card>
+                ))}
+              </>
+            ) : challengesError ? (
+              <div className="col-span-full">
+                <ErrorDisplay 
+                  message="Failed to load challenges. Please try again." 
+                  onRetry={() => refetchChallenges()} 
+                />
+              </div>
+            ) : challenges && challenges.length > 0 ? (
+              challenges.map((challenge) => (
+                <ChallengeCard
+                  key={challenge.id}
+                  id={challenge.id}
+                  title={challenge.title}
+                  description={challenge.description}
+                  sponsorName={challenge.sponsorName}
+                  requirementCount={challenge.requirementCount}
+                  bonusPoints={challenge.bonusPoints}
+                  userProgress={challenge.userProgress || 0}
+                  canClaim={challenge.canClaim}
+                  claimed={challenge.claimed}
+                  endDate={challenge.endDate}
+                  onClaim={handleClaimChallenge}
+                  isClaimLoading={claimingChallengeId === challenge.id}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                No active challenges at the moment. Check back soon for new sponsored challenges!
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* REWARDS CATALOG - PRIORITY #1 */}
         <section id="rewards" className="scroll-mt-20">
           <div className="mb-8 text-center">
