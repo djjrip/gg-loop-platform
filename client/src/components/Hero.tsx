@@ -42,9 +42,9 @@ export default function Hero() {
             </h1>
 
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8 font-medium">
-              Turn every match into real rewards. Try GG Loop free for 7 days, then just
-              <span className="text-foreground font-semibold"> $5/month</span> to earn up to 
-              <span className="text-primary font-semibold"> $45/month</span> in gift cards and gaming gear.
+              Turn every match into real rewards. Subscribe from
+              <span className="text-foreground font-semibold"> $5/month</span> to earn gift cards and gaming gear, 
+              <span className="text-primary font-semibold"> PLUS unlimited bonus earnings</span> from sponsored challenges.
             </p>
 
             <div className="flex items-center justify-center gap-6 mb-12">
@@ -94,7 +94,7 @@ export default function Hero() {
                 <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Rewards Earned</div>
               </div>
               <div className="group bg-card/50 backdrop-blur-md border border-border rounded-2xl p-6 hover:border-primary/30 transition-all duration-300">
-                <div className="text-4xl md:text-5xl font-black text-primary mb-2 transition-colors">10:1</div>
+                <div className="text-4xl md:text-5xl font-black text-primary mb-2 transition-colors">100:1</div>
                 <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Points to Value</div>
               </div>
             </div>
