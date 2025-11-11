@@ -19,27 +19,34 @@ export async function awardGgCoins(
   sourceType?: string,
   sourceId?: string
 ): Promise<number> {
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  if (!user) throw new Error("User not found");
+  // Use transaction with FOR UPDATE lock to prevent race conditions
+  return await db.transaction(async (tx) => {
+    const [user] = await tx.select().from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+      .for("update");
+    
+    if (!user) throw new Error("User not found");
 
-  const newBalance = user.ggCoins + amount;
+    const newBalance = user.ggCoins + amount;
 
-  // Update user balance
-  await db.update(users)
-    .set({ ggCoins: newBalance })
-    .where(eq(users.id, userId));
+    // Update user balance
+    await tx.update(users)
+      .set({ ggCoins: newBalance })
+      .where(eq(users.id, userId));
 
-  // Record transaction
-  await db.insert(ggCoinTransactions).values({
-    userId,
-    amount,
-    reason,
-    sourceType,
-    sourceId,
-    balanceAfter: newBalance,
+    // Record transaction
+    await tx.insert(ggCoinTransactions).values({
+      userId,
+      amount,
+      reason,
+      sourceType,
+      sourceId,
+      balanceAfter: newBalance,
+    });
+
+    return newBalance;
   });
-
-  return newBalance;
 }
 
 /**
@@ -166,38 +173,48 @@ export async function unlockBadgeByCondition(
  * Redeem GG Coins for Basic trial
  */
 export async function redeemBasicTrial(userId: string): Promise<boolean> {
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  if (!user) throw new Error("User not found");
+  // Use transaction to prevent race conditions
+  return await db.transaction(async (tx) => {
+    const [user] = await tx.select().from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+      .for("update");
+    
+    if (!user) throw new Error("User not found");
 
-  if (user.ggCoins < GG_COINS_FOR_BASIC_TRIAL) {
-    throw new Error(`Need ${GG_COINS_FOR_BASIC_TRIAL} GG Coins (you have ${user.ggCoins})`);
-  }
+    if (user.ggCoins < GG_COINS_FOR_BASIC_TRIAL) {
+      throw new Error(`Need ${GG_COINS_FOR_BASIC_TRIAL} GG Coins (you have ${user.ggCoins})`);
+    }
 
-  // Check if already has active trial
-  if (user.freeTrialEndsAt && user.freeTrialEndsAt > new Date()) {
-    throw new Error("You already have an active trial");
-  }
+    // Check if already has active trial
+    if (user.freeTrialEndsAt && user.freeTrialEndsAt > new Date()) {
+      throw new Error("You already have an active trial");
+    }
 
-  const now = new Date();
-  const trialEnd = new Date(now.getTime() + BASIC_TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const trialEnd = new Date(now.getTime() + BASIC_TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000);
+    const newBalance = user.ggCoins - GG_COINS_FOR_BASIC_TRIAL;
 
-  // Deduct coins via awardGgCoins (single source of truth for balance)
-  await awardGgCoins(
-    userId,
-    -GG_COINS_FOR_BASIC_TRIAL,
-    `Redeemed ${BASIC_TRIAL_DURATION_DAYS}-day Basic trial`,
-    'trial_redemption'
-  );
+    // Deduct coins and activate trial atomically
+    await tx.update(users)
+      .set({
+        ggCoins: newBalance,
+        freeTrialStartedAt: now,
+        freeTrialEndsAt: trialEnd,
+      })
+      .where(eq(users.id, userId));
 
-  // Activate trial
-  await db.update(users)
-    .set({
-      freeTrialStartedAt: now,
-      freeTrialEndsAt: trialEnd,
-    })
-    .where(eq(users.id, userId));
+    // Record transaction
+    await tx.insert(ggCoinTransactions).values({
+      userId,
+      amount: -GG_COINS_FOR_BASIC_TRIAL,
+      reason: `Redeemed ${BASIC_TRIAL_DURATION_DAYS}-day Basic trial`,
+      sourceType: 'trial_redemption',
+      balanceAfter: newBalance,
+    });
 
-  return true;
+    return true;
+  });
 }
 
 /**

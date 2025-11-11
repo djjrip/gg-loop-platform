@@ -1,7 +1,8 @@
 import { db } from './db';
-import { riotAccounts, processedRiotMatches } from '@shared/schema';
+import { riotAccounts, processedRiotMatches, subscriptions, users } from '@shared/schema';
 import { getRiotAPI } from './lib/riot';
 import { pointsEngine } from './pointsEngine';
+import { awardGgCoins, GG_COINS_PER_WIN } from './lib/freeTier';
 import { eq, and, desc } from 'drizzle-orm';
 
 const SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
@@ -110,31 +111,56 @@ async function syncLeagueAccount(account: typeof riotAccounts.$inferSelect) {
     const didWin = participant.win;
     const gameEndedAt = new Date(matchData.info.gameEndTimestamp);
     
-    // Award points if they won
+    // Award points or GG Coins based on subscription status
     let pointsAwarded = 0;
     let transactionId: string | null = null;
     
     if (didWin) {
       try {
-        const transaction = await pointsEngine.awardPoints(
-          account.userId,
-          10, // Base points for a League win
-          'match_win',
-          matchId,
-          'riot_league',
-          `League of Legends win (${participant.championName})`
-        );
+        // Check if user has active subscription OR trial
+        const [user] = await db.select().from(users)
+          .where(eq(users.id, account.userId))
+          .limit(1);
         
-        pointsAwarded = transaction.amount;
-        transactionId = transaction.id;
+        const hasActiveTrial = user && user.freeTrialEndsAt && user.freeTrialEndsAt > new Date();
         
-        console.log(`[MatchSync] ✓ Awarded ${pointsAwarded} points to ${account.gameName}#${account.tagLine} for League win`);
+        const [userSub] = await db.select().from(subscriptions)
+          .where(eq(subscriptions.userId, account.userId))
+          .limit(1);
+        
+        if ((userSub && userSub.status === 'active') || hasActiveTrial) {
+          // Paid/Trial user: Award regular points
+          const transaction = await pointsEngine.awardPoints(
+            account.userId,
+            10,
+            'match_win',
+            matchId,
+            'riot_league',
+            `League of Legends win (${participant.championName})`
+          );
+          
+          pointsAwarded = transaction.amount;
+          transactionId = transaction.id;
+          
+          console.log(`[MatchSync] ✓ Awarded ${pointsAwarded} points to ${account.gameName}#${account.tagLine} for League win`);
+        } else {
+          // Free tier user: Award GG Coins
+          await awardGgCoins(
+            account.userId,
+            GG_COINS_PER_WIN,
+            `League of Legends win (${participant.championName})`,
+            'match_win',
+            matchId
+          );
+          
+          console.log(`[MatchSync] ✓ Awarded ${GG_COINS_PER_WIN} GG Coins to ${account.gameName}#${account.tagLine} for League win (free tier)`);
+        }
       } catch (error: any) {
-        console.error(`[MatchSync] Failed to award points for match ${matchId}:`, error.message);
+        console.error(`[MatchSync] Failed to award rewards for match ${matchId}:`, error.message);
         // Still record the match as processed even if points failed
       }
     } else {
-      console.log(`[MatchSync] - Match ${matchId} was a loss. No points awarded.`);
+      console.log(`[MatchSync] - Match ${matchId} was a loss. No rewards awarded.`);
     }
     
     // Record as processed
@@ -199,31 +225,56 @@ async function syncValorantAccount(account: typeof riotAccounts.$inferSelect) {
     const gameLengthMillis = matchData.matchInfo?.gameLengthMillis || 0;
     const gameEndedAt = new Date(gameStartMillis + gameLengthMillis);
     
-    // Award points if they won
+    // Award points or GG Coins based on subscription status
     let pointsAwarded = 0;
     let transactionId: string | null = null;
     
     if (didWin) {
       try {
-        const transaction = await pointsEngine.awardPoints(
-          account.userId,
-          10, // Base points for a Valorant win
-          'match_win',
-          matchId,
-          'riot_valorant',
-          `Valorant win (Agent: ${participant.characterId})`
-        );
+        // Check if user has active subscription OR trial
+        const [user] = await db.select().from(users)
+          .where(eq(users.id, account.userId))
+          .limit(1);
         
-        pointsAwarded = transaction.amount;
-        transactionId = transaction.id;
+        const hasActiveTrial = user && user.freeTrialEndsAt && user.freeTrialEndsAt > new Date();
         
-        console.log(`[MatchSync] ✓ Awarded ${pointsAwarded} points to ${account.gameName}#${account.tagLine} for Valorant win`);
+        const [userSub] = await db.select().from(subscriptions)
+          .where(eq(subscriptions.userId, account.userId))
+          .limit(1);
+        
+        if ((userSub && userSub.status === 'active') || hasActiveTrial) {
+          // Paid/Trial user: Award regular points
+          const transaction = await pointsEngine.awardPoints(
+            account.userId,
+            10,
+            'match_win',
+            matchId,
+            'riot_valorant',
+            `Valorant win (Agent: ${participant.characterId})`
+          );
+          
+          pointsAwarded = transaction.amount;
+          transactionId = transaction.id;
+          
+          console.log(`[MatchSync] ✓ Awarded ${pointsAwarded} points to ${account.gameName}#${account.tagLine} for Valorant win`);
+        } else {
+          // Free tier user: Award GG Coins
+          await awardGgCoins(
+            account.userId,
+            GG_COINS_PER_WIN,
+            `Valorant win (Agent: ${participant.characterId})`,
+            'match_win',
+            matchId
+          );
+          
+          console.log(`[MatchSync] ✓ Awarded ${GG_COINS_PER_WIN} GG Coins to ${account.gameName}#${account.tagLine} for Valorant win (free tier)`);
+        }
       } catch (error: any) {
-        console.error(`[MatchSync] Failed to award points for match ${matchId}:`, error.message);
+        console.error(`[MatchSync] Failed to award rewards for match ${matchId}:`, error.message);
         // Still record the match as processed even if points failed
       }
     } else {
-      console.log(`[MatchSync] - Match ${matchId} was a loss. No points awarded.`);
+      console.log(`[MatchSync] - Match ${matchId} was a loss. No rewards awarded.`);
     }
     
     // Record as processed

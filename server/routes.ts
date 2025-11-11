@@ -1897,6 +1897,32 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
     }
   });
 
+  // Free Tier Routes
+  app.get('/api/free-tier/status', getUserMiddleware, async (req: any, res) => {
+    try {
+      const { getFreeTierStatus } = await import('./lib/freeTier');
+      const status = await getFreeTierStatus(req.dbUser.id);
+      res.json(status);
+    } catch (error: any) {
+      console.error("Error getting free tier status:", error);
+      res.status(500).json({ message: error.message || "Failed to get free tier status" });
+    }
+  });
+
+  app.post('/api/free-tier/redeem-trial', getUserMiddleware, async (req: any, res) => {
+    try {
+      const { redeemBasicTrial } = await import('./lib/freeTier');
+      await redeemBasicTrial(req.dbUser.id);
+      res.json({ 
+        success: true, 
+        message: "Basic trial activated! Enjoy 7 days of premium features." 
+      });
+    } catch (error: any) {
+      console.error("Error redeeming trial:", error);
+      res.status(400).json({ message: error.message || "Failed to redeem trial" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
