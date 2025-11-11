@@ -269,8 +269,7 @@ export class PointsEngine {
         and(
           eq(pointTransactions.userId, userId),
           gte(pointTransactions.amount, 0),
-          gte(pointTransactions.createdAt, startOfMonth),
-          sql`${pointTransactions.type} != 'subscription_monthly'`
+          gte(pointTransactions.createdAt, startOfMonth)
         )
       );
 
