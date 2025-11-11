@@ -8,9 +8,9 @@ import {
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
   insertAchievementSchema, insertUserRewardSchema,
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
-  insertReferralSchema
+  insertReferralSchema, processedRiotMatches
 } from "@shared/schema";
-import { and, eq, sql, inArray } from "drizzle-orm";
+import { and, eq, sql, inArray, desc } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./oauth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { z } from "zod";
@@ -582,6 +582,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching Riot account:", error);
       res.status(500).json({ message: "Failed to fetch Riot account" });
+    }
+  });
+
+  // Get user's processed Riot matches
+  app.get('/api/riot/matches', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      
+      const userRiotAccounts = await db.select().from(riotAccounts).where(
+        eq(riotAccounts.userId, userId)
+      );
+      
+      if (userRiotAccounts.length === 0) {
+        return res.json([]);
+      }
+      
+      const accountIds = userRiotAccounts.map(acc => acc.id);
+      
+      const matches = await db.select({
+        match: processedRiotMatches,
+        account: riotAccounts,
+      })
+      .from(processedRiotMatches)
+      .innerJoin(riotAccounts, eq(processedRiotMatches.riotAccountId, riotAccounts.id))
+      .where(
+        inArray(processedRiotMatches.riotAccountId, accountIds)
+      )
+      .orderBy(desc(processedRiotMatches.gameEndedAt))
+      .limit(limit);
+      
+      const formattedMatches = matches.map(m => ({
+        id: m.match.id,
+        matchId: m.match.matchId,
+        game: m.account.game,
+        gameName: m.account.gameName,
+        tagLine: m.account.tagLine,
+        region: m.account.region,
+        isWin: m.match.isWin,
+        pointsAwarded: m.match.pointsAwarded,
+        gameEndedAt: m.match.gameEndedAt,
+        processedAt: m.match.processedAt,
+      }));
+      
+      res.json(formattedMatches);
+    } catch (error: any) {
+      console.error("Error fetching Riot matches:", error);
+      res.status(500).json({ message: "Failed to fetch matches" });
     }
   });
 

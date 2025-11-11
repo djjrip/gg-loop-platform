@@ -6,11 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, CheckCircle, XCircle, Clock, Upload, X } from "lucide-react";
+import { Trophy, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Game } from "@shared/schema";
 
@@ -33,9 +32,6 @@ export default function ReportMatch() {
   const [selectedGame, setSelectedGame] = useState<string>("");
   const [matchType, setMatchType] = useState<string>("win");
   const [notes, setNotes] = useState("");
-  const [screenshot, setScreenshot] = useState<File | null>(null);
-  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
 
   const { data: games } = useQuery<Game[]>({
     queryKey: ["/api/games"],
@@ -47,7 +43,7 @@ export default function ReportMatch() {
   });
 
   const submitMutation = useMutation({
-    mutationFn: async (data: { gameId: string; matchType: string; notes: string; screenshotUrl?: string }) => {
+    mutationFn: async (data: { gameId: string; matchType: string; notes: string }) => {
       const res = await apiRequest("POST", "/api/match-submissions", data);
       return await res.json();
     },
@@ -59,8 +55,6 @@ export default function ReportMatch() {
       setSelectedGame("");
       setMatchType("win");
       setNotes("");
-      setScreenshot(null);
-      setScreenshotPreview(null);
       queryClient.invalidateQueries({ queryKey: ["/api/match-submissions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
@@ -74,31 +68,6 @@ export default function ReportMatch() {
   });
 
 
-  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "File Too Large",
-          description: "Screenshot must be less than 10MB",
-          variant: "destructive",
-        });
-        return;
-      }
-      setScreenshot(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setScreenshotPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRemoveScreenshot = () => {
-    setScreenshot(null);
-    setScreenshotPreview(null);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -111,46 +80,10 @@ export default function ReportMatch() {
       return;
     }
 
-    let screenshotUrl: string | undefined;
-
-    if (screenshot) {
-      setIsUploading(true);
-      try {
-        const uploadRes = await apiRequest("POST", "/api/objects/upload");
-        const uploadData: any = await uploadRes.json();
-
-        const uploadResponse = await fetch(uploadData.uploadURL, {
-          method: "PUT",
-          body: screenshot,
-          headers: {
-            "Content-Type": screenshot.type,
-          },
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error("Failed to upload screenshot");
-        }
-
-        screenshotUrl = uploadData.uploadURL.split("?")[0];
-      } catch (error) {
-        console.error("Upload error:", error);
-        toast({
-          title: "Upload Failed",
-          description: "Failed to upload screenshot. Please try again.",
-          variant: "destructive",
-        });
-        setIsUploading(false);
-        return;
-      } finally {
-        setIsUploading(false);
-      }
-    }
-
     submitMutation.mutate({
       gameId: selectedGame,
       matchType,
       notes,
-      screenshotUrl,
     });
   };
 
@@ -229,56 +162,13 @@ export default function ReportMatch() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="screenshot">Screenshot (Optional)</Label>
-                {!screenshotPreview ? (
-                  <div className="border-2 border-dashed rounded-lg p-6 text-center hover-elevate">
-                    <Input
-                      id="screenshot"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleScreenshotChange}
-                      className="hidden"
-                      data-testid="input-screenshot"
-                    />
-                    <label htmlFor="screenshot" className="cursor-pointer flex flex-col items-center gap-2">
-                      <Upload className="h-8 w-8 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        Click to upload screenshot
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        PNG, JPG up to 10MB
-                      </span>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="relative rounded-lg overflow-hidden border">
-                    <img 
-                      src={screenshotPreview} 
-                      alt="Screenshot preview" 
-                      className="w-full h-48 object-cover"
-                    />
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="destructive"
-                      className="absolute top-2 right-2"
-                      onClick={handleRemoveScreenshot}
-                      data-testid="button-remove-screenshot"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={submitMutation.isPending || isUploading}
+                disabled={submitMutation.isPending}
                 data-testid="button-submit"
               >
-                {isUploading ? "Uploading..." : submitMutation.isPending ? "Submitting..." : "Submit Match"}
+                {submitMutation.isPending ? "Submitting..." : "Submit Match"}
               </Button>
             </form>
           </Card>
@@ -293,14 +183,10 @@ export default function ReportMatch() {
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground font-bold text-xs">2</span>
-                  <span>Add any notes about your match (optional)</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground font-bold text-xs">3</span>
                   <span>Submit and earn points instantly!</span>
                 </li>
                 <li className="flex gap-3">
-                  <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground font-bold text-xs">4</span>
+                  <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground font-bold text-xs">3</span>
                   <span>View your match history and total points earned</span>
                 </li>
               </ol>

@@ -23,7 +23,7 @@ export default function Header() {
   };
 
   const handleLogin = () => {
-    window.location.href = "/api/login";
+    window.location.href = "/login";
   };
 
   const handleLogout = () => {
@@ -46,12 +46,12 @@ export default function Header() {
               Games
             </a>
             <Link 
-              href="/report-match" 
+              href="/stats" 
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
-              data-testid="link-report-match"
+              data-testid="link-stats"
             >
               <Gamepad2 className="h-3.5 w-3.5 text-primary" />
-              Report Win
+              My Stats
             </Link>
             <Link 
               href="/referrals" 

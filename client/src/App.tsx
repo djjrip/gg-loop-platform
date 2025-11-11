@@ -27,6 +27,8 @@ import FulfillmentDashboard from "@/pages/FulfillmentDashboard";
 import MyRewards from "@/pages/MyRewards";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
+import Login from "@/pages/Login";
+import Stats from "@/pages/Stats";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -68,6 +70,8 @@ function Router() {
       <Route path="/fulfillment" component={FulfillmentDashboard} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
+      <Route path="/login" component={Login} />
+      <Route path="/stats" component={Stats} />
       <Route component={NotFound} />
     </Switch>
   );
