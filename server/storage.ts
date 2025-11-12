@@ -25,6 +25,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByOidcSub(oidcSub: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: InsertUser): Promise<User>;
   updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string): Promise<User>;
@@ -99,6 +100,11 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result[0];
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     let referralCode: string | undefined;
     let codeExists = true;
@@ -109,11 +115,32 @@ export class DbStorage implements IStorage {
       codeExists = !!existing;
     }
 
-    // Check if this is a new user (skip founder logic for existing users)
+    // Check if user exists by oidcSub
     const existingUser = userData.oidcSub ? await this.getUserByOidcSub(userData.oidcSub) : undefined;
 
+    // If not found by oidcSub, check by email (for multi-provider support)
+    const existingEmailUser = !existingUser && userData.email 
+      ? await this.getUserByEmail(userData.email) 
+      : undefined;
+
+    // If user exists with same email but different provider, link the new provider
+    if (existingEmailUser && userData.oidcSub) {
+      const [user] = await db
+        .update(users)
+        .set({
+          oidcSub: userData.oidcSub, // Update to new provider
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, existingEmailUser.id))
+        .returning();
+      return user;
+    }
+
     // For new users only, use transaction to safely assign founder status
-    if (!existingUser) {
+    if (!existingUser && !existingEmailUser) {
       return db.transaction(async (tx) => {
         // Advisory lock (id=1001) to serialize founder assignment even when table is empty
         await tx.execute(sql`SELECT pg_advisory_xact_lock(1001)`);
