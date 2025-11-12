@@ -11,7 +11,7 @@ export default function LaunchChecklist() {
       status: "complete",
       items: [
         { done: true, text: "Subscription system (Basic/Pro/Elite tiers)", detail: "Stripe integration live" },
-        { done: true, text: "Points engine with caps & multipliers", detail: "100:1 ratio, monthly caps" },
+        { done: true, text: "Points engine with caps & multipliers", detail: "Tier-based monthly point caps" },
         { done: true, text: "Rewards catalog with 18+ items", detail: "Gift cards, gear, experiences" },
         { done: true, text: "Riot API integration", detail: "League/VALORANT verification" },
         { done: true, text: "Sponsored challenges system", detail: "Ready for brand campaigns" },

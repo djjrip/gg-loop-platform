@@ -35,7 +35,7 @@ Key Compliance Points:
 
 4. REWARDS STRUCTURE
    - Users redeem points for physical goods (gift cards, gaming gear)
-   - 100:1 point-to-dollar conversion (transparent pricing)
+   - Transparent point-based rewards catalog
    - Monthly earning caps prevent abuse
    - Similar to Xbox Game Pass Rewards or Twitch Channel Points
 

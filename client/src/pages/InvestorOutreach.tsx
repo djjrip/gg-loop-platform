@@ -153,7 +153,7 @@ Quick snapshot:
 
 Problem: 42M competitive US gamers invest 20+ hrs/week but earn $0 unless they're top 1% streamers.
 
-Solution: We verify wins via Riot API, award points (100:1 ratio), redeemable for gift cards + gear.
+Solution: We verify wins via Riot API, award membership points redeemable for gift cards + gaming gear.
 
 Happy to send deck + share analytics dashboard. Available for a call?
 
