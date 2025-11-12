@@ -2,6 +2,11 @@ const RIOT_API_KEY = process.env.RIOT_API_KEY;
 
 // Regional routing values
 const REGIONAL_ENDPOINTS: Record<string, string> = {
+  // Broad regions (used by guest signup form)
+  'americas': 'americas',
+  'europe': 'europe',
+  'asia': 'asia',
+  // Specific server regions (backward compatibility)
   'na': 'americas',
   'euw': 'europe',
   'eune': 'europe',
