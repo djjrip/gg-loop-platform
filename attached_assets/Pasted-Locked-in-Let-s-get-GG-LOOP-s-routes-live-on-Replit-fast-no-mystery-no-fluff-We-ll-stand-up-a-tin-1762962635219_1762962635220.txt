@@ -1,0 +1,240 @@
+Locked in. Let’s get GG LOOP’s routes live on Replit fast—no mystery, no fluff. We’ll stand up a tiny Express app with real pages for /launch, /twitch-outreach, /sponsor-outreach, /investor-outreach, and /roadmap, then wire your domain.
+
+1) Spin up the server (Express)
+
+In Replit, create a Node.js repl (or use your existing one) and add these files.
+
+package.json
+
+{
+  "name": "ggloop",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "4.19.2",
+    "ejs": "3.1.10"
+  }
+}
+
+
+server.js
+
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+
+// view engine
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+// static assets (css/images)
+app.use("/static", express.static(path.join(__dirname, "public")));
+
+const pages = [
+  { slug: "launch", title: "Launch Checklist" },
+  { slug: "twitch-outreach", title: "Twitch Streamer Outreach" },
+  { slug: "sponsor-outreach", title: "Sponsor Outreach Kit" },
+  { slug: "investor-outreach", title: "Investor Outreach Kit" },
+  { slug: "roadmap", title: "6-Week Validation Roadmap" }
+];
+
+// home hub
+app.get("/", (req, res) => {
+  res.render("home", { pages });
+});
+
+// generic page handler for /launch, /twitch-outreach, etc.
+app.get("/:slug", (req, res, next) => {
+  const p = pages.find(x => x.slug === req.params.slug);
+  if (!p) return next();
+  res.render("page", { page: p });
+});
+
+// 404
+app.use((req, res) => res.status(404).render("404"));
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`GG LOOP live on ${PORT}`));
+
+2) Drop simple views (EJS)
+
+Create a folder /views and add:
+
+views/home.ejs
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>GG LOOP – Business Hub</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+  <h1>GG LOOP – Business Hub</h1>
+  <h2>Quick Links</h2>
+  <ul>
+    <% pages.forEach(p => { %>
+      <li><a href="/<%= p.slug %>">/<%= p.slug %> – <%= p.title %></a></li>
+    <% }) %>
+  </ul>
+
+  <h2>Rewards System Status</h2>
+  <p>✅ API 200 OK • 18 rewards loading • Redemption flow ready • Points tracking functional</p>
+</body>
+</html>
+
+
+views/page.ejs
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title><%= page.title %> – GG LOOP</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+  <a href="/">← Back to Hub</a>
+  <h1><%= page.title %></h1>
+
+  <% if (page.slug === "launch") { %>
+    <h2>Today</h2>
+    <ol>
+      <li>Send 20 Twitch DMs (see templates)</li>
+      <li>Post in 2 Discord servers</li>
+      <li>Confirm rewards redemption flow with 1 test user</li>
+    </ol>
+    <h2>Week-by-Week</h2>
+    <ul>
+      <li>Weeks 1–2: Validate conversion (track CAC)</li>
+      <li>Weeks 3–4: Lock 2 wholesale suppliers (≥30% discount)</li>
+      <li>Weeks 5–6: Sponsor pilot ($500–$1k)</li>
+    </ul>
+  <% } %>
+
+  <% if (page.slug === "twitch-outreach") { %>
+    <h2>Targets</h2>
+    <p>Streamers with 5–100 viewers in VALORANT/LoL categories.</p>
+    <h2>DM Template</h2>
+    <pre>
+Hey [Name] — saw your stream. I’m testing GG LOOP, a free rewards layer
+that gives points for match wins → gift cards. Want early access?
+If you’re down, I’ll set you up with bonus points for your community.
+    </pre>
+    <p>Action: Send 20 DMs today. Goal: 10–20 signups this week.</p>
+  <% } %>
+
+  <% if (page.slug === "sponsor-outreach") { %>
+    <h2>Brands & Contacts</h2>
+    <ul>
+      <li>G Fuel — partnerships@gfuel.com</li>
+      <li>Razer — sponsorships@razer.com</li>
+      <li>SteelSeries — sponsorship@steelseries.com</li>
+      <li>Discord — partnerships@discord.com</li>
+      <li>Logitech G — LogitechG@logitech.com</li>
+    </ul>
+    <h2>Email (copy/paste)</h2>
+    <pre>
+Subject: Pilot: Rewarding Game Wins for Streamers
+
+Hi [Brand Team],
+I’m building GG LOOP, a rewards layer for match wins (VALORANT/LoL).
+Pilot idea: sponsor-branded rewards for 500–1,000 players over 2 weeks.
+We provide attribution + conversion data. Interested in a $500–$1k test?
+    </pre>
+  <% } %>
+
+  <% if (page.slug === "investor-outreach") { %>
+    <h2>Targets</h2>
+    <ul>
+      <li>BITKRAFT, Makers Fund, 1Up, gaming angels</li>
+    </ul>
+    <h2>Short Email</h2>
+    <pre>
+Subject: GG LOOP – Rewards Layer for Game Wins (68% early conversion)
+
+Hi [Name], solo builder testing a rewards layer that pays players for wins.
+18 rewards live, API 200, early cohort at 68% paid conversion. Running a
+6-week validation sprint; would love a quick chat if this fits your thesis.
+    </pre>
+  <% } %>
+
+  <% if (page.slug === "roadmap") { %>
+    <h2>6-Week Validation</h2>
+    <ul>
+      <li>Hit or miss metrics (replicate conversion OR 1 sponsor pilot)</li>
+      <li>Guardrails: no Sundays, sleep 7+ hrs</li>
+    </ul>
+  <% } %>
+</body>
+</html>
+
+
+views/404.ejs
+
+<!doctype html>
+<html><body><h1>404</h1><p>Page not found.</p><a href="/">Home</a></body></html>
+
+3) Basic styling (optional)
+
+Create /public/style.css
+
+body { font-family: system-ui, Arial; max-width: 820px; margin: 40px auto; line-height: 1.5; }
+h1 { margin-bottom: 0.2rem; }
+pre { background:#0f172a; color:#e2e8f0; padding:12px; border-radius:8px; overflow:auto; }
+a { color:#ff7a00; text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+4) Run it
+
+Click Run in Replit.
+
+Open the web preview → Open in New Tab.
+
+Hit:
+
+/ (hub)
+
+/launch
+
+/twitch-outreach
+
+/sponsor-outreach
+
+/investor-outreach
+
+/roadmap
+
+If it 404s, your framework path or file names differ—tell me your current repo layout and I’ll map it exactly.
+
+5) Hook up your custom domain (Namecheap → Replit)
+
+In Replit, click Deployments (or the globe icon) → Add Domain → enter ggloop.io.
+
+Replit gives you DNS records (often a CNAME to something like cname.repl.co and a TXT for verification).
+
+In Namecheap → Advanced DNS, add those exact records. Save.
+
+Back in Replit, click Verify. Propagation can take from 5 min to a couple hours.
+
+Once verified, visiting https://ggloop.io/launch should render your page.
+
+6) Sanity checks (don’t skip)
+
+PORT: Replit sets process.env.PORT. We’re using that—✅
+
+Always-on: If you’re not using Deployments, turn on “Always On” (if available) or use Deploy to keep it live.
+
+HTTPS only: Use your domain’s https:// links in outreach.
+
+SEO/meta later. Ship now.
+
+If you paste your existing server.js (or Next.js /pages tree), I’ll refactor it to slot these routes in place. You’ve got momentum—ship the pages, send the 20 DMs, and start logging conversions today.
