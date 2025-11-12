@@ -686,7 +686,7 @@ export default function Home() {
                 </div>
                 <div className="mb-4 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full inline-block">STEP 3</div>
                 <h3 className="text-xl font-semibold mb-3">Redeem Real Rewards</h3>
-                <p className="text-muted-foreground text-sm">Trade points for gift cards, gaming gear, subscriptions. 100:1 ratio ($10 = 1,000 points).</p>
+                <p className="text-muted-foreground text-sm">Trade points for gift cards, gaming gear, and subscriptions from our rewards catalog.</p>
               </div>
             </Card>
           </div>

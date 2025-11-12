@@ -111,15 +111,12 @@ export default function Stats() {
     return matchDate.getMonth() === currentMonth && matchDate.getFullYear() === currentYear;
   }) || [];
   const thisMonthPoints = thisMonthMatches.reduce((sum, m) => sum + (m.pointsAwarded || 0), 0);
-  const thisMonthCash = thisMonthPoints / 100; // 100:1 ratio
   
-  // Subscription ROI calculation (fetch from separate query)
+  // Subscription info (fetch from separate query)
   const { data: subscription } = useQuery<{ tier: string; status: string }>({
     queryKey: ["/api/subscription/status"],
     enabled: isAuthenticated,
   });
-  const subscriptionCost = subscription?.tier === 'elite' ? 25 : subscription?.tier === 'pro' ? 12 : subscription?.tier === 'basic' ? 5 : 0;
-  const netProfit = thisMonthCash - subscriptionCost;
 
   return (
     <div className="min-h-screen bg-background">
@@ -197,49 +194,34 @@ export default function Stats() {
         )}
 
         {hasLinkedAccounts && (
-          <Card className="mb-8 border-green-500/30 bg-gradient-to-r from-green-500/10 to-primary/10">
+          <Card className="mb-8 border-primary/20 bg-gradient-to-r from-primary/10 to-accent/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
-                Monthly Earnings Summary
+                <Trophy className="h-5 w-5 text-primary" />
+                Monthly Progress
               </CardTitle>
               <CardDescription>
-                {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })} - Real income from gaming
+                {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })} - Track your performance
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Points Earned</p>
+                  <p className="text-sm text-muted-foreground mb-1">Points Earned This Month</p>
                   <p className="text-3xl font-bold text-primary" data-testid="monthly-points">
                     {thisMonthPoints.toLocaleString()}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">From {thisMonthMatches.filter(m => m.isWin).length} wins</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Cash Equivalent</p>
-                  <p className="text-3xl font-bold text-green-600 dark:text-green-400" data-testid="monthly-cash">
-                    ${thisMonthCash.toFixed(2)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">100 points = $1.00</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Net Profit</p>
-                  <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`} data-testid="monthly-net-profit">
-                    {netProfit >= 0 ? '+' : ''}\${netProfit.toFixed(2)}
+                  <p className="text-sm text-muted-foreground mb-1">Membership Tier</p>
+                  <p className="text-3xl font-bold text-primary capitalize" data-testid="subscription-tier">
+                    {subscription?.tier || 'Free Trial'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {netProfit >= 0 
-                      ? (subscriptionCost > 0 ? `After $${subscriptionCost}/mo sub` : 'No subscription')
-                      : `$${Math.abs(netProfit).toFixed(2)} from break-even`
-                    }
+                    {subscription?.status === 'active' ? 'Active subscription' : 'Start earning points!'}
                   </p>
                 </div>
-              </div>
-              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                <p className="text-xs text-muted-foreground">
-                  <strong>Proof of Income:</strong> This summary shows your family/friends that gaming is generating real earnings. Screenshot this to share your progress!
-                </p>
               </div>
             </CardContent>
           </Card>

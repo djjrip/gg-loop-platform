@@ -84,16 +84,16 @@ export default function Hero() {
             {/* Stats bar - premium collectible feel */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <div className="group bg-card/50 backdrop-blur-md border border-border rounded-2xl p-6 hover:border-primary/30 transition-all duration-300">
-                <div className="text-4xl md:text-5xl font-black text-primary mb-2 transition-colors">2,400+</div>
-                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Streamers</div>
+                <div className="text-4xl md:text-5xl font-black text-primary mb-2 transition-colors">3 Tiers</div>
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Membership Levels</div>
               </div>
               <div className="group bg-card/50 backdrop-blur-md border border-border rounded-2xl p-6 hover:border-primary/30 transition-all duration-300">
-                <div className="text-4xl md:text-5xl font-black text-primary mb-2 transition-colors">$89K+</div>
-                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Rewards Earned</div>
+                <div className="text-4xl md:text-5xl font-black text-primary mb-2 transition-colors">25K</div>
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Max Points/Month</div>
               </div>
               <div className="group bg-card/50 backdrop-blur-md border border-border rounded-2xl p-6 hover:border-primary/30 transition-all duration-300">
-                <div className="text-4xl md:text-5xl font-black text-primary mb-2 transition-colors">100:1</div>
-                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Points to Value</div>
+                <div className="text-4xl md:text-5xl font-black text-primary mb-2 transition-colors">7 Days</div>
+                <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Free Trial</div>
               </div>
             </div>
           </div>
