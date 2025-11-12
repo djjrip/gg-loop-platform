@@ -12,8 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Slider } from "@/components/ui/slider";
-import { Trophy, Gamepad2, Award, TrendingUp, Users, Zap, Calculator, DollarSign } from "lucide-react";
+import { Trophy, Gamepad2, Award, TrendingUp, Users, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import type { Game, LeaderboardEntryWithUser, Achievement, Reward } from "@shared/schema";
@@ -28,8 +27,6 @@ export default function Home() {
   const [selectedPeriod, setSelectedPeriod] = useState<"daily" | "weekly" | "all-time">("weekly");
   const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
   const [claimingChallengeId, setClaimingChallengeId] = useState<string | null>(null);
-  const [calculatorWins, setCalculatorWins] = useState([5]); // Default 5 wins/day
-  const [calculatorTier, setCalculatorTier] = useState<'basic' | 'pro' | 'elite'>('basic');
   const { toast} = useToast();
 
   const claimRewardMutation = useMutation({
@@ -226,7 +223,7 @@ export default function Home() {
             </Badge>
             
             <h2 className="text-5xl md:text-6xl font-black tracking-tight">
-              Your Passion. <span className="text-primary">Your Paycheck.</span>
+              Your Passion. <span className="text-primary">Your Community.</span>
             </h2>
             
             <div className="max-w-3xl mx-auto space-y-6 text-lg text-muted-foreground leading-relaxed">
@@ -239,15 +236,15 @@ export default function Home() {
               </p>
               
               <p>
-                GG Loop was built to legitimize gaming as a real income source. Whether you're streaming to 5 viewers or 5,000, you deserve to earn from your skill. We believe every clutch play, every comeback, every grind session should translate to real-world value.
+                GG Loop was built to legitimize gaming as a rewarding membership experience. Whether you're streaming to 5 viewers or 5,000, you deserve recognition for your dedication. We believe every clutch play, every comeback, every grind session should unlock tangible perks.
               </p>
               
               <p>
-                <span className="font-semibold text-foreground">Starting with zero followers?</span> Perfect. Our leaderboards and point system reward skill, not just popularity. Climb the ranks. Earn your way. Unlock partnerships and sponsorships <span className="text-primary font-semibold">through GG Loop</span> as you prove your dedication.
+                <span className="font-semibold text-foreground">Starting with zero followers?</span> Perfect. Our leaderboards and point system showcase skill, not just popularity. Climb the ranks. Unlock your path. Access partnerships and sponsorships <span className="text-primary font-semibold">through GG Loop</span> as you prove your dedication.
               </p>
               
               <p className="text-2xl font-bold text-foreground pt-4">
-                Play. Earn. LOOP. <span className="text-primary">Rinse and repeat.</span>
+                Play. Unlock. LOOP. <span className="text-primary">Rinse and repeat.</span>
               </p>
               
               <p className="text-base italic">
@@ -272,7 +269,7 @@ export default function Home() {
       </section>
 
       <main className="container mx-auto max-w-7xl px-4 py-16 space-y-24">
-        {/* SPONSORED CHALLENGES - Enable users to actually EARN money! */}
+        {/* SPONSORED CHALLENGES - Bonus points beyond monthly allocation */}
         <section id="challenges" className="scroll-mt-20">
           <div className="mb-8 text-center">
             <h2 className="text-5xl font-bold font-heading tracking-tight flex items-center justify-center gap-3">
@@ -280,7 +277,7 @@ export default function Home() {
               Sponsored Challenges
             </h2>
             <p className="text-muted-foreground mt-3 text-lg max-w-2xl mx-auto">
-              Complete challenges to earn bonus points that bypass your monthly earning cap. Real sponsors, real rewards.
+              Complete challenges from sponsors to unlock bonus points beyond your monthly tier allocation. Real brands, real perks.
             </p>
           </div>
           
@@ -332,10 +329,10 @@ export default function Home() {
           <div className="mb-8 text-center">
             <h2 className="text-5xl font-bold font-heading tracking-tight flex items-center justify-center gap-3">
               <span className="w-1 h-10 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
-              Earn Real Rewards
+              Redeem Membership Perks
             </h2>
             <p className="text-muted-foreground mt-3 text-lg max-w-2xl mx-auto">
-              Turn your gaming skills into rewards - gaming gear, subscriptions, and exclusive perks. Start earning today.
+              Turn your membership points into rewards - gaming gear, subscriptions, and exclusive perks. Redeem anytime.
             </p>
           </div>
           
@@ -385,13 +382,13 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Recent Earnings - Show earning activity */}
+        {/* Recent Activity - Show match activity */}
         {isAuthenticated && (
           <section className="scroll-mt-20">
             <div className="mb-8">
               <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
                 <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
-                Your Recent Earnings
+                Your Recent Activity
               </h2>
               <p className="text-muted-foreground mt-2 ml-4">Track your verified match wins and points earned</p>
             </div>
@@ -692,107 +689,97 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Earnings Calculator */}
+        {/* Membership Tiers Benefits */}
         <section className="py-16">
-          <Card className="max-w-4xl mx-auto border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
-            <div className="p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <Calculator className="h-8 w-8 text-primary" />
-                <div>
-                  <h2 className="text-3xl font-bold">Earnings Calculator</h2>
-                  <p className="text-muted-foreground">See your income potential - real numbers, no BS</p>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">Membership Tier Benefits</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Choose your tier and receive fixed monthly point allocations to redeem for gaming gear and perks
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <Card className="p-8 relative overflow-hidden border-primary/10">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/50 to-transparent" />
+              <div className="text-center mb-6">
+                <Badge variant="outline" className="mb-4">BASIC</Badge>
+                <div className="text-4xl font-black text-primary mb-2">3,000</div>
+                <div className="text-sm text-muted-foreground">Points per Month</div>
+              </div>
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-2 text-sm">
+                  <Trophy className="h-4 w-4 text-primary" />
+                  <span>Monthly point allocation</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Award className="h-4 w-4 text-primary" />
+                  <span>Stats tracking</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span>Leaderboards access</span>
                 </div>
               </div>
+              <div className="text-center pt-4 border-t border-border">
+                <div className="text-2xl font-bold">$5</div>
+                <div className="text-xs text-muted-foreground">per month</div>
+              </div>
+            </Card>
 
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-sm font-medium mb-3 block">Wins Per Day</label>
-                    <div className="flex items-center gap-4">
-                      <Slider
-                        value={calculatorWins}
-                        onValueChange={setCalculatorWins}
-                        max={20}
-                        min={0}
-                        step={1}
-                        className="flex-1"
-                      />
-                      <Badge variant="secondary" className="text-lg font-bold w-16 justify-center">
-                        {calculatorWins[0]}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">Average dedicated player: 3-7 wins/day</p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-3 block">Subscription Tier</label>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant={calculatorTier === 'basic' ? 'default' : 'outline'}
-                        onClick={() => setCalculatorTier('basic')}
-                      >
-                        Basic ($5/mo)
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={calculatorTier === 'pro' ? 'default' : 'outline'}
-                        onClick={() => setCalculatorTier('pro')}
-                      >
-                        Pro ($12/mo)
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={calculatorTier === 'elite' ? 'default' : 'outline'}
-                        onClick={() => setCalculatorTier('elite')}
-                      >
-                        Elite ($25/mo)
-                      </Button>
-                    </div>
-                  </div>
+            <Card className="p-8 relative overflow-hidden border-primary/20">
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary to-transparent" />
+              <div className="text-center mb-6">
+                <Badge className="mb-4">PRO</Badge>
+                <div className="text-4xl font-black text-primary mb-2">10,000</div>
+                <div className="text-sm text-muted-foreground">Points per Month</div>
+              </div>
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-2 text-sm">
+                  <Trophy className="h-4 w-4 text-primary" />
+                  <span>Monthly point allocation</span>
                 </div>
-
-                <div className="space-y-4">
-                  <div className="p-6 bg-background/50 rounded-lg border border-border">
-                    <p className="text-sm text-muted-foreground mb-2">Monthly Earnings</p>
-                    <p className="text-4xl font-bold text-primary mb-4">
-                      ${((calculatorWins[0] * 30 * 10) / 100).toFixed(2)}
-                    </p>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Points per win:</span>
-                        <span className="font-medium">10 points</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Monthly wins:</span>
-                        <span className="font-medium">{calculatorWins[0] * 30}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total points:</span>
-                        <span className="font-medium">{(calculatorWins[0] * 30 * 10).toLocaleString()}</span>
-                      </div>
-                      <div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
-                        <span>Subscription cost:</span>
-                        <span className="text-red-500">-${calculatorTier === 'elite' ? '25.00' : calculatorTier === 'pro' ? '12.00' : '5.00'}</span>
-                      </div>
-                      <div className="border-t border-border pt-2 flex justify-between text-lg font-bold">
-                        <span>Net Profit:</span>
-                        <span className={((calculatorWins[0] * 30 * 10) / 100) - (calculatorTier === 'elite' ? 25 : calculatorTier === 'pro' ? 12 : 5) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}>
-                          {((calculatorWins[0] * 30 * 10) / 100) - (calculatorTier === 'elite' ? 25 : calculatorTier === 'pro' ? 12 : 5) >= 0 ? '+' : ''}$
-                          {(((calculatorWins[0] * 30 * 10) / 100) - (calculatorTier === 'elite' ? 25 : calculatorTier === 'pro' ? 12 : 5)).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-                    <p className="text-sm text-muted-foreground">
-                      <strong className="text-green-700 dark:text-green-400">This is your proof of concept.</strong> Show this to family/friends who think gaming can't pay bills. These are real, achievable numbers.
-                    </p>
-                  </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Award className="h-4 w-4 text-primary" />
+                  <span>Priority rewards access</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span>Bonus challenge rewards</span>
                 </div>
               </div>
-            </div>
-          </Card>
+              <div className="text-center pt-4 border-t border-border">
+                <div className="text-2xl font-bold">$12</div>
+                <div className="text-xs text-muted-foreground">per month</div>
+              </div>
+            </Card>
+
+            <Card className="p-8 relative overflow-hidden border-primary/30">
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-primary to-transparent" />
+              <div className="text-center mb-6">
+                <Badge className="mb-4 bg-primary text-primary-foreground">ELITE</Badge>
+                <div className="text-4xl font-black text-primary mb-2">25,000</div>
+                <div className="text-sm text-muted-foreground">Points per Month</div>
+              </div>
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-2 text-sm">
+                  <Trophy className="h-4 w-4 text-primary" />
+                  <span>Max monthly allocation</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Award className="h-4 w-4 text-primary" />
+                  <span>Exclusive premium rewards</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span>Enhanced challenge bonuses</span>
+                </div>
+              </div>
+              <div className="text-center pt-4 border-t border-border">
+                <div className="text-2xl font-bold">$25</div>
+                <div className="text-xs text-muted-foreground">per month</div>
+              </div>
+            </Card>
+          </div>
         </section>
 
         {/* CTA Section */}
@@ -801,9 +788,9 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-transparent to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-tl from-primary/5 via-transparent to-transparent" />
             <div className="relative z-10">
-              <h2 className="text-4xl font-bold font-heading tracking-tight mb-4">Ready to Start Earning?</h2>
+              <h2 className="text-4xl font-bold font-heading tracking-tight mb-4">Ready to Join?</h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Join thousands of gamers who are already turning their gameplay into real rewards
+                Join thousands of gamers who are already redeeming membership perks for gaming gear
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <Button size="lg" className="text-base font-semibold" data-testid="button-create-account">

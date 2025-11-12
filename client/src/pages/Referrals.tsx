@@ -291,7 +291,7 @@ export default function Referrals() {
                       className="flex items-center gap-2 justify-start"
                       onClick={() => {
                         if (!validateReferralCode()) return;
-                        const caption = `Gaming just got BETTER! Join me on GG Loop - earn real rewards just by playing.\n\nUse code: ${stats!.referralCode}\nLink: ${window.location.origin}?ref=${stats!.referralCode}\n\nBoth of us get bonus points! #GGLoop #GamingRewards #Gamer`;
+                        const caption = `Gaming just got BETTER! Join me on GG Loop - unlock member perks and rewards.\n\nUse code: ${stats!.referralCode}\nLink: ${window.location.origin}?ref=${stats!.referralCode}\n\nBoth of us get bonus points! #GGLoop #GamingRewards #Gamer`;
                         navigator.clipboard.writeText(caption);
                         toast({
                           title: "TikTok Caption Copied!",
@@ -311,7 +311,7 @@ export default function Referrals() {
                       className="flex items-center gap-2 justify-start"
                       onClick={() => {
                         if (!validateReferralCode()) return;
-                        const message = `Hey everyone! I'm earning rewards for my gaming on GG Loop. Join me and we both get bonus points!\n\nUse my code: **${stats!.referralCode}**\nSign up: ${window.location.origin}?ref=${stats!.referralCode}\n\nLet's build this together!`;
+                        const message = `Hey everyone! I'm getting membership rewards for my gaming on GG Loop. Join me and we both get bonus points!\n\nUse my code: **${stats!.referralCode}**\nSign up: ${window.location.origin}?ref=${stats!.referralCode}\n\nLet's build this together!`;
                         navigator.clipboard.writeText(message);
                         toast({
                           title: "Discord Message Copied!",
@@ -331,7 +331,7 @@ export default function Referrals() {
                       className="flex items-center gap-2 justify-start"
                       onClick={() => {
                         if (!validateReferralCode()) return;
-                        const description = `SUPPORT THE CHANNEL & EARN REWARDS!\n\nJoin me on GG Loop - turn your gaming into real rewards (gift cards, gaming gear, etc.)\n\nUse my code: ${stats!.referralCode}\nSign up here: ${window.location.origin}?ref=${stats!.referralCode}\n\nYou get 50 bonus points when you use my code!\n#GGLoop #GamingRewards`;
+                        const description = `SUPPORT THE CHANNEL & UNLOCK REWARDS!\n\nJoin me on GG Loop - access the rewards catalog (gift cards, gaming gear, etc.) with membership points.\n\nUse my code: ${stats!.referralCode}\nSign up here: ${window.location.origin}?ref=${stats!.referralCode}\n\nYou get 50 bonus points when you use my code!\n#GGLoop #GamingRewards`;
                         navigator.clipboard.writeText(description);
                         toast({
                           title: "YouTube Description Copied!",
@@ -351,7 +351,7 @@ export default function Referrals() {
                       className="flex items-center gap-2 justify-start col-span-2"
                       onClick={() => {
                         if (!validateReferralCode()) return;
-                        const panelText = `Join me on GG Loop and earn rewards for gaming!\n\nUse code: ${stats!.referralCode}\nLink: ${window.location.origin}?ref=${stats!.referralCode}\n\nBoth of us get bonus points when you sign up!`;
+                        const panelText = `Join me on GG Loop and unlock membership rewards!\n\nUse code: ${stats!.referralCode}\nLink: ${window.location.origin}?ref=${stats!.referralCode}\n\nBoth of us get bonus points when you sign up!`;
                         navigator.clipboard.writeText(panelText);
                         toast({
                           title: "Twitch Panel Text Copied!",

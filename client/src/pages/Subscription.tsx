@@ -96,7 +96,7 @@ export default function SubscriptionPage() {
     onSuccess: () => {
       toast({
         title: "Free Trial Started!",
-        description: "You now have 7 days to explore GG Loop. Start earning points by reporting match wins!",
+        description: "You now have 7 days of temporary Basic access with starter points to explore membership benefits!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
@@ -118,7 +118,7 @@ export default function SubscriptionPage() {
     onSuccess: () => {
       toast({
         title: "Trial Unlocked! 🎉",
-        description: "7 days of Basic tier activated! Start earning points from your wins.",
+        description: "7 days of Basic tier activated! Track your wins and explore membership benefits.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
@@ -135,33 +135,15 @@ export default function SubscriptionPage() {
 
   const tiers = [
     {
-      id: "free",
-      name: "Free",
-      price: 0,
-      icon: Gift,
-      description: "Start earning today, no payment required",
-      badge: "Always Free",
-      features: [
-        { text: "Earn 10 GG Coins per win", included: true },
-        { text: "Login streak bonuses", included: true },
-        { text: "100 points per month cap", included: true },
-        { text: "Redeem for gaming gear & rewards", included: true },
-        { text: "Auto-sync League & Valorant matches", included: true },
-        { text: "Access to stats dashboard", included: true },
-        { text: "Unlock 7-day trial with 500 GG Coins", included: true },
-        { text: "Higher earning caps", included: false },
-      ],
-    },
-    {
       id: "basic",
       name: "Basic",
       price: 5,
       icon: Trophy,
-      description: "Start earning rewards from your gameplay",
+      description: "Monthly point allocation for membership rewards",
       features: [
-        { text: "Up to 3,000 points/month (1x multiplier)", included: true },
-        { text: "100 point subscription bonus", included: true },
-        { text: "Earn from match wins & achievements", included: true },
+        { text: "3,000 points deposited monthly", included: true },
+        { text: "Automatic point allocation on billing cycle", included: true },
+        { text: "Track match wins & achievements", included: true },
         { text: "Access to rewards catalog", included: true },
         { text: "Leaderboard rankings", included: true },
         { text: "Achievement tracking", included: true },
@@ -174,11 +156,11 @@ export default function SubscriptionPage() {
       name: "Pro",
       price: 12,
       icon: Flame,
-      description: "Double your earning potential",
+      description: "Enhanced monthly point allocation",
       features: [
-        { text: "Up to 10,000 points/month (1.5x multiplier)", included: true },
-        { text: "200 point subscription bonus", included: true },
-        { text: "15 points per win", included: true },
+        { text: "10,000 points deposited monthly", included: true },
+        { text: "Automatic point allocation on billing cycle", included: true },
+        { text: "Bonus challenge eligibility", included: true },
         { text: "Access to rewards catalog", included: true },
         { text: "Leaderboard rankings", included: true },
         { text: "Achievement tracking", included: true },
@@ -191,12 +173,12 @@ export default function SubscriptionPage() {
       name: "Elite",
       price: 25,
       icon: Star,
-      description: "Maximum earning power",
+      description: "Premium monthly point allocation",
       badge: "Best Value",
       features: [
-        { text: "Up to 25,000 points/month (2x multiplier)", included: true },
-        { text: "300 point subscription bonus", included: true },
-        { text: "20 points per win", included: true },
+        { text: "25,000 points deposited monthly", included: true },
+        { text: "Automatic point allocation on billing cycle", included: true },
+        { text: "Priority bonus challenge access", included: true },
         { text: "Access to rewards catalog", included: true },
         { text: "Leaderboard rankings", included: true },
         { text: "Achievement tracking", included: true },
@@ -218,7 +200,7 @@ export default function SubscriptionPage() {
             Choose Your Plan
           </h1>
           <p className="text-xl text-muted-foreground" data-testid="text-subtitle">
-            Earn real rewards for your gaming performance
+            Redeem membership points for gaming gear and rewards
           </p>
           {isAuthenticated && pointsData && (
             <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-primary/10 border border-primary/20 rounded-lg">

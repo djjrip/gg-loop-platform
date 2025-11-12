@@ -26,7 +26,7 @@ export default function Login() {
           </div>
           <CardTitle className="text-2xl" data-testid="heading-login">Welcome to GG Loop</CardTitle>
           <CardDescription>
-            Choose your preferred login method to start earning rewards from your gameplay
+            Choose your preferred login method to unlock membership rewards
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

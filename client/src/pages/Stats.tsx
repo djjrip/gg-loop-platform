@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Target, TrendingUp, Calendar, CheckCircle, XCircle, Link as LinkIcon, RefreshCw, Clock, DollarSign, TrendingDown } from "lucide-react";
+import { Trophy, Target, TrendingUp, Calendar, CheckCircle, XCircle, Link as LinkIcon, RefreshCw, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -101,7 +101,7 @@ export default function Stats() {
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   const totalPoints = matches?.reduce((sum, m) => sum + (m.pointsAwarded || 0), 0) || 0;
 
-  // Calculate this month's earnings
+  // Calculate this month's match activity
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
@@ -128,7 +128,7 @@ export default function Stats() {
             Performance Dashboard
           </h1>
           <p className="text-muted-foreground">
-            Track your wins, stats, and earnings from League of Legends and Valorant
+            Track your match history, stats, and performance from League of Legends and Valorant
           </p>
         </div>
 
@@ -161,11 +161,11 @@ export default function Stats() {
                 </div>
                 <div className="flex items-center gap-1">
                   <Trophy className="h-3 w-3 text-primary" />
-                  Auto-award points
+                  Track match results
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3 w-3 text-accent-foreground" />
-                  Same-day matches only
+                  Real-time stats updates
                 </div>
               </div>
             </CardContent>

@@ -8,7 +8,7 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-3">GG Loop</h3>
             <p className="text-sm text-muted-foreground">
-              Play. Earn. LOOP. Legitimizing gaming as real income.
+              Play. Unlock. LOOP. A membership rewards program for dedicated gamers.
             </p>
           </div>
           

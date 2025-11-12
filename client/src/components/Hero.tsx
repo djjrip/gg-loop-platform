@@ -37,18 +37,18 @@ export default function Hero() {
             <h1 className="text-7xl md:text-9xl font-black leading-none tracking-tighter mb-6">
               <span className="block text-foreground mb-2 hover:text-primary transition-colors duration-500">Play.</span>
               <span className="block bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent mb-2 
-                             hover:scale-105 transition-transform duration-500 inline-block">Earn.</span>
+                             hover:scale-105 transition-transform duration-500 inline-block">Unlock.</span>
               <span className="block text-foreground hover:text-primary transition-colors duration-500">Loop.</span>
             </h1>
 
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8 font-medium">
-              Turn every match into <span className="text-primary font-semibold">real rewards</span>. Start free for 7 days, then choose your tier. <span className="text-primary font-semibold">Earn points</span> from wins, unlock <span className="text-primary font-semibold">bonus challenges</span> from sponsors, and redeem for gaming peripherals, gear, and subscriptions.
+              A <span className="text-primary font-semibold">membership rewards program</span> for gamers. Start free for 7 days, then choose your tier. <span className="text-primary font-semibold">Monthly points</span> unlock gaming peripherals, gear, and subscriptions. Track stats, complete <span className="text-primary font-semibold">bonus challenges</span>, and showcase achievements.
             </p>
 
             <div className="flex items-center justify-center gap-6 mb-12">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Users className="h-5 w-5 text-primary" />
-                <span>Invite friends, both earn <span className="font-bold text-foreground">bonus points</span></span>
+                <span>Invite friends, both get <span className="font-bold text-foreground">bonus points</span></span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Trophy className="h-5 w-5 text-primary" />

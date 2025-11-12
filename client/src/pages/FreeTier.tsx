@@ -34,7 +34,7 @@ export default function FreeTierPage() {
             <Trophy className="h-16 w-16 mx-auto text-primary mb-4" />
             <h2 className="text-2xl font-bold mb-2">Join GG Loop Free</h2>
             <p className="text-muted-foreground mb-6">
-              Start earning GG Coins from your League and Valorant wins!
+              Log ranked victories to build GG Coins and unlock trial access!
             </p>
             <Link href="/login">
               <Button>Sign In to Get Started</Button>
@@ -77,7 +77,7 @@ export default function FreeTierPage() {
                     {freeTierData?.ggCoins || 0}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Earn 10 per win
+                    10 coins awarded per verified match
                   </p>
                 </CardContent>
               </Card>
