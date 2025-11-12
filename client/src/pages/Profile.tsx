@@ -12,7 +12,6 @@ import {
   Share2
 } from "lucide-react";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { ShareButtons } from "@/components/ShareButtons";
 import TrophyCard from "@/components/TrophyCard";
 import ShareableCard from "@/components/ShareableCard";
@@ -325,7 +324,7 @@ export default function Profile() {
           )}
         </DialogContent>
       </Dialog>
-      <Footer />
+      
     </div>
   );
 }

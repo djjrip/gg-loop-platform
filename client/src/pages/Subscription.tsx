@@ -14,7 +14,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 
 export default function SubscriptionPage() {
   const { user, isAuthenticated } = useAuth();
@@ -682,7 +681,7 @@ export default function SubscriptionPage() {
           </div>
         </div>
       </div>
-      <Footer />
+      
     </div>
   );
 }

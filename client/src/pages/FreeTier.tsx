@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Coins, Trophy, Flame, Gift, TrendingUp, Zap, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { Link } from "wouter";
 
 export default function FreeTierPage() {
@@ -42,7 +41,6 @@ export default function FreeTierPage() {
             </Link>
           </Card>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -251,7 +249,6 @@ export default function FreeTierPage() {
           </div>
         )}
       </div>
-      <Footer />
     </div>
   );
 }

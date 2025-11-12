@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LoginNotification } from "@/components/LoginNotification";
+import Footer from "@/components/Footer";
 import { useAuth } from "./hooks/useAuth";
 import Home from "@/pages/Home";
 import Subscription from "@/pages/Subscription";
@@ -86,7 +87,12 @@ function App() {
       <TooltipProvider>
         <LoginNotification />
         <Toaster />
-        <Router />
+        <div className="flex flex-col min-h-screen">
+          <div className="flex-1">
+            <Router />
+          </div>
+          <Footer />
+        </div>
       </TooltipProvider>
     </QueryClientProvider>
   );

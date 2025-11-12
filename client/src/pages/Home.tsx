@@ -1,5 +1,4 @@
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
 import GameCard from "@/components/GameCard";
 import StatsCard from "@/components/StatsCard";
@@ -639,7 +638,7 @@ export default function Home() {
           </Card>
         </section>
       </main>
-      <Footer />
+      
     </div>
   );
 }
