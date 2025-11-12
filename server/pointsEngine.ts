@@ -13,16 +13,24 @@ export interface EarningRule {
   monthlyCap?: number;
 }
 
-// Point-to-Dollar Conversion: 100 points = $1
-// This sustainable ratio ensures profitability while rewarding players
+// Monthly subscription point allocations per tier
+// These are fixed monthly grants awarded via subscription renewal
+export const MONTHLY_SUBSCRIPTION_POINTS = {
+  basic: 3000,   // Basic tier: 3,000 points/month
+  pro: 10000,    // Pro tier: 10,000 points/month
+  elite: 25000,  // Elite tier: 25,000 points/month
+};
+
+// DEPRECATED: Old point-to-dollar conversion system (no longer used)
+// Points are now awarded as fixed monthly allocations, not tied to gameplay performance
 export const POINTS_PER_DOLLAR = 100;
 
-// Monthly earning caps per tier (in points)
-// Prevents users from exceeding their subscription value in rewards
+// DEPRECATED: Monthly earning caps (no longer enforced)
+// Points are now distributed as capped monthly allocations via subscription tier
 export const MONTHLY_EARNING_CAPS = {
-  basic: 400,    // $4 max rewards/month on $5 subscription
-  pro: 800,      // $8 max rewards/month on $12 subscription
-  elite: 1500,   // $15 max rewards/month on $25 subscription (with manual review)
+  basic: 400,
+  pro: 800,
+  elite: 1500,
 };
 
 export const EARNING_RULES: Record<string, EarningRule> = {
@@ -129,14 +137,16 @@ export class PointsEngine {
         }
       }
 
-      // Check monthly earning cap per tier
-      const monthlyCap = MONTHLY_EARNING_CAPS[tier as keyof typeof MONTHLY_EARNING_CAPS];
-      if (monthlyCap) {
-        const monthlyTotal = await this.getMonthlyEarnings(userId, tx);
-        if (monthlyTotal + finalAmount > monthlyCap) {
-          throw new Error(`Monthly earning cap of ${monthlyCap} points (${monthlyCap / POINTS_PER_DOLLAR} in rewards) reached for ${tier} tier. Upgrade to earn more!`);
-        }
-      }
+      // DEPRECATED: Monthly earning caps no longer enforced
+      // Points are now distributed as fixed monthly allocations via subscription tier
+      // Legacy cap checking disabled to support new compliance-friendly model
+      // const monthlyCap = MONTHLY_EARNING_CAPS[tier as keyof typeof MONTHLY_EARNING_CAPS];
+      // if (monthlyCap) {
+      //   const monthlyTotal = await this.getMonthlyEarnings(userId, tx);
+      //   if (monthlyTotal + finalAmount > monthlyCap) {
+      //     throw new Error(`Monthly earning cap of ${monthlyCap} points reached for ${tier} tier.`);
+      //   }
+      // }
 
       const user = await tx.select().from(users).where(eq(users.id, userId)).limit(1).for("update");
       if (!user[0]) throw new Error("User not found");
@@ -214,6 +224,75 @@ export class PointsEngine {
         .set({ totalPoints: newBalance, updatedAt: new Date() })
         .where(eq(users.id, userId));
 
+      return transaction;
+    };
+
+    if (dbOrTx) {
+      return executeAward(dbOrTx);
+    } else {
+      return await db.transaction(executeAward);
+    }
+  }
+
+  async awardMonthlySubscriptionPoints(
+    userId: string,
+    tier: string,
+    invoiceId: string,
+    dbOrTx?: DbOrTx
+  ): Promise<PointTransaction | null> {
+    const amount = MONTHLY_SUBSCRIPTION_POINTS[tier as keyof typeof MONTHLY_SUBSCRIPTION_POINTS];
+    
+    if (!amount) {
+      throw new Error(`Invalid tier: ${tier}`);
+    }
+
+    const executeAward = async (tx: DbOrTx) => {
+      // Idempotency check: Has this invoice already been processed?
+      const existing = await tx
+        .select()
+        .from(pointTransactions)
+        .where(
+          and(
+            eq(pointTransactions.userId, userId),
+            eq(pointTransactions.type, "subscription_monthly"),
+            eq(pointTransactions.sourceId, invoiceId)
+          )
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        console.log(`Monthly points already awarded for invoice ${invoiceId}`);
+        return null;
+      }
+
+      const user = await tx.select().from(users).where(eq(users.id, userId)).limit(1).for("update");
+      if (!user[0]) throw new Error("User not found");
+
+      const newBalance = user[0].totalPoints + amount;
+
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 12);
+
+      const [transaction] = await tx
+        .insert(pointTransactions)
+        .values({
+          userId,
+          amount,
+          type: "subscription_monthly",
+          sourceId: invoiceId,
+          sourceType: "invoice",
+          balanceAfter: newBalance,
+          description: `${tier.toUpperCase()} tier monthly points`,
+          expiresAt,
+        })
+        .returning();
+
+      await tx
+        .update(users)
+        .set({ totalPoints: newBalance, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+
+      console.log(`[PointsEngine] Awarded ${amount} monthly points to user ${userId} (${tier} tier)`);
       return transaction;
     };
 

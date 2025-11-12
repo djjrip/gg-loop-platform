@@ -1567,6 +1567,13 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
         case 'invoice.payment_succeeded': {
           const invoice = event.data.object as any;
           
+          // Only process regular subscription invoices (initial + renewals), skip prorations/upgrades
+          const validBillingReasons = ['subscription_create', 'subscription_cycle'];
+          if (invoice.billing_reason && !validBillingReasons.includes(invoice.billing_reason)) {
+            console.log(`Skipping invoice ${invoice.id} with billing_reason: ${invoice.billing_reason}`);
+            break;
+          }
+          
           const subscriptionId = invoice.subscription 
             || (invoice.lines?.data?.[0]?.subscription);
           
@@ -1592,15 +1599,11 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
               eventData: event.data.object as any
             });
 
-            const basePoints = existingSub.tier === "premium" ? 300 : 150;
-            
-            await pointsEngine.awardPoints(
+            // Award monthly subscription points (compliance-friendly model)
+            await pointsEngine.awardMonthlySubscriptionPoints(
               userId,
-              basePoints,
-              "SUBSCRIPTION_MONTHLY",
-              invoice.id,
-              "invoice",
-              `Monthly subscription points - ${existingSub.tier}`
+              existingSub.tier,
+              invoice.id
             );
           }
           break;
@@ -1686,7 +1689,8 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
       }
 
       const basePoints = 10;
-      const tierMultiplier = subscription.tier === "premium" ? 1.5 : 1.0;
+      // Tier multipliers for match win webhooks (legacy - match-based points deprecated)
+      const tierMultiplier = subscription.tier === "elite" ? 1.5 : subscription.tier === "pro" ? 1.2 : 1.0;
       const pointsToAward = Math.floor(basePoints * tierMultiplier);
 
       const event = await storage.logGamingEvent({
