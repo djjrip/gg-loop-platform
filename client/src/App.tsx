@@ -30,6 +30,7 @@ import MyRewards from "@/pages/MyRewards";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Login from "@/pages/Login";
+import QuickStart from "@/pages/QuickStart";
 import Stats from "@/pages/Stats";
 import FreeTier from "@/pages/FreeTier";
 import Shop from "@/pages/Shop";
@@ -75,6 +76,7 @@ function Router() {
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/login" component={Login} />
+      <Route path="/quick-start" component={QuickStart} />
       <Route path="/stats" component={Stats} />
       <Route path="/free-tier" component={FreeTier} />
       <Route path="/shop" component={Shop} />
