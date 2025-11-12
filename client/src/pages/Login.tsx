@@ -4,10 +4,6 @@ import { Trophy } from "lucide-react";
 import { SiDiscord, SiTwitch, SiGoogle } from "react-icons/si";
 
 export default function Login() {
-  const handleReplitLogin = () => {
-    window.location.href = "/api/login";
-  };
-
   const handleDiscordLogin = () => {
     window.location.href = "/api/auth/discord";
   };
@@ -35,32 +31,13 @@ export default function Login() {
         </CardHeader>
         <CardContent className="space-y-3">
           <Button
-            onClick={handleReplitLogin}
-            variant="default"
-            className="w-full h-12 text-base gap-3"
-            data-testid="button-replit-login"
-          >
-            <Trophy className="h-5 w-5" />
-            Continue with Replit
-          </Button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
-
-          <Button
             onClick={handleDiscordLogin}
             variant="outline"
             className="w-full h-12 text-base gap-3 hover-elevate active-elevate-2"
             data-testid="button-discord-login"
           >
             <SiDiscord className="h-5 w-5" style={{ color: '#5865F2' }} />
-            Discord
+            Continue with Discord
           </Button>
 
           <Button
@@ -70,7 +47,7 @@ export default function Login() {
             data-testid="button-twitch-login"
           >
             <SiTwitch className="h-5 w-5" style={{ color: '#9146FF' }} />
-            Twitch
+            Continue with Twitch
           </Button>
 
           <Button
@@ -80,7 +57,7 @@ export default function Login() {
             data-testid="button-google-login"
           >
             <SiGoogle className="h-5 w-5" style={{ color: '#DB4437' }} />
-            Google
+            Continue with Google
           </Button>
 
           <div className="text-center pt-4">
