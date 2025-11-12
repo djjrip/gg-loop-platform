@@ -92,34 +92,37 @@ export default function QuickStart() {
                   <SelectValue placeholder="Select your game" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="league-of-legends">League of Legends</SelectItem>
-                  <SelectItem value="valorant">VALORANT</SelectItem>
+                  <SelectItem value="4cf0e30a-7969-4572-a8f5-29ad5935dc00">League of Legends</SelectItem>
+                  <SelectItem value="36f728c6-8143-4be3-9e94-54c549a48d7f">VALORANT</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="riotId">Riot ID (Game Name)</Label>
+              <Label htmlFor="riotId">Game Name</Label>
               <Input
                 id="riotId"
-                placeholder="YourGameName"
+                placeholder="JRIP"
                 value={riotId}
                 onChange={(e) => setRiotId(e.target.value)}
                 data-testid="input-riot-id"
               />
+              <p className="text-xs text-muted-foreground">
+                The part <strong>before</strong> the # symbol
+              </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="tagLine">Tag Line</Label>
               <Input
                 id="tagLine"
-                placeholder="NA1"
+                placeholder="KUYA"
                 value={tagLine}
                 onChange={(e) => setTagLine(e.target.value)}
                 data-testid="input-tag-line"
               />
               <p className="text-xs text-muted-foreground">
-                Your full Riot ID looks like: YourGameName#NA1
+                The part <strong>after</strong> the # symbol (e.g., if your Riot ID is JRIP#KUYA, enter KUYA)
               </p>
             </div>
 
