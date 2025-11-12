@@ -26,7 +26,8 @@ const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-10-29.clover" })
   : null;
 
-const getUserMiddleware = async (req: any, res: any, next: any) => {
+// Middleware that accepts BOTH guest sessions AND OAuth sessions
+const requireAuth = async (req: any, res: any, next: any) => {
   try {
     let dbUser;
     
@@ -51,6 +52,9 @@ const getUserMiddleware = async (req: any, res: any, next: any) => {
     res.status(500).json({ message: "Failed to fetch user" });
   }
 };
+
+// Alias for backwards compatibility
+const getUserMiddleware = requireAuth;
 
 const adminMiddleware = async (req: any, res: any, next: any) => {
   try {
@@ -136,9 +140,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Guest account creation
   app.post('/api/auth/guest', async (req: any, res) => {
     try {
-      const { email, riotId, tagLine, region } = req.body;
+      const { email, game, riotId, tagLine, region } = req.body;
       
-      if (!email || !riotId || !tagLine || !region) {
+      if (!email || !game || !riotId || !tagLine || !region) {
         return res.status(400).json({ message: "All fields are required" });
       }
       
@@ -146,14 +150,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const guestId = crypto.randomUUID();
       const guestUsername = `guest_${guestId.split('-')[0]}`;
       
+      // Verify Riot account exists and get PUUID
+      const { RiotApiService } = await import('./riotApi');
+      const riotApi = new RiotApiService();
+      
+      let account;
+      try {
+        account = await riotApi.verifyAccount(riotId, tagLine, region);
+      } catch (error) {
+        return res.status(400).json({ 
+          message: `Could not verify Riot account "${riotId}#${tagLine}" in ${region} region. Please check your Riot ID and try again.` 
+        });
+      }
+      
       // Create guest user with null oidcSub
       const user = await storage.createUser({
         oidcSub: null,
         email,
         username: guestUsername,
         firstName: riotId,
-        lastName: tagLine,
+        lastName: `#${tagLine}`,
         profileImageUrl: null,
+      });
+      
+      // Link Riot account to user
+      await storage.linkRiotAccount(user.id, game, {
+        puuid: account.puuid,
+        gameName: account.gameName,
+        tagLine: account.tagLine,
+        region
       });
       
       // Store guest session

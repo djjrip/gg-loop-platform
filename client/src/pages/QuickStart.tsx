@@ -14,12 +14,13 @@ export default function QuickStart() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
+  const [game, setGame] = useState("");
   const [riotId, setRiotId] = useState("");
   const [tagLine, setTagLine] = useState("");
   const [region, setRegion] = useState("");
 
   const guestLoginMutation = useMutation({
-    mutationFn: async (data: { email: string; riotId: string; tagLine: string; region: string }) => {
+    mutationFn: async (data: { email: string; game: string; riotId: string; tagLine: string; region: string }) => {
       const res = await apiRequest("POST", "/api/auth/guest", data);
       return await res.json();
     },
@@ -42,7 +43,7 @@ export default function QuickStart() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !riotId || !tagLine || !region) {
+    if (!email || !game || !riotId || !tagLine || !region) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields",
@@ -51,7 +52,7 @@ export default function QuickStart() {
       return;
     }
 
-    guestLoginMutation.mutate({ email, riotId, tagLine, region });
+    guestLoginMutation.mutate({ email, game, riotId, tagLine, region });
   };
 
   return (
@@ -82,6 +83,19 @@ export default function QuickStart() {
               <p className="text-xs text-muted-foreground">
                 Required for account recovery and subscription receipts
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="game">Primary Game *</Label>
+              <Select value={game} onValueChange={setGame}>
+                <SelectTrigger id="game" data-testid="select-game">
+                  <SelectValue placeholder="Select your game" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="league-of-legends">League of Legends</SelectItem>
+                  <SelectItem value="valorant">VALORANT</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
