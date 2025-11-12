@@ -48,12 +48,15 @@ export async function setupAuth(app: Express) {
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
+  // Determine base URL - use custom domain if available, otherwise use Replit URL
+  const baseUrl = process.env.BASE_URL || 'https://ggloop.io';
+
   // Google OAuth Strategy
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     passport.use(new GoogleStrategy({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/api/auth/google/callback",
+      callbackURL: `${baseUrl}/api/auth/google/callback`,
       state: true, // Enable CSRF protection
     }, async (accessToken, refreshToken, profile, done) => {
       try {
@@ -92,7 +95,7 @@ export async function setupAuth(app: Express) {
     passport.use(new TwitchStrategy({
       clientID: process.env.TWITCH_CLIENT_ID,
       clientSecret: process.env.TWITCH_CLIENT_SECRET,
-      callbackURL: "/api/auth/twitch/callback",
+      callbackURL: `${baseUrl}/api/auth/twitch/callback`,
       scope: ['user:read:email'],
       state: true, // Enable CSRF protection
     }, async (accessToken: any, refreshToken: any, profile: any, done: any) => {
@@ -132,7 +135,7 @@ export async function setupAuth(app: Express) {
     passport.use(new DiscordStrategy({
       clientID: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
-      callbackURL: "/api/auth/discord/callback",
+      callbackURL: `${baseUrl}/api/auth/discord/callback`,
       scope: ['identify', 'email'],
     }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
       try {
