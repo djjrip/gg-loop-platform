@@ -29,7 +29,7 @@ export default function Footer() {
               </li>
               <li>
                 <a 
-                  href="https://tiktok.com/@ggloop" 
+                  href="https://tiktok.com/@gg.loop" 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 hover-elevate px-2 py-1 rounded-md"
