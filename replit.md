@@ -47,6 +47,15 @@ The database schema includes core tables for users, games, subscriptions, point 
 *   **Backend Framework**: Express.js
 *   **Validation**: Zod
 
+## Recent Changes (November 12, 2025)
+*   ✅ Added controller favicon (replacing Replit icon)
+*   ✅ Integrated Discord (https://discord.gg/rEXCFjJ4) and TikTok (@gg.loop) social links in footer
+*   ✅ Added Header component to Referrals page for consistent navigation
+*   ✅ Fixed TypeScript errors in Referrals.tsx with safe non-null assertions
+*   ✅ Fixed Twitch OAuth callback URLs in Twitch Developer Console
+*   ✅ Server restarted and verified running correctly
+*   ⚠️ **CRITICAL**: Production (ggloop.io) requires republishing to get all fixes live before TikTok launch
+
 ## Recent Changes (November 11, 2025)
 *   ✅ Implemented multi-provider OAuth authentication (Discord, Twitch, Google)
 *   ✅ Created unified login page with all authentication options
