@@ -12,7 +12,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trophy, Gamepad2, Award, TrendingUp, Users, Zap } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Trophy, Gamepad2, Award, TrendingUp, Users, Zap, Calculator, DollarSign } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import type { Game, LeaderboardEntryWithUser, Achievement, Reward } from "@shared/schema";
@@ -27,6 +28,8 @@ export default function Home() {
   const [selectedPeriod, setSelectedPeriod] = useState<"daily" | "weekly" | "all-time">("weekly");
   const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
   const [claimingChallengeId, setClaimingChallengeId] = useState<string | null>(null);
+  const [calculatorWins, setCalculatorWins] = useState([5]); // Default 5 wins/day
+  const [calculatorTier, setCalculatorTier] = useState<'basic' | 'pro' | 'elite'>('basic');
   const { toast} = useToast();
 
   const claimRewardMutation = useMutation({
@@ -687,6 +690,109 @@ export default function Home() {
               </div>
             </Card>
           </div>
+        </section>
+
+        {/* Earnings Calculator */}
+        <section className="py-16">
+          <Card className="max-w-4xl mx-auto border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+            <div className="p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <Calculator className="h-8 w-8 text-primary" />
+                <div>
+                  <h2 className="text-3xl font-bold">Earnings Calculator</h2>
+                  <p className="text-muted-foreground">See your income potential - real numbers, no BS</p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div>
+                    <label className="text-sm font-medium mb-3 block">Wins Per Day</label>
+                    <div className="flex items-center gap-4">
+                      <Slider
+                        value={calculatorWins}
+                        onValueChange={setCalculatorWins}
+                        max={20}
+                        min={0}
+                        step={1}
+                        className="flex-1"
+                      />
+                      <Badge variant="secondary" className="text-lg font-bold w-16 justify-center">
+                        {calculatorWins[0]}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">Average dedicated player: 3-7 wins/day</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-3 block">Subscription Tier</label>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={calculatorTier === 'basic' ? 'default' : 'outline'}
+                        onClick={() => setCalculatorTier('basic')}
+                      >
+                        Basic ($5/mo)
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={calculatorTier === 'pro' ? 'default' : 'outline'}
+                        onClick={() => setCalculatorTier('pro')}
+                      >
+                        Pro ($12/mo)
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={calculatorTier === 'elite' ? 'default' : 'outline'}
+                        onClick={() => setCalculatorTier('elite')}
+                      >
+                        Elite ($25/mo)
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-6 bg-background/50 rounded-lg border border-border">
+                    <p className="text-sm text-muted-foreground mb-2">Monthly Earnings</p>
+                    <p className="text-4xl font-bold text-primary mb-4">
+                      ${((calculatorWins[0] * 30 * 10) / 100).toFixed(2)}
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Points per win:</span>
+                        <span className="font-medium">10 points</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Monthly wins:</span>
+                        <span className="font-medium">{calculatorWins[0] * 30}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total points:</span>
+                        <span className="font-medium">{(calculatorWins[0] * 30 * 10).toLocaleString()}</span>
+                      </div>
+                      <div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
+                        <span>Subscription cost:</span>
+                        <span className="text-red-500">-${calculatorTier === 'elite' ? '25.00' : calculatorTier === 'pro' ? '12.00' : '5.00'}</span>
+                      </div>
+                      <div className="border-t border-border pt-2 flex justify-between text-lg font-bold">
+                        <span>Net Profit:</span>
+                        <span className={((calculatorWins[0] * 30 * 10) / 100) - (calculatorTier === 'elite' ? 25 : calculatorTier === 'pro' ? 12 : 5) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}>
+                          {((calculatorWins[0] * 30 * 10) / 100) - (calculatorTier === 'elite' ? 25 : calculatorTier === 'pro' ? 12 : 5) >= 0 ? '+' : ''}$
+                          {(((calculatorWins[0] * 30 * 10) / 100) - (calculatorTier === 'elite' ? 25 : calculatorTier === 'pro' ? 12 : 5)).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      💰 <strong className="text-green-700 dark:text-green-400">This is your proof of concept.</strong> Show this to family/friends who think gaming can't pay bills. These are real, achievable numbers.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
         </section>
 
         {/* CTA Section */}

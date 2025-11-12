@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Target, TrendingUp, Calendar, CheckCircle, XCircle, Link as LinkIcon, RefreshCw, Clock } from "lucide-react";
+import { Trophy, Target, TrendingUp, Calendar, CheckCircle, XCircle, Link as LinkIcon, RefreshCw, Clock, DollarSign, TrendingDown } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -101,6 +101,26 @@ export default function Stats() {
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
   const totalPoints = matches?.reduce((sum, m) => sum + (m.pointsAwarded || 0), 0) || 0;
 
+  // Calculate this month's earnings
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const thisMonthMatches = matches?.filter(m => {
+    if (!m.gameEndedAt) return false; // Skip matches without valid timestamp
+    const matchDate = new Date(m.gameEndedAt);
+    return matchDate.getMonth() === currentMonth && matchDate.getFullYear() === currentYear;
+  }) || [];
+  const thisMonthPoints = thisMonthMatches.reduce((sum, m) => sum + (m.pointsAwarded || 0), 0);
+  const thisMonthCash = thisMonthPoints / 100; // 100:1 ratio
+  
+  // Subscription ROI calculation (fetch from separate query)
+  const { data: subscription } = useQuery<{ tier: string; status: string }>({
+    queryKey: ["/api/subscription/status"],
+    enabled: isAuthenticated,
+  });
+  const subscriptionCost = subscription?.tier === 'elite' ? 25 : subscription?.tier === 'pro' ? 12 : subscription?.tier === 'basic' ? 5 : 0;
+  const netProfit = thisMonthCash - subscriptionCost;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -172,6 +192,55 @@ export default function Stats() {
                   Go to Settings to Link Account
                 </Button>
               </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        {hasLinkedAccounts && (
+          <Card className="mb-8 border-green-500/30 bg-gradient-to-r from-green-500/10 to-primary/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                Monthly Earnings Summary
+              </CardTitle>
+              <CardDescription>
+                {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })} - Real income from gaming
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Points Earned</p>
+                  <p className="text-3xl font-bold text-primary" data-testid="monthly-points">
+                    {thisMonthPoints.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">From {thisMonthMatches.filter(m => m.isWin).length} wins</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Cash Equivalent</p>
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400" data-testid="monthly-cash">
+                    ${thisMonthCash.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">100 points = $1.00</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Net Profit</p>
+                  <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`} data-testid="monthly-net-profit">
+                    {netProfit >= 0 ? '+' : ''}\${netProfit.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {netProfit >= 0 
+                      ? (subscriptionCost > 0 ? `After $${subscriptionCost}/mo sub` : 'No subscription')
+                      : `$${Math.abs(netProfit).toFixed(2)} from break-even`
+                    }
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  💡 <strong>Proof of Income:</strong> This summary shows your family/friends that gaming is generating real earnings. Screenshot this to share your progress!
+                </p>
+              </div>
             </CardContent>
           </Card>
         )}
