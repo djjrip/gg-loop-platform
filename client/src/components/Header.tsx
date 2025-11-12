@@ -1,4 +1,4 @@
-import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins } from "lucide-react";
+import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -67,10 +67,12 @@ export default function Header() {
               <Users className="h-3.5 w-3.5 text-primary" />
               Referrals
             </Link>
-            <a href="#leaderboards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md" data-testid="link-leaderboards">
+            <a href="#leaderboards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards">
+              <BarChart3 className="h-3.5 w-3.5 text-primary" />
               Leaderboards
             </a>
-            <a href="#rewards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md" data-testid="link-rewards">
+            <a href="#rewards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-rewards">
+              <Gift className="h-3.5 w-3.5 text-primary" />
               Rewards
             </a>
           </nav>
