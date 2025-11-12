@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Target, TrendingUp, Calendar, CheckCircle, XCircle, Link as LinkIcon } from "lucide-react";
+import { Trophy, Target, TrendingUp, Calendar, CheckCircle, XCircle, Link as LinkIcon, RefreshCw, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 interface RiotMatch {
   id: string;
@@ -29,6 +31,8 @@ interface RiotAccountStatus {
 
 export default function Stats() {
   const { user, isAuthenticated } = useAuth();
+  const [secondsUntilSync, setSecondsUntilSync] = useState(0);
+  const [syncProgress, setSyncProgress] = useState(100);
 
   const { data: matches, isLoading: matchesLoading } = useQuery<RiotMatch[]>({
     queryKey: ["/api/riot/matches"],
@@ -44,6 +48,37 @@ export default function Stats() {
     queryKey: ["/api/riot/account/valorant"],
     enabled: isAuthenticated,
   });
+
+  // Calculate time until next sync (every 10 minutes)
+  useEffect(() => {
+    const updateSyncTimer = () => {
+      const now = new Date();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+      
+      // Next sync happens at minute 0, 10, 20, 30, 40, 50
+      const currentCycleMinute = Math.floor(minutes / 10) * 10;
+      const nextSyncMinute = currentCycleMinute + 10;
+      const minutesUntilSync = (nextSyncMinute - minutes - 1 + 60) % 60;
+      const secondsRemaining = 60 - seconds;
+      const totalSecondsUntilSync = minutesUntilSync * 60 + secondsRemaining;
+      
+      setSecondsUntilSync(totalSecondsUntilSync);
+      // Progress from 0-100, where 100 is just synced, 0 is about to sync
+      const progressPercent = ((600 - totalSecondsUntilSync) / 600) * 100;
+      setSyncProgress(Math.max(0, Math.min(100, progressPercent)));
+    };
+
+    updateSyncTimer();
+    const interval = setInterval(updateSyncTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   if (!isAuthenticated) {
     return (
@@ -79,6 +114,46 @@ export default function Stats() {
             Track your wins, stats, and earnings from League of Legends and Valorant
           </p>
         </div>
+
+        {hasLinkedAccounts && (
+          <Card className="mb-8 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <RefreshCw className="h-5 w-5 text-primary animate-spin-slow" />
+                Match Sync Status
+              </CardTitle>
+              <CardDescription>
+                Automatic syncing from Riot Games API every 10 minutes
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Next sync in:</span>
+                </div>
+                <Badge variant="secondary" className="text-base font-mono">
+                  {formatTime(secondsUntilSync)}
+                </Badge>
+              </div>
+              <Progress value={syncProgress} className="h-2" />
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3 text-green-500" />
+                  Checking for new wins
+                </div>
+                <div className="flex items-center gap-1">
+                  <Trophy className="h-3 w-3 text-primary" />
+                  Auto-award points
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-accent-foreground" />
+                  Same-day matches only
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {!hasLinkedAccounts && (
           <Card className="mb-8 border-primary/20 bg-primary/5">
