@@ -102,7 +102,7 @@ export default function Settings() {
 
   const disconnectTwitchMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/auth/twitch/unlink", "POST", {});
+      return await apiRequest("POST", "/api/auth/twitch/unlink", {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
@@ -136,7 +136,7 @@ export default function Settings() {
       if (!gameName || !tagLine) {
         throw new Error("Please enter your Riot ID in the format: GameName#TAG");
       }
-      return await apiRequest("/api/riot/link-account", "POST", {
+      return await apiRequest("POST", "/api/riot/link-account", {
         game: "league",
         gameName,
         tagLine,
@@ -166,7 +166,7 @@ export default function Settings() {
       if (!gameName || !tagLine) {
         throw new Error("Please enter your Riot ID in the format: GameName#TAG");
       }
-      return await apiRequest("/api/riot/link-account", "POST", {
+      return await apiRequest("POST", "/api/riot/link-account", {
         game: "valorant",
         gameName,
         tagLine,
@@ -192,7 +192,7 @@ export default function Settings() {
 
   const disconnectLeagueMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/riot/unlink-account", "POST", { game: "league" });
+      return await apiRequest("POST", "/api/riot/unlink-account", { game: "league" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/riot/account/league'] });
@@ -212,7 +212,7 @@ export default function Settings() {
 
   const disconnectValorantMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/riot/unlink-account", "POST", { game: "valorant" });
+      return await apiRequest("POST", "/api/riot/unlink-account", { game: "valorant" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/riot/account/valorant'] });
@@ -237,7 +237,7 @@ export default function Settings() {
       if (!gameName || !tagLine) {
         throw new Error("Please enter your Riot ID in the format: GameName#TAG");
       }
-      return await apiRequest("/api/riot/request-verification-code", "POST", {
+      return await apiRequest("POST", "/api/riot/request-verification-code", {
         game: "valorant",
         gameName,
         tagLine,
@@ -263,7 +263,7 @@ export default function Settings() {
   const verifyValorantMutation = useMutation({
     mutationFn: async () => {
       const [gameName, tagLine] = valorantRiotId.split('#');
-      return await apiRequest("/api/riot/verify-account", "POST", {
+      return await apiRequest("POST", "/api/riot/verify-account", {
         game: "valorant",
         gameName,
         tagLine,
