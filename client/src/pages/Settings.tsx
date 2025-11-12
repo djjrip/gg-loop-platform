@@ -575,6 +575,12 @@ export default function Settings() {
               </div>
             ) : (
               <div className="space-y-4">
+                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <p className="font-semibold text-sm mb-2 text-blue-700 dark:text-blue-400">How Valorant Linking Works</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Unlike Discord/Twitch, Riot doesn't support automatic login. To verify you own this account, we'll give you a code to temporarily add to your Valorant Player Title in-game. This takes 2 minutes and you can change it back after verification.
+                  </p>
+                </div>
                 {!valorantVerificationCode ? (
                   <div className="space-y-4">
                     <div className="space-y-2">
