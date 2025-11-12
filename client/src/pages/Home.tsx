@@ -20,6 +20,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
+import { Link } from "wouter";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
@@ -211,6 +212,61 @@ export default function Home() {
       <Header />
       
       <Hero />
+
+      {/* MISSION STATEMENT */}
+      <section className="relative py-24 bg-gradient-to-b from-card to-background overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0icmdiYSgyNTUsIDE0MCwgNjYsIDAuMDUpIi8+PC9nPjwvc3ZnPg==')] opacity-30" />
+        <div className="container mx-auto max-w-5xl px-6 relative z-10">
+          <div className="text-center space-y-8">
+            <Badge variant="outline" className="px-4 py-2 text-sm font-semibold border-primary/30 text-primary">
+              Our Mission
+            </Badge>
+            
+            <h2 className="text-5xl md:text-6xl font-black tracking-tight">
+              Your Passion. <span className="text-primary">Your Paycheck.</span>
+            </h2>
+            
+            <div className="max-w-3xl mx-auto space-y-6 text-lg text-muted-foreground leading-relaxed">
+              <p className="text-xl text-foreground font-semibold">
+                For years, gamers have been told their passion is a "waste of time." <span className="text-primary">We're here to prove them wrong.</span>
+              </p>
+              
+              <p>
+                Remember when you were told to "log off" and "do something productive"? GG Loop is here to <span className="text-primary font-semibold">heal that inner kid</span> who loved gaming but was made to feel guilty about it. Your passion was never a waste—it was just waiting for the right platform.
+              </p>
+              
+              <p>
+                GG Loop was built to legitimize gaming as a real income source. Whether you're streaming to 5 viewers or 5,000, you deserve to earn from your skill. We believe every clutch play, every comeback, every grind session should translate to real-world value.
+              </p>
+              
+              <p>
+                <span className="font-semibold text-foreground">Starting with zero followers?</span> Perfect. Our leaderboards and point system reward skill, not just popularity. Climb the ranks. Earn your way. Unlock partnerships and sponsorships <span className="text-primary font-semibold">through GG Loop</span> as you prove your dedication.
+              </p>
+              
+              <p className="text-2xl font-bold text-foreground pt-4">
+                Play. Earn. LOOP. <span className="text-primary">Rinse and repeat.</span>
+              </p>
+              
+              <p className="text-base italic">
+                This is your access to glory. This is your path to proving that gaming isn't a waste—it's an opportunity. Welcome to the LOOP.
+              </p>
+            </div>
+            
+            <div className="pt-8">
+              <Link href="/subscription">
+                <Button size="lg" className="text-lg font-bold px-10 py-7 h-auto shadow-lg" data-testid="button-mission-cta">
+                  <Trophy className="h-5 w-5 mr-2" />
+                  Start Your Journey Free
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+        
+        {/* Decorative elements */}
+        <div className="absolute top-10 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+      </section>
 
       <main className="container mx-auto max-w-7xl px-4 py-16 space-y-24">
         {/* SPONSORED CHALLENGES - Enable users to actually EARN money! */}
