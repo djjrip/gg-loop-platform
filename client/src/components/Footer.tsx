@@ -1,13 +1,45 @@
+import { SiDiscord, SiTiktok } from "react-icons/si";
+
 export default function Footer() {
   return (
     <footer className="w-full border-t border-border bg-background/95 backdrop-blur mt-16">
       <div className="container mx-auto max-w-7xl px-4 py-8">
-        <div className="grid md:grid-cols-3 gap-8 mb-6">
+        <div className="grid md:grid-cols-4 gap-8 mb-6">
           <div>
             <h3 className="font-semibold mb-3">GG Loop</h3>
             <p className="text-sm text-muted-foreground">
-              Track your League of Legends and Valorant performance. Earn rewards for your gameplay.
+              Play. Earn. LOOP. Legitimizing gaming as real income.
             </p>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold mb-3">Community</h3>
+            <ul className="space-y-2">
+              <li>
+                <a 
+                  href="https://discord.gg/ggloop" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 hover-elevate px-2 py-1 rounded-md"
+                  data-testid="link-discord"
+                >
+                  <SiDiscord className="h-4 w-4" />
+                  Join Discord
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://tiktok.com/@ggloop" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 hover-elevate px-2 py-1 rounded-md"
+                  data-testid="link-tiktok"
+                >
+                  <SiTiktok className="h-4 w-4" />
+                  Follow on TikTok
+                </a>
+              </li>
+            </ul>
           </div>
           
           <div>
@@ -32,11 +64,6 @@ export default function Footer() {
               <li>
                 <a href="mailto:support@ggloop.io" className="text-muted-foreground hover:text-foreground">
                   Contact Us
-                </a>
-              </li>
-              <li>
-                <a href="https://discord.gg/ggloop" className="text-muted-foreground hover:text-foreground">
-                  Discord Community
                 </a>
               </li>
             </ul>
