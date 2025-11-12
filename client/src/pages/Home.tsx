@@ -630,9 +630,24 @@ export default function Home() {
 
         {/* How It Works */}
         <section className="py-16">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-4xl font-bold font-heading tracking-tight">How It Works</h2>
-            <p className="text-muted-foreground mt-2 text-lg">Start earning rewards in three simple steps</p>
+            <p className="text-muted-foreground mt-2 text-lg">100% Automatic - No Screenshots, No Manual Submissions</p>
+          </div>
+
+          <div className="mb-12 p-6 bg-green-500/10 border-2 border-green-500/30 rounded-lg max-w-3xl mx-auto">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                <Zap className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg mb-2 text-green-700 dark:text-green-400">Fully Automated Tracking</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Once you link your League of Legends or Valorant account, we automatically check for new match wins <strong>every 10 minutes</strong>. 
+                  Win a game? Points are added to your account automatically. Check your Stats page anytime to see your progress in real-time.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -642,8 +657,9 @@ export default function Home() {
                 <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
                   <Gamepad2 className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Connect Your Games</h3>
-                <p className="text-muted-foreground">Link your gaming accounts from Steam, Epic Games, Xbox, and more</p>
+                <div className="mb-4 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full inline-block">STEP 1</div>
+                <h3 className="text-xl font-semibold mb-3">Link Your Riot Account</h3>
+                <p className="text-muted-foreground text-sm">Quick verification for League of Legends or Valorant. Takes 2 minutes, one-time setup.</p>
               </div>
             </Card>
 
@@ -653,8 +669,9 @@ export default function Home() {
                 <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
                   <Zap className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Play & Compete</h3>
-                <p className="text-muted-foreground">Complete challenges, climb leaderboards, and earn points automatically</p>
+                <div className="mb-4 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full inline-block">STEP 2</div>
+                <h3 className="text-xl font-semibold mb-3">Play & Win Games</h3>
+                <p className="text-muted-foreground text-sm">Every match win is automatically detected and points are added to your balance instantly. No manual work required.</p>
               </div>
             </Card>
 
@@ -664,8 +681,9 @@ export default function Home() {
                 <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
                   <Trophy className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Claim Rewards</h3>
-                <p className="text-muted-foreground">Redeem your points for gaming peripherals, subscriptions, and exclusive prizes</p>
+                <div className="mb-4 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full inline-block">STEP 3</div>
+                <h3 className="text-xl font-semibold mb-3">Redeem Real Rewards</h3>
+                <p className="text-muted-foreground text-sm">Trade points for gift cards, gaming gear, subscriptions. 100:1 ratio ($10 = 1,000 points).</p>
               </div>
             </Card>
           </div>
