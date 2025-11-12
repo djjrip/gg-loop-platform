@@ -192,7 +192,7 @@ export default function Settings() {
 
   const disconnectLeagueMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("POST", "/api/riot/unlink-account", { game: "league" });
+      return await apiRequest("POST", `/api/riot/${LEAGUE_GAME_ID}/disconnect`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/riot/account/league'] });
@@ -212,7 +212,7 @@ export default function Settings() {
 
   const disconnectValorantMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("POST", "/api/riot/unlink-account", { game: "valorant" });
+      return await apiRequest("POST", `/api/riot/${VALORANT_GAME_ID}/disconnect`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/riot/account/valorant'] });
@@ -633,15 +633,18 @@ export default function Settings() {
                         </Button>
                       </div>
                     </div>
-                    <div className="p-4 bg-muted rounded-lg">
-                      <p className="font-medium mb-2">Step 2: Add to Valorant profile</p>
-                      <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground ml-2">
-                        <li>Open Valorant client</li>
-                        <li>Click on your profile (top right)</li>
-                        <li>Click "Account" → "Profile" → "About Me"</li>
-                        <li>Paste the code above in the description</li>
-                        <li>Come back here and click "Verify Now"</li>
+                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                      <p className="font-bold mb-2 text-amber-700 dark:text-amber-400">Step 2: Add to Valorant profile</p>
+                      <ol className="list-decimal list-inside space-y-2 text-sm ml-2">
+                        <li className="font-medium">Open Valorant client</li>
+                        <li className="font-medium">Click on your profile (top right)</li>
+                        <li className="font-medium">Navigate: Profile → Edit Card → Player Title</li>
+                        <li className="font-medium">Paste the verification code above in the "Player Title" field</li>
+                        <li className="font-medium">Save and come back here to click "Verify Now"</li>
                       </ol>
+                      <p className="text-xs mt-3 text-muted-foreground italic">
+                        Note: You can change your player title back after verification is complete.
+                      </p>
                     </div>
                     <div className="flex gap-2">
                       <Button
