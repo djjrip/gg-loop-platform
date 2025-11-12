@@ -6,6 +6,7 @@ import { Copy, Trophy, Users, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SiX, SiTiktok, SiDiscord, SiYoutube, SiTwitch } from "react-icons/si";
+import Header from "@/components/Header";
 
 interface ReferralStats {
   referralCode: string;
@@ -110,11 +111,13 @@ export default function Referrals() {
   const nextTier = getNextTier();
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2 text-foreground">Referral Program</h1>
-        <p className="text-muted-foreground">Invite friends and earn rewards for every subscriber you bring</p>
-      </div>
+    <>
+      <Header />
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2 text-foreground">Referral Program</h1>
+          <p className="text-muted-foreground">Invite friends and earn rewards for every subscriber you bring</p>
+        </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
         <Card data-testid="card-referral-stats" className="hover-elevate">
@@ -480,6 +483,7 @@ export default function Referrals() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }
