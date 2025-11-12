@@ -49,11 +49,17 @@ The database schema includes core tables for users, games, subscriptions, point 
 
 ## Recent Changes (November 12, 2025 - 8:30 AM TikTok Launch)
 
+### ✅ **CREDIBILITY FEATURES (November 12, 2025 - Pre-Launch)**
+*   **Monthly Earnings Summary**: Stats page now shows a "Proof of Income" card displaying points earned this month, cash equivalent at 100:1 ratio, subscription cost, and net profit/loss. Always visible for linked accounts (even with $0 earnings). Negative net profit styled in amber with "$X from break-even" messaging for credibility with skeptical family/friends.
+*   **Earnings Calculator**: Home page widget with interactive slider (0-20 wins/day, default 5) and tier selector showing projected monthly earnings. Displays breakdown: points per win, monthly wins, total points, subscription cost, net profit. Designed to help users demonstrate income potential to others.
+*   **Footer Contact Update**: Changed support email from support@ggloop.io to info@ggloop.io
+*   **Architect Review**: PASS ✓ - Fixed critical bug where Monthly Earnings Summary only showed with matches > 0. Now displays for all linked accounts with proper validation.
+
 ### ✅ **PRE-LAUNCH FIXES (Completed Overnight - Ready for Production)**
 *   **Settings Navigation Fix**: Added Header component to Settings page - users can now navigate back to Home
 *   **Riot Disconnect Bug Fix**: Corrected frontend disconnect endpoint from `/api/riot/unlink-account` to `/api/riot/:gameId/disconnect` to match backend routes
 *   **Stats Page Enhancement**: Added real-time match sync progress indicator showing countdown to next Riot API sync (every 10 minutes) with visual progress bar
-*   **Valorant Verification UX**: Improved instructions with amber-highlighted card and clearer steps for Player Title field
+*   **Valorant Verification UX**: Improved instructions with blue info card and clearer steps for Player Title field
 *   **Testing Completed**: Quick Start flow (valid/invalid Riot IDs, duplicate emails), navigation links, Riot linking/disconnect, subscription endpoints
 *   **Architect Review**: PASS ✓ - No blocking defects, deployment ready for 8:30 AM launch
 
