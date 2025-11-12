@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -319,12 +320,14 @@ export default function Settings() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-6 py-12">
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-4xl font-bold mb-2">Settings</h1>
-          <p className="text-muted-foreground">Manage your GG Loop profile</p>
-        </div>
+    <>
+      <Header />
+      <div className="container mx-auto max-w-4xl px-6 py-12">
+        <div className="space-y-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Settings</h1>
+            <p className="text-muted-foreground">Manage your GG Loop profile</p>
+          </div>
 
         <Card data-testid="card-username-settings">
           <CardHeader>
@@ -690,8 +693,8 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
-      
-    </div>
+    </>
   );
 }
