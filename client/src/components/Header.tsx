@@ -48,6 +48,14 @@ export default function Header() {
           </Link>
           
           <nav className="hidden md:flex items-center gap-6">
+            <Link 
+              href="/" 
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+              data-testid="link-home-nav"
+            >
+              <Trophy className="h-3.5 w-3.5 text-primary" />
+              Home
+            </Link>
             <a href="#games" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-games">
               <Gamepad2 className="h-3.5 w-3.5 text-primary" />
               Games
@@ -183,6 +191,14 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t">
           <nav className="flex flex-col gap-2 p-4">
+            <Link 
+              href="/" 
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+              data-testid="link-home-mobile"
+            >
+              <Trophy className="h-3.5 w-3.5 text-primary" />
+              Home
+            </Link>
             <a href="#games" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-games-mobile">
               <Gamepad2 className="h-3.5 w-3.5 text-primary" />
               Games
