@@ -28,14 +28,22 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 const getUserMiddleware = async (req: any, res: any, next: any) => {
   try {
-    if (!req.isAuthenticated() || !req.user?.oidcSub) {
+    let dbUser;
+    
+    // Check for guest session first
+    if (req.session.guestUserId) {
+      dbUser = await storage.getUser(req.session.guestUserId);
+    } 
+    // Check for OAuth session
+    else if (req.isAuthenticated() && req.user?.oidcSub) {
+      const oidcSub = req.user.oidcSub;
+      dbUser = await storage.getUserByOidcSub(oidcSub);
+    }
+    
+    if (!dbUser) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    const oidcSub = req.user.oidcSub;
-    const dbUser = await storage.getUserByOidcSub(oidcSub);
-    if (!dbUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    
     req.dbUser = dbUser;
     next();
   } catch (error) {
@@ -106,6 +114,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/auth/user', async (req: any, res) => {
     try {
+      // Check for guest session first
+      if (req.session.guestUserId) {
+        const user = await storage.getUser(req.session.guestUserId);
+        return res.json(user || null);
+      }
+      
+      // Check for OAuth session
       if (!req.isAuthenticated() || !req.user?.oidcSub) {
         return res.json(null);
       }
@@ -115,6 +130,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Guest account creation
+  app.post('/api/auth/guest', async (req: any, res) => {
+    try {
+      const { email, riotId, tagLine, region } = req.body;
+      
+      if (!email || !riotId || !tagLine || !region) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+      
+      // Generate UUID-based username for guest
+      const guestId = crypto.randomUUID();
+      const guestUsername = `guest_${guestId.split('-')[0]}`;
+      
+      // Create guest user with null oidcSub
+      const user = await storage.createUser({
+        oidcSub: null,
+        email,
+        username: guestUsername,
+        firstName: riotId,
+        lastName: tagLine,
+        profileImageUrl: null,
+      });
+      
+      // Store guest session
+      req.session.guestUserId = user.id;
+      req.session.save((err: any) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ message: 'Failed to create session' });
+        }
+        
+        res.json({ 
+          success: true, 
+          userId: user.id,
+          message: 'Account created successfully' 
+        });
+      });
+    } catch (error) {
+      console.error("Error creating guest account:", error);
+      res.status(500).json({ message: "Failed to create account" });
     }
   });
 

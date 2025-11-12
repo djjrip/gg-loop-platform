@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,14 +11,15 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function QuickStart() {
-  const [, navigate] = useNavigate();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [email, setEmail] = useState("");
   const [riotId, setRiotId] = useState("");
   const [tagLine, setTagLine] = useState("");
   const [region, setRegion] = useState("");
 
   const guestLoginMutation = useMutation({
-    mutationFn: async (data: { riotId: string; tagLine: string; region: string }) => {
+    mutationFn: async (data: { email: string; riotId: string; tagLine: string; region: string }) => {
       const res = await apiRequest("POST", "/api/auth/guest", data);
       return await res.json();
     },
@@ -27,7 +28,7 @@ export default function QuickStart() {
         title: "Welcome to GG Loop!",
         description: "Your account has been created. Start reporting matches to earn points!",
       });
-      navigate("/");
+      setLocation("/");
     },
     onError: (error: Error) => {
       toast({
@@ -41,7 +42,7 @@ export default function QuickStart() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!riotId || !tagLine || !region) {
+    if (!email || !riotId || !tagLine || !region) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields",
@@ -50,7 +51,7 @@ export default function QuickStart() {
       return;
     }
 
-    guestLoginMutation.mutate({ riotId, tagLine, region });
+    guestLoginMutation.mutate({ email, riotId, tagLine, region });
   };
 
   return (
@@ -68,6 +69,21 @@ export default function QuickStart() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                data-testid="input-email"
+              />
+              <p className="text-xs text-muted-foreground">
+                Required for account recovery and subscription receipts
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="riotId">Riot ID (Game Name)</Label>
               <Input
@@ -120,7 +136,7 @@ export default function QuickStart() {
             <div className="text-center pt-2">
               <button
                 type="button"
-                onClick={() => navigate("/login")}
+                onClick={() => setLocation("/login")}
                 className="text-sm text-muted-foreground hover:text-primary underline"
               >
                 Back to login options
