@@ -47,14 +47,23 @@ The database schema includes core tables for users, games, subscriptions, point 
 *   **Backend Framework**: Express.js
 *   **Validation**: Zod
 
-## Recent Changes (November 12, 2025)
-*   ✅ Added controller favicon (replacing Replit icon)
-*   ✅ Integrated Discord (https://discord.gg/rEXCFjJ4) and TikTok (@gg.loop) social links in footer
-*   ✅ Added Header component to Referrals page for consistent navigation
-*   ✅ Fixed TypeScript errors in Referrals.tsx with safe non-null assertions
-*   ✅ Fixed Twitch OAuth callback URLs in Twitch Developer Console
-*   ✅ Server restarted and verified running correctly
-*   ⚠️ **CRITICAL**: Production (ggloop.io) requires republishing to get all fixes live before TikTok launch
+## Recent Changes (November 12, 2025 - 8:30 AM TikTok Launch)
+
+### ✅ **PRE-LAUNCH FIXES (Completed Overnight - Ready for Production)**
+*   **Settings Navigation Fix**: Added Header component to Settings page - users can now navigate back to Home
+*   **Riot Disconnect Bug Fix**: Corrected frontend disconnect endpoint from `/api/riot/unlink-account` to `/api/riot/:gameId/disconnect` to match backend routes
+*   **Stats Page Enhancement**: Added real-time match sync progress indicator showing countdown to next Riot API sync (every 10 minutes) with visual progress bar
+*   **Valorant Verification UX**: Improved instructions with amber-highlighted card and clearer steps for Player Title field
+*   **Testing Completed**: Quick Start flow (valid/invalid Riot IDs, duplicate emails), navigation links, Riot linking/disconnect, subscription endpoints
+*   **Architect Review**: PASS ✓ - No blocking defects, deployment ready for 8:30 AM launch
+
+### ✅ **Earlier Today (November 12, 2025)**
+*   Added controller favicon (replacing Replit icon)
+*   Integrated Discord (https://discord.gg/rEXCFjJ4) and TikTok (@gg.loop) social links in footer
+*   Added Header component to Referrals page for consistent navigation
+*   Fixed TypeScript errors in Referrals.tsx with safe non-null assertions
+*   Fixed Twitch OAuth callback URLs in Twitch Developer Console
+*   Server restarted and verified running correctly
 
 ## Recent Changes (November 11, 2025)
 *   ✅ Implemented multi-provider OAuth authentication (Discord, Twitch, Google)
