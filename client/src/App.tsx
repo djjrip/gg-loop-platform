@@ -32,6 +32,7 @@ import Privacy from "@/pages/Privacy";
 import Login from "@/pages/Login";
 import Stats from "@/pages/Stats";
 import FreeTier from "@/pages/FreeTier";
+import Shop from "@/pages/Shop";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -76,6 +77,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/stats" component={Stats} />
       <Route path="/free-tier" component={FreeTier} />
+      <Route path="/shop" component={Shop} />
       <Route component={NotFound} />
     </Switch>
   );

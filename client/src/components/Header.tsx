@@ -48,7 +48,8 @@ export default function Header() {
           </Link>
           
           <nav className="hidden md:flex items-center gap-6">
-            <a href="#games" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md" data-testid="link-games">
+            <a href="#games" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-games">
+              <Gamepad2 className="h-3.5 w-3.5 text-primary" />
               Games
             </a>
             <Link 
@@ -71,10 +72,14 @@ export default function Header() {
               <BarChart3 className="h-3.5 w-3.5 text-primary" />
               Leaderboards
             </a>
-            <a href="#rewards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-rewards">
+            <Link 
+              href="/shop" 
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+              data-testid="link-shop"
+            >
               <Gift className="h-3.5 w-3.5 text-primary" />
-              Rewards
-            </a>
+              Shop
+            </Link>
           </nav>
         </div>
 
@@ -178,16 +183,17 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t">
           <nav className="flex flex-col gap-2 p-4">
-            <a href="#games" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md" data-testid="link-games-mobile">
+            <a href="#games" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-games-mobile">
+              <Gamepad2 className="h-3.5 w-3.5 text-primary" />
               Games
             </a>
             <Link 
-              href="/report-match" 
+              href="/stats" 
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
-              data-testid="link-report-match-mobile"
+              data-testid="link-stats-mobile"
             >
               <Gamepad2 className="h-3.5 w-3.5 text-primary" />
-              Report Win
+              My Stats
             </Link>
             <Link 
               href="/referrals" 
@@ -197,12 +203,18 @@ export default function Header() {
               <Users className="h-3.5 w-3.5 text-primary" />
               Referrals
             </Link>
-            <a href="#leaderboards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md" data-testid="link-leaderboards-mobile">
+            <a href="#leaderboards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards-mobile">
+              <BarChart3 className="h-3.5 w-3.5 text-primary" />
               Leaderboards
             </a>
-            <a href="#rewards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md" data-testid="link-rewards-mobile">
-              Rewards
-            </a>
+            <Link 
+              href="/shop" 
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+              data-testid="link-shop-mobile"
+            >
+              <Gift className="h-3.5 w-3.5 text-primary" />
+              Shop
+            </Link>
             <Link 
               href="/tiktok-content" 
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
