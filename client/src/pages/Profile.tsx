@@ -130,7 +130,7 @@ export default function Profile() {
                     className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 px-3 py-1 text-sm font-bold shadow-lg"
                     data-testid="badge-founder"
                   >
-                    ⭐ FOUNDER #{profile.user.founderNumber}
+                    FOUNDER #{profile.user.founderNumber}
                   </Badge>
                 )}
                 {profile.claimedBadges && profile.claimedBadges.length > 0 && profile.claimedBadges.map((claimedBadge) => (
@@ -149,7 +149,7 @@ export default function Profile() {
                     className="bg-gradient-to-r from-purple-500 to-purple-700 text-white border-0 px-3 py-1 text-sm font-bold shadow-lg"
                     data-testid="badge-twitch"
                   >
-                    💜 {profile.user.twitchUsername}
+                    {profile.user.twitchUsername}
                   </Badge>
                 )}
               </div>
@@ -170,7 +170,7 @@ export default function Profile() {
               </div>
               <ShareButtons 
                 title={`${displayName}'s GG Loop Profile`}
-                description={`Check out my GG Loop gaming profile! ${profile.user.totalPoints.toLocaleString()} points earned 🎮🏆`}
+                description={`Check out my GG Loop gaming profile! ${profile.user.totalPoints.toLocaleString()} points earned`}
                 hashtags={["GGLoop", "Gaming", "Gamer"]}
               />
             </div>

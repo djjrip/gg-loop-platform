@@ -29,7 +29,7 @@ export default function Terms() {
               You must be at least 18 years of age to use this Service. By using the Service, you represent and warrant that you are at least 18 years old.
             </p>
             <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
-              <p className="text-sm font-semibold">⚠️ IMPORTANT: Users under 18 are prohibited from using this platform.</p>
+              <p className="text-sm font-semibold">IMPORTANT: Users under 18 are prohibited from using this platform.</p>
             </div>
           </section>
 

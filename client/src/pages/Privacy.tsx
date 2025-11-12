@@ -86,7 +86,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-2xl font-bold font-heading mb-4">7. Children's Privacy</h2>
             <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
-              <p className="text-sm font-semibold mb-2">⚠️ AGE RESTRICTION</p>
+              <p className="text-sm font-semibold mb-2">AGE RESTRICTION</p>
               <p className="text-sm text-muted-foreground">
                 GG Loop is intended for users 18 years and older. We do not knowingly collect information from anyone under 18. If we discover that a user under 18 has provided personal information, we will immediately delete that data.
               </p>

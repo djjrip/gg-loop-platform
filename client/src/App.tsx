@@ -22,6 +22,10 @@ import InvestorOutreach from "@/pages/InvestorOutreach";
 import TwitchOutreach from "@/pages/TwitchOutreach";
 import LaunchChecklist from "@/pages/LaunchChecklist";
 import BusinessHub from "@/pages/BusinessHub";
+import StripeAppeal from "@/pages/StripeAppeal";
+import PaddleSetup from "@/pages/PaddleSetup";
+import LemonSqueezySetup from "@/pages/LemonSqueezySetup";
+import PaymentProcessorGuide from "@/pages/PaymentProcessorGuide";
 import ReportMatch from "@/pages/ReportMatch";
 import Referrals from "@/pages/Referrals";
 import Settings from "@/pages/Settings";
@@ -68,6 +72,10 @@ function Router() {
       <Route path="/twitch-outreach" component={TwitchOutreach} />
       <Route path="/launch" component={LaunchChecklist} />
       <Route path="/business" component={BusinessHub} />
+      <Route path="/stripe-appeal" component={StripeAppeal} />
+      <Route path="/paddle-setup" component={PaddleSetup} />
+      <Route path="/lemonsqueezy-setup" component={LemonSqueezySetup} />
+      <Route path="/payment-guide" component={PaymentProcessorGuide} />
       <Route path="/report-match" component={ReportMatch} />
       <Route path="/referrals" component={Referrals} />
       <Route path="/my-rewards" component={MyRewards} />

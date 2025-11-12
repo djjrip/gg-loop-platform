@@ -786,7 +786,7 @@ export default function Home() {
                   </div>
                   <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
                     <p className="text-sm text-muted-foreground">
-                      💰 <strong className="text-green-700 dark:text-green-400">This is your proof of concept.</strong> Show this to family/friends who think gaming can't pay bills. These are real, achievable numbers.
+                      <strong className="text-green-700 dark:text-green-400">This is your proof of concept.</strong> Show this to family/friends who think gaming can't pay bills. These are real, achievable numbers.
                     </p>
                   </div>
                 </div>

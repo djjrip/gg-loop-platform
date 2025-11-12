@@ -7,7 +7,7 @@ import { Link } from "wouter";
 export default function LaunchChecklist() {
   const sections = [
     {
-      title: "✅ Platform Ready (100%)",
+      title: "Platform Ready (100%)",
       status: "complete",
       items: [
         { done: true, text: "Subscription system (Basic/Pro/Elite tiers)", detail: "Stripe integration live" },
@@ -21,7 +21,7 @@ export default function LaunchChecklist() {
       ],
     },
     {
-      title: "🚀 Go Live NOW",
+      title: "Go Live NOW",
       status: "action",
       items: [
         { done: false, text: "Send 20 Twitch streamer invites TODAY", action: "/twitch-outreach", detail: "Use ready-to-send templates" },
@@ -30,7 +30,7 @@ export default function LaunchChecklist() {
       ],
     },
     {
-      title: "📧 Week 1: Sponsor Outreach",
+      title: "Week 1: Sponsor Outreach",
       status: "pending",
       items: [
         { done: false, text: "Monday: Send emails to G Fuel, Razer, SteelSeries, Discord, Logitech", action: "/sponsor-outreach", detail: "Templates ready" },
@@ -40,7 +40,7 @@ export default function LaunchChecklist() {
       ],
     },
     {
-      title: "💰 Week 2: Investor Outreach",
+      title: "Week 2: Investor Outreach",
       status: "pending",
       items: [
         { done: false, text: "Research 10 gaming VCs/angels on LinkedIn", action: "/investor-outreach", detail: "Bitkraft, Makers Fund, 1Up" },
@@ -50,7 +50,7 @@ export default function LaunchChecklist() {
       ],
     },
     {
-      title: "📊 Week 3-6: Validation Sprint",
+      title: "Week 3-6: Validation Sprint",
       status: "pending",
       items: [
         { done: false, text: "Run acquisition experiments (Reddit ads, Discord, TikTok)", action: "/roadmap", detail: "$200-300 budget" },

@@ -238,7 +238,7 @@ export default function Stats() {
               </div>
               <div className="mt-4 p-3 bg-muted/50 rounded-lg">
                 <p className="text-xs text-muted-foreground">
-                  💡 <strong>Proof of Income:</strong> This summary shows your family/friends that gaming is generating real earnings. Screenshot this to share your progress!
+                  <strong>Proof of Income:</strong> This summary shows your family/friends that gaming is generating real earnings. Screenshot this to share your progress!
                 </p>
               </div>
             </CardContent>

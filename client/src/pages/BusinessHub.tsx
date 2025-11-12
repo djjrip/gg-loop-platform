@@ -11,7 +11,9 @@ import {
   Home,
   Target,
   Mail,
-  Briefcase
+  Briefcase,
+  CreditCard,
+  AlertCircle
 } from "lucide-react";
 
 export default function BusinessHub() {
@@ -121,15 +123,46 @@ export default function BusinessHub() {
           </div>
         </div>
 
+        <Card className="mb-6 border-2 border-amber-500 bg-amber-500/10">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                  Stripe Paused - Alternative Payment Solution Needed
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Stripe restricted GG LOOP due to gaming policy. Recovery plan: apply to Lemon Squeezy (gaming-friendly, 48-72hr approval), 
+                  or Paddle (established platform), while appealing Stripe in parallel.
+                </p>
+                <div className="flex gap-2">
+                  <Button asChild data-testid="button-payment-guide">
+                    <Link href="/payment-guide">
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      View Payment Options
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" data-testid="button-lemonsqueezy-quick">
+                    <Link href="/lemonsqueezy-setup">
+                      Quick: Lemon Squeezy Setup
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="mb-8 border-2 border-primary bg-primary/5">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
               <Rocket className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
               <div>
-                <h3 className="font-bold text-lg mb-2">Platform is 100% Ready - Start Inviting Users</h3>
+                <h3 className="font-bold text-lg mb-2">Platform Ready - Fix Payments Then Launch</h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  All core features working. Rewards catalog loaded. Stripe live. 
-                  Go to Launch Checklist and send 20 Twitch DMs today.
+                  All core features working. Rewards catalog loaded. Once payments are set up, 
+                  send 20 Twitch DMs to launch.
                 </p>
                 <Button asChild data-testid="button-launch">
                   <Link href="/launch">
@@ -142,6 +175,71 @@ export default function BusinessHub() {
         </Card>
 
         <div className="space-y-8">
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Payment Processors (Urgent)</h2>
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
+              <Card className="hover-elevate border-green-500/30" data-testid="card-lemonsqueezy">
+                <CardHeader>
+                  <div className="flex items-start gap-3">
+                    <CreditCard className="h-5 w-5 text-green-600 mt-1" />
+                    <div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        Lemon Squeezy
+                        <Badge variant="default" className="text-xs">Recommended</Badge>
+                      </CardTitle>
+                      <CardDescription className="mt-1">Gaming-friendly, fast setup (2-3 days)</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild variant="default" className="w-full" data-testid="button-lemonsqueezy">
+                    <Link href="/lemonsqueezy-setup">
+                      Setup Guide
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-elevate border-blue-500/30" data-testid="card-paddle">
+                <CardHeader>
+                  <div className="flex items-start gap-3">
+                    <CreditCard className="h-5 w-5 text-blue-600 mt-1" />
+                    <div>
+                      <CardTitle className="text-lg">Paddle</CardTitle>
+                      <CardDescription className="mt-1">Gaming-friendly, 70% approval</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild variant="outline" className="w-full" data-testid="button-paddle">
+                    <Link href="/paddle-setup">
+                      Setup Guide
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-elevate border-amber-500/30" data-testid="card-stripe">
+                <CardHeader>
+                  <div className="flex items-start gap-3">
+                    <CreditCard className="h-5 w-5 text-amber-600 mt-1" />
+                    <div>
+                      <CardTitle className="text-lg">Stripe Appeal</CardTitle>
+                      <CardDescription className="mt-1">Worth trying, 20-30% success</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild variant="outline" className="w-full" data-testid="button-stripe">
+                    <Link href="/stripe-appeal">
+                      Appeal Template
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
           <div>
             <h2 className="text-2xl font-bold mb-4">Outreach & Growth</h2>
             <div className="grid md:grid-cols-2 gap-4">
