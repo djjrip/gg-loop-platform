@@ -8,7 +8,7 @@ const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID!;
 const TWITCH_CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET!;
 
 function getTwitchRedirectUri(hostname: string) {
-  return `https://${hostname}/api/auth/twitch/callback`;
+  return `https://${hostname}/api/settings/twitch/callback`;
 }
 
 export function setupTwitchAuth(app: Express) {
@@ -24,8 +24,8 @@ export function setupTwitchAuth(app: Express) {
     res.redirect(authUrl);
   });
 
-  // Twitch OAuth callback
-  app.get('/api/auth/twitch/callback', isAuthenticated, async (req: any, res) => {
+  // Twitch OAuth callback for linking (different from login callback)
+  app.get('/api/settings/twitch/callback', isAuthenticated, async (req: any, res) => {
     const { code, state } = req.query;
 
     // Validate state to prevent CSRF attacks
