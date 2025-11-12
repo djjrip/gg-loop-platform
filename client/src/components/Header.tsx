@@ -1,4 +1,4 @@
-import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3 } from "lucide-react";
+import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -57,7 +57,7 @@ export default function Header() {
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
               data-testid="link-stats"
             >
-              <Gamepad2 className="h-3.5 w-3.5 text-primary" />
+              <Activity className="h-3.5 w-3.5 text-primary" />
               My Stats
             </Link>
             <Link 
@@ -192,7 +192,7 @@ export default function Header() {
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
               data-testid="link-stats-mobile"
             >
-              <Gamepad2 className="h-3.5 w-3.5 text-primary" />
+              <Activity className="h-3.5 w-3.5 text-primary" />
               My Stats
             </Link>
             <Link 
