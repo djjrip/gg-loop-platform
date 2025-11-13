@@ -250,4 +250,45 @@ export class RiotApiService {
       return false;
     }
   }
+
+  /**
+   * Get recent TFT match IDs for a player
+   */
+  async getTFTMatchIds(puuid: string, region: string = 'na', options: { count?: number } = {}): Promise<string[]> {
+    const { count = 20 } = options;
+    const regionalEndpoint = REGIONAL_ENDPOINTS[region] || 'americas';
+    const url = `https://${regionalEndpoint}.api.riotgames.com/tft/match/v1/matches/by-puuid/${puuid}/ids?start=0&count=${count}`;
+
+    const response = await fetch(url, {
+      headers: {
+        'X-Riot-Token': this.apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch TFT matches: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
+  /**
+   * Get detailed TFT match data
+   */
+  async getTFTMatch(matchId: string, region: string = 'na'): Promise<any> {
+    const regionalEndpoint = REGIONAL_ENDPOINTS[region] || 'americas';
+    const url = `https://${regionalEndpoint}.api.riotgames.com/tft/match/v1/matches/${matchId}`;
+
+    const response = await fetch(url, {
+      headers: {
+        'X-Riot-Token': this.apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch TFT match details: ${response.status}`);
+    }
+
+    return await response.json();
+  }
 }

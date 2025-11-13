@@ -271,7 +271,7 @@ export const riotAccounts = pgTable("riot_accounts", {
   idxRiotAccountsUser: index("idx_riot_accounts_user").on(table.userId),
   idxRiotAccountsPuuid: index("idx_riot_accounts_puuid").on(table.puuid),
   uniqUserGame: sql`UNIQUE(user_id, game)`,
-  gameCheck: sql`CHECK (game IN ('league', 'valorant'))`,
+  gameCheck: sql`CHECK (game IN ('league', 'valorant', 'tft'))`,
 }));
 
 export const processedRiotMatches = pgTable("processed_riot_matches", {

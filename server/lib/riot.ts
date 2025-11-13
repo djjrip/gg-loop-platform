@@ -216,6 +216,25 @@ export class RiotAPI {
     const playerTeamData = teams.find((t: any) => t.teamId === playerTeam);
     return playerTeamData?.won || false;
   }
+
+  // Teamfight Tactics - Get match IDs by PUUID
+  async getTFTMatchIds(
+    puuid: string,
+    platformRegion: string = 'na1',
+    options?: { count?: number }
+  ): Promise<string[]> {
+    const routingRegion = getRoutingRegion(platformRegion);
+    const count = options?.count || 20;
+    const url = `https://${routingRegion}.api.riotgames.com/tft/match/v1/matches/by-puuid/${puuid}/ids?count=${count}`;
+    return this.makeRequest(url);
+  }
+
+  // Teamfight Tactics - Get match details
+  async getTFTMatch(matchId: string, platformRegion: string = 'na1'): Promise<any> {
+    const routingRegion = getRoutingRegion(platformRegion);
+    const url = `https://${routingRegion}.api.riotgames.com/tft/match/v1/matches/${matchId}`;
+    return this.makeRequest(url);
+  }
 }
 
 // Export singleton instance

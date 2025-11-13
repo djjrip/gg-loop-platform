@@ -54,6 +54,8 @@ async function syncAllAccounts() {
           await syncLeagueAccount(account);
         } else if (account.game === 'valorant') {
           await syncValorantAccount(account);
+        } else if (account.game === 'tft') {
+          await syncTFTAccount(account);
         }
       } catch (error: any) {
         console.error(`[MatchSync] Error syncing account ${account.puuid}:`, error.message);
@@ -181,6 +183,57 @@ async function syncValorantAccount(account: typeof riotAccounts.$inferSelect) {
       matchId,
       gameEndedAt,
       isWin: didWin,
+      pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
+      transactionId: null,
+    });
+  }
+}
+
+async function syncTFTAccount(account: typeof riotAccounts.$inferSelect) {
+  const riotAPI = getRiotAPI();
+  
+  // Fetch recent match IDs (pass platform region directly, getTFTMatchIds handles routing internally)
+  const matchIds = await riotAPI.getTFTMatchIds(account.puuid, account.region, { count: MATCHES_TO_CHECK });
+  
+  console.log(`[MatchSync] Found ${matchIds.length} recent TFT matches for ${account.gameName}#${account.tagLine}`);
+  
+  for (const matchId of matchIds) {
+    // Check if already processed
+    const [existing] = await db.select().from(processedRiotMatches).where(
+      and(
+        eq(processedRiotMatches.matchId, matchId),
+        eq(processedRiotMatches.riotAccountId, account.id)
+      )
+    );
+    
+    if (existing) {
+      continue; // Already processed this match
+    }
+    
+    // Fetch match details (pass platform region directly, getTFTMatch handles routing internally)
+    const matchData = await riotAPI.getTFTMatch(matchId, account.region);
+    
+    // Find this player's participation
+    const participant = matchData.info.participants.find((p: any) => p.puuid === account.puuid);
+    
+    if (!participant) {
+      console.warn(`[MatchSync] Player not found in match ${matchId}`);
+      continue;
+    }
+    
+    // In TFT, placement 1-4 is considered a "win" (top half of 8 players)
+    const placement = participant.placement;
+    const isTopFour = placement <= 4;
+    const gameEndedAt = new Date(matchData.info.game_datetime);
+    
+    // Record match for stats tracking (no points awarded - handled by monthly subscription allocation)
+    console.log(`[MatchSync] - Recording TFT match ${matchId} for stats (Placement: ${placement}, ${isTopFour ? 'Top 4' : 'Bottom 4'}). Points awarded via subscription tier, not match outcomes.`);
+    
+    await db.insert(processedRiotMatches).values({
+      riotAccountId: account.id,
+      matchId,
+      gameEndedAt,
+      isWin: isTopFour, // Top 4 placement counts as a win
       pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
       transactionId: null,
     });
