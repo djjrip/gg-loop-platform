@@ -32,7 +32,7 @@ export default function TikTokContentGenerator() {
           
           if (data.pointsAwarded) {
             toast({
-              title: "Script Copied! 🎉",
+              title: "Script Copied!",
               description: `+${data.pointsAwarded} points earned for creating content! Post it on TikTok to help grow GG Loop.`,
             });
             queryClient.invalidateQueries({ queryKey: ["/api/user"] });

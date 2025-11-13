@@ -2507,14 +2507,19 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
     }
   });
 
+  const tiktokCopySchema = z.object({
+    templateId: z.string().min(1)
+  });
+
   app.post('/api/tiktok/track-copy', getUserMiddleware, async (req: any, res) => {
     try {
-      const { templateId } = req.body;
-      const userId = req.dbUser.id;
-
-      if (!templateId) {
-        return res.status(400).json({ message: "Missing template ID" });
+      const parsed = tiktokCopySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid request data" });
       }
+
+      const { templateId } = parsed.data;
+      const userId = req.dbUser.id;
 
       const idempotencyKey = `tiktok-${userId}-${templateId}`;
       const existingReward = await storage.checkEventProcessed(idempotencyKey);
