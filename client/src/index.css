@@ -549,6 +549,3 @@
     animation: reverse-orbit 25s linear infinite;
   }
 }
-
-/* Trophy Card shimmer animation for rare+ cards */
-@keyframes shimmer {
