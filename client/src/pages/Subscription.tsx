@@ -259,19 +259,25 @@ export default function SubscriptionPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-2 gap-4 text-sm mb-4">
+                  <div className="grid md:grid-cols-3 gap-4 text-sm mb-4">
                     <div>
                       <p className="text-muted-foreground">
-                        {subscription.status === "canceling" ? "Ends On" : "Current Period Ends"}
+                        {subscription.status === "canceling" ? "Ends On" : "Renews On"}
                       </p>
                       <p className="font-semibold" data-testid="text-period-end">
                         {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                       </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Monthly Points Cap</p>
+                      <p className="text-muted-foreground">Days Remaining</p>
+                      <p className="font-semibold" data-testid="text-days-remaining">
+                        {Math.max(0, Math.ceil((new Date(subscription.currentPeriodEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} days
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Monthly Allocation</p>
                       <p className="font-semibold" data-testid="text-monthly-points">
-                        {subscription.tier === "elite" ? "1500" : subscription.tier === "pro" ? "800" : "400"} points
+                        {subscription.tier === "elite" ? "25,000" : subscription.tier === "pro" ? "10,000" : "3,000"} points
                       </p>
                     </div>
                   </div>
@@ -359,7 +365,7 @@ export default function SubscriptionPage() {
                         <p className="text-xs text-muted-foreground">Full Access</p>
                       </div>
                       <div className="bg-background/50 rounded-lg p-4">
-                        <div className="text-2xl font-bold text-primary mb-1">50 Points</div>
+                        <div className="text-2xl font-bold text-primary mb-1">500 Points</div>
                         <p className="text-xs text-muted-foreground">Bonus Starter</p>
                       </div>
                       <div className="bg-background/50 rounded-lg p-4">
@@ -457,7 +463,7 @@ export default function SubscriptionPage() {
               </Card>
             )}
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid md:grid-cols-3 gap-6">
               {tiers.map((tier) => {
                 const TierIcon = tier.icon;
                 const isCurrentTier = subscription?.tier === tier.id;
@@ -467,7 +473,7 @@ export default function SubscriptionPage() {
                 return (
                   <Card
                     key={tier.id}
-                    className={`relative ${
+                    className={`relative flex flex-col ${
                       isElite ? "border-primary/50 bg-primary/5" : ""
                     }`}
                     data-testid={`card-tier-${tier.id}`}
@@ -511,7 +517,7 @@ export default function SubscriptionPage() {
                       </div>
                     </CardHeader>
 
-                    <CardContent>
+                    <CardContent className="flex-1">
                       <ul className="space-y-3">
                         {tier.features.map((feature, idx) => (
                           <li key={idx} className="flex items-start gap-2">
@@ -535,7 +541,7 @@ export default function SubscriptionPage() {
                       </ul>
                     </CardContent>
 
-                    <CardFooter>
+                    <CardFooter className="mt-auto">
                       {isFree ? (
                         <div className="w-full space-y-3">
                           {isAuthenticated && freeTierData && (

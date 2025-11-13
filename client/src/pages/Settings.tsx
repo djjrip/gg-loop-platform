@@ -56,7 +56,6 @@ export default function Settings() {
   const [leagueRegion, setLeagueRegion] = useState("na1");
   const [valorantRiotId, setValorantRiotId] = useState(""); // Format: GameName#TAG
   const [valorantRegion, setValorantRegion] = useState("na");
-  const [valorantVerificationCode, setValorantVerificationCode] = useState("");
 
   const { data: user, isLoading } = useQuery<UserData>({
     queryKey: ['/api/auth/user'],
@@ -217,7 +216,6 @@ export default function Settings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/riot/account/valorant'] });
-      setValorantVerificationCode("");
       toast({
         title: "Valorant account disconnected",
         description: "Your Valorant account has been unlinked.",
@@ -227,64 +225,6 @@ export default function Settings() {
       toast({
         title: "Failed to disconnect",
         description: error.message || "Please try again",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const requestValorantCodeMutation = useMutation({
-    mutationFn: async () => {
-      const [gameName, tagLine] = valorantRiotId.split('#');
-      if (!gameName || !tagLine) {
-        throw new Error("Please enter your Riot ID in the format: GameName#TAG");
-      }
-      return await apiRequest("POST", "/api/riot/request-verification-code", {
-        game: "valorant",
-        gameName,
-        tagLine,
-        region: valorantRegion,
-      });
-    },
-    onSuccess: (data: any) => {
-      setValorantVerificationCode(data.verificationCode);
-      toast({
-        title: "Verification code generated",
-        description: "Copy the code and add it to your Valorant profile.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to generate code",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const verifyValorantMutation = useMutation({
-    mutationFn: async () => {
-      const [gameName, tagLine] = valorantRiotId.split('#');
-      return await apiRequest("POST", "/api/riot/verify-account", {
-        game: "valorant",
-        gameName,
-        tagLine,
-        region: valorantRegion,
-        verificationCode: valorantVerificationCode,
-      });
-    },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/riot/account/valorant'] });
-      setValorantRiotId("");
-      setValorantVerificationCode("");
-      toast({
-        title: "Valorant account verified!",
-        description: `Successfully linked ${data.account.gameName}#${data.account.tagLine}`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Verification failed",
-        description: error.message || "Please ensure the code is in your Valorant profile",
         variant: "destructive",
       });
     },
@@ -575,109 +515,43 @@ export default function Settings() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <p className="font-semibold text-sm mb-2 text-blue-700 dark:text-blue-400">How Valorant Linking Works</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Unlike Discord/Twitch, Riot doesn't support automatic login. To verify you own this account, we'll give you a code to temporarily add to your Valorant Player Title in-game. This takes 2 minutes and you can change it back after verification.
+                <div className="space-y-2">
+                  <Label htmlFor="valorant-riot-id">Riot ID</Label>
+                  <Input
+                    id="valorant-riot-id"
+                    value={valorantRiotId}
+                    onChange={(e) => setValorantRiotId(e.target.value)}
+                    placeholder="TenZ#NA1"
+                    data-testid="input-valorant-riot-id"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Your Riot ID (GameName#TAG). Find it in your Valorant profile.
                   </p>
                 </div>
-                {!valorantVerificationCode ? (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="valorant-riot-id">Riot ID</Label>
-                      <Input
-                        id="valorant-riot-id"
-                        value={valorantRiotId}
-                        onChange={(e) => setValorantRiotId(e.target.value)}
-                        placeholder="TenZ#NA1"
-                        data-testid="input-valorant-riot-id"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Your Riot ID (GameName#TAG). Find it in your Valorant profile.
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="valorant-region">Region</Label>
-                      <Select value={valorantRegion} onValueChange={setValorantRegion}>
-                        <SelectTrigger id="valorant-region" data-testid="select-valorant-region">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {REGIONS.map(region => (
-                            <SelectItem key={region.value} value={region.value}>
-                              {region.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      onClick={() => requestValorantCodeMutation.mutate()}
-                      disabled={requestValorantCodeMutation.isPending || !valorantRiotId.includes('#')}
-                      className="gap-2 w-full"
-                      data-testid="button-request-valorant-code"
-                    >
-                      <Shield className="h-4 w-4" />
-                      {requestValorantCodeMutation.isPending ? "Generating..." : "Generate Verification Code"}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-muted rounded-lg space-y-3">
-                      <p className="font-medium">Step 1: Copy verification code</p>
-                      <div className="flex items-center gap-2">
-                        <code className="flex-1 px-3 py-2 bg-background rounded font-mono text-lg font-bold" data-testid="text-valorant-verification-code">
-                          {valorantVerificationCode}
-                        </code>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            navigator.clipboard.writeText(valorantVerificationCode);
-                            toast({ title: "Code copied!" });
-                          }}
-                          data-testid="button-copy-valorant-code"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                      <p className="font-bold mb-2 text-amber-700 dark:text-amber-400">Step 2: Add to Valorant profile</p>
-                      <ol className="list-decimal list-inside space-y-2 text-sm ml-2">
-                        <li className="font-medium">Open Valorant client</li>
-                        <li className="font-medium">Click on your profile (top right)</li>
-                        <li className="font-medium">Navigate: Profile → Edit Card → Player Title</li>
-                        <li className="font-medium">Paste the verification code above in the "Player Title" field</li>
-                        <li className="font-medium">Save and come back here to click "Verify Now"</li>
-                      </ol>
-                      <p className="text-xs mt-3 text-muted-foreground italic">
-                        Note: You can change your player title back after verification is complete.
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => verifyValorantMutation.mutate()}
-                        disabled={verifyValorantMutation.isPending}
-                        className="gap-2 flex-1"
-                        data-testid="button-verify-valorant"
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        {verifyValorantMutation.isPending ? "Verifying..." : "Verify Now"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setValorantVerificationCode("");
-                          setValorantRiotId("");
-                        }}
-                        data-testid="button-cancel-valorant"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="valorant-region">Region</Label>
+                  <Select value={valorantRegion} onValueChange={setValorantRegion}>
+                    <SelectTrigger id="valorant-region" data-testid="select-valorant-region">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {REGIONS.map(region => (
+                        <SelectItem key={region.value} value={region.value}>
+                          {region.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={() => linkValorantMutation.mutate()}
+                  disabled={linkValorantMutation.isPending || !valorantRiotId.includes('#')}
+                  className="gap-2 w-full"
+                  data-testid="button-link-valorant"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {linkValorantMutation.isPending ? "Linking..." : "Link Account"}
+                </Button>
               </div>
             )}
           </CardContent>
