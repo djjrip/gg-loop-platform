@@ -401,8 +401,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { gameId } = req.params;
       const { riotId, region = 'na' } = req.body;
 
+      // Validate that this is actually Valorant by querying the game
+      const game = await storage.getGame(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ 
+          message: 'Game not found' 
+        });
+      }
+
       // Only allow provisional linking for Valorant
-      if (!gameId.includes('valorant')) {
+      if (!game.title.toLowerCase().includes('valorant')) {
         return res.status(400).json({ 
           message: 'Provisional linking is only available for Valorant' 
         });
@@ -2521,10 +2530,17 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
       const { templateId } = parsed.data;
       const userId = req.dbUser.id;
 
-      const idempotencyKey = `tiktok-${userId}-${templateId}`;
-      const existingReward = await storage.checkEventProcessed(idempotencyKey);
+      // Check if user already earned points for this template
+      const existingTransaction = await db.select()
+        .from(require('@shared/schema').pointTransactions)
+        .where(and(
+          eq(require('@shared/schema').pointTransactions.userId, userId),
+          eq(require('@shared/schema').pointTransactions.sourceType, 'tiktok_template'),
+          eq(require('@shared/schema').pointTransactions.sourceId, templateId)
+        ))
+        .limit(1);
       
-      if (existingReward) {
+      if (existingTransaction.length > 0) {
         return res.json({ 
           pointsAwarded: 0, 
           message: "You've already earned points for this template" 
@@ -2540,8 +2556,6 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
         "tiktok_template",
         `Created TikTok content using template #${templateId}`
       );
-
-      await storage.markEventProcessed(idempotencyKey);
 
       res.json({ 
         pointsAwarded: POINTS_PER_TEMPLATE,
