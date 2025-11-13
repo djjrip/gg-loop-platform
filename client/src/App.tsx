@@ -38,6 +38,7 @@ import QuickStart from "@/pages/QuickStart";
 import Stats from "@/pages/Stats";
 import FreeTier from "@/pages/FreeTier";
 import Shop from "@/pages/Shop";
+import About from "@/pages/About";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -88,6 +89,7 @@ function Router() {
       <Route path="/stats" component={Stats} />
       <Route path="/free-tier" component={FreeTier} />
       <Route path="/shop" component={Shop} />
+      <Route path="/about" component={About} />
       <Route component={NotFound} />
     </Switch>
   );
