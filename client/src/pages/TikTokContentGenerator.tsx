@@ -3,14 +3,18 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Copy, Check, Sparkles, TrendingUp, Zap, Clock } from "lucide-react";
+import { Copy, Check, Sparkles, TrendingUp, Zap, Clock, Coins } from "lucide-react";
 import { tiktokTemplates, contentTips, trendingSounds, type TikTokTemplate } from "@/lib/tiktokTemplates";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import Header from "@/components/Header";
 
 export default function TikTokContentGenerator() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
 
   const copyToClipboard = async (template: TikTokTemplate) => {
     const fullScript = `${template.hook}\n\n${template.body}\n\n${template.cta}\n\n${template.hashtags.join(" ")}`;
@@ -18,10 +22,39 @@ export default function TikTokContentGenerator() {
     try {
       await navigator.clipboard.writeText(fullScript);
       setCopiedId(template.id);
-      toast({
-        title: "Copied!",
-        description: "Script copied to clipboard",
-      });
+      
+      if (isAuthenticated) {
+        try {
+          const response = await apiRequest("POST", "/api/tiktok/track-copy", {
+            templateId: template.id
+          });
+          const data = await response.json();
+          
+          if (data.pointsAwarded) {
+            toast({
+              title: "Script Copied! 🎉",
+              description: `+${data.pointsAwarded} points earned for creating content! Post it on TikTok to help grow GG Loop.`,
+            });
+            queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+          } else {
+            toast({
+              title: "Copied!",
+              description: data.message || "Script copied to clipboard",
+            });
+          }
+        } catch (error: any) {
+          toast({
+            title: "Copied!",
+            description: "Script copied to clipboard",
+          });
+        }
+      } else {
+        toast({
+          title: "Copied!",
+          description: "Log in to earn points for creating TikTok content!",
+        });
+      }
+      
       setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
       toast({

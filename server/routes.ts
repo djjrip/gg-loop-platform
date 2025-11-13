@@ -2507,6 +2507,47 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
     }
   });
 
+  app.post('/api/tiktok/track-copy', getUserMiddleware, async (req: any, res) => {
+    try {
+      const { templateId } = req.body;
+      const userId = req.dbUser.id;
+
+      if (!templateId) {
+        return res.status(400).json({ message: "Missing template ID" });
+      }
+
+      const idempotencyKey = `tiktok-${userId}-${templateId}`;
+      const existingReward = await storage.checkEventProcessed(idempotencyKey);
+      
+      if (existingReward) {
+        return res.json({ 
+          pointsAwarded: 0, 
+          message: "You've already earned points for this template" 
+        });
+      }
+
+      const POINTS_PER_TEMPLATE = 50;
+      await pointsEngine.awardPoints(
+        userId,
+        POINTS_PER_TEMPLATE,
+        "CONTENT_CREATION",
+        templateId,
+        "tiktok_template",
+        `Created TikTok content using template #${templateId}`
+      );
+
+      await storage.markEventProcessed(idempotencyKey);
+
+      res.json({ 
+        pointsAwarded: POINTS_PER_TEMPLATE,
+        message: `+${POINTS_PER_TEMPLATE} points earned! Post your content to help grow GG Loop.`
+      });
+    } catch (error: any) {
+      console.error("Error tracking TikTok copy:", error);
+      res.status(500).json({ message: error.message || "Failed to track content creation" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
