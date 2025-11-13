@@ -20,66 +20,41 @@ const rarityConfig: Record<RarityTier, {
   color: string; 
   icon: typeof Trophy; 
   label: string; 
-  gradient: string;
-  borderWidth: string;
-  texturePattern: string;
-  padding: string;
-  iconSize: string;
-  titleSize: string;
-  titleFont: string;
-  iconContainer: string;
+  accentColor: string;
+  bgGradient: string;
+  iconBg: string;
 }> = {
   common: {
-    color: "text-muted-foreground",
+    color: "text-zinc-400",
     icon: Trophy,
-    label: "Common",
-    gradient: "from-muted/20 to-transparent",
-    borderWidth: "border",
-    texturePattern: "",
-    padding: "p-4",
-    iconSize: "h-6 w-6",
-    titleSize: "text-base",
-    titleFont: "font-semibold",
-    iconContainer: "rounded-md p-2 bg-muted/30",
+    label: "COMMON",
+    accentColor: "bg-zinc-600",
+    bgGradient: "from-zinc-900/40 to-zinc-800/20",
+    iconBg: "bg-zinc-800/50",
   },
   rare: {
     color: "text-[#5F6D4E]",
     icon: Star,
-    label: "Rare",
-    gradient: "from-[#5F6D4E]/30 via-[#5F6D4E]/15 to-transparent",
-    borderWidth: "border-2",
-    texturePattern: "bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImxpbmVuIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIiB3aWR0aD0iNjAiIGhlaWdodD0iNjAiPjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0wIDAgTDYwIDYwIE0tMzAgMzAgTDMwIC0zMCBNMzAgOTAgTDkwIDMwIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjAzIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2xpbmVuKSIvPjwvc3ZnPg==')] opacity-40",
-    padding: "p-5",
-    iconSize: "h-7 w-7",
-    titleSize: "text-lg",
-    titleFont: "font-bold",
-    iconContainer: "rounded-full p-3 bg-[#5F6D4E]/20 border border-[#5F6D4E]/40",
+    label: "RARE",
+    accentColor: "bg-[#5F6D4E]",
+    bgGradient: "from-[#5F6D4E]/30 to-[#4A5A3D]/10",
+    iconBg: "bg-[#5F6D4E]/20",
   },
   epic: {
     color: "text-[#B8724D]",
     icon: Sparkles,
-    label: "Epic",
-    gradient: "from-[#B8724D]/40 via-[#B8724D]/25 to-[#B8724D]/5",
-    borderWidth: "border-[3px]",
-    texturePattern: "bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImRpYWdvbmFsIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0wIDIwIEw0MCAyMCBNMjAgMCBMMjAgNDAiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSIwLjgiIG9wYWNpdHk9IjAuMDUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZGlhZ29uYWwpIi8+PC9zdmc+')]",
-    padding: "p-6",
-    iconSize: "h-8 w-8",
-    titleSize: "text-xl",
-    titleFont: "font-bold",
-    iconContainer: "rounded-lg p-4 bg-gradient-to-br from-[#B8724D]/30 to-[#B8724D]/10 border-2 border-[#B8724D]/50 shadow-inner",
+    label: "EPIC",
+    accentColor: "bg-gradient-to-r from-[#B8724D] to-[#D4885F]",
+    bgGradient: "from-[#B8724D]/40 via-[#C88A5E]/20 to-[#8B5A3C]/10",
+    iconBg: "bg-gradient-to-br from-[#B8724D]/30 to-[#8B5A3C]/20",
   },
   legendary: {
     color: "text-[#D4A373]",
     icon: Crown,
-    label: "Legendary",
-    gradient: "from-[#D4A373]/50 via-[#C9A35E]/30 to-[#B8724D]/10",
-    borderWidth: "border-[4px]",
-    texturePattern: "bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9Im1ldGFsIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiPjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjEwIiBjeT0iMTAiIHI9IjAuOCIgZmlsbD0iIzAwMDAwMCIgb3BhY2l0eT0iMC4wNiIvPjxjaXJjbGUgY3g9IjUiIGN5PSI1IiByPSIwLjYiIGZpbGw9IiMwMDAwMDAiIG9wYWNpdHk9IjAuMDQiLz48Y2lyY2xlIGN4PSIxNSIgY3k9IjE1IiByPSIwLjYiIGZpbGw9IiMwMDAwMDAiIG9wYWNpdHk9IjAuMDQiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjbWV0YWwpIi8+PC9zdmc+')]",
-    padding: "p-8",
-    iconSize: "h-10 w-10",
-    titleSize: "text-2xl",
-    titleFont: "font-black tracking-tight",
-    iconContainer: "rounded-full p-5 bg-gradient-to-br from-[#D4A373]/40 to-[#B8724D]/20 border-[3px] border-[#D4A373]/60 shadow-lg ring-2 ring-[#D4A373]/20 ring-offset-2 ring-offset-background",
+    label: "LEGENDARY",
+    accentColor: "bg-gradient-to-r from-[#FFD700] via-[#D4A373] to-[#B8724D]",
+    bgGradient: "from-[#FFD700]/25 via-[#D4A373]/20 to-[#B8724D]/15",
+    iconBg: "bg-gradient-to-br from-[#FFD700]/30 via-[#D4A373]/25 to-[#B8724D]/20",
   },
 };
 
@@ -96,308 +71,240 @@ export default function TrophyCard({
   const config = rarityConfig[rarity];
   const IconComponent = config.icon;
   
-  const borderColor = rarity === "common" ? "border-muted/50" :
-                     rarity === "rare" ? "border-[#5F6D4E]/50" :
-                     rarity === "epic" ? "border-[#B8724D]/60" :
-                     "border-[#D4A373]/70";
+  // COMMON: Small, compact card
+  if (rarity === "common") {
+    return (
+      <Card 
+        className={cn(
+          "relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5",
+          "border border-zinc-700/50 hover:border-zinc-600",
+          className
+        )}
+        data-testid={`trophy-card-${title.toLowerCase().replace(/\s+/g, '-')}`}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-900/30 to-zinc-800/10" />
+        <div className="relative p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded bg-zinc-800/50">
+                <IconComponent className="h-4 w-4 text-zinc-400" />
+              </div>
+              <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                {config.label}
+              </span>
+            </div>
+            {serialNumber && (
+              <span className="text-xs text-zinc-600 font-mono" data-testid="text-serial">{serialNumber}</span>
+            )}
+          </div>
+          <h3 className="text-sm font-semibold leading-tight" data-testid="text-trophy-title">{title}</h3>
+          <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-800">
+            <span className="text-zinc-500" data-testid="text-trophy-game">{gameName}</span>
+            <span className="font-bold font-mono text-zinc-400" data-testid="text-trophy-points">+{pointsAwarded}</span>
+          </div>
+        </div>
+      </Card>
+    );
+  }
   
-  const hoverBorder = rarity === "common" ? "hover:border-muted" :
-                      rarity === "rare" ? "hover:border-[#5F6D4E]/80" :
-                      rarity === "epic" ? "hover:border-[#B8724D]/90" :
-                      "hover:border-[#D4A373]";
+  // RARE: Medium card with accent bar and split layout
+  if (rarity === "rare") {
+    return (
+      <Card 
+        className={cn(
+          "relative overflow-hidden transition-all duration-250 hover:-translate-y-1",
+          "border-2 border-[#5F6D4E]/50 hover:border-[#5F6D4E]/80",
+          className
+        )}
+        data-testid={`trophy-card-${title.toLowerCase().replace(/\s+/g, '-')}`}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-[#5F6D4E]/25 to-[#4A5A3D]/5" />
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#5F6D4E]" />
+        <div className="relative p-5 space-y-3.5">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-lg bg-[#5F6D4E]/20 border border-[#5F6D4E]/40">
+                <IconComponent className="h-6 w-6 text-[#5F6D4E]" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-[#5F6D4E] uppercase tracking-widest mb-1" data-testid="badge-rarity">
+                  {config.label}
+                </div>
+                <h3 className="text-base font-bold leading-tight" data-testid="text-trophy-title">{title}</h3>
+              </div>
+            </div>
+            {serialNumber && (
+              <span className="text-xs text-muted-foreground font-mono px-2 py-1 bg-[#5F6D4E]/10 rounded" data-testid="text-serial">
+                {serialNumber}
+              </span>
+            )}
+          </div>
+          {description && (
+            <p className="text-sm text-muted-foreground leading-relaxed" data-testid="text-trophy-description">{description}</p>
+          )}
+          <div className="flex items-center justify-between pt-2 border-t border-[#5F6D4E]/20">
+            <span className="text-sm font-medium" data-testid="text-trophy-game">{gameName}</span>
+            <span className="text-xl font-bold font-mono text-[#5F6D4E]" data-testid="text-trophy-points">+{pointsAwarded}</span>
+          </div>
+          <div className="text-xs text-muted-foreground" data-testid="text-trophy-date">
+            {new Date(achievedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </div>
+        </div>
+      </Card>
+    );
+  }
   
+  // EPIC: Large showcase card with prominent icon
+  if (rarity === "epic") {
+    return (
+      <Card 
+        className={cn(
+          "relative overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:scale-[1.01]",
+          "border-[3px] border-[#B8724D]/60 hover:border-[#B8724D]/90",
+          className
+        )}
+        data-testid={`trophy-card-${title.toLowerCase().replace(/\s+/g, '-')}`}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-[#B8724D]/35 via-[#C88A5E]/15 to-[#8B5A3C]/5" />
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#B8724D] to-[#D4885F]" />
+        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#D4885F] to-[#B8724D]" />
+        
+        <div className="relative p-6 space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-[#B8724D]/20 blur-xl rounded-full" />
+              <div className="relative p-5 rounded-xl bg-gradient-to-br from-[#B8724D]/30 to-[#8B5A3C]/20 border-2 border-[#B8724D]/50">
+                <IconComponent className="h-10 w-10 text-[#B8724D]" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs font-black text-[#B8724D] uppercase tracking-[0.2em]" data-testid="badge-rarity">
+                  {config.label}
+                </div>
+                {serialNumber && (
+                  <span className="text-xs text-muted-foreground font-mono font-semibold px-2.5 py-1 bg-[#B8724D]/15 rounded border border-[#B8724D]/30" data-testid="text-serial">
+                    {serialNumber}
+                  </span>
+                )}
+              </div>
+              <h3 className="text-xl font-bold leading-tight mb-1" data-testid="text-trophy-title">{title}</h3>
+              {description && (
+                <p className="text-sm text-muted-foreground leading-relaxed" data-testid="text-trophy-description">{description}</p>
+              )}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 pt-3 border-t-2 border-[#B8724D]/25">
+            <div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Game</div>
+              <div className="text-sm font-bold" data-testid="text-trophy-game">{gameName}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Points</div>
+              <div className="text-2xl font-black font-mono text-[#B8724D]" data-testid="text-trophy-points">+{pointsAwarded}</div>
+            </div>
+          </div>
+          
+          <div className="text-xs text-muted-foreground pt-2 border-t border-[#B8724D]/15" data-testid="text-trophy-date">
+            Unlocked {new Date(achievedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </div>
+        </div>
+      </Card>
+    );
+  }
+  
+  // LEGENDARY: Championship banner - FULL GLORY
   return (
     <Card 
       className={cn(
-        "group relative overflow-hidden transition-all duration-300",
-        "hover:-translate-y-1",
-        config.borderWidth,
-        borderColor,
-        hoverBorder,
+        "group relative overflow-hidden transition-all duration-400 hover:-translate-y-2 hover:scale-[1.02]",
+        "border-[4px] border-[#D4A373]/70 hover:border-[#FFD700]/90 shadow-2xl",
         className
       )}
       data-testid={`trophy-card-${title.toLowerCase().replace(/\s+/g, '-')}`}
     >
-      <div className={cn("absolute inset-0 bg-gradient-to-br", config.gradient)} />
+      {/* Glowing golden gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/20 via-[#D4A373]/15 to-[#B8724D]/10" />
       
-      {config.texturePattern && (
-        <div className={cn("absolute inset-0", config.texturePattern)} />
-      )}
+      {/* Top and bottom accent bars - CHAMPIONSHIP ENERGY */}
+      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#FFD700] via-[#D4A373] to-[#FFD700]" />
+      <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-[#FFD700] via-[#D4A373] to-[#FFD700]" />
       
-      {rarity === "legendary" && (
-        <div 
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-[#D4A373]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-          style={{
-            backgroundSize: '200% 100%',
-            animation: 'shimmer-slow 4s ease-in-out infinite',
-          }}
-        />
-      )}
+      {/* Corner accents */}
+      <div className="absolute top-0 left-0 w-16 h-16 bg-[#FFD700]/20 blur-2xl" />
+      <div className="absolute top-0 right-0 w-16 h-16 bg-[#FFD700]/20 blur-2xl" />
+      <div className="absolute bottom-0 left-0 w-20 h-20 bg-[#D4A373]/20 blur-2xl" />
+      <div className="absolute bottom-0 right-0 w-20 h-20 bg-[#D4A373]/20 blur-2xl" />
       
-      {rarity === "rare" && (
-        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-[#5F6D4E]/20" />
-      )}
+      {/* Subtle shimmer effect on hover */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-gradient-to-r from-transparent via-[#FFD700]/10 to-transparent bg-[length:200%_100%] animate-shimmer-slow" />
       
-      {rarity === "epic" && (
-        <>
-          <div className={cn(
-            "absolute inset-0 m-2 rounded-md",
-            "border border-[#B8724D]/30 pointer-events-none"
-          )} />
-          <div className="absolute top-0 left-0 w-16 h-16 bg-[#B8724D]/10 blur-2xl" />
-          <div className="absolute bottom-0 right-0 w-20 h-20 bg-[#B8724D]/10 blur-2xl" />
-        </>
-      )}
-      
-      <div className={cn("relative", config.padding)}>
-        {rarity === "legendary" ? (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className={cn(
-                "flex items-center justify-center",
-                config.iconContainer
-              )}>
-                <IconComponent className={cn(config.iconSize, config.color)} />
-              </div>
-              <Badge 
-                variant="secondary" 
-                className={cn(
-                  "uppercase text-xs px-3 py-1.5 font-bold tracking-wider",
-                  config.color,
-                  "bg-background/60 backdrop-blur-sm border-2",
-                  "border-[#D4A373]/50"
-                )}
-                data-testid="badge-rarity"
-              >
-                {config.label}
-              </Badge>
-            </div>
-
-            <div className="space-y-3">
-              <h3 className={cn(
-                config.titleSize,
-                config.titleFont,
-                "uppercase leading-none font-mono",
-                config.color
-              )} data-testid="text-trophy-title">
-                {title}
-              </h3>
-              {description && (
-                <p className="text-sm text-foreground/70 leading-relaxed italic" data-testid="text-trophy-description">
-                  {description}
-                </p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t-2 border-[#D4A373]/40">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Game</p>
-                <p className="text-sm font-bold" data-testid="text-trophy-game">{gameName}</p>
-              </div>
-              
-              <div className="space-y-1 text-center">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Unlocked</p>
-                <p className="text-xs font-medium" data-testid="text-trophy-date">
-                  {new Date(achievedAt).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric',
-                    year: '2-digit'
-                  })}
-                </p>
-              </div>
-              
-              <div className="space-y-1 text-right">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Points</p>
-                <p className={cn(
-                  "text-3xl font-black font-mono",
-                  config.color
-                )} data-testid="text-trophy-points">
-                  +{pointsAwarded}
-                </p>
-              </div>
-            </div>
-            
-            {serialNumber && (
-              <p className="text-xs font-mono text-muted-foreground text-center pt-2 border-t border-[#D4A373]/20" data-testid="text-serial">
-                {serialNumber}
-              </p>
-            )}
-          </div>
-        ) : rarity === "epic" ? (
-          <div className="space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className={cn(
-                "flex items-center justify-center",
-                config.iconContainer
-              )}>
-                <IconComponent className={cn(config.iconSize, config.color)} />
-              </div>
-              
-              <div className="flex flex-col items-end gap-1.5">
-                <Badge 
-                  variant="secondary" 
-                  className={cn(
-                    "font-bold uppercase text-xs px-3 py-1.5",
-                    config.color,
-                    "bg-background/70 backdrop-blur-sm border-2 border-[#B8724D]/40"
-                  )}
-                  data-testid="badge-rarity"
-                >
-                  {config.label}
-                </Badge>
-                {serialNumber && (
-                  <span className="text-xs font-mono text-muted-foreground font-semibold px-2 py-0.5 bg-background/50 rounded" data-testid="text-serial">
-                    {serialNumber}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className={cn(config.titleSize, config.titleFont, "leading-tight")} data-testid="text-trophy-title">
-                {title}
-              </h3>
-              {description && (
-                <p className="text-sm text-muted-foreground leading-relaxed" data-testid="text-trophy-description">
-                  {description}
-                </p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t-2 border-[#B8724D]/30">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Game</p>
-                <p className="text-sm font-bold" data-testid="text-trophy-game">{gameName}</p>
-              </div>
-              
-              <div className="space-y-1 text-right">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Points</p>
-                <p className={cn(
-                  "text-2xl font-black font-mono",
-                  config.color
-                )} data-testid="text-trophy-points">
-                  +{pointsAwarded}
-                </p>
-              </div>
-            </div>
-            
-            <div className="text-xs text-muted-foreground pt-2 border-t border-[#B8724D]/20" data-testid="text-trophy-date">
-              Unlocked {new Date(achievedAt).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-              })}
+      <div className="relative p-8 space-y-6">
+        {/* Top section: Icon and badge */}
+        <div className="flex items-center justify-between">
+          {/* MASSIVE championship icon */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-[#FFD700]/30 blur-2xl rounded-full" />
+            <div className="relative p-6 rounded-full bg-gradient-to-br from-[#FFD700]/30 via-[#D4A373]/25 to-[#B8724D]/20 border-[3px] border-[#FFD700]/60 shadow-xl ring-4 ring-[#D4A373]/20 ring-offset-2 ring-offset-background">
+              <IconComponent className="h-14 w-14 text-[#FFD700]" />
             </div>
           </div>
-        ) : rarity === "rare" ? (
-          <div className="space-y-3.5">
-            <div className="flex items-start justify-between gap-3">
-              <div className={cn(
-                "flex items-center justify-center",
-                config.iconContainer
-              )}>
-                <IconComponent className={cn(config.iconSize, config.color)} />
-              </div>
-              
-              <div className="flex flex-col items-end gap-1.5">
-                <Badge 
-                  variant="secondary" 
-                  className={cn(
-                    "font-bold uppercase text-xs px-3 py-1 rounded-full",
-                    config.color,
-                    "bg-background/60 backdrop-blur-sm"
-                  )}
-                  data-testid="badge-rarity"
-                >
-                  {config.label}
-                </Badge>
-                {serialNumber && (
-                  <span className="text-xs font-mono text-muted-foreground px-2 py-0.5 bg-[#5F6D4E]/10 rounded-full" data-testid="text-serial">
-                    {serialNumber}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className={cn(config.titleSize, config.titleFont, "leading-tight")} data-testid="text-trophy-title">
-                {title}
-              </h3>
-              {description && (
-                <p className="text-sm text-muted-foreground leading-relaxed" data-testid="text-trophy-description">
-                  {description}
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-[#5F6D4E]/30">
-              <div className="space-y-0.5">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Game</p>
-                <p className="text-sm font-bold" data-testid="text-trophy-game">{gameName}</p>
-              </div>
-              
-              <div className="space-y-0.5 text-right">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Points</p>
-                <p className={cn(
-                  "text-xl font-bold font-mono",
-                  config.color
-                )} data-testid="text-trophy-points">
-                  +{pointsAwarded}
-                </p>
-              </div>
-            </div>
-
-            <div className="text-xs text-muted-foreground" data-testid="text-trophy-date">
+          
+          {/* Legendary badge */}
+          <Badge 
+            variant="secondary" 
+            className="uppercase text-sm px-4 py-2 font-black tracking-[0.25em] text-[#FFD700] bg-gradient-to-r from-[#FFD700]/20 to-[#D4A373]/20 backdrop-blur-sm border-2 border-[#FFD700]/50"
+            data-testid="badge-rarity"
+          >
+            {config.label}
+          </Badge>
+        </div>
+        
+        {/* Title section */}
+        <div className="space-y-3">
+          <h3 className="text-3xl font-black uppercase leading-none tracking-tight font-mono text-[#FFD700]" data-testid="text-trophy-title">
+            {title}
+          </h3>
+          {description && (
+            <p className="text-base text-foreground/80 leading-relaxed italic font-medium" data-testid="text-trophy-description">
+              {description}
+            </p>
+          )}
+        </div>
+        
+        {/* Stats grid */}
+        <div className="grid grid-cols-3 gap-6 pt-6 border-t-2 border-[#D4A373]/40">
+          <div className="space-y-2">
+            <div className="text-xs text-muted-foreground uppercase tracking-[0.15em] font-bold">Game</div>
+            <div className="text-base font-bold" data-testid="text-trophy-game">{gameName}</div>
+          </div>
+          
+          <div className="space-y-2 text-center">
+            <div className="text-xs text-muted-foreground uppercase tracking-[0.15em] font-bold">Unlocked</div>
+            <div className="text-sm font-semibold" data-testid="text-trophy-date">
               {new Date(achievedAt).toLocaleDateString('en-US', { 
                 month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
+                day: 'numeric',
+                year: '2-digit'
               })}
             </div>
           </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex items-start justify-between gap-2">
-              <div className={cn(
-                "flex items-center justify-center",
-                config.iconContainer
-              )}>
-                <IconComponent className={cn(config.iconSize, config.color)} />
-              </div>
-              
-              <Badge 
-                variant="secondary" 
-                className="font-semibold uppercase text-xs px-2 py-0.5"
-                data-testid="badge-rarity"
-              >
-                {config.label}
-              </Badge>
+          
+          <div className="space-y-2 text-right">
+            <div className="text-xs text-muted-foreground uppercase tracking-[0.15em] font-bold">Points</div>
+            <div className="text-4xl font-black font-mono text-[#FFD700]" data-testid="text-trophy-points">
+              +{pointsAwarded}
             </div>
-
-            <div className="space-y-1.5">
-              <h3 className={cn(config.titleSize, config.titleFont, "leading-tight")} data-testid="text-trophy-title">
-                {title}
-              </h3>
-              {description && (
-                <p className="text-xs text-muted-foreground leading-relaxed" data-testid="text-trophy-description">
-                  {description}
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between text-xs pt-2 border-t border-border/40">
-              <span className="text-muted-foreground" data-testid="text-trophy-game">{gameName}</span>
-              <span className={cn("font-bold font-mono", config.color)} data-testid="text-trophy-points">
-                +{pointsAwarded}
-              </span>
-            </div>
-            
-            <div className="text-xs text-muted-foreground/70" data-testid="text-trophy-date">
-              {new Date(achievedAt).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric'
-              })}
-            </div>
+          </div>
+        </div>
+        
+        {/* Serial number at bottom */}
+        {serialNumber && (
+          <div className="pt-4 border-t border-[#D4A373]/25 text-center">
+            <span className="text-xs font-mono text-muted-foreground font-semibold tracking-wider" data-testid="text-serial">
+              {serialNumber}
+            </span>
           </div>
         )}
       </div>
