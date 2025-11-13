@@ -1478,22 +1478,67 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
     }
   });
 
-  app.post('/api/subscription/cancel', getUserMiddleware, async (req: any, res) => {
+  app.post('/api/paypal/subscription-approved', getUserMiddleware, async (req: any, res) => {
     try {
-      if (!stripe) {
-        return res.status(503).json({ message: "Stripe not configured" });
+      const { subscriptionId, tier } = req.body;
+      const userId = req.dbUser.id;
+
+      if (!subscriptionId || !tier) {
+        return res.status(400).json({ message: "Missing subscription ID or tier" });
       }
 
+      const tierLower = tier.toLowerCase();
+
+      const currentDate = new Date();
+      const nextBillingDate = new Date(currentDate);
+      nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+
+      const existingSubscription = await storage.getSubscription(userId);
+      
+      if (existingSubscription) {
+        await storage.updateSubscription(existingSubscription.id, {
+          tier: tierLower,
+          status: "active",
+          stripeSubscriptionId: subscriptionId,
+          currentPeriodEnd: nextBillingDate,
+        });
+      } else {
+        await storage.createSubscription({
+          userId,
+          tier: tierLower,
+          status: "active",
+          stripeSubscriptionId: subscriptionId,
+          currentPeriodStart: currentDate,
+          currentPeriodEnd: nextBillingDate,
+        });
+      }
+
+      await pointsEngine.awardMonthlySubscriptionPoints(userId, tierLower, subscriptionId);
+
+      res.json({ 
+        message: "Subscription activated successfully",
+        tier: tierLower
+      });
+    } catch (error: any) {
+      console.error("Error processing PayPal subscription:", error);
+      res.status(500).json({ message: error.message || "Failed to process subscription" });
+    }
+  });
+
+  app.post('/api/subscription/cancel', getUserMiddleware, async (req: any, res) => {
+    try {
       const userId = req.dbUser.id;
       const subscription = await storage.getSubscription(userId);
       
-      if (!subscription || !subscription.stripeSubscriptionId) {
+      if (!subscription) {
         return res.status(404).json({ message: "No active subscription found" });
       }
 
-      await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
-        cancel_at_period_end: true
-      });
+      if (subscription.stripeSubscriptionId && stripe) {
+        await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+          cancel_at_period_end: true
+        });
+      }
 
       await storage.updateSubscription(subscription.id, {
         status: "canceling"
