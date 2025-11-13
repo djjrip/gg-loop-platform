@@ -108,6 +108,14 @@ export default function Header() {
               <Gift className="h-3.5 w-3.5 text-primary" />
               Shop
             </Link>
+            <Link 
+              href="/about" 
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+              data-testid="link-about"
+            >
+              <Trophy className="h-3.5 w-3.5 text-primary" />
+              About
+            </Link>
           </nav>
         </div>
 
@@ -259,6 +267,24 @@ export default function Header() {
               <Sparkles className="h-3.5 w-3.5 text-primary" />
               TikTok Content
             </Link>
+            <Link 
+              href="/about" 
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+              data-testid="link-about-mobile"
+            >
+              <Trophy className="h-3.5 w-3.5 text-primary" />
+              About
+            </Link>
+            {isAuthenticated && user && user.isFounder && (
+              <Link 
+                href="/launch-dashboard" 
+                className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+                data-testid="link-launch-dashboard-mobile"
+              >
+                <Rocket className="h-3.5 w-3.5 text-primary" />
+                Launch
+              </Link>
+            )}
             {isAuthenticated && user ? (
               <>
                 <div className="border-t my-2" />
