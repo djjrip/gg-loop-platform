@@ -3,10 +3,12 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 // @ts-ignore - no type definitions available for passport-twitch-new
 import { Strategy as TwitchStrategy } from "passport-twitch-new";
 import { Strategy as DiscordStrategy } from "passport-discord";
+import { Strategy as OAuth2Strategy } from "passport-oauth2";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import createMemoryStore from "memorystore";
 import { storage } from "./storage";
+import axios from "axios";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
@@ -28,12 +30,15 @@ export function getSession() {
 }
 
 interface AuthUser {
-  provider: 'google' | 'twitch' | 'discord';
+  provider: 'google' | 'twitch' | 'discord' | 'riot';
   providerId: string;
-  oidcSub: string; // Format: "google:12345", "twitch:67890", or "discord:abc123"
+  oidcSub: string; // Format: "google:12345", "twitch:67890", "discord:abc123", or "riot:puuid123"
   email: string;
   displayName: string;
   profileImage?: string;
+  riotPuuid?: string; // For Riot OAuth - the unique player ID
+  riotGameName?: string; // For Riot OAuth - the in-game name
+  riotTagLine?: string; // For Riot OAuth - the tag line (#NA1, etc)
 }
 
 export async function setupAuth(app: Express) {
@@ -168,6 +173,69 @@ export async function setupAuth(app: Express) {
     }));
   }
 
+  // Riot OAuth Strategy (RSO - Riot Sign-On)
+  if (process.env.RIOT_CLIENT_ID && process.env.RIOT_CLIENT_SECRET) {
+    passport.use('riot', new OAuth2Strategy({
+      authorizationURL: 'https://auth.riotgames.com/authorize',
+      tokenURL: 'https://auth.riotgames.com/token',
+      clientID: process.env.RIOT_CLIENT_ID,
+      clientSecret: process.env.RIOT_CLIENT_SECRET,
+      callbackURL: `${baseUrl}/api/auth/riot/callback`,
+      scope: ['openid'], // openid for basic account info
+      state: true, // Enable CSRF protection
+      customHeaders: {
+        'Authorization': 'Basic ' + Buffer.from(
+          `${process.env.RIOT_CLIENT_ID}:${process.env.RIOT_CLIENT_SECRET}`
+        ).toString('base64')
+      }
+    }, async (accessToken: string, refreshToken: string, params: any, profile: any, done: any) => {
+      try {
+        // Fetch user account info from Riot API
+        // Use americas routing for account API (works for all regions)
+        const accountResponse = await axios.get(
+          'https://americas.api.riotgames.com/riot/account/v1/accounts/me',
+          {
+            headers: { 
+              'Authorization': `Bearer ${accessToken}`,
+              'X-Riot-Token': process.env.RIOT_API_KEY // Also include API key
+            }
+          }
+        );
+
+        const riotAccount = accountResponse.data;
+        const oidcSub = `riot:${riotAccount.puuid}`;
+        
+        // Create email from Riot account (Riot OAuth doesn't provide email directly)
+        // Format: gameName-tagLine@riot.gg (virtual email for our system)
+        const virtualEmail = `${riotAccount.gameName.toLowerCase()}-${riotAccount.tagLine.toLowerCase()}@riot.gg`;
+
+        const authUser: AuthUser = {
+          provider: 'riot',
+          providerId: riotAccount.puuid,
+          oidcSub,
+          email: virtualEmail,
+          displayName: `${riotAccount.gameName}#${riotAccount.tagLine}`,
+          riotPuuid: riotAccount.puuid,
+          riotGameName: riotAccount.gameName,
+          riotTagLine: riotAccount.tagLine,
+        };
+
+        await storage.upsertUser({
+          oidcSub,
+          email: authUser.email,
+          firstName: riotAccount.gameName,
+          lastName: `#${riotAccount.tagLine}`,
+          profileImageUrl: undefined, // Riot doesn't provide avatar in account API
+        });
+
+        done(null, authUser);
+      } catch (error) {
+        console.error('[Riot OAuth] Error fetching account:', error);
+        done(error as Error);
+      }
+    }));
+  }
+
   // Google OAuth routes
   app.get("/api/auth/google",
     passport.authenticate("google", { scope: ["profile", "email"] })
@@ -281,6 +349,59 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/auth/discord/callback",
     passport.authenticate("discord", { failureRedirect: "/" }),
+    async (req, res) => {
+      // Regenerate session for security
+      const user = req.user;
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error('Session regeneration error:', err);
+          return res.redirect("/");
+        }
+        req.login(user!, async (err) => {
+          if (err) {
+            console.error('Login error:', err);
+            return res.redirect("/");
+          }
+          
+          // Update login streak and award GG Coins
+          try {
+            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
+            if (dbUser) {
+              const { updateLoginStreak } = await import('./lib/freeTier');
+              const streakResult = await updateLoginStreak(dbUser.id);
+              
+              // Store notification in session for frontend to display
+              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+                req.session.loginNotification = {
+                  streak: streakResult.currentStreak,
+                  coinsAwarded: streakResult.coinsAwarded,
+                  badgeUnlocked: streakResult.badgeUnlocked,
+                  timestamp: Date.now(),
+                };
+              }
+              
+              if (streakResult.coinsAwarded > 0) {
+                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+              }
+            }
+          } catch (error) {
+            console.error('[Login] Failed to update streak:', error);
+            // Don't block login on streak error
+          }
+          
+          res.redirect("/");
+        });
+      });
+    }
+  );
+
+  // Riot OAuth routes
+  app.get("/api/auth/riot",
+    passport.authenticate("riot")
+  );
+
+  app.get("/api/auth/riot/callback",
+    passport.authenticate("riot", { failureRedirect: "/" }),
     async (req, res) => {
       // Regenerate session for security
       const user = req.user;
