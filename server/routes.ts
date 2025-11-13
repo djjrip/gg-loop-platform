@@ -15,6 +15,7 @@ import { setupAuth, isAuthenticated } from "./oauth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { z } from "zod";
 import Stripe from "stripe";
+import { verifyPayPalSubscription, cancelPayPalSubscription } from "./paypal";
 import { pointsEngine } from "./pointsEngine";
 import { createWebhookSignatureMiddleware } from "./webhookSecurity";
 import { twitchAPI } from "./lib/twitch";
@@ -1487,7 +1488,16 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
         return res.status(400).json({ message: "Missing subscription ID or tier" });
       }
 
-      const tierLower = tier.toLowerCase();
+      const verification = await verifyPayPalSubscription(subscriptionId);
+      
+      if (!verification.valid) {
+        console.error("PayPal subscription verification failed:", verification.error);
+        return res.status(400).json({ 
+          message: verification.error || "Invalid subscription" 
+        });
+      }
+
+      const tierLower = verification.tier || tier.toLowerCase();
 
       const currentDate = new Date();
       const nextBillingDate = new Date(currentDate);
@@ -1534,10 +1544,17 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
         return res.status(404).json({ message: "No active subscription found" });
       }
 
-      if (subscription.stripeSubscriptionId && stripe) {
-        await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
-          cancel_at_period_end: true
-        });
+      if (subscription.stripeSubscriptionId) {
+        const paypalResult = await cancelPayPalSubscription(
+          subscription.stripeSubscriptionId,
+          "User requested cancellation"
+        );
+        
+        if (!paypalResult.success && stripe) {
+          await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+            cancel_at_period_end: true
+          });
+        }
       }
 
       await storage.updateSubscription(subscription.id, {

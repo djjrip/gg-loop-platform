@@ -18,7 +18,7 @@ export default function PayPalSubscriptionButton({ planId, tier }: PayPalSubscri
   const { toast } = useToast();
 
   useEffect(() => {
-    const clientId = "ASvoH44nGW2ZS_V2Xki0SLlVKtYh1dYJyPQ82m_rIOuWa1F6crnP9c2_TMFgFBO_d8IrBuc6UcwAKoJO";
+    const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || "ASvoH44nGW2ZS_V2Xki0SLlVKtYh1dYJyPQ82m_rIOuWa1F6crnP9c2_TMFgFBO_d8IrBuc6UcwAKoJO";
     
     if (window.paypal && buttonContainerRef.current) {
       window.paypal.Buttons({
