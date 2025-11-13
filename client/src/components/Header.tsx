@@ -2,7 +2,7 @@ import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings a
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -14,7 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Header() {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    return saved === "light" ? false : true;
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
@@ -23,9 +26,18 @@ export default function Header() {
     enabled: isAuthenticated,
   });
 
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDark]);
+
   const toggleTheme = () => {
     setIsDark(!isDark);
-    document.documentElement.classList.toggle("dark");
   };
 
   const handleLogin = () => {
