@@ -49,10 +49,11 @@ export async function verifyPayPalSubscription(subscriptionId: string): Promise<
   }
 
   try {
-    const { result } = await subscriptionsController.subscriptionsGet({ id: subscriptionId });
+    const response = await subscriptionsController.getSubscription({ id: subscriptionId });
+    const subscription = response.result;
     
-    const status = result.status;
-    const planId = result.planId;
+    const status = (subscription as any).status;
+    const planId = (subscription as any).planId;
 
     const planTierMap: Record<string, string> = {
       "P-6A485619U8349492UNEK4RRA": "basic",
