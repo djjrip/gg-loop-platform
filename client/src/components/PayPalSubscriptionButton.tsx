@@ -36,8 +36,7 @@ export default function PayPalSubscriptionButton({ planId, tier }: PayPalSubscri
         onApprove: async function(data: any) {
           try {
             await apiRequest("POST", "/api/paypal/subscription-approved", {
-              subscriptionId: data.subscriptionID,
-              tier
+              subscriptionId: data.subscriptionID
             });
             
             queryClient.invalidateQueries({ queryKey: ["/api/user"] });
@@ -96,8 +95,7 @@ export default function PayPalSubscriptionButton({ planId, tier }: PayPalSubscri
             onApprove: async function(data: any) {
               try {
                 await apiRequest("POST", "/api/paypal/subscription-approved", {
-                  subscriptionId: data.subscriptionID,
-                  tier
+                  subscriptionId: data.subscriptionID
                 });
                 
                 queryClient.invalidateQueries({ queryKey: ["/api/user"] });

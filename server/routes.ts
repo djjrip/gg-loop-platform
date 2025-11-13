@@ -1481,11 +1481,11 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
 
   app.post('/api/paypal/subscription-approved', getUserMiddleware, async (req: any, res) => {
     try {
-      const { subscriptionId, tier } = req.body;
+      const { subscriptionId } = req.body;
       const userId = req.dbUser.id;
 
-      if (!subscriptionId || !tier) {
-        return res.status(400).json({ message: "Missing subscription ID or tier" });
+      if (!subscriptionId) {
+        return res.status(400).json({ message: "Missing subscription ID" });
       }
 
       const verification = await verifyPayPalSubscription(subscriptionId);
@@ -1497,7 +1497,13 @@ ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
         });
       }
 
-      const tierLower = verification.tier || tier.toLowerCase();
+      if (!verification.tier) {
+        return res.status(400).json({ 
+          message: "Could not determine tier from PayPal subscription" 
+        });
+      }
+
+      const tierLower = verification.tier;
 
       const currentDate = new Date();
       const nextBillingDate = new Date(currentDate);

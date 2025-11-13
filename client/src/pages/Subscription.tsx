@@ -142,6 +142,23 @@ export default function SubscriptionPage() {
 
   const tiers = [
     {
+      id: "free",
+      name: "Free",
+      price: 0,
+      icon: Coins,
+      description: "Earn GG Coins to unlock trial access",
+      features: [
+        { text: "10 GG Coins per match win", included: true },
+        { text: "50 GG Coins per 7-day login streak", included: true },
+        { text: "100 coin monthly cap", included: true },
+        { text: "Unlock 7-day trial with 500 coins", included: true },
+        { text: "Track match wins & achievements", included: true },
+        { text: "Leaderboard rankings", included: true },
+        { text: "Monthly point allocation", included: false },
+        { text: "Rewards catalog access", included: false },
+      ],
+    },
+    {
       id: "basic",
       name: "Basic",
       price: 5,
@@ -470,7 +487,7 @@ export default function SubscriptionPage() {
               </Card>
             )}
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-4 gap-6">
               {tiers.map((tier) => {
                 const TierIcon = tier.icon;
                 const isCurrentTier = subscription?.tier === tier.id;
