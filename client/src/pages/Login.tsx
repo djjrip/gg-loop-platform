@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy } from "lucide-react";
-import { SiDiscord, SiTwitch, SiGoogle } from "react-icons/si";
+import { SiDiscord, SiTwitch } from "react-icons/si";
 
 export default function Login() {
   const handleDiscordLogin = () => {
@@ -10,10 +10,6 @@ export default function Login() {
 
   const handleTwitchLogin = () => {
     window.location.href = "/api/auth/twitch";
-  };
-
-  const handleGoogleLogin = () => {
-    window.location.href = "/api/auth/google";
   };
 
   return (
@@ -48,16 +44,6 @@ export default function Login() {
           >
             <SiTwitch className="h-5 w-5" style={{ color: '#9146FF' }} />
             Continue with Twitch
-          </Button>
-
-          <Button
-            onClick={handleGoogleLogin}
-            variant="outline"
-            className="w-full h-12 text-base gap-3 hover-elevate active-elevate-2"
-            data-testid="button-google-login"
-          >
-            <SiGoogle className="h-5 w-5" style={{ color: '#DB4437' }} />
-            Continue with Google
           </Button>
 
           <div className="relative my-6">
