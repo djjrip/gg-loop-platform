@@ -1,5 +1,8 @@
 # GG Loop - Gaming Membership Rewards Platform
 
+## ⚠️ URGENT REMINDERS
+- **RIOT_API_KEY expires Friday, Nov 14th 2025 @ 11:37 AM PT** - Renew at https://developer.riotgames.com/ before expiration!
+
 ## Overview
 GG Loop is a tiered membership program for gamers that provides fixed monthly point allocations redeemable for gaming gear, peripherals, and subscriptions. The platform integrates match stats tracking, leaderboards, achievement displays, and sponsored challenge bonuses to boost community engagement and recognize player dedication. The core vision is to transform gaming passion into tangible membership perks, providing a unique loyalty program for dedicated gamers and aspiring content creators.
 
