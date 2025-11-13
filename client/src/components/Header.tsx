@@ -81,14 +81,6 @@ export default function Header() {
               My Stats
             </Link>
             <Link 
-              href="/free-tier" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
-              data-testid="link-free-tier"
-            >
-              <Coins className="h-3.5 w-3.5 text-primary" />
-              Free Tier
-            </Link>
-            <Link 
               href="/referrals" 
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
               data-testid="link-referrals"
