@@ -14,6 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
+import PayPalSubscriptionButton from "@/components/PayPalSubscriptionButton";
 
 export default function SubscriptionPage() {
   const { user, isAuthenticated } = useAuth();
@@ -132,6 +133,12 @@ export default function SubscriptionPage() {
       });
     },
   });
+
+  const paypalPlanIds = {
+    basic: "P-6A485619U8349492UNEK4RRA",
+    pro: "P-7PE45456B7870481SNEK4TRY",
+    elite: "P-369148416D044494CNEK4UDQ",
+  };
 
   const tiers = [
     {
@@ -609,16 +616,20 @@ export default function SubscriptionPage() {
                         >
                           Current Plan
                         </Button>
-                      ) : (
+                      ) : hasActiveSubscription ? (
                         <Button
                           className="w-full"
-                          variant={isElite ? "default" : "outline"}
-                          onClick={() => checkoutMutation.mutate(tier.id)}
-                          disabled={checkoutMutation.isPending || hasActiveSubscription}
+                          variant="outline"
+                          disabled
                           data-testid={`button-subscribe-${tier.id}`}
                         >
-                          {checkoutMutation.isPending ? "Loading..." : "Subscribe Now"}
+                          Cancel Current Plan to Switch
                         </Button>
+                      ) : (
+                        <PayPalSubscriptionButton 
+                          planId={paypalPlanIds[tier.id as keyof typeof paypalPlanIds]}
+                          tier={tier.name}
+                        />
                       )}
                     </CardFooter>
                   </Card>
