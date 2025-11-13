@@ -37,7 +37,7 @@ export default function Hero() {
             <h1 className="text-7xl md:text-9xl font-black leading-none tracking-tighter mb-6">
               <span className="block text-foreground mb-2 hover:text-primary transition-colors duration-500">Play.</span>
               <span className="block bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent mb-2 
-                             hover:scale-105 transition-transform duration-500 inline-block">Unlock.</span>
+                             hover:scale-105 transition-transform duration-500 inline-block">Earn.</span>
               <span className="block text-foreground hover:text-primary transition-colors duration-500">Loop.</span>
             </h1>
 
