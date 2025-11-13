@@ -259,19 +259,39 @@ export default function Header() {
               <Sparkles className="h-3.5 w-3.5 text-primary" />
               TikTok Content
             </Link>
-            <Link 
-              href="/launch-dashboard" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
-              data-testid="link-launch-dashboard-mobile"
-            >
-              <Rocket className="h-3.5 w-3.5 text-primary" />
-              Launch
-            </Link>
             {isAuthenticated && user ? (
-              <Button variant="destructive" size="sm" onClick={handleLogout} data-testid="button-logout-mobile">
-                <LogOut className="mr-2 h-4 w-4" />
-                Log Out
-              </Button>
+              <>
+                <div className="border-t my-2" />
+                <Link 
+                  href={`/profile/${user.id}`}
+                  className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+                  data-testid="link-profile-mobile"
+                >
+                  <Trophy className="h-3.5 w-3.5 text-primary" />
+                  My Profile
+                </Link>
+                <Link 
+                  href="/my-rewards" 
+                  className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+                  data-testid="link-my-rewards-mobile"
+                >
+                  <Gift className="h-3.5 w-3.5 text-primary" />
+                  My Rewards
+                </Link>
+                <Link 
+                  href="/settings" 
+                  className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+                  data-testid="link-settings-mobile"
+                >
+                  <SettingsIcon className="h-3.5 w-3.5 text-primary" />
+                  Settings
+                </Link>
+                <div className="border-t my-2" />
+                <Button variant="destructive" size="sm" onClick={handleLogout} data-testid="button-logout-mobile">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log Out
+                </Button>
+              </>
             ) : (
               <Button variant="default" size="sm" onClick={handleLogin} data-testid="button-sign-in-mobile">
                 Sign In
