@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
 import { 
-  userGames, riotAccounts, sponsors, insertSponsorSchema, challenges, 
+  users, userGames, riotAccounts, sponsors, insertSponsorSchema, challenges, 
   challengeCompletions, insertChallengeSchema, insertChallengeCompletionSchema,
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
   insertAchievementSchema, insertUserRewardSchema,
@@ -390,6 +390,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error verifying Riot account:', error);
       res.status(500).json({ 
         message: error.message || 'Failed to verify account. Please try again.' 
+      });
+    }
+  });
+
+  // Riot Account - Provisional Link (Valorant only - no verification)
+  app.post('/api/riot/:gameId/link-provisional', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+    try {
+      const { gameId } = req.params;
+      const { riotId, region = 'na' } = req.body;
+
+      // Only allow provisional linking for Valorant
+      if (!gameId.includes('valorant')) {
+        return res.status(400).json({ 
+          message: 'Provisional linking is only available for Valorant' 
+        });
+      }
+
+      if (!riotId || !riotId.includes('#')) {
+        return res.status(400).json({ 
+          message: 'Invalid Riot ID format. Use: GameName#TAG (e.g., TenZ#NA1)' 
+        });
+      }
+
+      const [gameName, tagLine] = riotId.split('#');
+      
+      // Verify account exists via Riot API
+      const { RiotApiService } = await import('./riotApi');
+      const riotApi = new RiotApiService();
+      
+      const account = await riotApi.verifyAccount(gameName.trim(), tagLine.trim(), region);
+      
+      // Link with provisional status (verifiedAt = null)
+      const existing = await db.select().from(userGames)
+        .where(and(eq(userGames.userId, req.dbUser.id), eq(userGames.gameId, gameId)))
+        .limit(1);
+
+      if (existing.length > 0) {
+        await db.update(userGames)
+          .set({
+            riotPuuid: account.puuid,
+            riotGameName: account.gameName,
+            riotTagLine: account.tagLine,
+            riotRegion: region,
+            verifiedAt: null, // Provisional - not verified
+          })
+          .where(eq(userGames.id, existing[0].id));
+      } else {
+        await db.insert(userGames).values({
+          userId: req.dbUser.id,
+          gameId,
+          riotPuuid: account.puuid,
+          riotGameName: account.gameName,
+          riotTagLine: account.tagLine,
+          riotRegion: region,
+          verifiedAt: null, // Provisional - not verified
+        });
+
+        await db.update(users)
+          .set({ gamesConnected: sql`${users.gamesConnected} + 1` })
+          .where(eq(users.id, req.dbUser.id));
+      }
+
+      res.json({ 
+        success: true,
+        provisional: true,
+        riotId: `${account.gameName}#${account.tagLine}`,
+        message: 'Account linked provisionally. Stats are self-reported.'
+      });
+    } catch (error: any) {
+      console.error('Error linking Valorant provisionally:', error);
+      res.status(500).json({ 
+        message: error.message || 'Failed to link account. Please check your Riot ID and try again.' 
       });
     }
   });
