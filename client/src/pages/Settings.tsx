@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { User, Save, ExternalLink, Twitch, Unlink, CheckCircle2, Gamepad2, Shield, Copy, AlertCircle, Link2 } from "lucide-react";
+import { User, Save, ExternalLink, Twitch, Unlink, CheckCircle2, Gamepad2, Shield, Copy, AlertCircle, Link2, Clock, Trophy, TrendingUp } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { useLocation } from "wouter";
 
 type UserData = {
@@ -27,6 +28,10 @@ type RiotAccountStatus = {
   tagLine?: string;
   region?: string;
   verifiedAt?: string;
+  lastSyncedAt?: string;
+  totalMatches?: number;
+  wins?: number;
+  losses?: number;
 };
 
 const LEAGUE_GAME_ID = '4cf0e30a-7969-4572-a8f5-29ad5935dc00';
@@ -462,6 +467,50 @@ export default function Settings() {
                     Disconnect
                   </Button>
                 </div>
+
+                {/* Sync Stats */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Trophy className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Matches</span>
+                    </div>
+                    <p className="text-2xl font-black font-mono" data-testid="text-league-matches">
+                      {leagueStatus.totalMatches || 0}
+                    </p>
+                  </div>
+                  
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">W/L</span>
+                    </div>
+                    <p className="text-lg font-bold" data-testid="text-league-record">
+                      <span className="text-green-500">{leagueStatus.wins || 0}</span>
+                      <span className="text-muted-foreground mx-1">/</span>
+                      <span className="text-red-500">{leagueStatus.losses || 0}</span>
+                    </p>
+                  </div>
+                  
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Last Sync</span>
+                    </div>
+                    <p className="text-xs font-medium" data-testid="text-league-last-sync">
+                      {leagueStatus.lastSyncedAt 
+                        ? formatDistanceToNow(new Date(leagueStatus.lastSyncedAt), { addSuffix: true })
+                        : 'Never'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded">
+                  <p className="flex items-center gap-2">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                    Matches sync automatically every 10 minutes. Stats are updated after each sync cycle.
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -541,6 +590,50 @@ export default function Settings() {
                     <Unlink className="h-4 w-4" />
                     Disconnect
                   </Button>
+                </div>
+
+                {/* Sync Stats */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Trophy className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Matches</span>
+                    </div>
+                    <p className="text-2xl font-black font-mono" data-testid="text-valorant-matches">
+                      {valorantStatus.totalMatches || 0}
+                    </p>
+                  </div>
+                  
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">W/L</span>
+                    </div>
+                    <p className="text-lg font-bold" data-testid="text-valorant-record">
+                      <span className="text-green-500">{valorantStatus.wins || 0}</span>
+                      <span className="text-muted-foreground mx-1">/</span>
+                      <span className="text-red-500">{valorantStatus.losses || 0}</span>
+                    </p>
+                  </div>
+                  
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Last Sync</span>
+                    </div>
+                    <p className="text-xs font-medium" data-testid="text-valorant-last-sync">
+                      {valorantStatus.lastSyncedAt 
+                        ? formatDistanceToNow(new Date(valorantStatus.lastSyncedAt), { addSuffix: true })
+                        : 'Never'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded">
+                  <p className="flex items-center gap-2">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                    Matches sync automatically every 10 minutes. Stats are updated after each sync cycle.
+                  </p>
                 </div>
               </div>
             ) : (

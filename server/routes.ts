@@ -740,7 +740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user's linked Riot account
+  // Get user's linked Riot account with sync stats
   app.get('/api/riot/account/:game', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
@@ -754,12 +754,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ linked: false });
       }
 
+      // Get match stats for this account
+      const matches = await db.select({
+        match: processedRiotMatches,
+      })
+      .from(processedRiotMatches)
+      .where(eq(processedRiotMatches.riotAccountId, riotAccount.id))
+      .orderBy(desc(processedRiotMatches.processedAt))
+      .limit(1);
+
+      const totalMatches = await db.select({ count: sql<number>`count(*)::int` })
+        .from(processedRiotMatches)
+        .where(eq(processedRiotMatches.riotAccountId, riotAccount.id));
+
+      const wins = await db.select({ count: sql<number>`count(*)::int` })
+        .from(processedRiotMatches)
+        .where(
+          and(
+            eq(processedRiotMatches.riotAccountId, riotAccount.id),
+            eq(processedRiotMatches.isWin, true)
+          )
+        );
+
+      const lastSyncedAt = matches[0]?.match.processedAt || riotAccount.createdAt;
+      const totalMatchCount = totalMatches[0]?.count || 0;
+      const winCount = wins[0]?.count || 0;
+
       res.json({
         linked: true,
         gameName: riotAccount.gameName,
         tagLine: riotAccount.tagLine,
         region: riotAccount.region,
         verifiedAt: riotAccount.createdAt,
+        lastSyncedAt,
+        totalMatches: totalMatchCount,
+        wins: winCount,
+        losses: totalMatchCount - winCount,
       });
     } catch (error: any) {
       console.error("Error fetching Riot account:", error);
