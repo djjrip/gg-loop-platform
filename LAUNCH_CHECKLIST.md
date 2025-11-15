@@ -2,13 +2,19 @@
 
 ## Critical Environment Variables (Required Before Launch)
 
-### 1. Update Riot API Key (Do This First!)
-- [ ] Open **Secrets** tab (🔒 icon in left sidebar)
-- [ ] Find `RIOT_API_KEY`
-- [ ] Update to: `RGAPI-d4667bcf-5bf8-48e0-b0dc-2f9591dd60b7`
-- [ ] Save changes
+### 1. Session Security
+- [ ] `SESSION_SECRET` - Generate a random 32+ character string for session encryption
+  - Use a secure random generator (not a dictionary word or predictable string)
+  - Example generation: `openssl rand -base64 32`
 
-### 2. PayPal Production Configuration
+### 2. Riot API Production Key
+- [ ] `RIOT_API_KEY` - Your approved production API key from Riot Games
+  - Obtain from: https://developer.riotgames.com/
+  - **IMPORTANT**: Use your own production key (starts with RGAPI-)
+  - Current approved game: League of Legends
+  - Rate limits: 20 req/1s, 100 req/2min
+
+### 3. PayPal Production Configuration
 - [ ] `PAYPAL_CLIENT_ID` - Your live PayPal client ID
 - [ ] `PAYPAL_CLIENT_SECRET` - Your live PayPal secret
 - [ ] `PAYPAL_BASIC_PLAN_ID` - Live Basic plan ID ($5/month)
@@ -17,14 +23,23 @@
 
 **⚠️ CRITICAL**: Do NOT use sandbox plan IDs in production. The app will reject them.
 
-### 3. Admin Access
+### 4. Stripe Configuration (Optional - PayPal is Primary)
+- [ ] `STRIPE_SECRET_KEY` - Stripe API secret key (if offering Stripe as alternative)
+- [ ] `STRIPE_WEBHOOK_SECRET` - Stripe webhook signature validation secret
+- [ ] `STRIPE_BASIC_PRICE_ID` - Basic tier price ID
+- [ ] `STRIPE_PRO_PRICE_ID` - Pro tier price ID
+- [ ] `STRIPE_ELITE_PRICE_ID` - Elite tier price ID
+
+**Note**: Stripe is optional. PayPal is the primary payment processor.
+
+### 5. Admin Access
 - [ ] `ADMIN_EMAILS` - Comma-separated list of admin emails
   - Example: `admin@ggloop.io,support@ggloop.io`
 
-### 4. Production Mode
+### 6. Production Mode
 - [ ] `NODE_ENV` - Set to `production`
 
-### 5. Base URL (If deploying)
+### 7. Base URL (If deploying)
 - [ ] `BASE_URL` - Your production domain (e.g., `https://ggloop.io`)
 
 ## Pre-Launch Verification
