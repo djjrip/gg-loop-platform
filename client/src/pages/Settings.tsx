@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { User, Save, ExternalLink, Twitch, Unlink, CheckCircle2, Gamepad2, Shield, Copy, AlertCircle, Link2, Clock, Trophy, TrendingUp } from "lucide-react";
+import { User, Save, ExternalLink, Twitch, Unlink, CheckCircle2, Gamepad2, Shield, Copy, AlertCircle, Link2, Clock, Trophy, TrendingUp, MapPin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocation } from "wouter";
 
@@ -20,6 +20,11 @@ type UserData = {
   email: string;
   twitchUsername: string | null;
   twitchConnectedAt: string | null;
+  shippingAddress: string | null;
+  shippingCity: string | null;
+  shippingState: string | null;
+  shippingZip: string | null;
+  shippingCountry: string | null;
 };
 
 type RiotAccountStatus = {
@@ -55,6 +60,13 @@ export default function Settings() {
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [location] = useLocation();
+  
+  // Shipping address state
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [shippingCity, setShippingCity] = useState("");
+  const [shippingState, setShippingState] = useState("");
+  const [shippingZip, setShippingZip] = useState("");
+  const [shippingCountry, setShippingCountry] = useState("US");
   
   // Riot account linking state
   const [leagueRiotId, setLeagueRiotId] = useState(""); // Format: GameName#TAG
@@ -125,6 +137,46 @@ export default function Settings() {
       });
     },
   });
+
+  const updateShippingAddressMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/user/shipping-address", {
+        address: shippingAddress,
+        city: shippingCity,
+        state: shippingState,
+        zip: shippingZip,
+        country: shippingCountry
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      toast({
+        title: "Shipping address saved!",
+        description: "Your address has been updated successfully.",
+      });
+      setShippingAddress("");
+      setShippingCity("");
+      setShippingState("");
+      setShippingZip("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to save address",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (user) {
+      setShippingAddress(user.shippingAddress || "");
+      setShippingCity(user.shippingCity || "");
+      setShippingState(user.shippingState || "");
+      setShippingZip(user.shippingZip || "");
+      setShippingCountry(user.shippingCountry || "US");
+    }
+  }, [user]);
 
   // Riot Account Status Queries
   const { data: leagueStatus } = useQuery<RiotAccountStatus>({
@@ -358,6 +410,114 @@ export default function Settings() {
               >
                 <Save className="h-4 w-4" />
                 {updateUsernameMutation.isPending ? "Saving..." : "Save Username"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card data-testid="card-shipping-address">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Shipping Address
+            </CardTitle>
+            <CardDescription>
+              Required for redeeming physical rewards like peripherals and gear
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {user?.shippingAddress ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="font-medium mb-1" data-testid="text-saved-address">Saved Address:</p>
+                  <p className="text-sm">{user.shippingAddress}</p>
+                  <p className="text-sm">{user.shippingCity}, {user.shippingState} {user.shippingZip}</p>
+                  <p className="text-sm">{user.shippingCountry}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">Update your address below if it has changed.</p>
+              </div>
+            ) : (
+              <div className="p-4 bg-muted/50 rounded-lg border border-border mb-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-muted-foreground">
+                    No shipping address on file. Add your address to redeem physical rewards.
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            <form onSubmit={(e) => { e.preventDefault(); updateShippingAddressMutation.mutate(); }} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="shipping-address">Street Address</Label>
+                <Input
+                  id="shipping-address"
+                  value={shippingAddress}
+                  onChange={(e) => setShippingAddress(e.target.value)}
+                  placeholder="123 Main St, Apt 4B"
+                  data-testid="input-shipping-address"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="shipping-city">City</Label>
+                  <Input
+                    id="shipping-city"
+                    value={shippingCity}
+                    onChange={(e) => setShippingCity(e.target.value)}
+                    placeholder="San Francisco"
+                    data-testid="input-shipping-city"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="shipping-state">State</Label>
+                  <Input
+                    id="shipping-state"
+                    value={shippingState}
+                    onChange={(e) => setShippingState(e.target.value)}
+                    placeholder="CA"
+                    maxLength={2}
+                    data-testid="input-shipping-state"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="shipping-zip">ZIP Code</Label>
+                  <Input
+                    id="shipping-zip"
+                    value={shippingZip}
+                    onChange={(e) => setShippingZip(e.target.value)}
+                    placeholder="94102"
+                    data-testid="input-shipping-zip"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="shipping-country">Country</Label>
+                  <Select value={shippingCountry} onValueChange={setShippingCountry}>
+                    <SelectTrigger id="shipping-country" data-testid="select-shipping-country">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="US">United States</SelectItem>
+                      <SelectItem value="CA">Canada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <Button 
+                type="submit"
+                disabled={updateShippingAddressMutation.isPending || !shippingAddress || !shippingCity || !shippingState || !shippingZip}
+                className="gap-2"
+                data-testid="button-save-shipping-address"
+              >
+                <Save className="h-4 w-4" />
+                {updateShippingAddressMutation.isPending ? "Saving..." : "Save Address"}
               </Button>
             </form>
           </CardContent>
