@@ -201,10 +201,30 @@ export default function FulfillmentDashboard() {
             </>
           ) : error ? (
             <Card className="p-12 text-center border-destructive/50">
-              <p className="text-destructive">Failed to load pending rewards</p>
-              <Button onClick={() => refetch()} className="mt-4" variant="outline">
-                Try Again
-              </Button>
+              <div className="max-w-md mx-auto space-y-4">
+                {error.message?.includes("Forbidden") || error.message?.includes("Admin access required") ? (
+                  <>
+                    <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 inline-block">
+                      <Package className="h-12 w-12 text-destructive mx-auto" />
+                    </div>
+                    <h3 className="text-xl font-bold text-destructive">Access Denied</h3>
+                    <p className="text-muted-foreground">
+                      Admin privileges are required to access the fulfillment dashboard.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      If you believe you should have access, please contact the site administrator.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-destructive font-semibold">Failed to load pending rewards</p>
+                    <p className="text-sm text-muted-foreground">{error.message || "An unexpected error occurred"}</p>
+                    <Button onClick={() => refetch()} className="mt-4" variant="outline">
+                      Try Again
+                    </Button>
+                  </>
+                )}
+              </div>
             </Card>
           ) : !pendingRewards || pendingRewards.length === 0 ? (
             <Card className="p-12 text-center border-primary/10">

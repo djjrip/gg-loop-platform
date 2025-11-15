@@ -1015,10 +1015,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Comprehensive address format validation
-        const address = user.shippingAddress.trim();
-        const city = user.shippingCity.trim();
-        const state = user.shippingState.trim();
-        const zip = user.shippingZip.trim();
+        // Safe to use non-null assertion - already validated above
+        const address = user.shippingAddress!.trim();
+        const city = user.shippingCity!.trim();
+        const state = user.shippingState!.trim();
+        const zip = user.shippingZip!.trim();
         const country = (user.shippingCountry || 'US').trim().toUpperCase();
         
         // Validate street address - must contain letters and numbers (not purely numeric)
