@@ -949,6 +949,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/admin/rewards/tracking', adminMiddleware, async (req: any, res) => {
+    try {
+      const { userRewardId, trackingNumber } = z.object({ 
+        userRewardId: z.string(),
+        trackingNumber: z.string()
+      }).parse(req.body);
+      
+      const userReward = await db.update(userRewards)
+        .set({ trackingNumber })
+        .where(eq(userRewards.id, userRewardId))
+        .returning();
+      
+      if (!userReward[0]) {
+        return res.status(404).json({ message: "User reward not found" });
+      }
+      
+      console.log(`📦 Tracking number added for reward ${userRewardId}: ${trackingNumber}`);
+      
+      res.json(userReward[0]);
+    } catch (error: any) {
+      console.error("Error adding tracking number:", error);
+      res.status(400).json({ message: error.message || "Failed to add tracking number" });
+    }
+  });
+
   app.post('/api/user/rewards/redeem', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;

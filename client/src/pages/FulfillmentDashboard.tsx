@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Package, CheckCircle, Clock, DollarSign, Mail, Copy } from "lucide-react";
+import { Package, CheckCircle, Clock, DollarSign, Mail, Copy, MapPin, Truck } from "lucide-react";
 import { useState } from "react";
 
 interface PendingReward {
@@ -17,6 +17,12 @@ interface PendingReward {
   pointsSpent: number;
   redeemedAt: string;
   status: string;
+  trackingNumber: string | null;
+  shippingAddress: string | null;
+  shippingCity: string | null;
+  shippingState: string | null;
+  shippingZip: string | null;
+  shippingCountry: string | null;
   reward: {
     id: string;
     title: string;
@@ -37,6 +43,7 @@ interface PendingReward {
 export default function FulfillmentDashboard() {
   const { toast } = useToast();
   const [fulfillmentCodes, setFulfillmentCodes] = useState<Record<string, string>>({});
+  const [trackingNumbers, setTrackingNumbers] = useState<Record<string, string>>({});
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 
   const { data: pendingRewards, isLoading, error, refetch } = useQuery<PendingReward[]>({
@@ -55,6 +62,7 @@ export default function FulfillmentDashboard() {
         description: "Reward marked as fulfilled",
       });
       setFulfillmentCodes({});
+      setTrackingNumbers({});
     },
     onError: (error: Error) => {
       toast({
@@ -65,9 +73,44 @@ export default function FulfillmentDashboard() {
     },
   });
 
+  const addTrackingMutation = useMutation({
+    mutationFn: async ({ userRewardId, trackingNumber }: { userRewardId: string; trackingNumber: string }) => {
+      const res = await apiRequest("POST", "/api/admin/rewards/tracking", { userRewardId, trackingNumber });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/pending-rewards"] });
+      toast({
+        title: "Tracking number added!",
+        description: "Customer will be notified via email",
+      });
+      setTrackingNumbers({});
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add tracking number",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleFulfill = (userRewardId: string) => {
     const giftCardCode = fulfillmentCodes[userRewardId];
     fulfillMutation.mutate({ userRewardId, giftCardCode });
+  };
+
+  const handleAddTracking = (userRewardId: string) => {
+    const trackingNumber = trackingNumbers[userRewardId];
+    if (!trackingNumber?.trim()) {
+      toast({
+        title: "Missing tracking number",
+        description: "Please enter a tracking number",
+        variant: "destructive",
+      });
+      return;
+    }
+    addTrackingMutation.mutate({ userRewardId, trackingNumber: trackingNumber.trim() });
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -227,42 +270,127 @@ export default function FulfillmentDashboard() {
                     </div>
                   </div>
 
+                  {/* Shipping Address for Physical Items */}
+                  {reward.reward.fulfillmentType === "physical" && reward.shippingAddress && (
+                    <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="h-4 w-4 text-blue-600" />
+                        <h4 className="font-semibold text-blue-600">Shipping Address</h4>
+                      </div>
+                      <div className="text-sm space-y-1" data-testid={`text-shipping-address-${reward.id}`}>
+                        <p className="font-medium">{reward.user.firstName} {reward.user.lastName}</p>
+                        <p>{reward.shippingAddress}</p>
+                        <p>{reward.shippingCity}, {reward.shippingState} {reward.shippingZip}</p>
+                        <p>{reward.shippingCountry || 'US'}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copyToClipboard(
+                          `${reward.user.firstName} ${reward.user.lastName}\n${reward.shippingAddress}\n${reward.shippingCity}, ${reward.shippingState} ${reward.shippingZip}\n${reward.shippingCountry || 'US'}`,
+                          "Address"
+                        )}
+                        className="mt-2"
+                        data-testid={`button-copy-address-${reward.id}`}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy Address
+                      </Button>
+                    </div>
+                  )}
+
                   {/* Fulfillment Instructions */}
                   <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
                     <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
+                      {reward.reward.fulfillmentType === "physical" ? <Truck className="h-4 w-4" /> : <Mail className="h-4 w-4" />}
                       Fulfillment Steps
                     </h4>
-                    <ol className="text-sm space-y-1 text-muted-foreground list-decimal list-inside">
-                      <li>Go to <a href="https://raise.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Raise.com</a></li>
-                      <li>Search for "{reward.reward.title}" gift card</li>
-                      <li>Buy ${reward.reward.realValue} card (usually ~7.5% discount)</li>
-                      <li>Copy the gift card code below</li>
-                      <li>Email the code to: <strong>{reward.user.email}</strong></li>
-                      <li>Mark as fulfilled</li>
-                    </ol>
+                    {reward.reward.fulfillmentType === "physical" ? (
+                      <ol className="text-sm space-y-1 text-muted-foreground list-decimal list-inside">
+                        <li>Purchase "{reward.reward.title}" from supplier</li>
+                        <li>Ship to address above</li>
+                        <li>Add tracking number below</li>
+                        <li>Customer will be automatically notified via email</li>
+                        <li>Mark as fulfilled once delivered</li>
+                      </ol>
+                    ) : (
+                      <ol className="text-sm space-y-1 text-muted-foreground list-decimal list-inside">
+                        <li>Go to <a href="https://raise.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Raise.com</a></li>
+                        <li>Search for "{reward.reward.title}" gift card</li>
+                        <li>Buy ${reward.reward.realValue} card (usually ~7.5% discount)</li>
+                        <li>Copy the gift card code below</li>
+                        <li>Email the code to: <strong>{reward.user.email}</strong></li>
+                        <li>Mark as fulfilled</li>
+                      </ol>
+                    )}
                   </div>
 
                   {/* Fulfillment Actions */}
-                  <div className="flex items-end gap-4">
-                    <div className="flex-1">
-                      <label className="text-sm font-medium mb-2 block">Gift Card Code (Optional)</label>
-                      <Input
-                        placeholder="Enter gift card code..."
-                        value={fulfillmentCodes[reward.id] || ""}
-                        onChange={(e) => setFulfillmentCodes({ ...fulfillmentCodes, [reward.id]: e.target.value })}
-                        data-testid={`input-code-${reward.id}`}
-                      />
+                  {reward.reward.fulfillmentType === "physical" ? (
+                    <div className="space-y-4">
+                      {reward.trackingNumber ? (
+                        <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <p className="font-semibold text-green-600">Tracking Added</p>
+                          </div>
+                          <code className="block bg-muted px-2 py-1 rounded font-mono text-sm">
+                            {reward.trackingNumber}
+                          </code>
+                        </div>
+                      ) : (
+                        <div className="flex items-end gap-4">
+                          <div className="flex-1">
+                            <label className="text-sm font-medium mb-2 block">Tracking Number</label>
+                            <Input
+                              placeholder="Enter USPS/UPS/FedEx tracking number..."
+                              value={trackingNumbers[reward.id] || ""}
+                              onChange={(e) => setTrackingNumbers({ ...trackingNumbers, [reward.id]: e.target.value })}
+                              data-testid={`input-tracking-${reward.id}`}
+                            />
+                          </div>
+                          <Button
+                            onClick={() => handleAddTracking(reward.id)}
+                            disabled={addTrackingMutation.isPending}
+                            data-testid={`button-add-tracking-${reward.id}`}
+                          >
+                            <Truck className="h-4 w-4 mr-2" />
+                            Add Tracking
+                          </Button>
+                        </div>
+                      )}
+                      <Button
+                        onClick={() => handleFulfill(reward.id)}
+                        disabled={fulfillMutation.isPending}
+                        variant="default"
+                        className="w-full"
+                        data-testid={`button-fulfill-${reward.id}`}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Mark as Fulfilled
+                      </Button>
                     </div>
-                    <Button
-                      onClick={() => handleFulfill(reward.id)}
-                      disabled={fulfillMutation.isPending}
-                      data-testid={`button-fulfill-${reward.id}`}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Mark as Fulfilled
-                    </Button>
-                  </div>
+                  ) : (
+                    <div className="flex items-end gap-4">
+                      <div className="flex-1">
+                        <label className="text-sm font-medium mb-2 block">Gift Card Code (Optional)</label>
+                        <Input
+                          placeholder="Enter gift card code..."
+                          value={fulfillmentCodes[reward.id] || ""}
+                          onChange={(e) => setFulfillmentCodes({ ...fulfillmentCodes, [reward.id]: e.target.value })}
+                          data-testid={`input-code-${reward.id}`}
+                        />
+                      </div>
+                      <Button
+                        onClick={() => handleFulfill(reward.id)}
+                        disabled={fulfillMutation.isPending}
+                        data-testid={`button-fulfill-${reward.id}`}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Mark as Fulfilled
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </Card>
             ))
