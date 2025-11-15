@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, Gift, Download, Mail, Trophy } from "lucide-react";
+import { Package, Gift, Download, Mail, Trophy, Truck, MapPin, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ClaimedReward {
@@ -15,6 +15,13 @@ interface ClaimedReward {
   redeemedAt: string;
   status: string;
   fulfillmentData: any;
+  trackingNumber: string | null;
+  fulfilledAt: string | null;
+  shippingAddress: string | null;
+  shippingCity: string | null;
+  shippingState: string | null;
+  shippingZip: string | null;
+  shippingCountry: string | null;
   reward: {
     id: string;
     title: string;
@@ -64,11 +71,13 @@ export default function MyRewards() {
     }
   };
 
-  const getStatusText = (status: string, fulfillmentType: string) => {
-    if (status === "completed") return "Completed";
+  const getStatusText = (status: string, fulfillmentType: string, trackingNumber?: string | null) => {
+    if (status === "fulfilled") return "Fulfilled";
     if (status === "pending" && fulfillmentType === "automatic") return "Active";
     if (status === "pending" && fulfillmentType === "digital_key") return "Check Email";
-    if (status === "pending" && fulfillmentType === "physical") return "Shipping Soon";
+    if (status === "pending" && fulfillmentType === "physical") {
+      return trackingNumber ? "Shipped" : "Processing";
+    }
     return "Processing";
   };
 
@@ -137,7 +146,7 @@ export default function MyRewards() {
                         </CardDescription>
                       </div>
                       <Badge variant={getStatusColor(claimed.status)}>
-                        {getStatusText(claimed.status, claimed.reward.fulfillmentType)}
+                        {getStatusText(claimed.status, claimed.reward.fulfillmentType, claimed.trackingNumber)}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -180,13 +189,66 @@ export default function MyRewards() {
                       </div>
                     )}
 
-                    {claimed.reward.fulfillmentType === "physical" && claimed.status === "pending" && (
-                      <div className="bg-muted border border-border rounded-lg p-3 text-sm">
-                        <p className="font-semibold mb-1">Shipping Information</p>
-                        <p className="text-muted-foreground text-xs">
-                          We'll email you tracking details within 2-3 business days.
-                        </p>
-                      </div>
+                    {claimed.reward.fulfillmentType === "physical" && (
+                      <>
+                        {claimed.trackingNumber ? (
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <Truck className="h-4 w-4 text-green-600" />
+                              <p className="font-semibold text-green-600">Shipped</p>
+                            </div>
+                            <div className="space-y-1 text-xs">
+                              <p className="text-muted-foreground">Tracking Number:</p>
+                              <code className="block bg-muted px-2 py-1 rounded font-mono text-xs" data-testid="text-tracking-number">
+                                {claimed.trackingNumber}
+                              </code>
+                            </div>
+                            {claimed.shippingAddress && (
+                              <div className="space-y-1 text-xs pt-2 border-t border-green-500/20">
+                                <div className="flex items-center gap-1 text-muted-foreground">
+                                  <MapPin className="h-3 w-3" />
+                                  <span>Shipping To:</span>
+                                </div>
+                                <p className="text-muted-foreground">
+                                  {claimed.shippingAddress}<br />
+                                  {claimed.shippingCity}, {claimed.shippingState} {claimed.shippingZip}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ) : claimed.status === "fulfilled" ? (
+                          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 text-sm">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              <p className="font-semibold text-green-600">Fulfilled</p>
+                            </div>
+                            {claimed.fulfilledAt && (
+                              <p className="text-muted-foreground text-xs mt-1">
+                                Completed on {new Date(claimed.fulfilledAt).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="bg-muted border border-border rounded-lg p-3 space-y-2">
+                            <p className="font-semibold text-sm">Processing Order</p>
+                            <p className="text-muted-foreground text-xs">
+                              We'll email you tracking details within 2-3 business days.
+                            </p>
+                            {claimed.shippingAddress && (
+                              <div className="space-y-1 text-xs pt-2 border-t">
+                                <div className="flex items-center gap-1 text-muted-foreground">
+                                  <MapPin className="h-3 w-3" />
+                                  <span>Shipping To:</span>
+                                </div>
+                                <p className="text-muted-foreground">
+                                  {claimed.shippingAddress}<br />
+                                  {claimed.shippingCity}, {claimed.shippingState} {claimed.shippingZip}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>
