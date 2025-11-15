@@ -6,7 +6,7 @@ import {
   users, userGames, riotAccounts, sponsors, insertSponsorSchema, challenges, 
   challengeCompletions, insertChallengeSchema, insertChallengeCompletionSchema,
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
-  insertAchievementSchema, insertUserRewardSchema,
+  insertAchievementSchema, insertUserRewardSchema, userRewards,
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
   insertReferralSchema, processedRiotMatches
 } from "@shared/schema";
@@ -994,6 +994,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get user's current shipping address for physical items
       const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
       
       // For physical items, require shipping address
       if (reward.fulfillmentType === 'physical') {
