@@ -173,17 +173,72 @@ For horizontal scaling (multiple server instances), upgrade to distributed rate 
 
 ## Security Checklist for Launch
 
-- [x] All admin endpoints protected with adminMiddleware
-- [x] PayPal plan IDs environment-driven
-- [x] Shipping address validation enhanced
-- [x] Subscription lifecycle events logged
-- [x] CSRF protection on OAuth flows
-- [x] SQL injection protection via ORM
-- [x] Input validation with Zod schemas
-- [x] Points system transaction safety
-- [x] Webhook signature validation (Stripe)
-- [x] Match sync deduplication
-- [ ] PayPal webhooks for production (recommended for scale)
-- [ ] Redis-backed rate limiting for horizontal scaling (if deploying multi-instance)
-- [ ] Set ADMIN_EMAILS environment variable
-- [ ] Renew Riot API key before expiry (Nov 14, 2025)
+### ✅ Completed Security Hardening
+- [x] All admin endpoints protected with adminMiddleware (14 endpoints verified)
+- [x] PayPal plan IDs production-safe with environment enforcement
+  - Production requires PAYPAL_BASIC_PLAN_ID, PAYPAL_PRO_PLAN_ID, PAYPAL_ELITE_PLAN_ID
+  - Rejects unrecognized plan IDs (prevents sandbox ID misuse in production)
+  - Development mode has safe sandbox fallbacks
+- [x] Comprehensive shipping address validation
+  - Regex validation for US/CA/UK postal codes
+  - Prevents purely numeric addresses and cities
+  - Country-aware validation with clear error messages
+- [x] Subscription event logging idempotent and complete
+  - Stable event IDs for deduplication (not timestamp-based)
+  - Failure path logging (verification_failed, processing_failed, cancel_failed)
+  - Early return for duplicate requests via `storage.checkEventProcessed()`
+- [x] CSRF protection on OAuth flows (state parameter)
+- [x] SQL injection protection via Drizzle ORM
+- [x] Input validation with Zod schemas on all POST/PATCH endpoints
+- [x] Points system transaction safety (atomic operations)
+- [x] Webhook signature validation (Stripe HMAC, Gaming webhooks HMAC-SHA256)
+- [x] Match sync deduplication (processedRiotMatches table)
+
+### 🚀 Pre-Launch Configuration Requirements
+
+**CRITICAL - Must Set Before Production:**
+1. **PayPal Configuration:**
+   - `PAYPAL_CLIENT_ID` - Production client ID
+   - `PAYPAL_CLIENT_SECRET` - Production secret
+   - `PAYPAL_BASIC_PLAN_ID` - Basic tier production plan ID
+   - `PAYPAL_PRO_PLAN_ID` - Pro tier production plan ID
+   - `PAYPAL_ELITE_PLAN_ID` - Elite tier production plan ID
+
+2. **Admin Access:**
+   - `ADMIN_EMAILS` - Comma-separated list (e.g., "admin@example.com,support@example.com")
+
+3. **Gaming APIs:**
+   - Renew `RIOT_API_KEY` before Nov 14, 2025 at https://developer.riotgames.com/
+
+4. **Session Security:**
+   - Ensure `SESSION_SECRET` is cryptographically random (32+ characters)
+
+5. **Deployment:**
+   - Set `NODE_ENV=production`
+   - Verify `BASE_URL` points to production domain
+
+### 📋 Pre-Launch Testing Checklist
+
+1. **Staging PayPal Flow:**
+   - [ ] Test subscription approval with production plan IDs
+   - [ ] Verify event logging creates entries in subscriptionEvents table
+   - [ ] Confirm deduplication prevents double-processing (refresh page after approval)
+   - [ ] Test cancellation flow and verify event logging
+
+2. **Shipping Validation:**
+   - [ ] Test US ZIP code validation (valid: 12345, 12345-6789; invalid: 1234A)
+   - [ ] Test Canadian postal code (valid: A1A 1A1; invalid: 12345)
+   - [ ] Test address rejection (purely numeric like "12345" should fail)
+
+3. **Admin Access:**
+   - [ ] Verify ADMIN_EMAILS restricts /api/admin/* endpoints correctly
+   - [ ] Test fulfillment dashboard with admin account
+   - [ ] Test rejection with non-admin account
+
+### 🔮 Future Enhancements (Post-Launch)
+
+- [ ] **PayPal Webhooks:** Implement webhook listeners for automatic renewal/cancellation notifications (reduces API calls, real-time updates)
+- [ ] **Redis Rate Limiting:** Upgrade from in-memory to Redis-backed rate limiting for horizontal scaling
+- [ ] **Riot OAuth Production:** Complete Riot OAuth approval process for production use
+- [ ] **Enhanced Fraud Detection:** IP-based rate limiting, address verification API integration
+- [ ] **Monitoring & Alerting:** Set up alerts for failed subscriptions, shipping validation failures, suspicious activity
