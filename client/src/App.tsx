@@ -30,6 +30,7 @@ import ReportMatch from "@/pages/ReportMatch";
 import Referrals from "@/pages/Referrals";
 import Settings from "@/pages/Settings";
 import FulfillmentDashboard from "@/pages/FulfillmentDashboard";
+import AdminDashboard from "@/pages/AdminDashboard";
 import MyRewards from "@/pages/MyRewards";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
@@ -81,6 +82,7 @@ function Router() {
       <Route path="/referrals" component={Referrals} />
       <Route path="/my-rewards" component={MyRewards} />
       <Route path="/settings" component={Settings} />
+      <Route path="/admin" component={AdminDashboard} />
       <Route path="/fulfillment" component={FulfillmentDashboard} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />

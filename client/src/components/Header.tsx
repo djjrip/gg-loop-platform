@@ -1,4 +1,4 @@
-import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity } from "lucide-react";
+import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +24,21 @@ export default function Header() {
   const { data: freeTierData } = useQuery<{ ggCoins: number; canRedeemTrial: boolean }>({
     queryKey: ["/api/free-tier/status"],
     enabled: isAuthenticated,
+  });
+
+  // Check if user has admin access (will fail silently if not admin)
+  const { data: isAdmin } = useQuery<boolean>({
+    queryKey: ["/api/admin/pending-rewards"],
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/admin/pending-rewards");
+        return res.ok; // If successful, user is admin
+      } catch {
+        return false;
+      }
+    },
+    enabled: isAuthenticated,
+    retry: false,
   });
 
   useEffect(() => {
@@ -175,6 +190,14 @@ export default function Header() {
                     My Profile
                   </DropdownMenuItem>
                 </Link>
+                {isAdmin && (
+                  <Link href="/admin">
+                    <DropdownMenuItem data-testid="link-admin-dashboard">
+                      <Shield className="mr-2 h-4 w-4 text-primary" />
+                      <span className="text-primary font-semibold">Admin</span>
+                    </DropdownMenuItem>
+                  </Link>
+                )}
                 <Link href="/my-rewards">
                   <DropdownMenuItem data-testid="link-my-rewards">
                     <Gift className="mr-2 h-4 w-4" />
