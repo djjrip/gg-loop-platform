@@ -1014,29 +1014,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Validate minimum lengths to prevent placeholder/test data
-        if (user.shippingAddress.trim().length < 5) {
+        // Comprehensive address format validation
+        const address = user.shippingAddress.trim();
+        const city = user.shippingCity.trim();
+        const state = user.shippingState.trim();
+        const zip = user.shippingZip.trim();
+        const country = (user.shippingCountry || 'US').trim().toUpperCase();
+        
+        // Validate street address - must contain letters and numbers (not purely numeric)
+        if (address.length < 5) {
           return res.status(400).json({ 
-            message: "Please enter a valid street address (minimum 5 characters)" 
+            message: "Street address must be at least 5 characters" 
           });
         }
         
-        if (user.shippingCity.trim().length < 2) {
+        if (/^\d+$/.test(address)) {
           return res.status(400).json({ 
-            message: "Please enter a valid city name" 
+            message: "Street address cannot be only numbers. Please include street name." 
           });
         }
         
-        if (user.shippingState.trim().length < 2) {
+        if (!/[a-zA-Z]/.test(address)) {
           return res.status(400).json({ 
-            message: "Please enter a valid state/province" 
+            message: "Street address must contain letters" 
           });
         }
         
-        if (user.shippingZip.trim().length < 3) {
+        // Validate city name - must contain letters (no purely numeric cities)
+        if (city.length < 2) {
           return res.status(400).json({ 
-            message: "Please enter a valid ZIP/postal code" 
+            message: "City name must be at least 2 characters" 
           });
+        }
+        
+        if (!/[a-zA-Z]/.test(city)) {
+          return res.status(400).json({ 
+            message: "City name must contain letters" 
+          });
+        }
+        
+        // Validate state/province - must be letters only (2-letter codes or full names)
+        if (state.length < 2) {
+          return res.status(400).json({ 
+            message: "State/Province must be at least 2 characters" 
+          });
+        }
+        
+        if (!/^[a-zA-Z\s.-]+$/.test(state)) {
+          return res.status(400).json({ 
+            message: "State/Province must contain only letters, spaces, hyphens, or periods" 
+          });
+        }
+        
+        // Validate ZIP/postal code - country-aware validation
+        if (zip.length < 3) {
+          return res.status(400).json({ 
+            message: "ZIP/Postal code must be at least 3 characters" 
+          });
+        }
+        
+        // US ZIP code: 5 digits or 5+4 format (12345 or 12345-6789)
+        if (country === 'US') {
+          if (!/^\d{5}(-\d{4})?$/.test(zip)) {
+            return res.status(400).json({ 
+              message: "US ZIP code must be 5 digits (e.g., 12345) or 9 digits (e.g., 12345-6789)" 
+            });
+          }
+        }
+        // Canada postal code: A1A 1A1 or A1A1A1
+        else if (country === 'CA') {
+          if (!/^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/.test(zip)) {
+            return res.status(400).json({ 
+              message: "Canadian postal code must be in format A1A 1A1" 
+            });
+          }
+        }
+        // UK postcode: various formats
+        else if (country === 'GB' || country === 'UK') {
+          if (!/^[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2}$/i.test(zip)) {
+            return res.status(400).json({ 
+              message: "UK postcode must be in valid format (e.g., SW1A 1AA)" 
+            });
+          }
+        }
+        // For other countries, ensure it contains at least one alphanumeric character
+        else {
+          if (!/[a-zA-Z0-9]/.test(zip)) {
+            return res.status(400).json({ 
+              message: "Postal code must contain at least one letter or number" 
+            });
+          }
         }
       }
       
@@ -1635,18 +1702,52 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
   });
 
   app.post('/api/paypal/subscription-approved', getUserMiddleware, async (req: any, res) => {
-    try {
-      const { subscriptionId } = req.body;
-      const userId = req.dbUser.id;
+    const { subscriptionId } = req.body;
+    const userId = req.dbUser.id;
 
-      if (!subscriptionId) {
-        return res.status(400).json({ message: "Missing subscription ID" });
+    if (!subscriptionId) {
+      return res.status(400).json({ message: "Missing subscription ID" });
+    }
+
+    // Generate stable event ID for deduplication (based on subscription ID, not timestamp)
+    const eventId = `paypal_approved_${subscriptionId}_${userId}`;
+    
+    try {
+      // Check if this approval has already been processed (deduplication)
+      const existingEvent = await storage.checkEventProcessed(eventId);
+      if (existingEvent) {
+        console.log(`PayPal subscription ${subscriptionId} already processed, skipping`);
+        const subscription = await storage.getSubscription(userId);
+        return res.json({ 
+          message: "Subscription already activated",
+          tier: subscription?.tier || "unknown"
+        });
       }
 
       const verification = await verifyPayPalSubscription(subscriptionId);
       
       if (!verification.valid) {
         console.error("PayPal subscription verification failed:", verification.error);
+        
+        // Log verification failure event
+        try {
+          const sub = await storage.getSubscription(userId);
+          if (sub) {
+            await storage.logSubscriptionEvent({
+              subscriptionId: sub.id,
+              eventType: "subscription.verification_failed",
+              stripeEventId: `${eventId}_failed`,
+              eventData: {
+                error: verification.error,
+                paypalSubscriptionId: subscriptionId,
+                status: verification.status,
+              },
+            });
+          }
+        } catch (logError) {
+          console.error("Failed to log verification failure:", logError);
+        }
+        
         return res.status(400).json({ 
           message: verification.error || "Invalid subscription" 
         });
@@ -1659,13 +1760,11 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       }
 
       const tierLower = verification.tier;
-
       const currentDate = new Date();
       const nextBillingDate = new Date(currentDate);
       nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
 
       const existingSubscription = await storage.getSubscription(userId);
-      
       let subscriptionDbId: string;
       
       if (existingSubscription) {
@@ -1677,11 +1776,11 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         });
         subscriptionDbId = existingSubscription.id;
         
-        // Log subscription update event
+        // Log subscription update event with stable ID
         await storage.logSubscriptionEvent({
           subscriptionId: existingSubscription.id,
           eventType: "subscription.updated",
-          stripeEventId: `paypal_${subscriptionId}_${Date.now()}`,
+          stripeEventId: eventId,
           eventData: {
             previousTier: existingSubscription.tier,
             newTier: tierLower,
@@ -1700,11 +1799,11 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         });
         subscriptionDbId = newSub.id;
         
-        // Log subscription created event
+        // Log subscription created event with stable ID
         await storage.logSubscriptionEvent({
           subscriptionId: newSub.id,
           eventType: "subscription.created",
-          stripeEventId: `paypal_${subscriptionId}_${Date.now()}`,
+          stripeEventId: eventId,
           eventData: {
             tier: tierLower,
             paypalSubscriptionId: subscriptionId,
@@ -1721,17 +1820,48 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       });
     } catch (error: any) {
       console.error("Error processing PayPal subscription:", error);
+      
+      // Log failure event with error details
+      try {
+        const sub = await storage.getSubscription(userId);
+        if (sub) {
+          await storage.logSubscriptionEvent({
+            subscriptionId: sub.id,
+            eventType: "subscription.processing_failed",
+            stripeEventId: `${eventId}_error`,
+            eventData: {
+              error: error.message,
+              paypalSubscriptionId: subscriptionId,
+              stack: error.stack,
+            },
+          });
+        }
+      } catch (logError) {
+        console.error("Failed to log processing error:", logError);
+      }
+      
       res.status(500).json({ message: error.message || "Failed to process subscription" });
     }
   });
 
   app.post('/api/subscription/cancel', getUserMiddleware, async (req: any, res) => {
+    const userId = req.dbUser.id;
+    
     try {
-      const userId = req.dbUser.id;
       const subscription = await storage.getSubscription(userId);
       
       if (!subscription) {
         return res.status(404).json({ message: "No active subscription found" });
+      }
+
+      // Generate stable event ID for deduplication
+      const eventId = `cancel_${subscription.stripeSubscriptionId}_${userId}`;
+      
+      // Check if cancellation already processed
+      const existingEvent = await storage.checkEventProcessed(eventId);
+      if (existingEvent) {
+        console.log(`Subscription ${subscription.stripeSubscriptionId} already being canceled`);
+        return res.json({ message: "Subscription cancellation already in progress" });
       }
 
       if (subscription.stripeSubscriptionId) {
@@ -1751,11 +1881,11 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         status: "canceling"
       });
       
-      // Log subscription cancellation event
+      // Log subscription cancellation event with stable ID
       await storage.logSubscriptionEvent({
         subscriptionId: subscription.id,
         eventType: "subscription.canceled",
-        stripeEventId: `cancel_${subscription.stripeSubscriptionId}_${Date.now()}`,
+        stripeEventId: eventId,
         eventData: {
           tier: subscription.tier,
           paypalSubscriptionId: subscription.stripeSubscriptionId,
@@ -1766,6 +1896,27 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       res.json({ message: "Subscription will be canceled at period end" });
     } catch (error: any) {
       console.error("Error canceling subscription:", error);
+      
+      // Log cancellation failure
+      try {
+        const subscription = await storage.getSubscription(userId);
+        if (subscription) {
+          const eventId = `cancel_${subscription.stripeSubscriptionId}_${userId}`;
+          await storage.logSubscriptionEvent({
+            subscriptionId: subscription.id,
+            eventType: "subscription.cancel_failed",
+            stripeEventId: `${eventId}_error`,
+            eventData: {
+              error: error.message,
+              tier: subscription.tier,
+              paypalSubscriptionId: subscription.stripeSubscriptionId,
+            },
+          });
+        }
+      } catch (logError) {
+        console.error("Failed to log cancellation error:", logError);
+      }
+      
       res.status(500).json({ message: error.message || "Failed to cancel subscription" });
     }
   });

@@ -48,6 +48,20 @@ export async function verifyPayPalSubscription(subscriptionId: string): Promise<
     return { valid: false, error: "PayPal not configured" };
   }
 
+  // In production, require plan IDs to be explicitly configured
+  const isProduction = process.env.NODE_ENV === "production";
+  const basicPlanId = process.env.PAYPAL_BASIC_PLAN_ID;
+  const proPlanId = process.env.PAYPAL_PRO_PLAN_ID;
+  const elitePlanId = process.env.PAYPAL_ELITE_PLAN_ID;
+
+  if (isProduction && (!basicPlanId || !proPlanId || !elitePlanId)) {
+    console.error("CRITICAL: PayPal plan IDs not configured in production");
+    return { 
+      valid: false, 
+      error: "PayPal configuration incomplete. Contact support." 
+    };
+  }
+
   try {
     const response = await subscriptionsController.getSubscription({ id: subscriptionId });
     const subscription = response.result;
@@ -55,14 +69,32 @@ export async function verifyPayPalSubscription(subscriptionId: string): Promise<
     const status = (subscription as any).status;
     const planId = (subscription as any).planId;
 
-    // Environment-driven plan ID mapping (fallback to hardcoded sandbox IDs for testing)
-    const planTierMap: Record<string, string> = {
-      [process.env.PAYPAL_BASIC_PLAN_ID || "P-6A485619U8349492UNEK4RRA"]: "basic",
-      [process.env.PAYPAL_PRO_PLAN_ID || "P-7PE45456B7870481SNEK4TRY"]: "pro",
-      [process.env.PAYPAL_ELITE_PLAN_ID || "P-369148416D044494CNEK4UDQ"]: "elite",
-    };
+    // Strict plan ID mapping - only accept configured plan IDs
+    // In production, only configured IDs are accepted (no fallback)
+    // In development, fallback to sandbox IDs for testing
+    const planTierMap: Record<string, string> = {};
+    
+    if (basicPlanId) planTierMap[basicPlanId] = "basic";
+    else if (!isProduction) planTierMap["P-6A485619U8349492UNEK4RRA"] = "basic"; // Sandbox fallback
+    
+    if (proPlanId) planTierMap[proPlanId] = "pro";
+    else if (!isProduction) planTierMap["P-7PE45456B7870481SNEK4TRY"] = "pro"; // Sandbox fallback
+    
+    if (elitePlanId) planTierMap[elitePlanId] = "elite";
+    else if (!isProduction) planTierMap["P-369148416D044494CNEK4UDQ"] = "elite"; // Sandbox fallback
 
     const tier = planId ? planTierMap[planId] : undefined;
+    
+    // Security: Reject if plan ID not recognized
+    if (!tier) {
+      console.error(`Security: Unrecognized PayPal plan ID ${planId}`);
+      return {
+        valid: false,
+        status,
+        planId,
+        error: "Unrecognized subscription plan. Contact support.",
+      };
+    }
 
     if (status === "ACTIVE" || status === "APPROVED") {
       return {
