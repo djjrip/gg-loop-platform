@@ -967,16 +967,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reward not found" });
       }
       
+      // Get user's current shipping address for physical items
+      const user = await storage.getUser(userId);
+      
+      // For physical items, require shipping address
+      if (reward.fulfillmentType === 'physical') {
+        if (!user.shippingAddress || !user.shippingCity || !user.shippingState || !user.shippingZip) {
+          return res.status(400).json({ 
+            message: "Please add your shipping address in Settings before redeeming physical items" 
+          });
+        }
+      }
+      
       // Server-side calculation of pointsSpent (security critical)
       const validated = insertUserRewardSchema.parse({ 
         userId, 
         rewardId,
-        pointsSpent: reward.pointsCost
+        pointsSpent: reward.pointsCost,
+        // Copy shipping address if it's a physical item
+        ...(reward.fulfillmentType === 'physical' && {
+          shippingAddress: user.shippingAddress,
+          shippingCity: user.shippingCity,
+          shippingState: user.shippingState,
+          shippingZip: user.shippingZip,
+          shippingCountry: user.shippingCountry || 'US'
+        })
       });
       
       const userReward = await storage.redeemReward(validated);
       
       // IMPORTANT: Notification for fulfillment
+      const shippingInfo = reward.fulfillmentType === 'physical' 
+        ? `\nShipping Address:\n${user.shippingAddress}\n${user.shippingCity}, ${user.shippingState} ${user.shippingZip}\n${user.shippingCountry || 'US'}`
+        : '';
+      
       console.log(`
 🎁 REWARD REDEMPTION ALERT 🎁
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -984,10 +1008,12 @@ User: ${req.dbUser.email} (${req.dbUser.firstName || 'Unknown'})
 Reward: ${reward.title}
 Points Spent: ${reward.pointsCost}
 Real Value: $${reward.realValue}
-Fulfillment Type: ${reward.fulfillmentType}
+Fulfillment Type: ${reward.fulfillmentType}${shippingInfo}
 Time: ${new Date().toLocaleString()}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ACTION NEEDED: Buy and email gift card code to ${req.dbUser.email}
+ACTION NEEDED: ${reward.fulfillmentType === 'physical' 
+  ? 'Purchase and ship item to address above'
+  : `Buy and email gift card code to ${req.dbUser.email}`}
       `);
       
       // TODO: Add email notification - see Replit docs for email integration
