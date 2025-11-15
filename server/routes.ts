@@ -999,11 +999,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      // For physical items, require shipping address
+      // For physical items, require complete and valid shipping address
       if (reward.fulfillmentType === 'physical') {
-        if (!user.shippingAddress || !user.shippingCity || !user.shippingState || !user.shippingZip) {
+        const missingFields: string[] = [];
+        
+        if (!user.shippingAddress?.trim()) missingFields.push("Street Address");
+        if (!user.shippingCity?.trim()) missingFields.push("City");
+        if (!user.shippingState?.trim()) missingFields.push("State/Province");
+        if (!user.shippingZip?.trim()) missingFields.push("ZIP/Postal Code");
+        
+        if (missingFields.length > 0) {
           return res.status(400).json({ 
-            message: "Please add your shipping address in Settings before redeeming physical items" 
+            message: `Please complete your shipping address in Settings. Missing: ${missingFields.join(", ")}` 
+          });
+        }
+        
+        // Validate minimum lengths to prevent placeholder/test data
+        if (user.shippingAddress.trim().length < 5) {
+          return res.status(400).json({ 
+            message: "Please enter a valid street address (minimum 5 characters)" 
+          });
+        }
+        
+        if (user.shippingCity.trim().length < 2) {
+          return res.status(400).json({ 
+            message: "Please enter a valid city name" 
+          });
+        }
+        
+        if (user.shippingState.trim().length < 2) {
+          return res.status(400).json({ 
+            message: "Please enter a valid state/province" 
+          });
+        }
+        
+        if (user.shippingZip.trim().length < 3) {
+          return res.status(400).json({ 
+            message: "Please enter a valid ZIP/postal code" 
           });
         }
       }
@@ -1634,6 +1666,8 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
       const existingSubscription = await storage.getSubscription(userId);
       
+      let subscriptionDbId: string;
+      
       if (existingSubscription) {
         await storage.updateSubscription(existingSubscription.id, {
           tier: tierLower,
@@ -1641,14 +1675,41 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           stripeSubscriptionId: subscriptionId,
           currentPeriodEnd: nextBillingDate,
         });
+        subscriptionDbId = existingSubscription.id;
+        
+        // Log subscription update event
+        await storage.logSubscriptionEvent({
+          subscriptionId: existingSubscription.id,
+          eventType: "subscription.updated",
+          stripeEventId: `paypal_${subscriptionId}_${Date.now()}`,
+          eventData: {
+            previousTier: existingSubscription.tier,
+            newTier: tierLower,
+            paypalSubscriptionId: subscriptionId,
+            status: verification.status,
+          },
+        });
       } else {
-        await storage.createSubscription({
+        const newSub = await storage.createSubscription({
           userId,
           tier: tierLower,
           status: "active",
           stripeSubscriptionId: subscriptionId,
           currentPeriodStart: currentDate,
           currentPeriodEnd: nextBillingDate,
+        });
+        subscriptionDbId = newSub.id;
+        
+        // Log subscription created event
+        await storage.logSubscriptionEvent({
+          subscriptionId: newSub.id,
+          eventType: "subscription.created",
+          stripeEventId: `paypal_${subscriptionId}_${Date.now()}`,
+          eventData: {
+            tier: tierLower,
+            paypalSubscriptionId: subscriptionId,
+            status: verification.status,
+          },
         });
       }
 
@@ -1688,6 +1749,18 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
       await storage.updateSubscription(subscription.id, {
         status: "canceling"
+      });
+      
+      // Log subscription cancellation event
+      await storage.logSubscriptionEvent({
+        subscriptionId: subscription.id,
+        eventType: "subscription.canceled",
+        stripeEventId: `cancel_${subscription.stripeSubscriptionId}_${Date.now()}`,
+        eventData: {
+          tier: subscription.tier,
+          paypalSubscriptionId: subscription.stripeSubscriptionId,
+          reason: "user_requested",
+        },
       });
 
       res.json({ message: "Subscription will be canceled at period end" });
