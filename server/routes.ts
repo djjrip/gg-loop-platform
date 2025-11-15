@@ -668,6 +668,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/user/shipping-address', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { address, city, state, zip, country } = z.object({
+        address: z.string().min(1, "Address is required"),
+        city: z.string().min(1, "City is required"),
+        state: z.string().min(1, "State is required"),
+        zip: z.string().min(1, "ZIP code is required"),
+        country: z.string().default("US")
+      }).parse(req.body);
+      
+      await db.update(users)
+        .set({
+          shippingAddress: address,
+          shippingCity: city,
+          shippingState: state,
+          shippingZip: zip,
+          shippingCountry: country
+        })
+        .where(eq(users.id, userId));
+      
+      const updatedUser = await storage.getUser(userId);
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error("Error updating shipping address:", error);
+      res.status(400).json({ message: error.message || "Failed to update shipping address" });
+    }
+  });
+
   app.post('/api/user/games', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
