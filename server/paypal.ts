@@ -55,10 +55,11 @@ export async function verifyPayPalSubscription(subscriptionId: string): Promise<
     const status = (subscription as any).status;
     const planId = (subscription as any).planId;
 
+    // Environment-driven plan ID mapping (fallback to hardcoded sandbox IDs for testing)
     const planTierMap: Record<string, string> = {
-      "P-6A485619U8349492UNEK4RRA": "basic",
-      "P-7PE45456B7870481SNEK4TRY": "pro",
-      "P-369148416D044494CNEK4UDQ": "elite",
+      [process.env.PAYPAL_BASIC_PLAN_ID || "P-6A485619U8349492UNEK4RRA"]: "basic",
+      [process.env.PAYPAL_PRO_PLAN_ID || "P-7PE45456B7870481SNEK4TRY"]: "pro",
+      [process.env.PAYPAL_ELITE_PLAN_ID || "P-369148416D044494CNEK4UDQ"]: "elite",
     };
 
     const tier = planId ? planTierMap[planId] : undefined;
