@@ -31,6 +31,11 @@ export const users = pgTable("users", {
   twitchAccessToken: text("twitch_access_token"),
   twitchRefreshToken: text("twitch_refresh_token"),
   twitchConnectedAt: timestamp("twitch_connected_at"),
+  shippingAddress: text("shipping_address"),
+  shippingCity: varchar("shipping_city"),
+  shippingState: varchar("shipping_state"),
+  shippingZip: varchar("shipping_zip"),
+  shippingCountry: varchar("shipping_country").default("US"),
   referralCode: varchar("referral_code", { length: 10 }).unique(),
   referredBy: varchar("referred_by").references((): any => users.id),
   isFounder: boolean("is_founder").notNull().default(false),
@@ -137,6 +142,14 @@ export const userRewards = pgTable("user_rewards", {
   redeemedAt: timestamp("redeemed_at").notNull().defaultNow(),
   status: text("status").notNull().default("pending"),
   fulfillmentData: jsonb("fulfillment_data"),
+  trackingNumber: text("tracking_number"),
+  fulfillmentNotes: text("fulfillment_notes"),
+  fulfilledAt: timestamp("fulfilled_at"),
+  shippingAddress: text("shipping_address"),
+  shippingCity: varchar("shipping_city"),
+  shippingState: varchar("shipping_state"),
+  shippingZip: varchar("shipping_zip"),
+  shippingCountry: varchar("shipping_country"),
 });
 
 export const subscriptions = pgTable("subscriptions", {
