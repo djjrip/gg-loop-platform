@@ -22,6 +22,7 @@ import { twitchAPI } from "./lib/twitch";
 import { calculateReferralReward, FREE_TRIAL_DURATION_DAYS } from "./lib/referral";
 import crypto from 'crypto';
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { tangoCardService } from "./tangoCardService";
 
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-10-29.clover" })
@@ -929,6 +930,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching rewards:", error);
       res.status(500).json({ message: "Failed to fetch rewards" });
+    }
+  });
+
+  // Tango Card Catalog Endpoint
+  app.get('/api/tango/catalog', async (req, res) => {
+    try {
+      const catalog = await tangoCardService.getCatalog();
+      
+      // Transform Tango items to match our shop format
+      const transformedCatalog = catalog.map(item => ({
+        id: item.utid,
+        utid: item.utid,
+        title: item.rewardName,
+        description: item.description || `${item.rewardType} - ${item.currencyCode}`,
+        pointsCost: item.faceValue * 100, // Convert dollars to points (e.g., $25 = 2,500 points)
+        category: item.rewardType,
+        imageUrl: null,
+        stock: null, // Tango has unlimited stock
+        minValue: item.minValue,
+        maxValue: item.maxValue,
+        valueType: item.valueType,
+        isExpirable: item.isExpirable,
+      }));
+
+      res.json(transformedCatalog);
+    } catch (error) {
+      console.error("Error fetching Tango catalog:", error);
+      res.status(500).json({ message: "Failed to fetch catalog" });
+    }
+  });
+
+  // Tango Card Redemption Endpoint
+  app.post('/api/tango/redeem', getUserMiddleware, async (req: any, res) => {
+    try {
+      const { utid, amount } = z.object({
+        utid: z.string(),
+        amount: z.number().positive(),
+      }).parse(req.body);
+
+      const userId = req.dbUser.id;
+      const userEmail = req.dbUser.email;
+
+      if (!userEmail) {
+        return res.status(400).json({ message: "User email required for redemption" });
+      }
+
+      // Get item details
+      const item = await tangoCardService.getItemByUtid(utid);
+      if (!item) {
+        return res.status(404).json({ message: "Item not found in catalog" });
+      }
+
+      // Calculate points cost
+      const pointsCost = amount * 100; // $1 = 100 points
+
+      // Check if user has enough points
+      if (req.dbUser.totalPoints < pointsCost) {
+        return res.status(400).json({ 
+          message: "Insufficient points",
+          required: pointsCost,
+          available: req.dbUser.totalPoints
+        });
+      }
+
+      // Place order with Tango Card
+      const order = await tangoCardService.placeOrder(utid, amount, userEmail);
+
+      // Deduct points using points engine
+      await pointsEngine.spendPoints(
+        userId,
+        pointsCost,
+        'TANGO_REDEMPTION',
+        utid,
+        'tango_card',
+        `Redeemed ${item.rewardName} - $${amount}`,
+        db
+      );
+
+      // Record redemption in database (using raw insert since this is a Tango item)
+      const [userReward] = await db.insert(userRewards).values({
+        userId,
+        rewardId: utid,
+        pointsSpent: pointsCost,
+        status: 'fulfilled',
+        trackingInfo: order.referenceOrderID,
+      }).returning();
+
+      res.json({
+        success: true,
+        order,
+        pointsDeducted: pointsCost,
+        remainingPoints: req.dbUser.totalPoints - pointsCost,
+      });
+    } catch (error: any) {
+      console.error("Error redeeming Tango item:", error);
+      res.status(500).json({ message: error.message || "Failed to redeem item" });
     }
   });
 
