@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { 
   users, games, userGames, leaderboardEntries, achievements, rewards, userRewards,
-  subscriptions, subscriptionEvents, pointTransactions, apiPartners, gamingEvents, matchSubmissions, referrals,
+  subscriptions, subscriptionEvents, pointTransactions, apiPartners, gamingEvents, matchSubmissions, referrals, checklistItems,
   type User, type InsertUser, type UpsertUser,
   type Game, type InsertGame,
   type UserGame, type InsertUserGame,
@@ -15,7 +15,8 @@ import {
   type ApiPartner, type InsertApiPartner,
   type GamingEvent, type InsertGamingEvent,
   type MatchSubmission, type InsertMatchSubmission,
-  type Referral, type InsertReferral
+  type Referral, type InsertReferral,
+  type ChecklistItem, type InsertChecklistItem
 } from "@shared/schema";
 import { eq, desc, and, sql, gte } from "drizzle-orm";
 import { pointsEngine } from "./pointsEngine";
@@ -87,6 +88,10 @@ export interface IStorage {
   getReferralLeaderboard(limit?: number): Promise<{ user: User; referralCount: number; totalPoints: number }[]>;
   startFreeTrial(userId: string): Promise<User>;
   getDailyMetrics(): Promise<any>;
+  
+  getChecklistItems(date: string): Promise<ChecklistItem[]>;
+  upsertChecklistItem(item: InsertChecklistItem): Promise<ChecklistItem>;
+  toggleChecklistItem(date: string, taskId: string, taskLabel: string, completed: boolean): Promise<ChecklistItem>;
 }
 
 export class DbStorage implements IStorage {
@@ -848,6 +853,53 @@ export class DbStorage implements IStorage {
       totalPointsRedeemed,
       pointsLiability: totalPointsIssued - totalPointsRedeemed,
     };
+  }
+
+  async getChecklistItems(date: string): Promise<ChecklistItem[]> {
+    return db.select().from(checklistItems).where(eq(checklistItems.date, date));
+  }
+
+  async upsertChecklistItem(item: InsertChecklistItem): Promise<ChecklistItem> {
+    const existing = await db
+      .select()
+      .from(checklistItems)
+      .where(and(eq(checklistItems.date, item.date), eq(checklistItems.taskId, item.taskId)))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const [updated] = await db
+        .update(checklistItems)
+        .set({ ...item, completedAt: item.completed ? new Date() : null })
+        .where(eq(checklistItems.id, existing[0].id))
+        .returning();
+      return updated;
+    }
+
+    const [created] = await db.insert(checklistItems).values(item).returning();
+    return created;
+  }
+
+  async toggleChecklistItem(date: string, taskId: string, taskLabel: string, completed: boolean): Promise<ChecklistItem> {
+    const existing = await db
+      .select()
+      .from(checklistItems)
+      .where(and(eq(checklistItems.date, date), eq(checklistItems.taskId, taskId)))
+      .limit(1);
+
+    if (existing.length > 0) {
+      const [updated] = await db
+        .update(checklistItems)
+        .set({ completed, completedAt: completed ? new Date() : null })
+        .where(eq(checklistItems.id, existing[0].id))
+        .returning();
+      return updated;
+    }
+
+    const [created] = await db
+      .insert(checklistItems)
+      .values({ date, taskId, taskLabel, completed, completedAt: completed ? new Date() : null })
+      .returning();
+    return created;
   }
 }
 

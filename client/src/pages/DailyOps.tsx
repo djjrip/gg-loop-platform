@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import {
   Activity
 } from "lucide-react";
 import { Link } from "wouter";
-import { useState } from "react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface DailyMetrics {
   // Financial
@@ -48,11 +48,38 @@ interface DailyMetrics {
   pointsLiability: number;
 }
 
+interface ChecklistItem {
+  id: string;
+  date: string;
+  taskId: string;
+  taskLabel: string;
+  completed: boolean;
+  completedAt: string | null;
+  createdAt: string;
+}
+
 export default function DailyOps() {
-  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const today = new Date().toISOString().split('T')[0];
 
   const { data: metrics, isLoading } = useQuery<DailyMetrics>({
     queryKey: ["/api/admin/daily-metrics"],
+  });
+
+  const { data: checklistItems = [] } = useQuery<ChecklistItem[]>({
+    queryKey: ["/api/admin/checklist", today],
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ taskId, taskLabel, completed }: { taskId: string; taskLabel: string; completed: boolean }) => {
+      return apiRequest("/api/admin/checklist/toggle", {
+        method: "POST",
+        body: JSON.stringify({ date: today, taskId, taskLabel, completed }),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/checklist", today] });
+    },
   });
 
   const dailyChecklist = [
@@ -63,15 +90,17 @@ export default function DailyOps() {
     { id: "rewards", label: "Verify reward inventory levels", priority: "low", link: "/admin/rewards" },
   ];
 
-  const toggleCheck = (id: string) => {
-    setCheckedItems(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
+  const isChecked = (taskId: string) => {
+    return checklistItems.some(item => item.taskId === taskId && item.completed);
+  };
+
+  const toggleCheck = (taskId: string) => {
+    const currentlyChecked = isChecked(taskId);
+    const task = dailyChecklist.find(t => t.id === taskId);
+    toggleMutation.mutate({ 
+      taskId, 
+      taskLabel: task?.label || taskId,
+      completed: !currentlyChecked 
     });
   };
 
@@ -97,7 +126,8 @@ export default function DailyOps() {
     );
   }
 
-  const completionRate = checkedItems.size / dailyChecklist.length * 100;
+  const completedCount = dailyChecklist.filter(item => isChecked(item.id)).length;
+  const completionRate = completedCount / dailyChecklist.length * 100;
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
@@ -126,7 +156,7 @@ export default function DailyOps() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-primary font-mono">
-                  {checkedItems.size}/{dailyChecklist.length}
+                  {completedCount}/{dailyChecklist.length}
                 </div>
                 <p className="text-xs text-muted-foreground">{completionRate.toFixed(0)}% complete</p>
               </div>
@@ -143,15 +173,16 @@ export default function DailyOps() {
                   <button
                     onClick={() => toggleCheck(item.id)}
                     className="flex-shrink-0"
+                    data-testid={`button-checklist-${item.id}`}
                   >
-                    {checkedItems.has(item.id) ? (
+                    {isChecked(item.id) ? (
                       <CheckCircle2 className="h-6 w-6 text-green-500" />
                     ) : (
                       <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/30" />
                     )}
                   </button>
                   <div className="flex-1">
-                    <p className={`font-medium ${checkedItems.has(item.id) ? 'line-through text-muted-foreground' : ''}`}>
+                    <p className={`font-medium ${isChecked(item.id) ? 'line-through text-muted-foreground' : ''}`}>
                       {item.label}
                     </p>
                   </div>

@@ -963,6 +963,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/admin/checklist/:date', adminMiddleware, async (req: any, res) => {
+    try {
+      const { date } = req.params;
+      const items = await storage.getChecklistItems(date);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching checklist items:", error);
+      res.status(500).json({ message: "Failed to fetch checklist items" });
+    }
+  });
+
+  app.post('/api/admin/checklist/toggle', adminMiddleware, async (req: any, res) => {
+    try {
+      const { date, taskId, taskLabel, completed } = z.object({
+        date: z.string(),
+        taskId: z.string(),
+        taskLabel: z.string(),
+        completed: z.boolean(),
+      }).parse(req.body);
+      
+      const item = await storage.toggleChecklistItem(date, taskId, taskLabel, completed);
+      res.json(item);
+    } catch (error: any) {
+      console.error("Error toggling checklist item:", error);
+      res.status(400).json({ message: error.message || "Failed to toggle checklist item" });
+    }
+  });
+
   app.post('/api/admin/rewards/fulfill', adminMiddleware, async (req: any, res) => {
     try {
       const { userRewardId, giftCardCode } = z.object({ 

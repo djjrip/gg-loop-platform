@@ -547,3 +547,25 @@ export const tournamentWebhookSchema = gamingWebhookBaseSchema.extend({
     tournamentName: z.string().optional(),
   }),
 });
+
+export const checklistItems = pgTable("checklist_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: varchar("date").notNull(),
+  taskId: varchar("task_id").notNull(),
+  taskLabel: text("task_label").notNull(),
+  completed: boolean("completed").notNull().default(false),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_checklist_date").on(table.date),
+  sql`UNIQUE(date, task_id)`,
+]);
+
+export const insertChecklistItemSchema = createInsertSchema(checklistItems).omit({
+  id: true,
+  completedAt: true,
+  createdAt: true,
+});
+
+export type InsertChecklistItem = z.infer<typeof insertChecklistItemSchema>;
+export type ChecklistItem = typeof checklistItems.$inferSelect;
