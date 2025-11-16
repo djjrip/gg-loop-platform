@@ -57,7 +57,7 @@ export default function AdminDashboard() {
       title: "Sponsor Management",
       description: "View sponsor proposals, manage partnerships, and track challenge budgets",
       icon: DollarSign,
-      href: "/sponsor-management",
+      href: "/admin/sponsors",
       badge: activeSponsors > 0 ? `${activeSponsors} active` : null,
       badgeVariant: "secondary",
       stats: `${activeSponsors} active sponsors`,
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
               View Pending Orders
             </Button>
           </Link>
-          <Link href="/sponsor-management">
+          <Link href="/admin/sponsors">
             <Button size="lg" variant="outline" data-testid="button-quick-sponsors">
               <DollarSign className="h-4 w-4 mr-2" />
               Manage Sponsors
