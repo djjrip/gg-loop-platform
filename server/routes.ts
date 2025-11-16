@@ -1024,35 +1024,166 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // STEP 2: Execute redemption in transaction
-      const result = await db.transaction(async (tx) => {
-        // Place order with Tango Card
-        const order = await tangoCardService.placeOrder(utid, amount, userEmail);
+      // STEP 2: Create pending redemption record AND deduct points atomically (with idempotency)
+      let pendingRewardId: string;
+      let isRetry = false;
 
-        // Deduct points using points engine
-        await pointsEngine.spendPoints(
+      // Check for RECENT pending record (last 5 minutes) for idempotency
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const [existingPending] = await db.select()
+        .from(userRewards)
+        .where(
+          and(
+            eq(userRewards.userId, userId),
+            eq(userRewards.rewardId, tangoReward.id),
+            eq(userRewards.status, 'pending'),
+            sql`${userRewards.redeemedAt} > ${fiveMinutesAgo}`
+          )
+        )
+        .orderBy(desc(userRewards.redeemedAt))
+        .limit(1);
+
+      if (existingPending) {
+        // Recent retry detected - return existing pending record to avoid double-order
+        console.log('[TANGO] Found recent pending redemption (idempotent retry)', {
           userId,
-          pointsCost,
-          'TANGO_REDEMPTION',
+          pendingRewardId: existingPending.id,
           utid,
-          'tango_card',
-          `Redeemed ${item.rewardName} - $${amount}`,
-          tx
-        );
+          redeemedAt: existingPending.redeemedAt
+        });
 
-        // Record redemption in user_rewards for My Rewards tracking
-        const [userReward] = await tx.insert(userRewards).values({
+        // Return existing record status (don't re-execute order)
+        return res.status(409).json({
+          success: false,
+          error: 'Redemption already in progress. Please wait or contact support.',
+          existingRedemption: {
+            id: existingPending.id,
+            status: existingPending.status,
+            redeemedAt: existingPending.redeemedAt
+          }
+        });
+      } else {
+        // First attempt - create new pending record
+        await db.transaction(async (tx) => {
+          // Deduct points first (will throw if insufficient)
+          await pointsEngine.spendPoints(
+            userId,
+            pointsCost,
+            'TANGO_REDEMPTION',
+            utid,
+            'tango_card',
+            `Pending: ${item.rewardName} - $${amount}`,
+            tx
+          );
+
+          // Create pending user_rewards record with all correlation data
+          const [pendingReward] = await tx.insert(userRewards).values({
+            userId,
+            rewardId: tangoReward.id,
+            pointsSpent: pointsCost,
+            status: 'pending', // Critical: record intent before external API
+            fulfillmentData: { utid, amount, itemName: item.rewardName },
+            fulfillmentNotes: `Pending Tango order for ${item.rewardName}`,
+          }).returning();
+
+          pendingRewardId = pendingReward.id;
+        });
+      }
+
+      // STEP 3: Place Tango order (redemption intent already recorded)
+      let order;
+      let finalStatus: 'fulfilled' | 'failed';
+      let trackingNumber: string | null = null;
+      let fulfillmentData: any;
+      let fulfilledAt: Date | null = null;
+      
+      try {
+        order = await tangoCardService.placeOrder(utid, amount, userEmail);
+        finalStatus = 'fulfilled';
+        trackingNumber = order.referenceOrderID;
+        fulfillmentData = order;
+        fulfilledAt = new Date();
+      } catch (error) {
+        // Order failed - mark as failed and refund points
+        finalStatus = 'failed';
+        fulfillmentData = { error: String(error), utid, amount };
+        
+        console.error('[TANGO] Order placement failed', {
           userId,
-          rewardId: tangoReward.id, // Use generated reward ID
-          pointsSpent: pointsCost,
-          status: 'fulfilled', // Tango orders are instant
-          trackingNumber: order.referenceOrderID,
-          fulfillmentData: order,
-          fulfilledAt: new Date(),
-        }).returning();
+          userEmail,
+          utid,
+          amount,
+          error,
+          action: 'REFUNDING_POINTS'
+        });
+      }
 
-        return { order, userReward };
-      });
+      // STEP 4: Update pending record to final status atomically (with error handling)
+      let result;
+      try {
+        result = await db.transaction(async (tx) => {
+          // Update user_rewards status
+          const [userReward] = await tx.update(userRewards)
+            .set({
+              status: finalStatus,
+              trackingNumber,
+              fulfillmentData,
+              fulfilledAt,
+              fulfillmentNotes: finalStatus === 'fulfilled' 
+                ? `Fulfilled via Tango Card` 
+                : `Order failed - points refunded`
+            })
+            .where(eq(userRewards.id, pendingRewardId))
+            .returning();
+
+          // If failed, refund points
+          if (finalStatus === 'failed') {
+            await pointsEngine.awardPoints(
+              userId,
+              pointsCost,
+              'TANGO_REFUND',
+              utid,
+              'tango_card',
+              `Refund: Failed Tango order for ${item.rewardName}`,
+              tx
+            );
+          }
+
+          return { order, userReward };
+        });
+      } catch (updateError) {
+        // CRITICAL: Status update failed - log for reconciliation with full order data
+        const criticalLog = {
+          severity: 'CRITICAL',
+          event: 'TANGO_STATUS_UPDATE_FAILED',
+          userId,
+          userEmail,
+          pendingRewardId,
+          utid,
+          amount,
+          pointsCost,
+          tangoOrderStatus: finalStatus,
+          tangoReferenceOrderID: trackingNumber,
+          tangoOrderPayload: fulfillmentData,
+          updateError: String(updateError),
+          timestamp: new Date().toISOString(),
+          action: finalStatus === 'fulfilled' 
+            ? 'MANUAL_UPDATE_TO_FULFILLED_REQUIRED' 
+            : 'MANUAL_UPDATE_TO_FAILED_AND_REFUND_REQUIRED',
+          reconciliationInstructions: finalStatus === 'fulfilled'
+            ? 'User received gift card. Update pending record to fulfilled with above data.'
+            : 'Tango order failed. Update pending record to failed and refund points.'
+        };
+        
+        console.error('[TANGO_CRITICAL]', JSON.stringify(criticalLog, null, 2));
+        
+        // Re-throw to return error to client
+        throw new Error(
+          finalStatus === 'fulfilled'
+            ? 'Order placed successfully but system error occurred. Check your email for gift card. Support will update your account.'
+            : 'Redemption failed. Your points will be refunded shortly by support.'
+        );
+      }
 
       res.json({
         success: true,
