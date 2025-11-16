@@ -974,6 +974,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/admin/rewards', adminMiddleware, async (req: any, res) => {
+    try {
+      const rewardData = insertRewardSchema.parse(req.body);
+      const newReward = await storage.createReward(rewardData);
+      console.log(`✨ Created reward: ${newReward.title} (${newReward.pointsCost} points)`);
+      res.json(newReward);
+    } catch (error: any) {
+      console.error("Error creating reward:", error);
+      res.status(400).json({ message: error.message || "Failed to create reward" });
+    }
+  });
+
+  app.patch('/api/admin/rewards/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = z.object({ id: z.string() }).parse(req.params);
+      const updates = insertRewardSchema.partial().parse(req.body);
+      const updatedReward = await storage.updateReward(id, updates);
+      console.log(`✏️ Updated reward: ${updatedReward.title}`);
+      res.json(updatedReward);
+    } catch (error: any) {
+      console.error("Error updating reward:", error);
+      res.status(400).json({ message: error.message || "Failed to update reward" });
+    }
+  });
+
+  app.delete('/api/admin/rewards/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = z.object({ id: z.string() }).parse(req.params);
+      await storage.deleteReward(id);
+      console.log(`🗑️ Deleted reward: ${id}`);
+      res.json({ message: "Reward deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting reward:", error);
+      res.status(400).json({ message: error.message || "Failed to delete reward" });
+    }
+  });
+
   app.post('/api/user/rewards/redeem', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;

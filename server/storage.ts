@@ -50,6 +50,10 @@ export interface IStorage {
   createAchievement(achievement: InsertAchievement): Promise<Achievement>;
   
   getAllRewards(): Promise<Reward[]>;
+  getReward(id: string): Promise<Reward | undefined>;
+  createReward(reward: InsertReward): Promise<Reward>;
+  updateReward(rewardId: string, updates: Partial<InsertReward>): Promise<Reward>;
+  deleteReward(rewardId: string): Promise<void>;
   getUserRewards(userId: string): Promise<(UserReward & { reward: Reward })[]>;
   getAllPendingRewards(): Promise<(UserReward & { reward: Reward; user: User })[]>;
   updateUserRewardStatus(userRewardId: string, status: string, fulfillmentData?: any): Promise<UserReward>;
@@ -394,6 +398,35 @@ export class DbStorage implements IStorage {
 
   async getAllRewards(): Promise<Reward[]> {
     return db.select().from(rewards).where(eq(rewards.inStock, true));
+  }
+
+  async getReward(id: string): Promise<Reward | undefined> {
+    const result = await db.select().from(rewards).where(eq(rewards.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createReward(reward: InsertReward): Promise<Reward> {
+    const [newReward] = await db.insert(rewards).values(reward).returning();
+    return newReward;
+  }
+
+  async updateReward(rewardId: string, updates: Partial<InsertReward>): Promise<Reward> {
+    const [updatedReward] = await db
+      .update(rewards)
+      .set(updates)
+      .where(eq(rewards.id, rewardId))
+      .returning();
+    if (!updatedReward) {
+      throw new Error("Reward not found");
+    }
+    return updatedReward;
+  }
+
+  async deleteReward(rewardId: string): Promise<void> {
+    await db
+      .update(rewards)
+      .set({ inStock: false })
+      .where(eq(rewards.id, rewardId));
   }
 
   async getUserRewards(userId: string): Promise<(UserReward & { reward: Reward })[]> {
