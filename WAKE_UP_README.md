@@ -113,7 +113,7 @@ Go to `/twitch-outreach` and:
 ### **THIS WEEK (2-3 hours):**
 1. Send 10 investor emails (`/investor-outreach`)
 2. Post in 5 Discord gaming servers
-3. Research gift card wholesalers (Raise.com, CardCash, Tango Card)
+3. Research gift card wholesalers (Tango Card, CardCash)
 
 ---
 

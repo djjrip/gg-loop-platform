@@ -17,7 +17,7 @@ ACTION NEEDED: Buy and email gift card code to user@email.com
 
 ### Step 1: Buy the Gift Card
 **Where to buy discounted gift cards:**
-- **Raise.com** - Usually 5-10% off (e.g., $10 Steam card for $9)
+- **Tango Card** - Wholesale API integration (recommended)
 - **CardCash.com** - Wholesale pricing
 - **Direct from retailer** - Steam, Xbox, PlayStation stores
 
@@ -55,9 +55,9 @@ Just keep track in a simple spreadsheet or note. Admin panel coming later when y
 
 | Reward Type | Where to Buy | Typical Discount |
 |------------|--------------|------------------|
-| Steam | Raise.com | 5-10% off |
-| Xbox/PlayStation | CardCash | 3-8% off |
-| Amazon | GiftCardGranny | 2-5% off |
+| Steam | Tango Card API | Wholesale pricing |
+| Xbox/PlayStation | Tango Card API | Wholesale pricing |
+| Amazon | Tango Card API | Wholesale pricing |
 | Discord Nitro | Direct from Discord | No discount |
 
 ---
@@ -65,7 +65,7 @@ Just keep track in a simple spreadsheet or note. Admin panel coming later when y
 ## Profit Margin Example
 
 **User redeems $10 Steam card (100 points):**
-- You buy for: $9 on Raise.com
+- You buy for: $9 via wholesale supplier
 - Profit: $1
 - Your $5 subscription covers ~5 redemptions/month
 - Break-even: Users need to earn less than 500 points/month
@@ -110,7 +110,7 @@ A: Buy a replacement, email new code, track the bad seller to avoid in future
 ## Emergency Contacts
 
 **Gift Card Issues:**
-- Raise.com support: support@raise.com
+- Tango Card support: support@tangocard.com
 - CardCash: 888-289-8018
 
 **Need Help?**

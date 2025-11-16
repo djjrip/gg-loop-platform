@@ -177,11 +177,11 @@ export default function FulfillmentDashboard() {
                 <CheckCircle className="h-6 w-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Cost Savings</p>
+                <p className="text-sm text-muted-foreground">Est. Cost Savings</p>
                 <p className="text-3xl font-bold font-mono text-green-500" data-testid="text-savings">
                   ${(totalValue * 0.075).toFixed(0)}
                 </p>
-                <p className="text-xs text-muted-foreground">7.5% avg Raise.com discount</p>
+                <p className="text-xs text-muted-foreground">7.5% avg wholesale discount</p>
               </div>
             </div>
           </Card>
@@ -335,10 +335,9 @@ export default function FulfillmentDashboard() {
                       </ol>
                     ) : (
                       <ol className="text-sm space-y-1 text-muted-foreground list-decimal list-inside">
-                        <li>Go to <a href="https://raise.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Raise.com</a></li>
-                        <li>Search for "{reward.reward.title}" gift card</li>
-                        <li>Buy ${reward.reward.realValue} card (usually ~7.5% discount)</li>
-                        <li>Copy the gift card code below</li>
+                        <li>Purchase "{reward.reward.title}" gift card from supplier</li>
+                        <li>Buy ${reward.reward.realValue} card value</li>
+                        <li>Copy the gift card code</li>
                         <li>Email the code to: <strong>{reward.user.email}</strong></li>
                         <li>Mark as fulfilled</li>
                       </ol>
