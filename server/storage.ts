@@ -17,7 +17,7 @@ import {
   type MatchSubmission, type InsertMatchSubmission,
   type Referral, type InsertReferral
 } from "@shared/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, gte } from "drizzle-orm";
 import { pointsEngine } from "./pointsEngine";
 import { generateReferralCode } from "./lib/referral";
 
@@ -86,6 +86,7 @@ export interface IStorage {
   updateReferral(referralId: string, updates: Partial<{ status: string; pointsAwarded: number; tier: number; completionReason: string | null; activatedAt: Date | null; completedAt: Date | null }>): Promise<Referral>;
   getReferralLeaderboard(limit?: number): Promise<{ user: User; referralCount: number; totalPoints: number }[]>;
   startFreeTrial(userId: string): Promise<User>;
+  getDailyMetrics(): Promise<any>;
 }
 
 export class DbStorage implements IStorage {
@@ -731,6 +732,122 @@ export class DbStorage implements IStorage {
       .where(eq(users.id, userId))
       .returning();
     return user;
+  }
+
+  async getDailyMetrics(): Promise<any> {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(now);
+    weekStart.setDate(weekStart.getDate() - 7);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Get all subscriptions
+    const allSubs = await db.select().from(subscriptions).where(eq(subscriptions.status, 'active'));
+    
+    // Calculate MRR and tier breakdown
+    const tierPrices = { basic: 500, pro: 1200, elite: 2500 };
+    let mrrTotal = 0;
+    const activeSubscribers = { basic: 0, pro: 0, elite: 0, total: 0 };
+    
+    allSubs.forEach(sub => {
+      const tier = sub.tier as 'basic' | 'pro' | 'elite';
+      mrrTotal += tierPrices[tier] || 0;
+      activeSubscribers[tier]++;
+      activeSubscribers.total++;
+    });
+
+    // Get subscription events for revenue calculation
+    const revenueToday = await db
+      .select({ total: sql<number>`COALESCE(SUM(CASE WHEN type = 'payment_succeeded' THEN amount ELSE 0 END), 0)` })
+      .from(subscriptionEvents)
+      .where(gte(subscriptionEvents.createdAt, todayStart));
+    
+    const revenueThisWeek = await db
+      .select({ total: sql<number>`COALESCE(SUM(CASE WHEN type = 'payment_succeeded' THEN amount ELSE 0 END), 0)` })
+      .from(subscriptionEvents)
+      .where(gte(subscriptionEvents.createdAt, weekStart));
+
+    const revenueThisMonth = await db
+      .select({ total: sql<number>`COALESCE(SUM(CASE WHEN type = 'payment_succeeded' THEN amount ELSE 0 END), 0)` })
+      .from(subscriptionEvents)
+      .where(gte(subscriptionEvents.createdAt, monthStart));
+
+    // Get fulfillment metrics
+    const pendingRewards = await db
+      .select({ 
+        count: sql<number>`COUNT(*)::int`,
+        value: sql<number>`COALESCE(SUM(points_spent), 0)::int`
+      })
+      .from(userRewards)
+      .where(eq(userRewards.status, 'pending'));
+
+    const fulfilledToday = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(userRewards)
+      .where(and(
+        eq(userRewards.status, 'fulfilled'),
+        gte(userRewards.fulfilledAt, todayStart)
+      ));
+
+    // Get user activity
+    const totalUsersResult = await db.select({ count: sql<number>`COUNT(*)::int` }).from(users);
+    const newSignupsTodayResult = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(users)
+      .where(gte(users.createdAt, todayStart));
+    
+    const newSignupsWeekResult = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(users)
+      .where(gte(users.createdAt, weekStart));
+
+    // Get active earners (users who earned points)
+    const activeEarnersTodayResult = await db
+      .select({ count: sql<number>`COUNT(DISTINCT user_id)::int` })
+      .from(pointTransactions)
+      .where(and(
+        gte(pointTransactions.createdAt, todayStart),
+        sql`amount > 0`
+      ));
+
+    const activeEarnersWeekResult = await db
+      .select({ count: sql<number>`COUNT(DISTINCT user_id)::int` })
+      .from(pointTransactions)
+      .where(and(
+        gte(pointTransactions.createdAt, weekStart),
+        sql`amount > 0`
+      ));
+
+    // Get points economy
+    const pointsIssuedResult = await db
+      .select({ total: sql<number>`COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0)::int` })
+      .from(pointTransactions);
+
+    const pointsRedeemedResult = await db
+      .select({ total: sql<number>`COALESCE(SUM(points_spent), 0)::int` })
+      .from(userRewards);
+
+    const totalPointsIssued = pointsIssuedResult[0]?.total || 0;
+    const totalPointsRedeemed = pointsRedeemedResult[0]?.total || 0;
+
+    return {
+      mrrTotal,
+      revenueToday: revenueToday[0]?.total || 0,
+      revenueThisWeek: revenueThisWeek[0]?.total || 0,
+      revenueThisMonth: revenueThisMonth[0]?.total || 0,
+      activeSubscribers,
+      pendingFulfillments: pendingRewards[0]?.count || 0,
+      pendingValue: pendingRewards[0]?.value || 0,
+      fulfilledToday: fulfilledToday[0]?.count || 0,
+      totalUsers: totalUsersResult[0]?.count || 0,
+      newSignupsToday: newSignupsTodayResult[0]?.count || 0,
+      newSignupsThisWeek: newSignupsWeekResult[0]?.count || 0,
+      activeEarnersToday: activeEarnersTodayResult[0]?.count || 0,
+      activeEarnersThisWeek: activeEarnersWeekResult[0]?.count || 0,
+      totalPointsIssued,
+      totalPointsRedeemed,
+      pointsLiability: totalPointsIssued - totalPointsRedeemed,
+    };
   }
 }
 

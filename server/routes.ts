@@ -953,6 +953,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/admin/daily-metrics', adminMiddleware, async (req: any, res) => {
+    try {
+      const metrics = await storage.getDailyMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching daily metrics:", error);
+      res.status(500).json({ message: "Failed to fetch daily metrics" });
+    }
+  });
+
   app.post('/api/admin/rewards/fulfill', adminMiddleware, async (req: any, res) => {
     try {
       const { userRewardId, giftCardCode } = z.object({ 

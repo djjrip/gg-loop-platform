@@ -211,28 +211,34 @@ export default function Header() {
                         Admin Tools
                       </p>
                     </div>
-                    <Link href="/admin">
-                      <DropdownMenuItem data-testid="link-admin-dashboard">
-                        <Shield className="mr-2 h-4 w-4 text-primary" />
-                        Admin Dashboard
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href="/launch-dashboard">
-                      <DropdownMenuItem data-testid="link-launch-dashboard">
-                        <Rocket className="mr-2 h-4 w-4 text-primary" />
-                        Launch KPIs
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href="/admin/rewards">
-                      <DropdownMenuItem data-testid="link-rewards-management">
-                        <Package className="mr-2 h-4 w-4 text-primary" />
-                        Manage Rewards
+                    <Link href="/admin/daily-ops">
+                      <DropdownMenuItem data-testid="link-daily-ops">
+                        <Activity className="mr-2 h-4 w-4 text-primary" />
+                        Daily Operations
                       </DropdownMenuItem>
                     </Link>
                     <Link href="/fulfillment">
                       <DropdownMenuItem data-testid="link-fulfillment">
-                        <TrendingUp className="mr-2 h-4 w-4 text-primary" />
+                        <Package className="mr-2 h-4 w-4 text-primary" />
                         Fulfillment
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/admin/rewards">
+                      <DropdownMenuItem data-testid="link-rewards-management">
+                        <Gift className="mr-2 h-4 w-4 text-primary" />
+                        Manage Rewards
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/launch-dashboard">
+                      <DropdownMenuItem data-testid="link-launch-dashboard">
+                        <TrendingUp className="mr-2 h-4 w-4 text-primary" />
+                        Launch KPIs
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/admin">
+                      <DropdownMenuItem data-testid="link-admin-dashboard">
+                        <Shield className="mr-2 h-4 w-4 text-primary" />
+                        Admin Dashboard
                       </DropdownMenuItem>
                     </Link>
                   </>
