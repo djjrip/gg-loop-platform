@@ -1,4 +1,4 @@
-import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield } from "lucide-react";
+import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, Package, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,20 +26,14 @@ export default function Header() {
     enabled: isAuthenticated,
   });
 
-  // Check if user has admin access (will fail silently if not admin)
-  const { data: isAdmin } = useQuery<boolean>({
-    queryKey: ["/api/admin/pending-rewards"],
-    queryFn: async () => {
-      try {
-        const res = await fetch("/api/admin/pending-rewards");
-        return res.ok; // If successful, user is admin
-      } catch {
-        return false;
-      }
-    },
+  // Check if user has admin access
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/auth/is-admin"],
     enabled: isAuthenticated,
     retry: false,
   });
+  
+  const isAdmin = adminCheck?.isAdmin || false;
 
   useEffect(() => {
     if (isDark) {
@@ -190,14 +184,6 @@ export default function Header() {
                     My Profile
                   </DropdownMenuItem>
                 </Link>
-                {isAdmin && (
-                  <Link href="/admin">
-                    <DropdownMenuItem data-testid="link-admin-dashboard">
-                      <Shield className="mr-2 h-4 w-4 text-primary" />
-                      <span className="text-primary font-semibold">Admin</span>
-                    </DropdownMenuItem>
-                  </Link>
-                )}
                 <Link href="/my-rewards">
                   <DropdownMenuItem data-testid="link-my-rewards">
                     <Gift className="mr-2 h-4 w-4" />
@@ -216,6 +202,41 @@ export default function Header() {
                     Settings
                   </DropdownMenuItem>
                 </Link>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-1.5">
+                      <p className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
+                        <Shield className="h-3 w-3" />
+                        Admin Tools
+                      </p>
+                    </div>
+                    <Link href="/admin">
+                      <DropdownMenuItem data-testid="link-admin-dashboard">
+                        <Shield className="mr-2 h-4 w-4 text-primary" />
+                        Admin Dashboard
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/launch-dashboard">
+                      <DropdownMenuItem data-testid="link-launch-dashboard">
+                        <Rocket className="mr-2 h-4 w-4 text-primary" />
+                        Launch KPIs
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/admin/rewards">
+                      <DropdownMenuItem data-testid="link-rewards-management">
+                        <Package className="mr-2 h-4 w-4 text-primary" />
+                        Manage Rewards
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/fulfillment">
+                      <DropdownMenuItem data-testid="link-fulfillment">
+                        <TrendingUp className="mr-2 h-4 w-4 text-primary" />
+                        Fulfillment
+                      </DropdownMenuItem>
+                    </Link>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
                   <LogOut className="mr-2 h-4 w-4" />

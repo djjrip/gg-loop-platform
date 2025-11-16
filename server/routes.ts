@@ -138,6 +138,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if user is admin
+  app.get('/api/auth/is-admin', async (req: any, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user?.oidcSub) {
+        return res.json({ isAdmin: false });
+      }
+      
+      const oidcSub = req.user.oidcSub;
+      const user = await storage.getUserByOidcSub(oidcSub);
+      
+      if (!user || !user.email) {
+        return res.json({ isAdmin: false });
+      }
+      
+      const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
+      const isAdmin = ADMIN_EMAILS.includes(user.email);
+      
+      res.json({ isAdmin });
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      res.json({ isAdmin: false });
+    }
+  });
+
   // Guest account creation
   app.post('/api/auth/guest', async (req: any, res) => {
     try {
