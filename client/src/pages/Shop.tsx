@@ -46,30 +46,30 @@ function getRarity(pointsCost: number): 'common' | 'rare' | 'epic' | 'legendary'
 
 const rarityConfig = {
   legendary: {
-    color: 'from-yellow-600 to-orange-600',
-    border: 'border-yellow-500/50',
-    bg: 'bg-yellow-500/10',
+    color: 'from-amber-600 to-orange-600',
+    border: 'border-amber-600/40',
+    bg: 'bg-amber-950/10',
     icon: Crown,
     label: 'Legendary',
   },
   epic: {
-    color: 'from-purple-600 to-pink-600',
-    border: 'border-purple-500/50',
-    bg: 'bg-purple-500/10',
+    color: 'from-purple-600 to-purple-700',
+    border: 'border-purple-600/40',
+    bg: 'bg-purple-950/10',
     icon: Sparkles,
     label: 'Epic',
   },
   rare: {
-    color: 'from-blue-600 to-cyan-600',
-    border: 'border-blue-500/50',
-    bg: 'bg-blue-500/10',
+    color: 'from-blue-600 to-blue-700',
+    border: 'border-blue-600/40',
+    bg: 'bg-blue-950/10',
     icon: Star,
     label: 'Rare',
   },
   common: {
-    color: 'from-gray-600 to-gray-500',
-    border: 'border-gray-500/50',
-    bg: 'bg-gray-500/10',
+    color: 'from-slate-500 to-slate-600',
+    border: 'border-slate-500/40',
+    bg: 'bg-slate-950/10',
     icon: Zap,
     label: 'Common',
   },
@@ -103,16 +103,41 @@ export default function Shop() {
     isLimited: reward.stock !== null && reward.stock < 50,
   }));
 
-  // Categorize items based on title/description
+  // Enhanced categorization with comprehensive keyword mapping
   const categorizeItem = (item: EnhancedReward): string => {
     const titleLower = item.title.toLowerCase();
     const descLower = (item.description || '').toLowerCase();
     const combined = `${titleLower} ${descLower}`;
     
-    if (combined.includes('gift card') || combined.includes('giftcard') || combined.includes('card')) return 'gift-cards';
-    if (combined.includes('subscription') || combined.includes('premium') || combined.includes('membership')) return 'subscriptions';
-    if (combined.includes('apparel') || combined.includes('shirt') || combined.includes('hoodie') || combined.includes('merch')) return 'apparel';
-    if (combined.includes('gear') || combined.includes('headset') || combined.includes('mouse') || combined.includes('keyboard')) return 'gaming-gear';
+    // Gift cards - highest priority to catch card-related items
+    const giftCardKeywords = ['gift card', 'giftcard', 'egift', 'e-gift', 'digital card', 'prepaid card'];
+    if (giftCardKeywords.some(kw => combined.includes(kw))) return 'gift-cards';
+    
+    // Gaming gear - comprehensive hardware keywords
+    const gamingGearKeywords = [
+      'headset', 'headphone', 'mouse', 'keyboard', 'controller', 'gamepad',
+      'monitor', 'webcam', 'microphone', 'mic', 'capture card',
+      'logitech', 'razer', 'steelseries', 'hyperx', 'corsair', 'astro',
+      'gaming chair', 'desk pad', 'mousepad', 'rgb', 'mechanical',
+      'wireless gaming', 'gaming headset', 'pro gaming'
+    ];
+    if (gamingGearKeywords.some(kw => combined.includes(kw))) return 'gaming-gear';
+    
+    // Subscriptions
+    const subscriptionKeywords = [
+      'subscription', 'premium', 'membership', 'monthly', 'annual',
+      'plus', 'pro', 'xbox live', 'game pass', 'playstation plus',
+      'nintendo online', 'discord nitro'
+    ];
+    if (subscriptionKeywords.some(kw => combined.includes(kw))) return 'subscriptions';
+    
+    // Apparel
+    const apparelKeywords = [
+      'apparel', 'shirt', 't-shirt', 'tee', 'hoodie', 'sweatshirt',
+      'jacket', 'hat', 'cap', 'merch', 'clothing', 'wear'
+    ];
+    if (apparelKeywords.some(kw => combined.includes(kw))) return 'apparel';
+    
     return 'other';
   };
 
