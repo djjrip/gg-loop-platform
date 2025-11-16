@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy } from "lucide-react";
 import { SiDiscord, SiTwitch } from "react-icons/si";
+import { Link } from "wouter";
 
 export default function Login() {
   const handleDiscordLogin = () => {
@@ -68,9 +69,9 @@ export default function Login() {
           <div className="text-center pt-4">
             <p className="text-xs text-muted-foreground">
               By signing in, you agree to our{" "}
-              <a href="/terms" className="underline hover:text-primary">Terms of Service</a>
+              <Link href="/terms" className="underline hover:text-primary">Terms of Service</Link>
               {" "}and{" "}
-              <a href="/privacy" className="underline hover:text-primary">Privacy Policy</a>
+              <Link href="/privacy" className="underline hover:text-primary">Privacy Policy</Link>
             </p>
           </div>
         </CardContent>

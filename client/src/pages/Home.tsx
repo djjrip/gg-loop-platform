@@ -417,7 +417,7 @@ export default function Home() {
                 <p className="mb-2">No earnings yet!</p>
                 <p className="text-sm">Report your first win to start earning points.</p>
                 <Button variant="default" asChild className="mt-4" data-testid="button-report-first-win">
-                  <a href="/report-match">Report Win</a>
+                  <Link href="/report-match">Report Win</Link>
                 </Button>
               </div>
             ) : (
@@ -471,7 +471,7 @@ export default function Home() {
                 {recentEarnings.length > 5 && (
                   <div className="flex justify-center mt-6">
                     <Button variant="outline" asChild data-testid="button-view-all-earnings">
-                      <a href="/report-match">View All Matches</a>
+                      <Link href="/report-match">View All Matches</Link>
                     </Button>
                   </div>
                 )}

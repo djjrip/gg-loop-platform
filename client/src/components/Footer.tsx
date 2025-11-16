@@ -1,4 +1,5 @@
 import { SiDiscord, SiTiktok } from "react-icons/si";
+import { Link } from "wouter";
 
 export default function Footer() {
   return (
@@ -46,14 +47,14 @@ export default function Footer() {
             <h3 className="font-semibold mb-3">Legal</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="/terms" className="text-muted-foreground hover:text-foreground">
+                <Link href="/terms" className="text-muted-foreground hover:text-foreground">
                   Terms of Service
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/privacy" className="text-muted-foreground hover:text-foreground">
+                <Link href="/privacy" className="text-muted-foreground hover:text-foreground">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
