@@ -17,8 +17,14 @@ import {
   Shirt,
   Coffee,
   Headphones,
-  Lock
+  Lock,
+  Search,
+  Gift,
+  Gamepad2,
+  CreditCard,
+  Filter
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -74,6 +80,7 @@ export default function Shop() {
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedRarity, setSelectedRarity] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Fetch Tango Card catalog
   const { data: tangoItems, isLoading: tangoLoading } = useQuery<any[]>({
@@ -96,9 +103,27 @@ export default function Shop() {
     isLimited: reward.stock !== null && reward.stock < 50,
   }));
 
+  // Categorize items based on title/description
+  const categorizeItem = (item: EnhancedReward): string => {
+    const titleLower = item.title.toLowerCase();
+    const descLower = (item.description || '').toLowerCase();
+    const combined = `${titleLower} ${descLower}`;
+    
+    if (combined.includes('gift card') || combined.includes('giftcard') || combined.includes('card')) return 'gift-cards';
+    if (combined.includes('subscription') || combined.includes('premium') || combined.includes('membership')) return 'subscriptions';
+    if (combined.includes('apparel') || combined.includes('shirt') || combined.includes('hoodie') || combined.includes('merch')) return 'apparel';
+    if (combined.includes('gear') || combined.includes('headset') || combined.includes('mouse') || combined.includes('keyboard')) return 'gaming-gear';
+    return 'other';
+  };
+
   const filteredItems = enhancedRewards.filter(item => {
     const rarityMatch = selectedRarity === 'all' || item.rarity === selectedRarity;
-    return rarityMatch;
+    const categoryMatch = selectedCategory === 'all' || categorizeItem(item) === selectedCategory;
+    const searchMatch = searchQuery === '' || 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return rarityMatch && categoryMatch && searchMatch;
   });
 
   const canAfford = (pointsCost: number) => {
@@ -205,54 +230,150 @@ export default function Shop() {
           )}
         </div>
 
-        {/* Filters */}
-        <div className="mb-8">
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant={selectedRarity === 'all' ? 'default' : 'outline'}
-              onClick={() => setSelectedRarity('all')}
-              data-testid="filter-rarity-all"
-            >
-              All Rarities
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedRarity === 'legendary' ? 'default' : 'outline'}
-              onClick={() => setSelectedRarity('legendary')}
-              data-testid="filter-rarity-legendary"
-            >
-              <Crown className="h-3.5 w-3.5 mr-1.5" />
-              Legendary
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedRarity === 'epic' ? 'default' : 'outline'}
-              onClick={() => setSelectedRarity('epic')}
-              data-testid="filter-rarity-epic"
-            >
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              Epic
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedRarity === 'rare' ? 'default' : 'outline'}
-              onClick={() => setSelectedRarity('rare')}
-              data-testid="filter-rarity-rare"
-            >
-              <Star className="h-3.5 w-3.5 mr-1.5" />
-              Rare
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedRarity === 'common' ? 'default' : 'outline'}
-              onClick={() => setSelectedRarity('common')}
-              data-testid="filter-rarity-common"
-            >
-              Common
-            </Button>
+        {/* Search and Filters */}
+        <Card className="mb-8 p-6">
+          <div className="space-y-6">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search rewards by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+                data-testid="input-search-rewards"
+              />
+            </div>
+
+            {/* Category Filters */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm font-semibold">Categories</p>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                  onClick={() => setSelectedCategory('all')}
+                  data-testid="filter-category-all"
+                >
+                  All Items
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedCategory === 'gift-cards' ? 'default' : 'outline'}
+                  onClick={() => setSelectedCategory('gift-cards')}
+                  data-testid="filter-category-gift-cards"
+                >
+                  <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+                  Gift Cards
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedCategory === 'subscriptions' ? 'default' : 'outline'}
+                  onClick={() => setSelectedCategory('subscriptions')}
+                  data-testid="filter-category-subscriptions"
+                >
+                  <Star className="h-3.5 w-3.5 mr-1.5" />
+                  Subscriptions
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedCategory === 'gaming-gear' ? 'default' : 'outline'}
+                  onClick={() => setSelectedCategory('gaming-gear')}
+                  data-testid="filter-category-gaming-gear"
+                >
+                  <Headphones className="h-3.5 w-3.5 mr-1.5" />
+                  Gaming Gear
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedCategory === 'apparel' ? 'default' : 'outline'}
+                  onClick={() => setSelectedCategory('apparel')}
+                  data-testid="filter-category-apparel"
+                >
+                  <Shirt className="h-3.5 w-3.5 mr-1.5" />
+                  Apparel
+                </Button>
+              </div>
+            </div>
+
+            {/* Rarity Filters */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm font-semibold">Rarity</p>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  variant={selectedRarity === 'all' ? 'default' : 'outline'}
+                  onClick={() => setSelectedRarity('all')}
+                  data-testid="filter-rarity-all"
+                >
+                  All Rarities
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedRarity === 'legendary' ? 'default' : 'outline'}
+                  onClick={() => setSelectedRarity('legendary')}
+                  data-testid="filter-rarity-legendary"
+                >
+                  <Crown className="h-3.5 w-3.5 mr-1.5" />
+                  Legendary
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedRarity === 'epic' ? 'default' : 'outline'}
+                  onClick={() => setSelectedRarity('epic')}
+                  data-testid="filter-rarity-epic"
+                >
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                  Epic
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedRarity === 'rare' ? 'default' : 'outline'}
+                  onClick={() => setSelectedRarity('rare')}
+                  data-testid="filter-rarity-rare"
+                >
+                  <Star className="h-3.5 w-3.5 mr-1.5" />
+                  Rare
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedRarity === 'common' ? 'default' : 'outline'}
+                  onClick={() => setSelectedRarity('common')}
+                  data-testid="filter-rarity-common"
+                >
+                  Common
+                </Button>
+              </div>
+            </div>
+
+            {/* Results Count */}
+            <div className="flex items-center justify-between pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'}
+              </p>
+              {(searchQuery || selectedCategory !== 'all' || selectedRarity !== 'all') && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('all');
+                    setSelectedRarity('all');
+                  }}
+                  data-testid="button-clear-filters"
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
+        </Card>
 
         {/* Loading State */}
         {isLoading ? (
