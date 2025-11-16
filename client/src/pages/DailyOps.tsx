@@ -11,8 +11,12 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Calendar,
-  Activity
+  Activity,
+  MapPin,
+  FileText,
+  ClipboardList
 } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -46,6 +50,7 @@ interface DailyMetrics {
   totalPointsIssued: number;
   totalPointsRedeemed: number;
   pointsLiability: number;
+  
 }
 
 interface ChecklistItem {
@@ -71,11 +76,7 @@ export default function DailyOps() {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ taskId, taskLabel, completed }: { taskId: string; taskLabel: string; completed: boolean }) => {
-      return apiRequest("/api/admin/checklist/toggle", {
-        method: "POST",
-        body: JSON.stringify({ date: today, taskId, taskLabel, completed }),
-        headers: { "Content-Type": "application/json" },
-      });
+      return apiRequest("POST", "/api/admin/checklist/toggle", { date: today, taskId, taskLabel, completed });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/checklist", today] });
@@ -383,6 +384,81 @@ export default function DailyOps() {
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   ≈ ${((metrics?.pointsLiability || 0) / 1333).toFixed(2)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Sales Tax Compliance */}
+        <Card className="border-yellow-500/50">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-yellow-600" />
+                  Sales Tax Compliance Reference
+                </CardTitle>
+                <CardDescription>Educational guidance for tax setup (manual configuration required)</CardDescription>
+              </div>
+              <a href="https://github.com/replit/ggloop/blob/main/PAYPAL_TAX_SETUP.md" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="sm" data-testid="button-tax-guide">
+                  <FileText className="h-4 w-4 mr-2" />
+                  View Setup Guide
+                </Button>
+              </a>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500 flex-shrink-0" />
+                  <p className="text-sm font-medium text-yellow-600 dark:text-yellow-500">
+                    General Information: Economic Nexus Thresholds
+                  </p>
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Most states set economic nexus thresholds at:
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                  <li>• <strong>200+ transactions per year</strong> in a state, OR</li>
+                  <li>• <strong>$100,000+ in sales</strong> per year in a state</li>
+                </ul>
+                <p className="text-xs text-muted-foreground mt-2 italic">
+                  Specific requirements vary - this is general reference only.
+                </p>
+              </div>
+
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-500 flex-shrink-0" />
+                  <p className="text-sm font-medium text-blue-600 dark:text-blue-500">
+                    Information: PayPal Tax Settings
+                  </p>
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">
+                  PayPal Business Accounts include tax-related settings that you may research and configure independently. Some merchants use these features; others use third-party services or manual tracking.
+                </p>
+                <p className="text-sm text-muted-foreground mb-2">
+                  <strong>Research needed:</strong> Businesses should investigate whether PayPal's built-in tax options meet their specific requirements and comply with applicable state obligations before relying on any automated features.
+                </p>
+                <p className="text-xs text-muted-foreground mt-3 italic">
+                  See the external setup guide for more reference material. GG Loop provides no tax integration - you are responsible for all tax management.
+                </p>
+              </div>
+
+
+              <div className="bg-muted/50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <ClipboardList className="h-4 w-4 flex-shrink-0" />
+                  <p className="text-sm font-medium">General Tax Compliance Steps</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  General tax compliance typically involves: researching state-specific requirements for digital subscriptions, investigating payment processor features, understanding permit registration processes in states where nexus may be established, tracking sales data, and consulting tax professionals for personalized guidance.
+                </p>
+                <p className="text-xs text-muted-foreground mt-3">
+                  <strong>Disclaimer:</strong> This is educational reference only. GG Loop does not provide tax automation, tracking, or compliance services. You are solely responsible for all tax obligations.
                 </p>
               </div>
             </div>
