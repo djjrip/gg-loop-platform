@@ -12,7 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trophy, Gamepad2, Award, TrendingUp, Users, Zap } from "lucide-react";
+import { Trophy, Gamepad2, Award, TrendingUp, Users, Zap, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import type { Game, LeaderboardEntryWithUser, Achievement, Reward } from "@shared/schema";
@@ -385,15 +385,17 @@ export default function Home() {
         {/* Recent Activity - Show match activity */}
         {isAuthenticated && (
           <section className="scroll-mt-20">
-            <div className="mb-8">
-              <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
-                <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
+            <div className="mb-8 text-center">
+              <h2 className="text-5xl font-bold font-heading tracking-tight flex items-center justify-center gap-3">
+                <Trophy className="w-10 h-10 text-primary" />
                 Your Recent Activity
               </h2>
-              <p className="text-muted-foreground mt-2 ml-4">Track your verified match wins and points earned</p>
+              <p className="text-muted-foreground mt-3 text-lg max-w-2xl mx-auto">
+                Track your verified match wins and points earned. Report wins to boost your points!
+              </p>
             </div>
             
-            <Card className="p-6 border-primary/20">{earningsLoading ? (
+            <Card className="p-6 border-primary/20 shadow-lg">{earningsLoading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center gap-4 p-4">
@@ -412,12 +414,15 @@ export default function Home() {
                 <p>Failed to load earnings. Please try again later.</p>
               </div>
             ) : !recentEarnings || recentEarnings.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Trophy className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p className="mb-2">No earnings yet!</p>
-                <p className="text-sm">Report your first win to start earning points.</p>
-                <Button variant="default" asChild className="mt-4" data-testid="button-report-first-win">
-                  <Link href="/report-match">Report Win</Link>
+              <div className="text-center py-12 text-muted-foreground">
+                <Trophy className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-semibold mb-2">No match wins reported yet!</p>
+                <p className="text-sm mb-6">Go to My Stats to report your first win and start earning points</p>
+                <Button size="lg" variant="default" asChild data-testid="button-report-first-win">
+                  <Link href="/stats">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Report Your First Win
+                  </Link>
                 </Button>
               </div>
             ) : (
@@ -468,13 +473,19 @@ export default function Home() {
                   })}
                 </div>
                 
-                {recentEarnings.length > 5 && (
-                  <div className="flex justify-center mt-6">
-                    <Button variant="outline" asChild data-testid="button-view-all-earnings">
-                      <Link href="/report-match">View All Matches</Link>
-                    </Button>
-                  </div>
-                )}
+                <div className="flex justify-center mt-6 gap-3">
+                  <Button variant="default" asChild data-testid="button-view-stats">
+                    <Link href="/stats">
+                      View My Stats Dashboard
+                    </Link>
+                  </Button>
+                  <Button variant="outline" asChild data-testid="button-report-win">
+                    <Link href="/stats">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Report Win
+                    </Link>
+                  </Button>
+                </div>
               </>
             )}
             </Card>

@@ -1,13 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Target, TrendingUp, Calendar, CheckCircle, XCircle, Link as LinkIcon, RefreshCw, Clock } from "lucide-react";
+import { Trophy, Target, TrendingUp, Calendar, CheckCircle, XCircle, Link as LinkIcon, RefreshCw, Clock, Plus } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Game } from "@shared/schema";
 
 interface RiotMatch {
   id: string;
@@ -31,8 +37,18 @@ interface RiotAccountStatus {
 
 export default function Stats() {
   const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [secondsUntilSync, setSecondsUntilSync] = useState(0);
   const [syncProgress, setSyncProgress] = useState(100);
+  const [selectedGame, setSelectedGame] = useState<string>("");
+  const [matchType, setMatchType] = useState<string>("win");
+  const [notes, setNotes] = useState("");
+  const [showReportForm, setShowReportForm] = useState(false);
+
+  const { data: games } = useQuery<Game[]>({
+    queryKey: ["/api/games"],
+    enabled: isAuthenticated,
+  });
 
   const { data: matches, isLoading: matchesLoading } = useQuery<RiotMatch[]>({
     queryKey: ["/api/riot/matches"],
@@ -48,6 +64,52 @@ export default function Stats() {
     queryKey: ["/api/riot/account/valorant"],
     enabled: isAuthenticated,
   });
+
+  const submitMutation = useMutation({
+    mutationFn: async (data: { gameId: string; matchType: string; notes: string }) => {
+      const res = await apiRequest("POST", "/api/match-submissions", data);
+      return await res.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Match Win Recorded!",
+        description: `You earned ${data.pointsAwarded || 0} points!`,
+      });
+      setSelectedGame("");
+      setMatchType("win");
+      setNotes("");
+      setShowReportForm(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/match-submissions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/riot/matches"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Submission Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedGame) {
+      toast({
+        title: "Game Required",
+        description: "Please select a game",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    submitMutation.mutate({
+      gameId: selectedGame,
+      matchType,
+      notes,
+    });
+  };
 
   // Calculate time until next sync (every 10 minutes)
   useEffect(() => {
@@ -131,6 +193,108 @@ export default function Stats() {
             Track your match history, stats, and performance from League of Legends and Valorant
           </p>
         </div>
+
+        {/* REPORT MATCH WIN - Prominent CTA */}
+        <Card className="mb-8 border-primary/30 bg-gradient-to-r from-primary/10 to-accent/10">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5 text-primary" />
+                  Report Match Win
+                </CardTitle>
+                <CardDescription>
+                  Submit your match wins from any supported game and earn points instantly
+                </CardDescription>
+              </div>
+              {!showReportForm && (
+                <Button 
+                  onClick={() => setShowReportForm(true)}
+                  data-testid="button-show-report-form"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Report Win
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          
+          {showReportForm && (
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="game">Game *</Label>
+                    <Select value={selectedGame} onValueChange={setSelectedGame}>
+                      <SelectTrigger id="game" data-testid="select-game">
+                        <SelectValue placeholder="Select a game" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {games && games.length > 0 ? (
+                          games.map((game) => (
+                            <SelectItem key={game.id} value={game.id}>
+                              {game.title}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-games" disabled>No games available</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="matchType">Match Type</Label>
+                    <Select value={matchType} onValueChange={setMatchType}>
+                      <SelectTrigger id="matchType" data-testid="select-match-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="win">Competitive Win (+10 pts)</SelectItem>
+                        <SelectItem value="ranked">Ranked Win (+15 pts)</SelectItem>
+                        <SelectItem value="tournament">Tournament Top 3 (+50 pts)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add any additional details about your match..."
+                    rows={3}
+                    data-testid="textarea-notes"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <Button 
+                    type="submit" 
+                    disabled={submitMutation.isPending || !selectedGame}
+                    data-testid="button-submit-match"
+                  >
+                    {submitMutation.isPending ? "Submitting..." : "Submit Match"}
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowReportForm(false);
+                      setSelectedGame("");
+                      setNotes("");
+                    }}
+                    data-testid="button-cancel-report"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          )}
+        </Card>
 
         {hasLinkedAccounts && (
           <Card className="mb-8 border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5">
