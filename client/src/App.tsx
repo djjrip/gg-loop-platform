@@ -31,6 +31,7 @@ import Referrals from "@/pages/Referrals";
 import Settings from "@/pages/Settings";
 import FulfillmentDashboard from "@/pages/FulfillmentDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+import RewardsManagement from "@/pages/RewardsManagement";
 import MyRewards from "@/pages/MyRewards";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
@@ -83,6 +84,7 @@ function Router() {
       <Route path="/my-rewards" component={MyRewards} />
       <Route path="/settings" component={Settings} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/rewards" component={RewardsManagement} />
       <Route path="/fulfillment" component={FulfillmentDashboard} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />

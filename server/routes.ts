@@ -6,7 +6,7 @@ import {
   users, userGames, riotAccounts, sponsors, insertSponsorSchema, challenges, 
   challengeCompletions, insertChallengeSchema, insertChallengeCompletionSchema,
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
-  insertAchievementSchema, insertUserRewardSchema, userRewards,
+  insertAchievementSchema, insertRewardSchema, insertUserRewardSchema, userRewards,
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
   insertReferralSchema, processedRiotMatches
 } from "@shared/schema";

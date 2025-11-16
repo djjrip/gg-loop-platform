@@ -77,9 +77,9 @@ export default function AdminDashboard() {
       title: "Rewards Catalog",
       description: "Add, edit, or remove rewards from the catalog",
       icon: Gift,
-      href: "/rewards",
-      badge: "View Only",
-      badgeVariant: "outline",
+      href: "/admin/rewards",
+      badge: null,
+      badgeVariant: "secondary",
       stats: "Manage reward inventory",
       testId: "link-rewards"
     },
