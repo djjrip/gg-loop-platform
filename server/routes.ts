@@ -7,6 +7,7 @@ import {
   challengeCompletions, insertChallengeSchema, insertChallengeCompletionSchema,
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
   insertAchievementSchema, insertRewardSchema, insertUserRewardSchema, userRewards,
+  rewards,
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
   insertReferralSchema, processedRiotMatches
 } from "@shared/schema";
@@ -964,9 +965,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Tango Card Redemption Endpoint
   app.post('/api/tango/redeem', getUserMiddleware, async (req: any, res) => {
     try {
-      const { utid, amount } = z.object({
+      const { utid } = z.object({
         utid: z.string(),
-        amount: z.number().positive(),
       }).parse(req.body);
 
       const userId = req.dbUser.id;
@@ -976,13 +976,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "User email required for redemption" });
       }
 
-      // Get item details
+      // SECURITY: Get item details from catalog (server-side, not client-provided)
       const item = await tangoCardService.getItemByUtid(utid);
       if (!item) {
         return res.status(404).json({ message: "Item not found in catalog" });
       }
 
-      // Calculate points cost
+      // SECURITY: Use server-side item price (prevent tampering)
+      const amount = item.faceValue; // Use catalog price, not client input
       const pointsCost = amount * 100; // $1 = 100 points
 
       // Check if user has enough points
@@ -994,32 +995,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Place order with Tango Card
-      const order = await tangoCardService.placeOrder(utid, amount, userEmail);
+      // STEP 1: Ensure virtual reward entry exists OUTSIDE transaction (to avoid conflicts)
+      let [tangoReward] = await db.select().from(rewards).where(eq(rewards.sku, utid)).limit(1);
+      
+      if (!tangoReward) {
+        // Create virtual reward record for this Tango item (use SKU to track UTID)
+        try {
+          [tangoReward] = await db.insert(rewards).values({
+            title: item.rewardName,
+            description: `Tango Card - ${item.rewardType}`,
+            pointsCost: pointsCost,
+            realValue: amount, // Dollar value
+            category: 'tango_card',
+            tier: 1,
+            stock: null, // Unlimited stock
+            inStock: true,
+            imageUrl: null,
+            sku: utid, // Store UTID in SKU field
+            fulfillmentType: 'instant',
+          }).returning();
+        } catch (error: any) {
+          // Race condition: another request created it, fetch again
+          if (error.code === '23505') { // unique violation
+            [tangoReward] = await db.select().from(rewards).where(eq(rewards.sku, utid)).limit(1);
+          } else {
+            throw error;
+          }
+        }
+      }
 
-      // Deduct points using points engine
-      await pointsEngine.spendPoints(
-        userId,
-        pointsCost,
-        'TANGO_REDEMPTION',
-        utid,
-        'tango_card',
-        `Redeemed ${item.rewardName} - $${amount}`,
-        db
-      );
+      // STEP 2: Execute redemption in transaction
+      const result = await db.transaction(async (tx) => {
+        // Place order with Tango Card
+        const order = await tangoCardService.placeOrder(utid, amount, userEmail);
 
-      // Record redemption in database (using raw insert since this is a Tango item)
-      const [userReward] = await db.insert(userRewards).values({
-        userId,
-        rewardId: utid,
-        pointsSpent: pointsCost,
-        status: 'fulfilled',
-        trackingInfo: order.referenceOrderID,
-      }).returning();
+        // Deduct points using points engine
+        await pointsEngine.spendPoints(
+          userId,
+          pointsCost,
+          'TANGO_REDEMPTION',
+          utid,
+          'tango_card',
+          `Redeemed ${item.rewardName} - $${amount}`,
+          tx
+        );
+
+        // Record redemption in user_rewards for My Rewards tracking
+        const [userReward] = await tx.insert(userRewards).values({
+          userId,
+          rewardId: tangoReward.id, // Use generated reward ID
+          pointsSpent: pointsCost,
+          status: 'fulfilled', // Tango orders are instant
+          trackingNumber: order.referenceOrderID,
+          fulfillmentData: order,
+          fulfilledAt: new Date(),
+        }).returning();
+
+        return { order, userReward };
+      });
 
       res.json({
         success: true,
-        order,
+        order: result.order,
         pointsDeducted: pointsCost,
         remainingPoints: req.dbUser.totalPoints - pointsCost,
       });

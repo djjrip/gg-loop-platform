@@ -27,6 +27,7 @@ import type { Reward } from "@shared/schema";
 interface EnhancedReward extends Reward {
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
   isLimited: boolean;
+  utid?: string; // Tango Card UTID
 }
 
 // Rarity mapping based on points cost
@@ -74,10 +75,18 @@ export default function Shop() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedRarity, setSelectedRarity] = useState<string>('all');
 
-  // Fetch real rewards from backend
-  const { data: rewards, isLoading } = useQuery<Reward[]>({
+  // Fetch Tango Card catalog
+  const { data: tangoItems, isLoading: tangoLoading } = useQuery<any[]>({
+    queryKey: ["/api/tango/catalog"],
+  });
+
+  // Fetch local rewards (for legacy support)
+  const { data: localRewards, isLoading: localLoading } = useQuery<Reward[]>({
     queryKey: ["/api/rewards"],
   });
+
+  const isLoading = tangoLoading || localLoading;
+  const rewards = [...(tangoItems || []), ...(localRewards || [])];
 
   // Enhance rewards with rarity and limited status
   const enhancedRewards: EnhancedReward[] = (rewards || []).map(reward => ({
@@ -103,17 +112,28 @@ export default function Shop() {
   };
 
   const redeemMutation = useMutation({
-    mutationFn: async (rewardId: string) => {
-      const res = await apiRequest("POST", "/api/user/rewards/redeem", { rewardId });
-      return await res.json();
+    mutationFn: async (item: EnhancedReward) => {
+      // Check if this is a Tango Card item (has utid field)
+      if (item.utid) {
+        // SECURITY: Only send UTID, server determines price from catalog
+        const res = await apiRequest("POST", "/api/tango/redeem", { 
+          utid: item.utid
+        });
+        return await res.json();
+      } else {
+        // Local reward
+        const res = await apiRequest("POST", "/api/user/rewards/redeem", { rewardId: item.id });
+        return await res.json();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/rewards"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tango/catalog"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/rewards"] });
       toast({
         title: "Item Claimed!",
-        description: "Your merchandise has been added to My Rewards",
+        description: "Your reward has been sent to your email",
       });
     },
     onError: (error: any) => {
@@ -153,8 +173,8 @@ export default function Shop() {
       return;
     }
 
-    // Use existing rewards API endpoint
-    redeemMutation.mutate(item.id);
+    // Pass the entire item so we can determine if it's Tango or local
+    redeemMutation.mutate(item);
   };
 
   return (
