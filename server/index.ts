@@ -85,8 +85,15 @@ app.use((req, res, next) => {
       console.error("Failed to start streaming verifier:", err);
     });
     
-    // Start Riot match sync service
-    import("./matchSyncService").then(({ startMatchSyncService, stopMatchSyncService }) => {
+    // Start Riot match sync service with achievement detection
+    Promise.all([
+      import("./matchSyncService"),
+      import("./storage")
+    ]).then(([{ startMatchSyncService, stopMatchSyncService, initializeAchievementDetector }, { storage }]) => {
+      // Initialize achievement detector with storage instance
+      initializeAchievementDetector(storage);
+      
+      // Start match sync service
       startMatchSyncService();
       
       // Graceful shutdown handlers

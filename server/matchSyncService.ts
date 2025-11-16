@@ -2,11 +2,18 @@ import { db } from './db';
 import { riotAccounts, processedRiotMatches } from '@shared/schema';
 import { getRiotAPI } from './lib/riot';
 import { eq, and } from 'drizzle-orm';
+import { AchievementDetector } from './achievementDetector';
+import type { IStorage } from './storage';
 
 const SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 const MATCHES_TO_CHECK = 5; // Only check last 5 matches per sync
 
 let syncInterval: NodeJS.Timeout | null = null;
+let achievementDetector: AchievementDetector | null = null;
+
+export function initializeAchievementDetector(storage: IStorage) {
+  achievementDetector = new AchievementDetector(storage);
+}
 
 export async function startMatchSyncService() {
   console.log('[MatchSync] Starting match sync service...');
@@ -50,12 +57,20 @@ async function syncAllAccounts() {
     
     for (const account of accounts) {
       try {
+        let newMatchesRecorded = false;
+        
         if (account.game === 'league') {
-          await syncLeagueAccount(account);
+          newMatchesRecorded = await syncLeagueAccount(account);
         } else if (account.game === 'valorant') {
-          await syncValorantAccount(account);
+          newMatchesRecorded = await syncValorantAccount(account);
         } else if (account.game === 'tft') {
-          await syncTFTAccount(account);
+          newMatchesRecorded = await syncTFTAccount(account);
+        }
+        
+        // Check for new achievements if new matches were recorded
+        if (newMatchesRecorded && achievementDetector) {
+          console.log(`[MatchSync] Checking achievements for user ${account.userId}...`);
+          await achievementDetector.checkAndAwardAchievements(account.userId, account.game as 'league' | 'valorant' | 'tft');
         }
       } catch (error: any) {
         console.error(`[MatchSync] Error syncing account ${account.puuid}:`, error.message);
@@ -69,8 +84,9 @@ async function syncAllAccounts() {
   }
 }
 
-async function syncLeagueAccount(account: typeof riotAccounts.$inferSelect) {
+async function syncLeagueAccount(account: typeof riotAccounts.$inferSelect): Promise<boolean> {
   const riotAPI = getRiotAPI();
+  let newMatchesFound = false;
   
   // Determine regional routing
   const platformRegion = account.region; // e.g., "na1", "euw1"
@@ -122,11 +138,16 @@ async function syncLeagueAccount(account: typeof riotAccounts.$inferSelect) {
       pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
       transactionId: null,
     });
+    
+    newMatchesFound = true;
   }
+  
+  return newMatchesFound;
 }
 
-async function syncValorantAccount(account: typeof riotAccounts.$inferSelect) {
+async function syncValorantAccount(account: typeof riotAccounts.$inferSelect): Promise<boolean> {
   const riotAPI = getRiotAPI();
+  let newMatchesFound = false;
   
   // Determine regional routing for Valorant
   const routingRegion = account.region.startsWith('na') || account.region.startsWith('br') || account.region.startsWith('latam') ? 'na' :
@@ -186,11 +207,16 @@ async function syncValorantAccount(account: typeof riotAccounts.$inferSelect) {
       pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
       transactionId: null,
     });
+    
+    newMatchesFound = true;
   }
+  
+  return newMatchesFound;
 }
 
-async function syncTFTAccount(account: typeof riotAccounts.$inferSelect) {
+async function syncTFTAccount(account: typeof riotAccounts.$inferSelect): Promise<boolean> {
   const riotAPI = getRiotAPI();
+  let newMatchesFound = false;
   
   // Fetch recent match IDs (pass platform region directly, getTFTMatchIds handles routing internally)
   const matchIds = await riotAPI.getTFTMatchIds(account.puuid, account.region, { count: MATCHES_TO_CHECK });
@@ -237,5 +263,9 @@ async function syncTFTAccount(account: typeof riotAccounts.$inferSelect) {
       pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
       transactionId: null,
     });
+    
+    newMatchesFound = true;
   }
+  
+  return newMatchesFound;
 }
