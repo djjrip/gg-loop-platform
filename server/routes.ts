@@ -3219,6 +3219,107 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     }
   });
 
+  // ==================== FOUNDER CONTROLS ====================
+  // Import founder controls functionality
+  const founderControls = await import('./founderControls');
+
+  // Manual Point Adjustment
+  app.post('/api/admin/points/adjust', adminMiddleware, async (req: any, res) => {
+    try {
+      const schema = z.object({
+        targetUserId: z.string().uuid(),
+        amount: z.number().int(),
+        reason: z.string().min(5, "Reason must be at least 5 characters"),
+      });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      const { targetUserId, amount, reason } = parsed.data;
+      const adminUser = req.dbUser;
+      const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
+
+      const result = await founderControls.adjustUserPoints(
+        adminUser.id,
+        adminUser.email || 'unknown',
+        targetUserId,
+        amount,
+        reason,
+        ipAddress
+      );
+
+      res.json({
+        success: true,
+        ...result,
+        message: amount > 0 
+          ? `Successfully added ${amount} points` 
+          : `Successfully removed ${Math.abs(amount)} points`
+      });
+    } catch (error: any) {
+      console.error("Error adjusting points:", error);
+      res.status(500).json({ message: error.message || "Failed to adjust points" });
+    }
+  });
+
+  // Get Audit Log (all or for specific user)
+  app.get('/api/admin/audit-log', adminMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.query.userId as string | undefined;
+      const limit = parseInt(req.query.limit as string) || 100;
+
+      const logs = userId 
+        ? await founderControls.getUserAuditLog(userId, limit)
+        : await founderControls.getAllAuditLogs(limit);
+
+      res.json(logs);
+    } catch (error: any) {
+      console.error("Error fetching audit log:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch audit log" });
+    }
+  });
+
+  // System Health Dashboard
+  app.get('/api/admin/system-health', adminMiddleware, async (req: any, res) => {
+    try {
+      const health = await founderControls.getSystemHealth();
+      res.json(health);
+    } catch (error: any) {
+      console.error("Error fetching system health:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch system health" });
+    }
+  });
+
+  // Check Spending Limits (for testing/debugging)
+  app.post('/api/admin/check-spending-limit', adminMiddleware, async (req: any, res) => {
+    try {
+      const schema = z.object({
+        userId: z.string().uuid(),
+        rewardValue: z.number().positive(),
+      });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data",
+          errors: parsed.error.errors 
+        });
+      }
+
+      const { userId, rewardValue } = parsed.data;
+      const result = await founderControls.checkSpendingLimits(userId, rewardValue);
+
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error checking spending limits:", error);
+      res.status(500).json({ message: error.message || "Failed to check limits" });
+    }
+  });
+
   const tiktokCopySchema = z.object({
     templateId: z.string().min(1)
   });

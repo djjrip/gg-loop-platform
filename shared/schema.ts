@@ -569,3 +569,26 @@ export const insertChecklistItemSchema = createInsertSchema(checklistItems).omit
 
 export type InsertChecklistItem = z.infer<typeof insertChecklistItemSchema>;
 export type ChecklistItem = typeof checklistItems.$inferSelect;
+
+export const auditLog = pgTable("audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adminUserId: varchar("admin_user_id").notNull().references(() => users.id),
+  adminEmail: varchar("admin_email").notNull(),
+  action: varchar("action").notNull(),
+  targetUserId: varchar("target_user_id").references(() => users.id),
+  details: jsonb("details").notNull(),
+  ipAddress: varchar("ip_address"),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+}, (table) => [
+  index("idx_audit_target").on(table.targetUserId),
+  index("idx_audit_admin").on(table.adminUserId),
+  index("idx_audit_timestamp").on(table.timestamp),
+]);
+
+export const insertAuditLogSchema = createInsertSchema(auditLog).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type AuditLog = typeof auditLog.$inferSelect;

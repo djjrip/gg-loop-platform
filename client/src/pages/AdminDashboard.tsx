@@ -44,6 +44,16 @@ export default function AdminDashboard() {
 
   const adminCapabilities = [
     {
+      title: "Founder Controls",
+      description: "Manual point adjustments, spending limits, fraud detection, and system health",
+      icon: Shield,
+      href: "/admin/founder-controls",
+      badge: "New",
+      badgeVariant: "default",
+      stats: "Complete operational control",
+      testId: "link-founder-controls"
+    },
+    {
       title: "Fulfillment Dashboard",
       description: "Manage reward deliveries, add tracking numbers, and fulfill orders",
       icon: Package,

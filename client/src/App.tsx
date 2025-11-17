@@ -33,6 +33,7 @@ import FulfillmentDashboard from "@/pages/FulfillmentDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import RewardsManagement from "@/pages/RewardsManagement";
 import DailyOps from "@/pages/DailyOps";
+import FounderControls from "@/pages/FounderControls";
 import MyRewards from "@/pages/MyRewards";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
@@ -87,6 +88,7 @@ function Router() {
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/rewards" component={RewardsManagement} />
       <Route path="/admin/daily-ops" component={DailyOps} />
+      <Route path="/admin/founder-controls" component={FounderControls} />
       <Route path="/fulfillment" component={FulfillmentDashboard} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
