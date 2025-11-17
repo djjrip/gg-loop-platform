@@ -18,6 +18,7 @@ import Subscription from "@/pages/Subscription";
 
 // User pages
 import Login from "@/pages/Login";
+import QuickStart from "@/pages/archive/QuickStart";
 import Profile from "@/pages/Profile";
 import Stats from "@/pages/Stats";
 import Settings from "@/pages/Settings";
@@ -69,6 +70,7 @@ function Router() {
       
       {/* User Routes */}
       <Route path="/login" component={Login} />
+      <Route path="/quick-start" component={QuickStart} />
       <Route path="/profile/:userId" component={Profile} />
       <Route path="/stats" component={Stats} />
       <Route path="/settings" component={Settings} />
