@@ -64,7 +64,7 @@ export default function Header() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 hover-elevate px-2 py-1 rounded-md" data-testid="link-home">
             <div className="flex items-center gap-3">
-              <img src={logoImage} alt="GG LOOP Logo" className="h-10 w-10" />
+              <img src={logoImage} alt="GG LOOP Logo" className="h-10 w-auto" />
               <span className="font-bold text-3xl tracking-tight">GG LOOP</span>
             </div>
           </Link>

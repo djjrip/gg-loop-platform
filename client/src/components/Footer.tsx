@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="grid md:grid-cols-4 gap-8 mb-6">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <img src={logoImage} alt="GG LOOP Logo" className="h-8 w-8" />
+              <img src={logoImage} alt="GG LOOP Logo" className="h-8 w-auto" />
               <h3 className="font-semibold">GG Loop</h3>
             </div>
             <p className="text-sm text-muted-foreground">
