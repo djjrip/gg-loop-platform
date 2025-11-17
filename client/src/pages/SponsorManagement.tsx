@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import Header from "@/components/Header";
+import AdminLayout from "@/components/AdminLayout";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
@@ -74,7 +74,7 @@ export default function SponsorManagement() {
     queryKey: ['/api/admin/sponsors', viewingAnalytics, 'analytics'],
     queryFn: async () => {
       if (!viewingAnalytics) return null;
-      const res = await apiRequest(`/api/admin/sponsors/${viewingAnalytics}/analytics`, 'GET');
+      const res = await apiRequest('GET', `/api/admin/sponsors/${viewingAnalytics}/analytics`);
       return res.json();
     },
     enabled: !!viewingAnalytics,
@@ -83,7 +83,7 @@ export default function SponsorManagement() {
   // Create sponsor mutation
   const createMutation = useMutation({
     mutationFn: async (data: SponsorFormData) => {
-      return await apiRequest('/api/admin/sponsors', 'POST', data);
+      return await apiRequest('POST', '/api/admin/sponsors', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/sponsors'] });
@@ -102,7 +102,7 @@ export default function SponsorManagement() {
   // Update sponsor mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<SponsorFormData> }) => {
-      return await apiRequest(`/api/admin/sponsors/${id}`, 'PATCH', data);
+      return await apiRequest('PATCH', `/api/admin/sponsors/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/sponsors'] });
@@ -121,7 +121,7 @@ export default function SponsorManagement() {
   // Delete sponsor mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/admin/sponsors/${id}`, 'DELETE');
+      return await apiRequest('DELETE', `/api/admin/sponsors/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/sponsors'] });
@@ -139,7 +139,7 @@ export default function SponsorManagement() {
   // Add budget mutation
   const addBudgetMutation = useMutation({
     mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
-      return await apiRequest(`/api/admin/sponsors/${id}/add-budget`, 'POST', { amount });
+      return await apiRequest('POST', `/api/admin/sponsors/${id}/add-budget`, { amount });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/sponsors'] });
@@ -216,21 +216,17 @@ export default function SponsorManagement() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 p-6">
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        </main>
-      </div>
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
+    <AdminLayout>
+      <div className="flex-1 p-6 max-w-7xl mx-auto w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -905,7 +901,7 @@ export default function SponsorManagement() {
             ) : null}
           </DialogContent>
         </Dialog>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

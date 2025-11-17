@@ -1,4 +1,4 @@
-import Header from "@/components/Header";
+import AdminLayout from "@/components/AdminLayout";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -131,10 +131,8 @@ export default function FounderControls() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="container mx-auto max-w-7xl px-4 py-16 space-y-8">
+    <AdminLayout>
+      <div className="container mx-auto max-w-7xl px-4 py-16 space-y-8">
         {/* Header */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -450,7 +448,7 @@ export default function FounderControls() {
             </Card>
           </TabsContent>
         </Tabs>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

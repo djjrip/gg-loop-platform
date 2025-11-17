@@ -23,6 +23,7 @@ import Stats from "@/pages/Stats";
 import Settings from "@/pages/Settings";
 import MyRewards from "@/pages/MyRewards";
 import Referrals from "@/pages/Referrals";
+import LaunchDashboard from "@/pages/LaunchDashboard";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import SubscriptionCancel from "@/pages/SubscriptionCancel";
 
@@ -69,6 +70,7 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/my-rewards" component={MyRewards} />
       <Route path="/referrals" component={Referrals} />
+      <Route path="/launch-dashboard" component={LaunchDashboard} />
       <Route path="/subscription/success" component={SubscriptionSuccess} />
       <Route path="/subscription/cancel" component={SubscriptionCancel} />
       

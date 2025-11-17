@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
+import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -116,14 +117,16 @@ export default function DailyOps() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-7xl px-4 py-8">
-        <div className="space-y-6">
-          <Skeleton className="h-12 w-64" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1,2,3,4].map(i => <Skeleton key={i} className="h-32" />)}
+      <AdminLayout>
+        <div className="container mx-auto max-w-7xl px-4 py-8">
+          <div className="space-y-6">
+            <Skeleton className="h-12 w-64" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-32" />)}
+            </div>
           </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
@@ -131,7 +134,8 @@ export default function DailyOps() {
   const completionRate = completedCount / dailyChecklist.length * 100;
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8">
+    <AdminLayout>
+      <div className="container mx-auto max-w-7xl px-4 py-8">
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -499,5 +503,6 @@ export default function DailyOps() {
         </Card>
       </div>
     </div>
+  </AdminLayout>
   );
 }

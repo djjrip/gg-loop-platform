@@ -1,4 +1,4 @@
-import Header from "@/components/Header";
+import AdminLayout from "@/components/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -127,10 +127,8 @@ export default function FulfillmentDashboard() {
   const totalValue = pendingRewards?.reduce((sum, r) => sum + r.reward.realValue, 0) || 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="container mx-auto max-w-7xl px-4 py-16 space-y-8">
+    <AdminLayout>
+      <div className="container mx-auto max-w-7xl px-4 py-16 space-y-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
@@ -415,7 +413,7 @@ export default function FulfillmentDashboard() {
             ))
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }
