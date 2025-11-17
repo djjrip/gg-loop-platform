@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Trophy, TrendingUp, Gift, Zap, Link as LinkIcon, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import type { Reward } from "@shared/schema";
+import OnlineUsersCounter from "@/components/OnlineUsersCounter";
+import MatchSyncStatus from "@/components/MatchSyncStatus";
+import GlobalActivityFeed from "@/components/GlobalActivityFeed";
+import AnimatedCounter from "@/components/AnimatedCounter";
 
 interface RiotMatch {
   id: string;
@@ -86,12 +90,20 @@ export default function Stats() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold font-heading mb-2" data-testid="text-welcome">
-            Welcome back, {user?.username}!
-          </h1>
-          <p className="text-muted-foreground">
-            Track your performance and redeem rewards
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+            <div>
+              <h1 className="text-4xl font-bold font-heading mb-2" data-testid="text-welcome">
+                Welcome back, {user?.username}!
+              </h1>
+              <p className="text-muted-foreground">
+                Track your performance and redeem rewards
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <OnlineUsersCounter />
+              <MatchSyncStatus />
+            </div>
+          </div>
         </div>
 
         {/* Points Balance - Large Display */}
@@ -134,21 +146,27 @@ export default function Stats() {
               <Card data-testid="card-total-games">
                 <CardHeader className="pb-3">
                   <CardDescription>Total Games</CardDescription>
-                  <CardTitle className="text-3xl font-mono">{totalGames}</CardTitle>
+                  <CardTitle className="text-3xl font-mono">
+                    <AnimatedCounter value={totalGames} />
+                  </CardTitle>
                 </CardHeader>
               </Card>
               
               <Card data-testid="card-win-rate">
                 <CardHeader className="pb-3">
                   <CardDescription>Win Rate</CardDescription>
-                  <CardTitle className="text-3xl font-mono">{winRate}%</CardTitle>
+                  <CardTitle className="text-3xl font-mono">
+                    <AnimatedCounter value={winRate} />%
+                  </CardTitle>
                 </CardHeader>
               </Card>
               
               <Card data-testid="card-points-earned">
                 <CardHeader className="pb-3">
                   <CardDescription>Points Earned</CardDescription>
-                  <CardTitle className="text-3xl font-mono">{totalPointsFromMatches.toLocaleString()}</CardTitle>
+                  <CardTitle className="text-3xl font-mono">
+                    <AnimatedCounter value={totalPointsFromMatches} />
+                  </CardTitle>
                 </CardHeader>
               </Card>
             </div>
@@ -322,6 +340,9 @@ export default function Stats() {
                 </Link>
               </CardContent>
             </Card>
+
+            {/* Global Activity Feed */}
+            <GlobalActivityFeed />
           </div>
         </div>
       </div>

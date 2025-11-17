@@ -900,6 +900,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Global activity feed - recent wins across all users
+  app.get('/api/activity/recent-wins', async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 15;
+      
+      const recentWins = await db.select({
+        match: processedRiotMatches,
+        account: riotAccounts,
+        user: users,
+      })
+      .from(processedRiotMatches)
+      .innerJoin(riotAccounts, eq(processedRiotMatches.riotAccountId, riotAccounts.id))
+      .innerJoin(users, eq(riotAccounts.userId, users.id))
+      .where(eq(processedRiotMatches.isWin, true))
+      .orderBy(desc(processedRiotMatches.processedAt))
+      .limit(limit);
+      
+      const formattedActivity = recentWins.map(w => ({
+        username: w.user.username || w.account.gameName,
+        game: w.account.game,
+        pointsEarned: w.match.pointsAwarded,
+        timestamp: w.match.processedAt,
+      }));
+      
+      res.json(formattedActivity);
+    } catch (error: any) {
+      console.error("Error fetching recent wins:", error);
+      res.status(500).json({ message: "Failed to fetch recent activity" });
+    }
+  });
+
+  // Online users count - users active in last 10 minutes
+  app.get('/api/activity/online-users', async (req, res) => {
+    try {
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+      
+      const result = await db.select({ count: sql<number>`count(*)::int` })
+        .from(users)
+        .where(sql`${users.lastLoginAt} >= ${tenMinutesAgo}`);
+      
+      const onlineCount = result[0]?.count || 0;
+      
+      res.json({ 
+        count: onlineCount,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error("Error fetching online users:", error);
+      res.status(500).json({ message: "Failed to fetch online users" });
+    }
+  });
+
+  // Match sync status - last sync time and recent activity
+  app.get('/api/activity/sync-status', async (req, res) => {
+    try {
+      const lastProcessed = await db.select({
+        processedAt: processedRiotMatches.processedAt,
+      })
+      .from(processedRiotMatches)
+      .orderBy(desc(processedRiotMatches.processedAt))
+      .limit(1);
+      
+      const totalLinkedAccounts = await db.select({ count: sql<number>`count(*)::int` })
+        .from(riotAccounts);
+      
+      const lastSyncTime = lastProcessed[0]?.processedAt || null;
+      const linkedCount = totalLinkedAccounts[0]?.count || 0;
+      
+      // Match sync service runs every 10 minutes
+      const SYNC_INTERVAL_MS = 10 * 60 * 1000;
+      let nextSyncIn = null;
+      
+      if (lastSyncTime) {
+        const timeSinceLastSync = Date.now() - new Date(lastSyncTime).getTime();
+        nextSyncIn = Math.max(0, SYNC_INTERVAL_MS - timeSinceLastSync);
+      }
+      
+      res.json({
+        lastSyncAt: lastSyncTime,
+        nextSyncIn: nextSyncIn,
+        linkedAccounts: linkedCount,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      console.error("Error fetching sync status:", error);
+      res.status(500).json({ message: "Failed to fetch sync status" });
+    }
+  });
+
   app.get('/api/leaderboard/:gameId/:period', async (req, res) => {
     try {
       const { gameId, period } = req.params;
