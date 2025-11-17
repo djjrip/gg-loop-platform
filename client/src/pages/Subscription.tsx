@@ -656,10 +656,15 @@ export default function SubscriptionPage() {
                           Cancel Current to Downgrade
                         </Button>
                       ) : canUpgrade || !hasActiveSubscription ? (
-                        <PayPalSubscriptionButton 
-                          planId={paypalPlanIds[tier.id as keyof typeof paypalPlanIds]}
-                          tier={tier.name}
-                        />
+                        <Button
+                          className="w-full"
+                          variant={isElite ? "default" : "outline"}
+                          onClick={() => checkoutMutation.mutate(tier.id)}
+                          disabled={checkoutMutation.isPending}
+                          data-testid={`button-subscribe-${tier.id}`}
+                        >
+                          {checkoutMutation.isPending ? "Loading..." : `Subscribe to ${tier.name}`}
+                        </Button>
                       ) : null}
                     </CardFooter>
                   </Card>
