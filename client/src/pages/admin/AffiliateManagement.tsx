@@ -126,7 +126,7 @@ export default function AffiliateManagement() {
     });
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, appId?: string) => {
     const variants = {
       pending: { variant: "default" as const, icon: Clock, text: "Pending" },
       approved: { variant: "default" as const, icon: CheckCircle, text: "Approved" },
@@ -134,7 +134,11 @@ export default function AffiliateManagement() {
     };
     const badge = variants[status as keyof typeof variants] || variants.pending;
     return (
-      <Badge variant={badge.variant} className="flex items-center gap-1 w-fit">
+      <Badge 
+        variant={badge.variant} 
+        className="flex items-center gap-1 w-fit"
+        data-testid={appId ? `badge-status-${appId}` : "badge-status"}
+      >
         <badge.icon className="h-3 w-3" />
         {badge.text}
       </Badge>
@@ -156,7 +160,7 @@ export default function AffiliateManagement() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Applications</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold flex items-center gap-2">
+                <div className="text-2xl font-bold flex items-center gap-2" data-testid="text-total-applications">
                   <Users className="h-5 w-5 text-blue-500" />
                   {stats.totalApplications}
                 </div>
@@ -168,7 +172,7 @@ export default function AffiliateManagement() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Pending Review</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold flex items-center gap-2">
+                <div className="text-2xl font-bold flex items-center gap-2" data-testid="text-pending-review">
                   <Clock className="h-5 w-5 text-orange-500" />
                   {stats.pendingReview}
                 </div>
@@ -180,7 +184,7 @@ export default function AffiliateManagement() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Active Affiliates</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold flex items-center gap-2">
+                <div className="text-2xl font-bold flex items-center gap-2" data-testid="text-active-affiliates">
                   <CheckCircle className="h-5 w-5 text-green-500" />
                   {stats.activeAffiliates}
                 </div>
@@ -192,7 +196,7 @@ export default function AffiliateManagement() {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Paid Out</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold flex items-center gap-2">
+                <div className="text-2xl font-bold flex items-center gap-2" data-testid="text-total-paid">
                   <DollarSign className="h-5 w-5 text-green-500" />
                   ${stats.totalPaid.toLocaleString()}
                 </div>
@@ -222,10 +226,10 @@ export default function AffiliateManagement() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="font-semibold">{app.user.username || app.user.email}</h3>
-                      <p className="text-sm text-muted-foreground">{app.applicationData.payoutEmail}</p>
+                      <h3 className="font-semibold" data-testid={`text-username-${app.id}`}>{app.user.username || app.user.email}</h3>
+                      <p className="text-sm text-muted-foreground" data-testid={`text-email-${app.id}`}>{app.applicationData.payoutEmail}</p>
                     </div>
-                    {getStatusBadge(app.status)}
+                    {getStatusBadge(app.status, app.id)}
                   </div>
 
                   <div className="grid md:grid-cols-3 gap-3 mb-3 text-sm">
@@ -247,15 +251,15 @@ export default function AffiliateManagement() {
                     <div className="grid md:grid-cols-3 gap-3 mb-3 p-3 bg-primary/5 rounded-lg">
                       <div className="text-sm">
                         <span className="text-muted-foreground">Commission Tier:</span>
-                        <p className="font-semibold">{app.commissionTier}</p>
+                        <p className="font-semibold" data-testid={`text-commission-tier-${app.id}`}>{app.commissionTier}</p>
                       </div>
                       <div className="text-sm">
                         <span className="text-muted-foreground">Monthly Earnings:</span>
-                        <p className="font-semibold text-green-600">${app.monthlyEarnings}</p>
+                        <p className="font-semibold text-green-600" data-testid={`text-monthly-earnings-${app.id}`}>${app.monthlyEarnings}</p>
                       </div>
                       <div className="text-sm">
                         <span className="text-muted-foreground">Total Earnings:</span>
-                        <p className="font-semibold text-blue-600">${app.totalEarnings}</p>
+                        <p className="font-semibold text-blue-600" data-testid={`text-total-earnings-${app.id}`}>${app.totalEarnings}</p>
                       </div>
                     </div>
                   )}
@@ -294,7 +298,7 @@ export default function AffiliateManagement() {
                             <div>
                               <Label htmlFor="commissionTier">Commission Tier</Label>
                               <Select value={commissionTier} onValueChange={setCommissionTier}>
-                                <SelectTrigger id="commissionTier">
+                                <SelectTrigger id="commissionTier" data-testid="select-commission-tier">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -314,6 +318,7 @@ export default function AffiliateManagement() {
                                 onChange={(e) => setReviewNotes(e.target.value)}
                                 rows={3}
                                 placeholder="Add internal notes about this application..."
+                                data-testid="textarea-review-notes"
                               />
                             </div>
 

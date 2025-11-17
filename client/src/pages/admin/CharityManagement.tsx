@@ -182,7 +182,7 @@ export default function CharityManagement() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Impact</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
+              <div className="text-2xl font-bold flex items-center gap-2" data-testid="text-total-impact">
                 <TrendingUp className="h-5 w-5 text-green-500" />
                 ${totalImpact.toLocaleString()}
               </div>
@@ -194,7 +194,7 @@ export default function CharityManagement() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Active Charities</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
+              <div className="text-2xl font-bold flex items-center gap-2" data-testid="text-active-charities">
                 <Heart className="h-5 w-5 text-red-500" />
                 {charities.filter(c => c.isActive).length}
               </div>
@@ -206,7 +206,7 @@ export default function CharityManagement() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Active Campaigns</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
+              <div className="text-2xl font-bold flex items-center gap-2" data-testid="text-active-campaigns">
                 <Globe className="h-5 w-5 text-blue-500" />
                 {campaigns.filter(c => c.isActive).length}
               </div>
@@ -232,11 +232,11 @@ export default function CharityManagement() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold">{charity.name}</h3>
-                        <Badge variant={charity.isActive ? "default" : "destructive"}>
+                        <h3 className="font-semibold" data-testid={`text-charity-name-${charity.id}`}>{charity.name}</h3>
+                        <Badge variant={charity.isActive ? "default" : "destructive"} data-testid={`badge-active-${charity.id}`}>
                           {charity.isActive ? "Active" : "Inactive"}
                         </Badge>
-                        <Badge variant="outline">{charity.category}</Badge>
+                        <Badge variant="outline" data-testid={`badge-category-${charity.id}`}>{charity.category}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                         {charity.description}
@@ -244,12 +244,12 @@ export default function CharityManagement() {
                       <div className="grid md:grid-cols-3 gap-3 text-sm">
                         <div>
                           <span className="text-muted-foreground">Total Donated:</span>
-                          <p className="font-semibold text-green-600">${charity.totalDonated.toLocaleString()}</p>
+                          <p className="font-semibold text-green-600" data-testid={`text-donated-${charity.id}`}>${charity.totalDonated.toLocaleString()}</p>
                         </div>
                         {charity.impactMetric && (
                           <div>
                             <span className="text-muted-foreground">Impact:</span>
-                            <p className="font-semibold">{charity.impactValue} {charity.impactMetric}</p>
+                            <p className="font-semibold" data-testid={`text-impact-${charity.id}`}>{charity.impactValue} {charity.impactMetric}</p>
                           </div>
                         )}
                         {charity.website && (
@@ -259,6 +259,7 @@ export default function CharityManagement() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-primary hover:underline text-sm"
+                              data-testid={`link-website-${charity.id}`}
                             >
                               Visit Website →
                             </a>
@@ -347,8 +348,8 @@ export default function CharityManagement() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold">{campaign.title}</h3>
-                          <Badge variant={campaign.isActive ? "default" : "destructive"}>
+                          <h3 className="font-semibold" data-testid={`text-campaign-title-${campaign.id}`}>{campaign.title}</h3>
+                          <Badge variant={campaign.isActive ? "default" : "destructive"} data-testid={`badge-campaign-status-${campaign.id}`}>
                             {campaign.isActive ? "Active" : "Inactive"}
                           </Badge>
                         </div>
@@ -439,6 +440,7 @@ function CharityForm({
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           required
+          data-testid="input-charity-name"
         />
       </div>
 
@@ -450,6 +452,7 @@ function CharityForm({
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           rows={3}
           required
+          data-testid="textarea-charity-description"
         />
       </div>
 
@@ -460,7 +463,7 @@ function CharityForm({
             value={formData.category}
             onValueChange={(value) => setFormData({ ...formData, category: value })}
           >
-            <SelectTrigger id="category">
+            <SelectTrigger id="category" data-testid="select-charity-category">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -482,6 +485,7 @@ function CharityForm({
             value={formData.website}
             onChange={(e) => setFormData({ ...formData, website: e.target.value })}
             placeholder="https://example.org"
+            data-testid="input-charity-website"
           />
         </div>
       </div>
@@ -494,6 +498,7 @@ function CharityForm({
             value={formData.impactMetric}
             onChange={(e) => setFormData({ ...formData, impactMetric: e.target.value })}
             placeholder="e.g., students supported, trees planted"
+            data-testid="input-impact-metric"
           />
         </div>
 
@@ -504,6 +509,7 @@ function CharityForm({
             value={formData.impactValue}
             onChange={(e) => setFormData({ ...formData, impactValue: e.target.value })}
             placeholder="e.g., 1,000+"
+            data-testid="input-impact-value"
           />
         </div>
       </div>
@@ -516,6 +522,7 @@ function CharityForm({
             type="number"
             value={formData.totalDonated}
             onChange={(e) => setFormData({ ...formData, totalDonated: parseInt(e.target.value) || 0 })}
+            data-testid="input-total-donated"
           />
         </div>
 
@@ -526,6 +533,7 @@ function CharityForm({
             type="number"
             value={formData.featuredOrder}
             onChange={(e) => setFormData({ ...formData, featuredOrder: parseInt(e.target.value) || 0 })}
+            data-testid="input-featured-order"
           />
         </div>
       </div>
@@ -535,11 +543,12 @@ function CharityForm({
           id="isActive"
           checked={formData.isActive}
           onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+          data-testid="switch-charity-active"
         />
         <Label htmlFor="isActive">Active</Label>
       </div>
 
-      <Button type="submit" disabled={isPending} className="w-full">
+      <Button type="submit" disabled={isPending} className="w-full" data-testid="button-submit-charity">
         {isPending ? "Saving..." : charity ? "Update Charity" : "Create Charity"}
       </Button>
     </form>
@@ -588,7 +597,7 @@ function CampaignForm({
           value={formData.charityId}
           onValueChange={(value) => setFormData({ ...formData, charityId: value })}
         >
-          <SelectTrigger id="charityId">
+          <SelectTrigger id="charityId" data-testid="select-campaign-charity">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -608,6 +617,7 @@ function CampaignForm({
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
+          data-testid="input-campaign-title"
         />
       </div>
 
@@ -619,6 +629,7 @@ function CampaignForm({
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           rows={3}
           required
+          data-testid="textarea-campaign-description"
         />
       </div>
 
@@ -631,6 +642,7 @@ function CampaignForm({
             value={formData.goalAmount}
             onChange={(e) => setFormData({ ...formData, goalAmount: parseInt(e.target.value) || 0 })}
             required
+            data-testid="input-goal-amount"
           />
         </div>
 
@@ -641,6 +653,7 @@ function CampaignForm({
             type="number"
             value={formData.currentAmount}
             onChange={(e) => setFormData({ ...formData, currentAmount: parseInt(e.target.value) || 0 })}
+            data-testid="input-current-amount"
           />
         </div>
       </div>
@@ -653,6 +666,7 @@ function CampaignForm({
             type="date"
             value={formData.startDate?.split("T")[0] || ""}
             onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+            data-testid="input-start-date"
           />
         </div>
 
@@ -663,6 +677,7 @@ function CampaignForm({
             type="date"
             value={formData.endDate?.split("T")[0] || ""}
             onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+            data-testid="input-end-date"
           />
         </div>
       </div>
@@ -672,11 +687,12 @@ function CampaignForm({
           id="isActive"
           checked={formData.isActive}
           onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+          data-testid="switch-campaign-active"
         />
         <Label htmlFor="isActive">Active</Label>
       </div>
 
-      <Button type="submit" disabled={isPending} className="w-full">
+      <Button type="submit" disabled={isPending} className="w-full" data-testid="button-submit-campaign">
         {isPending ? "Saving..." : campaign ? "Update Campaign" : "Create Campaign"}
       </Button>
     </form>

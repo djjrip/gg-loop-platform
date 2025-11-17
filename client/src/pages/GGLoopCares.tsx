@@ -75,7 +75,7 @@ export default function GGLoopCares() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Impact</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold flex items-center gap-2">
+              <div className="text-3xl font-bold flex items-center gap-2" data-testid="text-total-impact">
                 <TrendingUp className="h-6 w-6 text-green-500" />
                 ${totalImpact.toLocaleString()}
               </div>
@@ -88,7 +88,7 @@ export default function GGLoopCares() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Active Partners</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold flex items-center gap-2">
+              <div className="text-3xl font-bold flex items-center gap-2" data-testid="text-active-partners">
                 <Globe className="h-6 w-6 text-blue-500" />
                 {charities.filter(c => c.isActive).length}
               </div>
@@ -101,7 +101,7 @@ export default function GGLoopCares() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Active Campaigns</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold flex items-center gap-2">
+              <div className="text-3xl font-bold flex items-center gap-2" data-testid="text-active-campaigns">
                 <Users className="h-6 w-6 text-purple-500" />
                 {campaigns.filter(c => c.isActive).length}
               </div>
@@ -122,11 +122,12 @@ export default function GGLoopCares() {
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <CardTitle className="mb-2">{campaign.title}</CardTitle>
+                          <CardTitle className="mb-2" data-testid={`text-campaign-title-${campaign.id}`}>{campaign.title}</CardTitle>
                           <CardDescription>{campaign.charity.name}</CardDescription>
                         </div>
                         <Badge
                           className={categoryColors[campaign.charity.category.toLowerCase()] || categoryColors.other}
+                          data-testid={`badge-category-${campaign.id}`}
                         >
                           {campaign.charity.category}
                         </Badge>
@@ -137,11 +138,11 @@ export default function GGLoopCares() {
                       
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="font-medium">${campaign.currentAmount.toLocaleString()} raised</span>
-                          <span className="text-muted-foreground">of ${campaign.goalAmount.toLocaleString()}</span>
+                          <span className="font-medium" data-testid={`text-raised-${campaign.id}`}>${campaign.currentAmount.toLocaleString()} raised</span>
+                          <span className="text-muted-foreground" data-testid={`text-goal-${campaign.id}`}>of ${campaign.goalAmount.toLocaleString()}</span>
                         </div>
-                        <Progress value={progress} className="h-2" />
-                        <p className="text-sm text-muted-foreground">{Math.round(progress)}% funded</p>
+                        <Progress value={progress} className="h-2" data-testid={`progress-campaign-${campaign.id}`} />
+                        <p className="text-sm text-muted-foreground" data-testid={`text-progress-${campaign.id}`}>{Math.round(progress)}% funded</p>
                       </div>
 
                       {campaign.endDate && (
@@ -170,13 +171,15 @@ export default function GGLoopCares() {
                         src={charity.logo}
                         alt={charity.name}
                         className="w-12 h-12 rounded-full object-cover"
+                        data-testid={`img-logo-${charity.id}`}
                       />
                     )}
                     <div className="flex-1">
-                      <CardTitle className="text-lg">{charity.name}</CardTitle>
+                      <CardTitle className="text-lg" data-testid={`text-charity-name-${charity.id}`}>{charity.name}</CardTitle>
                       <Badge
                         variant="outline"
                         className={categoryColors[charity.category.toLowerCase()] || categoryColors.other}
+                        data-testid={`badge-category-${charity.id}`}
                       >
                         {charity.category}
                       </Badge>
@@ -189,14 +192,14 @@ export default function GGLoopCares() {
                   {charity.impactMetric && charity.impactValue && (
                     <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
                       <p className="text-xs text-muted-foreground mb-1">Impact</p>
-                      <p className="font-semibold">{charity.impactValue} {charity.impactMetric}</p>
+                      <p className="font-semibold" data-testid={`text-impact-${charity.id}`}>{charity.impactValue} {charity.impactMetric}</p>
                     </div>
                   )}
 
                   <div className="flex items-center justify-between pt-2">
                     <div>
                       <p className="text-xs text-muted-foreground">Total Contributed</p>
-                      <p className="text-lg font-bold text-green-600">${charity.totalDonated.toLocaleString()}</p>
+                      <p className="text-lg font-bold text-green-600" data-testid={`text-donated-${charity.id}`}>${charity.totalDonated.toLocaleString()}</p>
                     </div>
                     {charity.website && (
                       <a
@@ -204,6 +207,7 @@ export default function GGLoopCares() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-sm text-primary hover:underline"
+                        data-testid={`link-website-${charity.id}`}
                       >
                         Visit <ExternalLink className="h-3 w-3" />
                       </a>

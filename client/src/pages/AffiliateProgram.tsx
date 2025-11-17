@@ -1,12 +1,20 @@
-import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
+import { 
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { 
   Users, 
   DollarSign, 
@@ -43,12 +51,16 @@ type ApplicationData = z.infer<typeof applicationSchema>;
 
 export default function AffiliateProgram() {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<ApplicationData>({
-    platform: "",
-    audience: "",
-    contentType: "",
-    reason: "",
-    payoutEmail: "",
+
+  const form = useForm<ApplicationData>({
+    resolver: zodResolver(applicationSchema),
+    defaultValues: {
+      platform: "",
+      audience: "",
+      contentType: "",
+      reason: "",
+      payoutEmail: "",
+    },
   });
 
   const { data: stats, isLoading } = useQuery<AffiliateStats>({
@@ -65,13 +77,7 @@ export default function AffiliateProgram() {
         title: "Application Submitted!",
         description: "We'll review your application within 48 hours",
       });
-      setFormData({
-        platform: "",
-        audience: "",
-        contentType: "",
-        reason: "",
-        payoutEmail: "",
-      });
+      form.reset();
     },
     onError: (error: Error) => {
       toast({
@@ -82,18 +88,8 @@ export default function AffiliateProgram() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const validated = applicationSchema.parse(formData);
-      applicationMutation.mutate(validated);
-    } catch (error: any) {
-      toast({
-        title: "Validation Error",
-        description: error.errors?.[0]?.message || "Please check your form",
-        variant: "destructive",
-      });
-    }
+  const handleSubmit = (data: ApplicationData) => {
+    applicationMutation.mutate(data);
   };
 
   const copyReferralLink = () => {
@@ -228,7 +224,7 @@ export default function AffiliateProgram() {
                       <FileText className="h-5 w-5 text-primary" />
                       Promotional Materials
                     </h3>
-                    <Button variant="outline" size="sm" className="mt-2">
+                    <Button variant="outline" size="sm" className="mt-2" data-testid="button-download-assets">
                       Download Assets
                     </Button>
                   </div>
@@ -312,73 +308,110 @@ export default function AffiliateProgram() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="platform">Platform *</Label>
-                    <Input
-                      id="platform"
-                      placeholder="e.g., Twitch, YouTube, TikTok, Discord"
-                      value={formData.platform}
-                      onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                      data-testid="input-platform"
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="platform"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Platform *</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., Twitch, YouTube, TikTok, Discord"
+                              data-testid="input-platform"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
 
-                  <div>
-                    <Label htmlFor="audience">Audience Size *</Label>
-                    <Input
-                      id="audience"
-                      placeholder="e.g., 5,000 followers, 10k monthly views"
-                      value={formData.audience}
-                      onChange={(e) => setFormData({ ...formData, audience: e.target.value })}
-                      data-testid="input-audience"
+                    <FormField
+                      control={form.control}
+                      name="audience"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Audience Size *</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., 5,000 followers, 10k monthly views"
+                              data-testid="input-audience"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
 
-                  <div>
-                    <Label htmlFor="contentType">Content Type *</Label>
-                    <Input
-                      id="contentType"
-                      placeholder="e.g., Gaming streams, tutorials, reviews"
-                      value={formData.contentType}
-                      onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
-                      data-testid="input-content-type"
+                    <FormField
+                      control={form.control}
+                      name="contentType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Content Type *</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., Gaming streams, tutorials, reviews"
+                              data-testid="input-content-type"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
 
-                  <div>
-                    <Label htmlFor="reason">Why GG Loop? * (min 50 characters)</Label>
-                    <Textarea
-                      id="reason"
-                      placeholder="Tell us why you want to partner with GG Loop and how you'll promote us to your audience..."
-                      value={formData.reason}
-                      onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                      rows={4}
-                      data-testid="textarea-reason"
+                    <FormField
+                      control={form.control}
+                      name="reason"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Why GG Loop? * (min 50 characters)</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Tell us why you want to partner with GG Loop and how you'll promote us to your audience..."
+                              rows={4}
+                              data-testid="textarea-reason"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
 
-                  <div>
-                    <Label htmlFor="payoutEmail">Payout Email *</Label>
-                    <Input
-                      id="payoutEmail"
-                      type="email"
-                      placeholder="paypal@example.com"
-                      value={formData.payoutEmail}
-                      onChange={(e) => setFormData({ ...formData, payoutEmail: e.target.value })}
-                      data-testid="input-payout-email"
+                    <FormField
+                      control={form.control}
+                      name="payoutEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Payout Email *</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="paypal@example.com"
+                              data-testid="input-payout-email"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
 
-                  <Button
-                    type="submit"
-                    disabled={applicationMutation.isPending}
-                    className="w-full"
-                    data-testid="button-submit-application"
-                  >
-                    {applicationMutation.isPending ? "Submitting..." : "Submit Application"}
-                  </Button>
-                </form>
+                    <Button
+                      type="submit"
+                      disabled={applicationMutation.isPending}
+                      className="w-full"
+                      data-testid="button-submit-application"
+                    >
+                      {applicationMutation.isPending ? "Submitting..." : "Submit Application"}
+                    </Button>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
           </>
