@@ -26,6 +26,8 @@ import Referrals from "@/pages/Referrals";
 import LaunchDashboard from "@/pages/LaunchDashboard";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import SubscriptionCancel from "@/pages/SubscriptionCancel";
+import AffiliateProgram from "@/pages/AffiliateProgram";
+import GGLoopCares from "@/pages/GGLoopCares";
 
 // Admin pages
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -34,6 +36,8 @@ import FulfillmentDashboard from "@/pages/FulfillmentDashboard";
 import RewardsManagement from "@/pages/RewardsManagement";
 import DailyOps from "@/pages/DailyOps";
 import SponsorManagement from "@/pages/SponsorManagement";
+import AffiliateManagement from "@/pages/admin/AffiliateManagement";
+import CharityManagement from "@/pages/admin/CharityManagement";
 
 // 404
 import NotFound from "@/pages/not-found";
@@ -70,6 +74,8 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/my-rewards" component={MyRewards} />
       <Route path="/referrals" component={Referrals} />
+      <Route path="/affiliate-program" component={AffiliateProgram} />
+      <Route path="/gg-loop-cares" component={GGLoopCares} />
       <Route path="/launch-dashboard" component={LaunchDashboard} />
       <Route path="/subscription/success" component={SubscriptionSuccess} />
       <Route path="/subscription/cancel" component={SubscriptionCancel} />
@@ -79,6 +85,8 @@ function Router() {
       <Route path="/admin/founder-controls" component={FounderControls} />
       <Route path="/admin/rewards" component={RewardsManagement} />
       <Route path="/admin/sponsors" component={SponsorManagement} />
+      <Route path="/admin/affiliates" component={AffiliateManagement} />
+      <Route path="/admin/charities" component={CharityManagement} />
       <Route path="/admin/daily-ops" component={DailyOps} />
       <Route path="/fulfillment" component={FulfillmentDashboard} />
       

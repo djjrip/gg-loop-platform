@@ -22,6 +22,8 @@ import {
   Home,
   Settings,
   LogOut,
+  UserPlus,
+  Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -96,6 +98,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           icon: Gift,
           href: "/admin/rewards",
           priority: "medium",
+        },
+      ],
+    },
+    {
+      title: "Growth",
+      items: [
+        {
+          title: "Affiliate Program",
+          icon: UserPlus,
+          href: "/admin/affiliates",
+          priority: "medium",
+          badge: "New",
+        },
+        {
+          title: "GG Loop Cares",
+          icon: Heart,
+          href: "/admin/charities",
+          priority: "medium",
+          badge: "New",
         },
       ],
     },

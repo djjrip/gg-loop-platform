@@ -9,7 +9,8 @@ import {
   insertAchievementSchema, insertRewardSchema, insertUserRewardSchema, userRewards,
   rewards,
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
-  insertReferralSchema, processedRiotMatches
+  insertReferralSchema, processedRiotMatches, referrals, affiliateApplications,
+  charities, charityCampaigns
 } from "@shared/schema";
 import { and, eq, sql, inArray, desc } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./oauth";
@@ -3457,6 +3458,440 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     } catch (error: any) {
       console.error("Error tracking TikTok copy:", error);
       res.status(500).json({ message: error.message || "Failed to track content creation" });
+    }
+  });
+
+  // ====================
+  // AFFILIATE PROGRAM ROUTES
+  // ====================
+
+  // GET /api/affiliate/stats - Get current user's affiliate stats
+  app.get('/api/affiliate/stats', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      
+      // Get affiliate application for this user
+      const [application] = await db
+        .select()
+        .from(affiliateApplications)
+        .where(eq(affiliateApplications.userId, userId))
+        .limit(1);
+
+      // Get user's referral code from users table
+      const [user] = await db
+        .select({ referralCode: users.referralCode })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      // Count total referrals (people this user has referred)
+      const referralCount = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(referrals)
+        .where(eq(referrals.referrerId, userId));
+
+      res.json({
+        status: application?.status || 'not_applied',
+        totalReferrals: referralCount[0]?.count || 0,
+        monthlyEarnings: application?.monthlyEarnings || 0,
+        totalEarnings: application?.totalEarnings || 0,
+        commissionTier: application?.commissionTier || 'standard',
+        referralCode: user?.referralCode || '',
+      });
+    } catch (error: any) {
+      console.error("Error fetching affiliate stats:", error);
+      res.status(500).json({ message: "Failed to fetch affiliate stats" });
+    }
+  });
+
+  // POST /api/affiliate/apply - Submit affiliate application
+  app.post('/api/affiliate/apply', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      
+      // Check if user already applied
+      const [existing] = await db
+        .select()
+        .from(affiliateApplications)
+        .where(eq(affiliateApplications.userId, userId))
+        .limit(1);
+
+      if (existing) {
+        return res.status(400).json({ message: "You already have an affiliate application" });
+      }
+
+      const schema = z.object({
+        platform: z.string().min(1),
+        audience: z.string().min(1),
+        contentType: z.string().min(1),
+        reason: z.string().min(50),
+        payoutEmail: z.string().email(),
+      });
+
+      const validated = schema.parse(req.body);
+
+      await db.insert(affiliateApplications).values({
+        userId,
+        status: 'pending',
+        applicationData: validated,
+        commissionTier: 'standard',
+        payoutEmail: validated.payoutEmail,
+      });
+
+      res.json({ success: true, message: "Application submitted successfully" });
+    } catch (error: any) {
+      console.error("Error submitting affiliate application:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid application data" });
+      }
+      res.status(500).json({ message: error.message || "Failed to submit application" });
+    }
+  });
+
+  // ADMIN: GET /api/admin/affiliate-stats - Get affiliate program stats
+  app.get('/api/admin/affiliate-stats', adminMiddleware, async (req: any, res) => {
+    try {
+      const totalApplications = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(affiliateApplications);
+
+      const pendingReview = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(affiliateApplications)
+        .where(eq(affiliateApplications.status, 'pending'));
+
+      const activeAffiliates = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(affiliateApplications)
+        .where(eq(affiliateApplications.status, 'approved'));
+
+      const totalEarnings = await db
+        .select({ sum: sql<number>`coalesce(sum(total_earnings), 0)::int` })
+        .from(affiliateApplications);
+
+      res.json({
+        totalApplications: totalApplications[0]?.count || 0,
+        pendingReview: pendingReview[0]?.count || 0,
+        activeAffiliates: activeAffiliates[0]?.count || 0,
+        totalPaid: totalEarnings[0]?.sum || 0,
+      });
+    } catch (error: any) {
+      console.error("Error fetching affiliate stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // ADMIN: GET /api/admin/affiliates - Get all affiliate applications
+  app.get('/api/admin/affiliates', adminMiddleware, async (req: any, res) => {
+    try {
+      const applications = await db
+        .select({
+          id: affiliateApplications.id,
+          userId: affiliateApplications.userId,
+          status: affiliateApplications.status,
+          applicationData: affiliateApplications.applicationData,
+          commissionTier: affiliateApplications.commissionTier,
+          monthlyEarnings: affiliateApplications.monthlyEarnings,
+          totalEarnings: affiliateApplications.totalEarnings,
+          reviewNotes: affiliateApplications.reviewNotes,
+          approvedAt: affiliateApplications.approvedAt,
+          createdAt: affiliateApplications.createdAt,
+          username: users.username,
+          email: users.email,
+        })
+        .from(affiliateApplications)
+        .leftJoin(users, eq(affiliateApplications.userId, users.id))
+        .orderBy(desc(affiliateApplications.createdAt));
+
+      const enriched = applications.map(app => ({
+        ...app,
+        user: {
+          id: app.userId,
+          username: app.username,
+          email: app.email,
+        },
+      }));
+
+      res.json(enriched);
+    } catch (error: any) {
+      console.error("Error fetching affiliates:", error);
+      res.status(500).json({ message: "Failed to fetch affiliates" });
+    }
+  });
+
+  // ADMIN: PATCH /api/admin/affiliates/:id - Update affiliate application
+  app.patch('/api/admin/affiliates/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const schema = z.object({
+        status: z.enum(['pending', 'approved', 'rejected']).optional(),
+        reviewNotes: z.string().optional(),
+        commissionTier: z.enum(['standard', 'silver', 'gold', 'platinum']).optional(),
+        monthlyEarnings: z.number().int().min(0).optional(),
+        totalEarnings: z.number().int().min(0).optional(),
+      });
+
+      const validated = schema.parse(req.body);
+      const updateData: any = { ...validated, updatedAt: new Date() };
+
+      if (validated.status === 'approved') {
+        updateData.approvedAt = new Date();
+        updateData.reviewedBy = req.dbUser.id;
+      }
+
+      await db
+        .update(affiliateApplications)
+        .set(updateData)
+        .where(eq(affiliateApplications.id, id));
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error updating affiliate:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update affiliate" });
+    }
+  });
+
+  // ====================
+  // GG LOOP CARES ROUTES
+  // ====================
+
+  // PUBLIC: GET /api/charities - Get active charities
+  app.get('/api/charities', async (req, res) => {
+    try {
+      const activeCharities = await db
+        .select()
+        .from(charities)
+        .where(eq(charities.isActive, true))
+        .orderBy(charities.featuredOrder);
+
+      res.json(activeCharities);
+    } catch (error: any) {
+      console.error("Error fetching charities:", error);
+      res.status(500).json({ message: "Failed to fetch charities" });
+    }
+  });
+
+  // PUBLIC: GET /api/charity-campaigns - Get active campaigns with charity data
+  app.get('/api/charity-campaigns', async (req, res) => {
+    try {
+      const activeCampaigns = await db
+        .select({
+          id: charityCampaigns.id,
+          charityId: charityCampaigns.charityId,
+          title: charityCampaigns.title,
+          description: charityCampaigns.description,
+          goalAmount: charityCampaigns.goalAmount,
+          currentAmount: charityCampaigns.currentAmount,
+          startDate: charityCampaigns.startDate,
+          endDate: charityCampaigns.endDate,
+          isActive: charityCampaigns.isActive,
+          createdAt: charityCampaigns.createdAt,
+          charity: charities,
+        })
+        .from(charityCampaigns)
+        .leftJoin(charities, eq(charityCampaigns.charityId, charities.id))
+        .where(and(
+          eq(charityCampaigns.isActive, true),
+          eq(charities.isActive, true)
+        ))
+        .orderBy(desc(charityCampaigns.createdAt));
+
+      res.json(activeCampaigns);
+    } catch (error: any) {
+      console.error("Error fetching campaigns:", error);
+      res.status(500).json({ message: "Failed to fetch campaigns" });
+    }
+  });
+
+  // ADMIN: GET /api/admin/charities - Get all charities
+  app.get('/api/admin/charities', adminMiddleware, async (req: any, res) => {
+    try {
+      const allCharities = await db
+        .select()
+        .from(charities)
+        .orderBy(charities.featuredOrder);
+
+      res.json(allCharities);
+    } catch (error: any) {
+      console.error("Error fetching charities:", error);
+      res.status(500).json({ message: "Failed to fetch charities" });
+    }
+  });
+
+  // ADMIN: POST /api/admin/charities - Create new charity
+  app.post('/api/admin/charities', adminMiddleware, async (req: any, res) => {
+    try {
+      const schema = z.object({
+        name: z.string().min(1),
+        description: z.string(),
+        website: z.string().url().optional().or(z.literal('')),
+        logo: z.string().optional(),
+        category: z.enum(['gaming', 'education', 'health', 'environment', 'youth', 'other']),
+        impactMetric: z.string().optional(),
+        impactValue: z.string().optional(),
+        totalDonated: z.number().int().min(0).default(0),
+        featuredOrder: z.number().int().default(0),
+        isActive: z.boolean().default(true),
+      });
+
+      const validated = schema.parse(req.body);
+
+      const result = await db
+        .insert(charities)
+        .values(validated)
+        .returning();
+
+      res.json(result[0]);
+    } catch (error: any) {
+      console.error("Error creating charity:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid charity data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create charity" });
+    }
+  });
+
+  // ADMIN: PATCH /api/admin/charities/:id - Update charity
+  app.patch('/api/admin/charities/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const schema = z.object({
+        name: z.string().min(1).optional(),
+        description: z.string().optional(),
+        website: z.string().url().optional().or(z.literal('')),
+        logo: z.string().optional(),
+        category: z.enum(['gaming', 'education', 'health', 'environment', 'youth', 'other']).optional(),
+        impactMetric: z.string().optional(),
+        impactValue: z.string().optional(),
+        totalDonated: z.number().int().min(0).optional(),
+        featuredOrder: z.number().int().optional(),
+        isActive: z.boolean().optional(),
+      });
+
+      const validated = schema.parse(req.body);
+
+      await db
+        .update(charities)
+        .set({ ...validated, updatedAt: new Date() })
+        .where(eq(charities.id, id));
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error updating charity:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update charity" });
+    }
+  });
+
+  // ADMIN: DELETE /api/admin/charities/:id - Delete charity
+  app.delete('/api/admin/charities/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      await db
+        .delete(charities)
+        .where(eq(charities.id, id));
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting charity:", error);
+      res.status(500).json({ message: "Failed to delete charity" });
+    }
+  });
+
+  // ADMIN: GET /api/admin/charity-campaigns - Get all campaigns
+  app.get('/api/admin/charity-campaigns', adminMiddleware, async (req: any, res) => {
+    try {
+      const allCampaigns = await db
+        .select({
+          id: charityCampaigns.id,
+          charityId: charityCampaigns.charityId,
+          title: charityCampaigns.title,
+          description: charityCampaigns.description,
+          goalAmount: charityCampaigns.goalAmount,
+          currentAmount: charityCampaigns.currentAmount,
+          startDate: charityCampaigns.startDate,
+          endDate: charityCampaigns.endDate,
+          isActive: charityCampaigns.isActive,
+          createdAt: charityCampaigns.createdAt,
+          charity: charities,
+        })
+        .from(charityCampaigns)
+        .leftJoin(charities, eq(charityCampaigns.charityId, charities.id))
+        .orderBy(desc(charityCampaigns.createdAt));
+
+      res.json(allCampaigns);
+    } catch (error: any) {
+      console.error("Error fetching campaigns:", error);
+      res.status(500).json({ message: "Failed to fetch campaigns" });
+    }
+  });
+
+  // ADMIN: POST /api/admin/charity-campaigns - Create new campaign
+  app.post('/api/admin/charity-campaigns', adminMiddleware, async (req: any, res) => {
+    try {
+      const schema = z.object({
+        charityId: z.string().uuid(),
+        title: z.string().min(1),
+        description: z.string(),
+        goalAmount: z.number().positive(),
+        currentAmount: z.number().default(0),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        isActive: z.boolean().default(true),
+      });
+
+      const validated = schema.parse(req.body);
+
+      const result = await db
+        .insert(charityCampaigns)
+        .values(validated)
+        .returning();
+
+      res.json(result[0]);
+    } catch (error: any) {
+      console.error("Error creating campaign:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid campaign data" });
+      }
+      res.status(500).json({ message: "Failed to create campaign" });
+    }
+  });
+
+  // ADMIN: PATCH /api/admin/charity-campaigns/:id - Update campaign
+  app.patch('/api/admin/charity-campaigns/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const schema = z.object({
+        charityId: z.string().uuid().optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        goalAmount: z.number().optional(),
+        currentAmount: z.number().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        isActive: z.boolean().optional(),
+      });
+
+      const validated = schema.parse(req.body);
+
+      await db
+        .update(charityCampaigns)
+        .set({ ...validated, updatedAt: new Date() })
+        .where(eq(charityCampaigns.id, id));
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error updating campaign:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update campaign" });
     }
   });
 
