@@ -65,7 +65,7 @@ export default function Home() {
             )}
             
             <a 
-              href="https://discord.gg/ggloop" 
+              href="https://discord.gg/X6GXg2At2D" 
               target="_blank" 
               rel="noopener noreferrer"
             >

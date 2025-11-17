@@ -18,7 +18,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <a 
-                  href="https://discord.gg/rEXCFjJ4" 
+                  href="https://discord.gg/X6GXg2At2D" 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 hover-elevate px-2 py-1 rounded-md"
