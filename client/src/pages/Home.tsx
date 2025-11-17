@@ -39,7 +39,7 @@ export default function Home() {
             Membership Rewards for Gamers
           </Badge>
           
-          <h1 className="text-6xl md:text-7xl font-bold font-heading tracking-tight" data-testid="text-hero-title">
+          <h1 className="text-7xl md:text-8xl font-bold font-heading tracking-tight" data-testid="text-hero-title">
             Play. <span className="text-primary">Earn.</span> Loop.
           </h1>
           
@@ -150,11 +150,15 @@ export default function Home() {
             Rewarding Gamers for Their Dedication
           </h2>
           
-          <p className="text-lg text-muted-foreground">
-            Gamers spend thousands of hours perfecting their skills, but receive zero tangible value in return. 
-            GG Loop changes that with a <span className="text-primary font-semibold">membership rewards program</span> that 
-            gives you fixed monthly point allocations to redeem for real gaming gear - without relying on sponsorships, ads, or grinding for views.
-          </p>
+          <div className="space-y-4 text-lg text-muted-foreground">
+            <p>
+              Remember when you were told to "log off" and "do something productive"? GG Loop is here to <span className="text-primary font-semibold">heal that inner kid</span> who loved gaming but was made to feel guilty about it. Your passion was never a waste—it was just waiting for the right platform.
+            </p>
+            
+            <p>
+              We built a <span className="text-primary font-semibold">membership rewards program</span> that gives you fixed monthly point allocations to redeem for real gaming gear - without relying on sponsorships, ads, or grinding for views.
+            </p>
+          </div>
 
           <div className="bg-muted/50 rounded-lg p-8 space-y-6 text-left">
             <h3 className="text-2xl font-bold text-center">What Makes Us Different</h3>
