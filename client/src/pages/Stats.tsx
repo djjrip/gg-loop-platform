@@ -103,7 +103,7 @@ export default function Stats() {
                 <span className="text-sm font-medium">Available Points</span>
               </div>
               <div className="text-7xl font-bold font-mono text-primary" data-testid="text-points-balance">
-                {user?.pointsBalance?.toLocaleString() || 0}
+                {user?.totalPoints?.toLocaleString() || 0}
               </div>
               <p className="text-muted-foreground">
                 Points earned from matches: {totalPointsFromMatches.toLocaleString()}
@@ -273,13 +273,13 @@ export default function Stats() {
                           <p className="text-primary font-bold font-mono" data-testid={`text-reward-points-${reward.id}`}>
                             {reward.pointsCost.toLocaleString()} pts
                           </p>
-                          {user?.pointsBalance && user.pointsBalance >= reward.pointsCost ? (
+                          {user?.totalPoints && user.totalPoints >= reward.pointsCost ? (
                             <Badge variant="default" className="w-full justify-center">
                               Can Redeem
                             </Badge>
                           ) : (
                             <Badge variant="secondary" className="w-full justify-center">
-                              Need {(reward.pointsCost - (user?.pointsBalance || 0)).toLocaleString()} more
+                              Need {(reward.pointsCost - (user?.totalPoints || 0)).toLocaleString()} more
                             </Badge>
                           )}
                         </div>
