@@ -968,8 +968,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const lastSyncTime = lastProcessed[0]?.processedAt || null;
       const linkedCount = totalLinkedAccounts[0]?.count || 0;
       
-      // Match sync service runs every 10 minutes
-      const SYNC_INTERVAL_MS = 10 * 60 * 1000;
+      // Match sync service runs every 5 minutes
+      const SYNC_INTERVAL_MS = 5 * 60 * 1000;
       let nextSyncIn = null;
       
       if (lastSyncTime) {

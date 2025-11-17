@@ -5,7 +5,7 @@ import { eq, and } from 'drizzle-orm';
 import { AchievementDetector } from './achievementDetector';
 import type { IStorage } from './storage';
 
-const SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
+const SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const MATCHES_TO_CHECK = 5; // Only check last 5 matches per sync
 
 let syncInterval: NodeJS.Timeout | null = null;
