@@ -592,3 +592,81 @@ export const insertAuditLogSchema = createInsertSchema(auditLog).omit({
 
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type AuditLog = typeof auditLog.$inferSelect;
+
+export const affiliateApplications = pgTable("affiliate_applications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  status: varchar("status").notNull().default("pending"),
+  applicationData: jsonb("application_data").notNull(),
+  commissionTier: varchar("commission_tier").default("standard"),
+  monthlyEarnings: integer("monthly_earnings").default(0),
+  totalEarnings: integer("total_earnings").default(0),
+  payoutEmail: varchar("payout_email"),
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewNotes: text("review_notes"),
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_affiliate_user").on(table.userId),
+  index("idx_affiliate_status").on(table.status),
+]);
+
+export const insertAffiliateApplicationSchema = createInsertSchema(affiliateApplications).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertAffiliateApplication = z.infer<typeof insertAffiliateApplicationSchema>;
+export type AffiliateApplication = typeof affiliateApplications.$inferSelect;
+
+export const charities = pgTable("charities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  website: varchar("website"),
+  logo: varchar("logo"),
+  category: varchar("category").notNull(),
+  impactMetric: varchar("impact_metric"),
+  impactValue: varchar("impact_value"),
+  totalDonated: integer("total_donated").default(0),
+  featuredOrder: integer("featured_order"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCharitySchema = createInsertSchema(charities).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCharity = z.infer<typeof insertCharitySchema>;
+export type Charity = typeof charities.$inferSelect;
+
+export const charityCampaigns = pgTable("charity_campaigns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  charityId: varchar("charity_id").notNull().references(() => charities.id),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  goalAmount: integer("goal_amount"),
+  currentAmount: integer("current_amount").default(0),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_campaign_charity").on(table.charityId),
+]);
+
+export const insertCharityCampaignSchema = createInsertSchema(charityCampaigns).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCharityCampaign = z.infer<typeof insertCharityCampaignSchema>;
+export type CharityCampaign = typeof charityCampaigns.$inferSelect;
