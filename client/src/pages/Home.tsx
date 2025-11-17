@@ -219,6 +219,144 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Games Section */}
+      <section id="games" className="container mx-auto px-4 py-24 bg-muted/30">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold font-heading mb-4" data-testid="text-games">
+            Supported Games
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Earn points from your favorite competitive games
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {/* League of Legends */}
+          <Card className="p-8 hover-elevate" data-testid="card-game-lol">
+            <CardContent className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Gamepad2 className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-2xl font-bold font-heading">League of Legends</h3>
+              <p className="text-muted-foreground">
+                Earn points for ranked wins and climb the leaderboard
+              </p>
+              <Badge variant="outline">Active</Badge>
+            </CardContent>
+          </Card>
+
+          {/* Valorant */}
+          <Card className="p-8 hover-elevate" data-testid="card-game-valorant">
+            <CardContent className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Target className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-2xl font-bold font-heading">Valorant</h3>
+              <p className="text-muted-foreground">
+                Competitive matches automatically tracked and rewarded
+              </p>
+              <Badge variant="outline">Active</Badge>
+            </CardContent>
+          </Card>
+
+          {/* TFT */}
+          <Card className="p-8 hover-elevate" data-testid="card-game-tft">
+            <CardContent className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Trophy className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-2xl font-bold font-heading">Teamfight Tactics</h3>
+              <p className="text-muted-foreground">
+                Top finishes in ranked TFT games earn bonus points
+              </p>
+              <Badge variant="outline">Active</Badge>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Leaderboards Section */}
+      <section id="leaderboards" className="container mx-auto px-4 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold font-heading mb-4" data-testid="text-leaderboards">
+            Global Leaderboards
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Compete with gamers worldwide
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* Points Leaderboard */}
+          <Card className="p-8 hover-elevate" data-testid="card-leaderboard-points">
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-heading">Points Leaders</h3>
+                  <p className="text-sm text-muted-foreground">Top earners this month</p>
+                </div>
+              </div>
+              <div className="space-y-3 pt-4">
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                  <Badge variant="default" className="text-xs">1st</Badge>
+                  <span className="text-sm font-medium flex-1">Sign up to compete</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                  <Badge variant="outline" className="text-xs">2nd</Badge>
+                  <span className="text-sm text-muted-foreground flex-1">Join the leaderboard</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                  <Badge variant="outline" className="text-xs">3rd</Badge>
+                  <span className="text-sm text-muted-foreground flex-1">Climb the ranks</span>
+                </div>
+              </div>
+              <Link href="/subscription">
+                <Button className="w-full" variant="outline" size="sm" data-testid="button-join-points">
+                  Join Competition
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Referral Leaderboard */}
+          <Card className="p-8 hover-elevate" data-testid="card-leaderboard-referrals">
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-heading">Referral Champions</h3>
+                  <p className="text-sm text-muted-foreground">Most referrals this month</p>
+                </div>
+              </div>
+              <div className="space-y-3 pt-4">
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                  <Badge variant="default" className="text-xs">1st</Badge>
+                  <span className="text-sm font-medium flex-1">Invite friends to compete</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                  <Badge variant="outline" className="text-xs">2nd</Badge>
+                  <span className="text-sm text-muted-foreground flex-1">Build your network</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+                  <Badge variant="outline" className="text-xs">3rd</Badge>
+                  <span className="text-sm text-muted-foreground flex-1">Grow together</span>
+                </div>
+              </div>
+              <Link href="/referrals">
+                <Button className="w-full" variant="outline" size="sm" data-testid="button-join-referrals">
+                  Start Referring
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       {/* Membership Tiers */}
       <section className="container mx-auto px-4 py-24 bg-muted/30">
         <div className="text-center mb-16">
