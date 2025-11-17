@@ -493,6 +493,19 @@ export default function SubscriptionPage() {
                 const isCurrentTier = subscription?.tier === tier.id;
                 const isElite = tier.id === "elite";
                 const isFree = tier.id === "free";
+                
+                // Allow upgrades: if user has basic, they can upgrade to pro/elite
+                // if user has pro, they can upgrade to elite
+                const canUpgrade = subscription && (
+                  (subscription.tier === 'basic' && (tier.id === 'pro' || tier.id === 'elite')) ||
+                  (subscription.tier === 'pro' && tier.id === 'elite')
+                );
+                
+                // Block downgrades: if user has a higher tier, block lower tiers
+                const isDowngrade = subscription && (
+                  (subscription.tier === 'elite' && (tier.id === 'pro' || tier.id === 'basic')) ||
+                  (subscription.tier === 'pro' && tier.id === 'basic')
+                );
 
                 return (
                   <Card
@@ -633,21 +646,21 @@ export default function SubscriptionPage() {
                         >
                           Current Plan
                         </Button>
-                      ) : hasActiveSubscription ? (
+                      ) : isDowngrade ? (
                         <Button
                           className="w-full"
                           variant="outline"
                           disabled
-                          data-testid={`button-subscribe-${tier.id}`}
+                          data-testid={`button-downgrade-${tier.id}`}
                         >
-                          Cancel Current Plan to Switch
+                          Cancel Current to Downgrade
                         </Button>
-                      ) : (
+                      ) : canUpgrade || !hasActiveSubscription ? (
                         <PayPalSubscriptionButton 
                           planId={paypalPlanIds[tier.id as keyof typeof paypalPlanIds]}
                           tier={tier.name}
                         />
-                      )}
+                      ) : null}
                     </CardFooter>
                   </Card>
                 );
