@@ -36,7 +36,7 @@ export default function Partners() {
       `Message:\n${formData.message}`
     );
     
-    window.location.href = `mailto:partnerships@ggloop.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:jaysonquindao@ggloop.io?subject=${subject}&body=${body}`;
     
     toast({
       title: "Opening email client",
@@ -301,10 +301,10 @@ export default function Partners() {
           <p className="text-center text-sm text-muted-foreground mt-6">
             Or email us directly at{" "}
             <a 
-              href="mailto:partnerships@ggloop.com" 
+              href="mailto:jaysonquindao@ggloop.io" 
               className="text-primary hover:underline"
             >
-              partnerships@ggloop.com
+              jaysonquindao@ggloop.io
             </a>
           </p>
         </div>
