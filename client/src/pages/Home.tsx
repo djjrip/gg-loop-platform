@@ -9,7 +9,8 @@ import {
   Zap,
   Trophy,
   Users,
-  ArrowRight
+  ArrowRight,
+  Target
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -137,8 +138,81 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Membership Tiers */}
+      {/* Mission Section */}
       <section className="container mx-auto px-4 py-24">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+            <Target className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Our Mission</span>
+          </div>
+          
+          <h2 className="text-4xl md:text-5xl font-bold font-heading" data-testid="text-mission-title">
+            Rewarding Gamers for Their Dedication
+          </h2>
+          
+          <p className="text-lg text-muted-foreground">
+            Gamers spend thousands of hours perfecting their skills, but receive zero tangible value in return. 
+            GG Loop changes that with a <span className="text-primary font-semibold">membership rewards program</span> that 
+            gives you fixed monthly point allocations to redeem for real gaming gear - without relying on sponsorships, ads, or grinding for views.
+          </p>
+
+          <div className="bg-muted/50 rounded-lg p-8 space-y-6 text-left">
+            <h3 className="text-2xl font-bold text-center">What Makes Us Different</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
+                  <div>
+                    <p className="font-semibold">Built for the 99%</p>
+                    <p className="text-sm text-muted-foreground">
+                      Not just pro players - rewards for dedicated gamers and aspiring creators
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
+                  <div>
+                    <p className="font-semibold">Transparent & Sustainable</p>
+                    <p className="text-sm text-muted-foreground">
+                      Fixed monthly allocations, no pay-to-win, points expire after 12 months
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
+                  <div>
+                    <p className="font-semibold">Real Value</p>
+                    <p className="text-sm text-muted-foreground">
+                      Gaming peripherals, gift cards, and subscriptions - no crypto promises
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
+                  <div>
+                    <p className="font-semibold">Community First</p>
+                    <p className="text-sm text-muted-foreground">
+                      Built by gamers, for gamers - recognition for your dedication
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Link href="/about">
+            <Button variant="outline" size="lg" data-testid="button-learn-more">
+              Learn More About Our Mission
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Membership Tiers */}
+      <section className="container mx-auto px-4 py-24 bg-muted/30">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold font-heading mb-4" data-testid="text-membership-tiers">
             Membership Tiers
