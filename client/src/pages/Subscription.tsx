@@ -181,7 +181,10 @@ export default function SubscriptionPage() {
       price: 12,
       icon: Flame,
       description: "Enhanced monthly point allocation",
+      badge: "7-Day Free Trial",
+      freeTrial: "7 days free",
       features: [
+        { text: "7-day free trial, then $12/month", included: true },
         { text: "10,000 points deposited monthly", included: true },
         { text: "Automatic point allocation on billing cycle", included: true },
         { text: "Bonus challenge eligibility", included: true },
@@ -198,8 +201,10 @@ export default function SubscriptionPage() {
       price: 25,
       icon: Star,
       description: "Premium monthly point allocation",
-      badge: "Best Value",
+      badge: "3-Day Free Trial",
+      freeTrial: "3 days free",
       features: [
+        { text: "3-day free trial, then $25/month", included: true },
         { text: "25,000 points deposited monthly", included: true },
         { text: "Automatic point allocation on billing cycle", included: true },
         { text: "Priority bonus challenge access", included: true },

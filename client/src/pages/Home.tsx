@@ -47,6 +47,10 @@ export default function Home() {
             Subscribe to GG Loop and earn points for every ranked match you win. 
             Redeem points for gaming gear, gift cards, and exclusive rewards.
           </p>
+          
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-lg">
+            <span className="text-sm font-medium text-primary">✨ Try Pro free for 7 days or Elite free for 3 days</span>
+          </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
             {isAuthenticated ? (
@@ -263,12 +267,15 @@ export default function Home() {
           <Card className="p-8 border-primary shadow-lg hover-elevate" data-testid="card-tier-pro">
             <CardContent className="space-y-6">
               <div>
-                <Badge className="mb-2" data-testid="badge-popular">Most Popular</Badge>
+                <div className="flex gap-2 mb-2">
+                  <Badge className="" data-testid="badge-popular">7-Day Free Trial</Badge>
+                </div>
                 <h3 className="text-2xl font-bold font-heading">Pro</h3>
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className="text-4xl font-bold" data-testid="text-price-pro">$12</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
+                <p className="text-sm text-muted-foreground mt-1">Try free for 7 days</p>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -296,11 +303,13 @@ export default function Home() {
           <Card className="p-8 hover-elevate" data-testid="card-tier-elite">
             <CardContent className="space-y-6">
               <div>
+                <Badge className="mb-2" variant="outline" data-testid="badge-elite-trial">3-Day Free Trial</Badge>
                 <h3 className="text-2xl font-bold font-heading">Elite</h3>
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className="text-4xl font-bold" data-testid="text-price-elite">$25</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
+                <p className="text-sm text-muted-foreground mt-1">Try free for 3 days</p>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
