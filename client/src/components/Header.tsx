@@ -1,4 +1,5 @@
 import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, Package, TrendingUp } from "lucide-react";
+import logoImage from "@assets/ChatGPT Image Nov 11, 2025, 06_17_23 PM_1763403383212.png";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -63,7 +64,7 @@ export default function Header() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 hover-elevate px-2 py-1 rounded-md" data-testid="link-home">
             <div className="flex items-center gap-3">
-              <Trophy className="h-8 w-8 text-primary" />
+              <img src={logoImage} alt="GG LOOP Logo" className="h-10 w-10" />
               <span className="font-bold text-3xl tracking-tight">GG LOOP</span>
             </div>
           </Link>

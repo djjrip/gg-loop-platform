@@ -1,5 +1,6 @@
 import { SiDiscord, SiTiktok } from "react-icons/si";
 import { Link } from "wouter";
+import logoImage from "@assets/ChatGPT Image Nov 11, 2025, 06_17_23 PM_1763403383212.png";
 
 export default function Footer() {
   return (
@@ -7,7 +8,10 @@ export default function Footer() {
       <div className="container mx-auto max-w-7xl px-4 py-8">
         <div className="grid md:grid-cols-4 gap-8 mb-6">
           <div>
-            <h3 className="font-semibold mb-3">GG Loop</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <img src={logoImage} alt="GG LOOP Logo" className="h-8 w-8" />
+              <h3 className="font-semibold">GG Loop</h3>
+            </div>
             <p className="text-sm text-muted-foreground">
               Play. Unlock. LOOP. A membership rewards program for dedicated gamers.
             </p>
