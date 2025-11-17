@@ -1,31 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { User, Save, ExternalLink, Twitch, Unlink, CheckCircle2, Gamepad2, Shield, Copy, AlertCircle, Link2, Clock, Trophy, TrendingUp, MapPin } from "lucide-react";
+import { CheckCircle2, AlertCircle, Link2, Unlink, Gamepad2, Trophy } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useLocation } from "wouter";
-
-type UserData = {
-  id: string;
-  username: string | null;
-  firstName: string;
-  lastName: string;
-  email: string;
-  twitchUsername: string | null;
-  twitchConnectedAt: string | null;
-  shippingAddress: string | null;
-  shippingCity: string | null;
-  shippingState: string | null;
-  shippingZip: string | null;
-  shippingCountry: string | null;
-};
 
 type RiotAccountStatus = {
   linked: boolean;
@@ -39,836 +24,430 @@ type RiotAccountStatus = {
   losses?: number;
 };
 
-const LEAGUE_GAME_ID = '4cf0e30a-7969-4572-a8f5-29ad5935dc00';
-const VALORANT_GAME_ID = '36f728c6-8143-4be3-9e94-54c549a48d7f';
-
-const REGIONS = [
-  { value: 'na', label: 'North America' },
-  { value: 'euw', label: 'Europe West' },
-  { value: 'eune', label: 'Europe Nordic & East' },
+const LEAGUE_REGIONS = [
+  { value: 'na1', label: 'North America' },
+  { value: 'euw1', label: 'Europe West' },
+  { value: 'eun1', label: 'Europe Nordic & East' },
   { value: 'kr', label: 'Korea' },
-  { value: 'br', label: 'Brazil' },
-  { value: 'lan', label: 'Latin America North' },
-  { value: 'las', label: 'Latin America South' },
-  { value: 'oce', label: 'Oceania' },
+  { value: 'br1', label: 'Brazil' },
+  { value: 'la1', label: 'Latin America North' },
+  { value: 'la2', label: 'Latin America South' },
+  { value: 'oc1', label: 'Oceania' },
   { value: 'ru', label: 'Russia' },
-  { value: 'tr', label: 'Turkey' },
-  { value: 'jp', label: 'Japan' },
+  { value: 'tr1', label: 'Turkey' },
+  { value: 'jp1', label: 'Japan' },
+];
+
+const VALORANT_REGIONS = [
+  { value: 'na', label: 'North America' },
+  { value: 'eu', label: 'Europe' },
+  { value: 'ap', label: 'Asia Pacific' },
+  { value: 'kr', label: 'Korea' },
+  { value: 'latam', label: 'Latin America' },
+  { value: 'br', label: 'Brazil' },
 ];
 
 export default function Settings() {
   const { toast } = useToast();
-  const [username, setUsername] = useState("");
-  const [location] = useLocation();
-  
-  // Shipping address state
-  const [shippingAddress, setShippingAddress] = useState("");
-  const [shippingCity, setShippingCity] = useState("");
-  const [shippingState, setShippingState] = useState("");
-  const [shippingZip, setShippingZip] = useState("");
-  const [shippingCountry, setShippingCountry] = useState("US");
   
   // Riot account linking state
-  const [leagueRiotId, setLeagueRiotId] = useState(""); // Format: GameName#TAG
+  const [leagueRiotId, setLeagueRiotId] = useState("");
   const [leagueRegion, setLeagueRegion] = useState("na1");
-  const [valorantRiotId, setValorantRiotId] = useState(""); // Format: GameName#TAG
+  const [valorantRiotId, setValorantRiotId] = useState("");
   const [valorantRegion, setValorantRegion] = useState("na");
-  const [valorantVerificationCode, setValorantVerificationCode] = useState("");
 
-  const { data: user, isLoading } = useQuery<UserData>({
-    queryKey: ['/api/auth/user'],
+  const { data: leagueAccount, isLoading: leagueLoading } = useQuery<RiotAccountStatus>({
+    queryKey: ["/api/riot/account/league"],
   });
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('twitch') === 'connected') {
-      toast({
-        title: "Twitch connected!",
-        description: "Your Twitch account has been linked successfully.",
-      });
-      window.history.replaceState({}, '', '/settings');
-    }
-  }, [toast]);
-
-  const updateUsernameMutation = useMutation({
-    mutationFn: async (newUsername: string) => {
-      return await apiRequest("/api/user/username", "POST", { username: newUsername });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      toast({
-        title: "Username updated!",
-        description: "Your profile URL has been updated.",
-      });
-      setUsername("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to update username",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
-    },
+  const { data: valorantAccount, isLoading: valorantLoading } = useQuery<RiotAccountStatus>({
+    queryKey: ["/api/riot/account/valorant"],
   });
 
-  const connectTwitchMutation = useMutation({
-    mutationFn: async () => {
-      // Redirect to Twitch OAuth flow
-      window.location.href = '/api/auth/twitch/link';
-    },
-  });
-
-  const disconnectTwitchMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest("POST", "/api/auth/twitch/unlink", {});
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      toast({
-        title: "Twitch disconnected",
-        description: "Your Twitch account has been unlinked.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to disconnect Twitch",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateShippingAddressMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest("POST", "/api/user/shipping-address", {
-        address: shippingAddress,
-        city: shippingCity,
-        state: shippingState,
-        zip: shippingZip,
-        country: shippingCountry
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      toast({
-        title: "Shipping address saved!",
-        description: "Your address has been updated successfully.",
-      });
-      setShippingAddress("");
-      setShippingCity("");
-      setShippingState("");
-      setShippingZip("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to save address",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
-    },
-  });
-
-  useEffect(() => {
-    if (user) {
-      setShippingAddress(user.shippingAddress || "");
-      setShippingCity(user.shippingCity || "");
-      setShippingState(user.shippingState || "");
-      setShippingZip(user.shippingZip || "");
-      setShippingCountry(user.shippingCountry || "US");
-    }
-  }, [user]);
-
-  // Riot Account Status Queries
-  const { data: leagueStatus } = useQuery<RiotAccountStatus>({
-    queryKey: ['/api/riot/account/league'],
-  });
-
-  const { data: valorantStatus } = useQuery<RiotAccountStatus>({
-    queryKey: ['/api/riot/account/valorant'],
-  });
-
-  // Riot Account Link Mutations (simplified - direct linking)
   const linkLeagueMutation = useMutation({
-    mutationFn: async () => {
-      const [gameName, tagLine] = leagueRiotId.split('#');
-      if (!gameName || !tagLine) {
-        throw new Error("Please enter your Riot ID in the format: GameName#TAG");
-      }
-      return await apiRequest("POST", "/api/riot/link-account", {
-        game: "league",
-        gameName,
-        tagLine,
-        region: leagueRegion,
-      });
+    mutationFn: async (data: { riotId: string; region: string }) => {
+      const res = await apiRequest("POST", "/api/riot/link/league", data);
+      return res.json();
     },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/riot/account/league'] });
-      setLeagueRiotId("");
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/riot/account/league"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/riot/matches"] });
       toast({
         title: "League account linked!",
-        description: `Successfully linked ${data.account.gameName}#${data.account.tagLine}`,
+        description: "Your matches will sync automatically every 10 minutes.",
       });
+      setLeagueRiotId("");
     },
     onError: (error: any) => {
       toast({
         title: "Failed to link account",
-        description: error.message || "Please check your Riot ID format (GameName#TAG)",
+        description: error.message || "Please check your Riot ID and region",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unlinkLeagueMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/riot/unlink/league", {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/riot/account/league"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/riot/matches"] });
+      toast({
+        title: "League account unlinked",
+        description: "Your account has been disconnected.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to unlink account",
+        description: error.message || "Please try again",
         variant: "destructive",
       });
     },
   });
 
   const linkValorantMutation = useMutation({
-    mutationFn: async () => {
-      const [gameName, tagLine] = valorantRiotId.split('#');
-      if (!gameName || !tagLine) {
-        throw new Error("Please enter your Riot ID in the format: GameName#TAG");
-      }
-      return await apiRequest("POST", "/api/riot/link-account", {
-        game: "valorant",
-        gameName,
-        tagLine,
-        region: valorantRegion,
-      });
+    mutationFn: async (data: { riotId: string; region: string }) => {
+      const res = await apiRequest("POST", "/api/riot/link/valorant", data);
+      return res.json();
     },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/riot/account/valorant'] });
-      setValorantRiotId("");
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/riot/account/valorant"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/riot/matches"] });
       toast({
         title: "Valorant account linked!",
-        description: `Successfully linked ${data.account.gameName}#${data.account.tagLine}`,
+        description: "Your matches will sync automatically every 10 minutes.",
       });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to link account",
-        description: error.message || "Please check your Riot ID format (GameName#TAG)",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const disconnectLeagueMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest("POST", `/api/riot/${LEAGUE_GAME_ID}/disconnect`, {});
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/riot/account/league'] });
-      toast({
-        title: "League account disconnected",
-        description: "Your League of Legends account has been unlinked.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to disconnect",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const disconnectValorantMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest("POST", `/api/riot/${VALORANT_GAME_ID}/disconnect`, {});
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/riot/account/valorant'] });
-      setValorantVerificationCode("");
-      toast({
-        title: "Valorant account disconnected",
-        description: "Your Valorant account has been unlinked.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to disconnect",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const linkValorantProvisionalMutation = useMutation({
-    mutationFn: async () => {
-      const [gameName, tagLine] = valorantRiotId.split('#');
-      if (!gameName || !tagLine) {
-        throw new Error("Please enter your Riot ID in the format: GameName#TAG");
-      }
-      return await apiRequest("POST", `/api/riot/${VALORANT_GAME_ID}/link-provisional`, {
-        riotId: `${gameName}#${tagLine}`,
-        region: valorantRegion,
-      });
-    },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/riot/account/valorant'] });
       setValorantRiotId("");
-      toast({
-        title: "Account linked!",
-        description: data.message || "Valorant account linked successfully",
-      });
     },
     onError: (error: any) => {
       toast({
         title: "Failed to link account",
-        description: error.message || "Please check your Riot ID and try again",
+        description: error.message || "Please check your Riot ID and region",
         variant: "destructive",
       });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username.trim()) return;
-    updateUsernameMutation.mutate(username);
+  const unlinkValorantMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/riot/unlink/valorant", {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/riot/account/valorant"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/riot/matches"] });
+      toast({
+        title: "Valorant account unlinked",
+        description: "Your account has been disconnected.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to unlink account",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleLinkLeague = () => {
+    if (!leagueRiotId || !leagueRiotId.includes('#')) {
+      toast({
+        title: "Invalid Riot ID",
+        description: "Please enter your Riot ID in the format: GameName#TAG",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    linkLeagueMutation.mutate({ riotId: leagueRiotId, region: leagueRegion });
   };
 
-  const currentUsername = user?.username || "Not set";
-  const profileUrl = user?.username 
-    ? `/profile/${user.username}` 
-    : user?.id ? `/profile/${user.id}` : "#";
+  const handleLinkValorant = () => {
+    if (!valorantRiotId || !valorantRiotId.includes('#')) {
+      toast({
+        title: "Invalid Riot ID",
+        description: "Please enter your Riot ID in the format: GameName#TAG",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto max-w-4xl px-6 py-12">
+    linkValorantMutation.mutate({ riotId: valorantRiotId, region: valorantRegion });
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold font-heading mb-2" data-testid="text-settings-title">
+            Account Settings
+          </h1>
+          <p className="text-muted-foreground">
+            Connect your Riot accounts to automatically track matches and earn points
+          </p>
+        </div>
+
         <div className="space-y-6">
-          <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-          <Card>
+          {/* League of Legends */}
+          <Card data-testid="card-league">
             <CardHeader>
-              <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Gamepad2 className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">League of Legends</CardTitle>
+                  <CardDescription>
+                    Link your League account to track ranked matches
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="h-10 w-full bg-muted animate-pulse rounded" />
+            <CardContent className="space-y-4">
+              {leagueLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-4"></div>
+                  <p>Loading...</p>
+                </div>
+              ) : leagueAccount?.linked ? (
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between p-4 border rounded-lg bg-muted/30">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        <span className="font-semibold" data-testid="text-league-connected">Connected</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Riot ID: <span className="font-mono" data-testid="text-league-riot-id">{leagueAccount.gameName}#{leagueAccount.tagLine}</span>
+                      </p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Region: {LEAGUE_REGIONS.find(r => r.value === leagueAccount.region)?.label || leagueAccount.region}
+                      </p>
+                      {leagueAccount.lastSyncedAt && (
+                        <p className="text-sm text-muted-foreground">
+                          Last synced: {formatDistanceToNow(new Date(leagueAccount.lastSyncedAt))} ago
+                        </p>
+                      )}
+                      {leagueAccount.totalMatches !== undefined && (
+                        <div className="flex items-center gap-4 mt-3">
+                          <Badge variant="secondary" data-testid="badge-league-matches">
+                            <Trophy className="h-3 w-3 mr-1" />
+                            {leagueAccount.totalMatches} matches
+                          </Badge>
+                          {leagueAccount.wins !== undefined && (
+                            <Badge variant="default" data-testid="badge-league-wins">
+                              {leagueAccount.wins}W {leagueAccount.losses}L
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => unlinkLeagueMutation.mutate()}
+                      disabled={unlinkLeagueMutation.isPending}
+                      data-testid="button-unlink-league"
+                    >
+                      <Unlink className="h-4 w-4 mr-2" />
+                      Disconnect
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-2 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-medium mb-1">How to find your Riot ID:</p>
+                      <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                        <li>Launch League of Legends client</li>
+                        <li>Look at the top right corner</li>
+                        <li>Your Riot ID format: <span className="font-mono">GameName#TAG</span></li>
+                      </ol>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="league-riot-id">Riot ID</Label>
+                      <Input
+                        id="league-riot-id"
+                        data-testid="input-league-riot-id"
+                        placeholder="GameName#TAG"
+                        value={leagueRiotId}
+                        onChange={(e) => setLeagueRiotId(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Example: HideonBush#KR1
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="league-region">Region</Label>
+                      <Select value={leagueRegion} onValueChange={setLeagueRegion}>
+                        <SelectTrigger id="league-region" data-testid="select-league-region">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LEAGUE_REGIONS.map((region) => (
+                            <SelectItem key={region.value} value={region.value}>
+                              {region.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button
+                      onClick={handleLinkLeague}
+                      disabled={linkLeagueMutation.isPending}
+                      className="w-full"
+                      data-testid="button-link-league"
+                    >
+                      <Link2 className="mr-2 h-4 w-4" />
+                      {linkLeagueMutation.isPending ? "Connecting..." : "Connect League Account"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Valorant */}
+          <Card data-testid="card-valorant">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Gamepad2 className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">Valorant</CardTitle>
+                  <CardDescription>
+                    Link your Valorant account to track competitive matches
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {valorantLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-4"></div>
+                  <p>Loading...</p>
+                </div>
+              ) : valorantAccount?.linked ? (
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between p-4 border rounded-lg bg-muted/30">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        <span className="font-semibold" data-testid="text-valorant-connected">Connected</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Riot ID: <span className="font-mono" data-testid="text-valorant-riot-id">{valorantAccount.gameName}#{valorantAccount.tagLine}</span>
+                      </p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Region: {VALORANT_REGIONS.find(r => r.value === valorantAccount.region)?.label || valorantAccount.region}
+                      </p>
+                      {valorantAccount.lastSyncedAt && (
+                        <p className="text-sm text-muted-foreground">
+                          Last synced: {formatDistanceToNow(new Date(valorantAccount.lastSyncedAt))} ago
+                        </p>
+                      )}
+                      {valorantAccount.totalMatches !== undefined && (
+                        <div className="flex items-center gap-4 mt-3">
+                          <Badge variant="secondary" data-testid="badge-valorant-matches">
+                            <Trophy className="h-3 w-3 mr-1" />
+                            {valorantAccount.totalMatches} matches
+                          </Badge>
+                          {valorantAccount.wins !== undefined && (
+                            <Badge variant="default" data-testid="badge-valorant-wins">
+                              {valorantAccount.wins}W {valorantAccount.losses}L
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => unlinkValorantMutation.mutate()}
+                      disabled={unlinkValorantMutation.isPending}
+                      data-testid="button-unlink-valorant"
+                    >
+                      <Unlink className="h-4 w-4 mr-2" />
+                      Disconnect
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-start gap-2 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-medium mb-1">How to find your Riot ID:</p>
+                      <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                        <li>Launch Valorant</li>
+                        <li>Look at the top right corner of the main menu</li>
+                        <li>Your Riot ID format: <span className="font-mono">GameName#TAG</span></li>
+                      </ol>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="valorant-riot-id">Riot ID</Label>
+                      <Input
+                        id="valorant-riot-id"
+                        data-testid="input-valorant-riot-id"
+                        placeholder="GameName#TAG"
+                        value={valorantRiotId}
+                        onChange={(e) => setValorantRiotId(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Example: TenZ#GOD
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="valorant-region">Region</Label>
+                      <Select value={valorantRegion} onValueChange={setValorantRegion}>
+                        <SelectTrigger id="valorant-region" data-testid="select-valorant-region">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {VALORANT_REGIONS.map((region) => (
+                            <SelectItem key={region.value} value={region.value}>
+                              {region.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button
+                      onClick={handleLinkValorant}
+                      disabled={linkValorantMutation.isPending}
+                      className="w-full"
+                      data-testid="button-link-valorant"
+                    >
+                      <Link2 className="mr-2 h-4 w-4" />
+                      {linkValorantMutation.isPending ? "Connecting..." : "Connect Valorant Account"}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
-    );
-  }
-
-  return (
-    <>
-      <Header />
-      <div className="container mx-auto max-w-4xl px-6 py-12">
-        <div className="space-y-8">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Settings</h1>
-            <p className="text-muted-foreground">Manage your GG Loop profile</p>
-          </div>
-
-        <Card data-testid="card-username-settings">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Username
-            </CardTitle>
-            <CardDescription>
-              Customize your profile URL to make it easy to share
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Current Username</Label>
-              <div className="flex items-center gap-3">
-                <code className="px-3 py-2 bg-muted rounded font-mono text-sm flex-1" data-testid="text-current-username">
-                  {currentUsername}
-                </code>
-                {user?.username && (
-                  <a href={profileUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm" className="gap-2" data-testid="button-view-profile">
-                      <ExternalLink className="h-4 w-4" />
-                      View Profile
-                    </Button>
-                  </a>
-                )}
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">New Username</Label>
-                <Input
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="coolstreamer123"
-                  pattern="[a-zA-Z0-9_]+"
-                  minLength={3}
-                  maxLength={20}
-                  data-testid="input-username"
-                />
-                <p className="text-xs text-muted-foreground">
-                  3-20 characters. Letters, numbers, and underscores only.
-                </p>
-              </div>
-
-              <Button 
-                type="submit" 
-                disabled={updateUsernameMutation.isPending || !username.trim()}
-                className="gap-2"
-                data-testid="button-save-username"
-              >
-                <Save className="h-4 w-4" />
-                {updateUsernameMutation.isPending ? "Saving..." : "Save Username"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card data-testid="card-shipping-address">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Shipping Address
-            </CardTitle>
-            <CardDescription>
-              Required for redeeming physical rewards like peripherals and gear
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {user?.shippingAddress ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg">
-                  <p className="font-medium mb-1" data-testid="text-saved-address">Saved Address:</p>
-                  <p className="text-sm">{user.shippingAddress}</p>
-                  <p className="text-sm">{user.shippingCity}, {user.shippingState} {user.shippingZip}</p>
-                  <p className="text-sm">{user.shippingCountry}</p>
-                </div>
-                <p className="text-xs text-muted-foreground">Update your address below if it has changed.</p>
-              </div>
-            ) : (
-              <div className="p-4 bg-muted/50 rounded-lg border border-border mb-4">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-muted-foreground">
-                    No shipping address on file. Add your address to redeem physical rewards.
-                  </p>
-                </div>
-              </div>
-            )}
-            
-            <form onSubmit={(e) => { e.preventDefault(); updateShippingAddressMutation.mutate(); }} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="shipping-address">Street Address</Label>
-                <Input
-                  id="shipping-address"
-                  value={shippingAddress}
-                  onChange={(e) => setShippingAddress(e.target.value)}
-                  placeholder="123 Main St, Apt 4B"
-                  data-testid="input-shipping-address"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="shipping-city">City</Label>
-                  <Input
-                    id="shipping-city"
-                    value={shippingCity}
-                    onChange={(e) => setShippingCity(e.target.value)}
-                    placeholder="San Francisco"
-                    data-testid="input-shipping-city"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="shipping-state">State</Label>
-                  <Input
-                    id="shipping-state"
-                    value={shippingState}
-                    onChange={(e) => setShippingState(e.target.value)}
-                    placeholder="CA"
-                    maxLength={2}
-                    data-testid="input-shipping-state"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="shipping-zip">ZIP Code</Label>
-                  <Input
-                    id="shipping-zip"
-                    value={shippingZip}
-                    onChange={(e) => setShippingZip(e.target.value)}
-                    placeholder="94102"
-                    data-testid="input-shipping-zip"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="shipping-country">Country</Label>
-                  <Select value={shippingCountry} onValueChange={setShippingCountry}>
-                    <SelectTrigger id="shipping-country" data-testid="select-shipping-country">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="US">United States</SelectItem>
-                      <SelectItem value="CA">Canada</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <Button 
-                type="submit"
-                disabled={updateShippingAddressMutation.isPending || !shippingAddress || !shippingCity || !shippingState || !shippingZip}
-                className="gap-2"
-                data-testid="button-save-shipping-address"
-              >
-                <Save className="h-4 w-4" />
-                {updateShippingAddressMutation.isPending ? "Saving..." : "Save Address"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card data-testid="card-twitch-integration">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Twitch className="h-5 w-5" />
-              Twitch Integration
-            </CardTitle>
-            <CardDescription>
-              Connect your Twitch account to earn points automatically while streaming
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {user?.twitchUsername ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  <div className="flex-1">
-                    <p className="font-medium" data-testid="text-connected-twitch">
-                      Connected as @{user.twitchUsername}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Connected {new Date(user.twitchConnectedAt!).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => disconnectTwitchMutation.mutate()}
-                    disabled={disconnectTwitchMutation.isPending}
-                    className="gap-2"
-                    data-testid="button-disconnect-twitch"
-                  >
-                    <Unlink className="h-4 w-4" />
-                    Disconnect
-                  </Button>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <p className="font-medium mb-2">Earn points while streaming:</p>
-                  <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li>5 points per hour of live streaming</li>
-                    <li>Bonus points for viewer milestones</li>
-                    <li>Automatic verification every 10 minutes</li>
-                  </ul>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">
-                  <p className="font-medium mb-2">Benefits of connecting Twitch:</p>
-                  <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li>Earn 5 points per hour of live streaming</li>
-                    <li>Get bonus points for viewer milestones</li>
-                    <li>Automatic verification - no manual reporting needed</li>
-                    <li>Build credibility with verified streaming hours</li>
-                  </ul>
-                </div>
-                <Button
-                  onClick={() => connectTwitchMutation.mutate()}
-                  disabled={connectTwitchMutation.isPending}
-                  className="gap-2"
-                  data-testid="button-connect-twitch"
-                >
-                  <Twitch className="h-4 w-4" />
-                  {connectTwitchMutation.isPending ? "Connecting..." : "Connect Twitch Account"}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card data-testid="card-league-integration">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Gamepad2 className="h-5 w-5" />
-              League of Legends
-            </CardTitle>
-            <CardDescription>
-              Link your League account to enable automatic match win verification
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {leagueStatus?.linked ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  <div className="flex-1">
-                    <p className="font-medium" data-testid="text-connected-league">
-                      {leagueStatus.gameName}#{leagueStatus.tagLine}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Region: {REGIONS.find(r => r.value === leagueStatus.region)?.label || leagueStatus.region}
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => disconnectLeagueMutation.mutate()}
-                    disabled={disconnectLeagueMutation.isPending}
-                    className="gap-2"
-                    data-testid="button-disconnect-league"
-                  >
-                    <Unlink className="h-4 w-4" />
-                    Disconnect
-                  </Button>
-                </div>
-
-                {/* Sync Stats */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Trophy className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Matches</span>
-                    </div>
-                    <p className="text-2xl font-black font-mono" data-testid="text-league-matches">
-                      {leagueStatus.totalMatches || 0}
-                    </p>
-                  </div>
-                  
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <TrendingUp className="h-4 w-4 text-green-500" />
-                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">W/L</span>
-                    </div>
-                    <p className="text-lg font-bold" data-testid="text-league-record">
-                      <span className="text-green-500">{leagueStatus.wins || 0}</span>
-                      <span className="text-muted-foreground mx-1">/</span>
-                      <span className="text-red-500">{leagueStatus.losses || 0}</span>
-                    </p>
-                  </div>
-                  
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Last Sync</span>
-                    </div>
-                    <p className="text-xs font-medium" data-testid="text-league-last-sync">
-                      {leagueStatus.lastSyncedAt 
-                        ? formatDistanceToNow(new Date(leagueStatus.lastSyncedAt), { addSuffix: true })
-                        : 'Never'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded">
-                  <p className="flex items-center gap-2">
-                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                    Matches sync automatically every 10 minutes. Stats are updated after each sync cycle.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="league-riot-id">Riot ID</Label>
-                  <Input
-                    id="league-riot-id"
-                    value={leagueRiotId}
-                    onChange={(e) => setLeagueRiotId(e.target.value)}
-                    placeholder="Faker#NA1"
-                    data-testid="input-league-riot-id"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Your Riot ID (GameName#TAG). Find it in your League client.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="league-region">Region</Label>
-                  <Select value={leagueRegion} onValueChange={setLeagueRegion}>
-                    <SelectTrigger id="league-region" data-testid="select-league-region">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {REGIONS.map(region => (
-                        <SelectItem key={region.value} value={region.value}>
-                          {region.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  onClick={() => linkLeagueMutation.mutate()}
-                  disabled={linkLeagueMutation.isPending || !leagueRiotId.includes('#')}
-                  className="gap-2 w-full"
-                  data-testid="button-link-league"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  {linkLeagueMutation.isPending ? "Linking..." : "Link Account"}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card data-testid="card-valorant-integration">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Valorant
-            </CardTitle>
-            <CardDescription>
-              Link your Valorant account to enable automatic match win verification
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {valorantStatus?.linked ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  <div className="flex-1">
-                    <p className="font-medium" data-testid="text-connected-valorant">
-                      {valorantStatus.gameName}#{valorantStatus.tagLine}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Region: {REGIONS.find(r => r.value === valorantStatus.region)?.label || valorantStatus.region}
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => disconnectValorantMutation.mutate()}
-                    disabled={disconnectValorantMutation.isPending}
-                    className="gap-2"
-                    data-testid="button-disconnect-valorant"
-                  >
-                    <Unlink className="h-4 w-4" />
-                    Disconnect
-                  </Button>
-                </div>
-
-                {/* Sync Stats */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Trophy className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Matches</span>
-                    </div>
-                    <p className="text-2xl font-black font-mono" data-testid="text-valorant-matches">
-                      {valorantStatus.totalMatches || 0}
-                    </p>
-                  </div>
-                  
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <TrendingUp className="h-4 w-4 text-green-500" />
-                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">W/L</span>
-                    </div>
-                    <p className="text-lg font-bold" data-testid="text-valorant-record">
-                      <span className="text-green-500">{valorantStatus.wins || 0}</span>
-                      <span className="text-muted-foreground mx-1">/</span>
-                      <span className="text-red-500">{valorantStatus.losses || 0}</span>
-                    </p>
-                  </div>
-                  
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Last Sync</span>
-                    </div>
-                    <p className="text-xs font-medium" data-testid="text-valorant-last-sync">
-                      {valorantStatus.lastSyncedAt 
-                        ? formatDistanceToNow(new Date(valorantStatus.lastSyncedAt), { addSuffix: true })
-                        : 'Never'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded">
-                  <p className="flex items-center gap-2">
-                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                    Matches sync automatically every 10 minutes. Stats are updated after each sync cycle.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-muted/50 border border-border rounded-lg p-4">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                    <div className="text-sm">
-                      <p className="font-medium mb-1">Provisional Linking</p>
-                      <p className="text-muted-foreground text-xs">
-                        Your Valorant stats will be self-reported and unverified. Full verification via Riot OAuth coming soon.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="valorant-riot-id">Riot ID</Label>
-                  <Input
-                    id="valorant-riot-id"
-                    value={valorantRiotId}
-                    onChange={(e) => setValorantRiotId(e.target.value)}
-                    placeholder="TenZ#NA1"
-                    data-testid="input-valorant-riot-id"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Your Riot ID (GameName#TAG). Find it in your Valorant profile.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="valorant-region">Region</Label>
-                  <Select value={valorantRegion} onValueChange={setValorantRegion}>
-                    <SelectTrigger id="valorant-region" data-testid="select-valorant-region">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {REGIONS.map(region => (
-                        <SelectItem key={region.value} value={region.value}>
-                          {region.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  onClick={() => linkValorantProvisionalMutation.mutate()}
-                  disabled={linkValorantProvisionalMutation.isPending || !valorantRiotId.includes('#')}
-                  className="gap-2 w-full"
-                  data-testid="button-link-valorant"
-                >
-                  <Link2 className="h-4 w-4" />
-                  {linkValorantProvisionalMutation.isPending ? "Linking..." : "Link Account"}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>Your account details from Replit Auth</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-[120px_1fr] gap-2 text-sm">
-              <span className="text-muted-foreground">Name:</span>
-              <span className="font-medium">{user?.firstName} {user?.lastName}</span>
-            </div>
-            <div className="grid grid-cols-[120px_1fr] gap-2 text-sm">
-              <span className="text-muted-foreground">Email:</span>
-              <span className="font-medium">{user?.email}</span>
-            </div>
-          </CardContent>
-        </Card>
-        </div>
-      </div>
-    </>
+    </div>
   );
 }

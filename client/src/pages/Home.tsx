@@ -1,822 +1,337 @@
 import Header from "@/components/Header";
-import Hero from "@/components/Hero";
-import GameCard from "@/components/GameCard";
-import StatsCard from "@/components/StatsCard";
-import LeaderboardRow from "@/components/LeaderboardRow";
-import CommunityFeedItem from "@/components/CommunityFeedItem";
-import RewardsCard from "@/components/RewardsCard";
-import ChallengeCard from "@/components/ChallengeCard";
-import ErrorDisplay from "@/components/ErrorDisplay";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Trophy, Gamepad2, Award, TrendingUp, Users, Zap, Plus } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
-import type { Game, LeaderboardEntryWithUser, Achievement, Reward } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { 
+  Gamepad2, 
+  TrendingUp, 
+  Gift, 
+  Zap,
+  Trophy,
+  Users,
+  ArrowRight
+} from "lucide-react";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+
+// Static mock rewards for marketing presentation
+const MOCK_REWARDS = [
+  { id: "1", title: "Steam Gift Card $25", pointsCost: 12000, imageUrl: "https://images.unsplash.com/photo-1633969707708-3f9644786f8d?w=400&h=400&fit=crop" },
+  { id: "2", title: "Razer DeathAdder V3", pointsCost: 35000, imageUrl: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&h=400&fit=crop" },
+  { id: "3", title: "HyperX Cloud II", pointsCost: 28000, imageUrl: "https://images.unsplash.com/photo-1599669454699-248893623440?w=400&h=400&fit=crop" },
+  { id: "4", title: "Discord Nitro 1 Year", pointsCost: 15000, imageUrl: "https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=400&h=400&fit=crop" },
+  { id: "5", title: "Logitech G Pro X", pointsCost: 42000, imageUrl: "https://images.unsplash.com/photo-1545127398-14699f92334b?w=400&h=400&fit=crop" },
+  { id: "6", title: "Amazon Gift Card $50", pointsCost: 25000, imageUrl: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=400&fit=crop" },
+];
 
 export default function Home() {
-  const { user, isAuthenticated } = useAuth();
-  const [selectedPeriod, setSelectedPeriod] = useState<"daily" | "weekly" | "all-time">("weekly");
-  const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
-  const [claimingChallengeId, setClaimingChallengeId] = useState<string | null>(null);
-  const { toast} = useToast();
-
-  const claimRewardMutation = useMutation({
-    mutationFn: async (rewardId: string) => {
-      try {
-        const res = await apiRequest("POST", "/api/user/rewards/redeem", { rewardId });
-        return await res.json();
-      } catch (error: any) {
-        const errorMessage = error.response
-          ? await error.response.json().then((data: any) => data.message).catch(() => "Failed to claim reward")
-          : error.message || "Failed to claim reward";
-        throw new Error(errorMessage);
-      }
-    },
-    onSuccess: () => {
-      setClaimingRewardId(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/rewards"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/rewards"] });
-      toast({
-        title: "Success!",
-        description: "Reward claimed successfully!",
-      });
-    },
-    onError: (error: Error) => {
-      setClaimingRewardId(null);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to claim reward",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleClaimReward = (rewardId: string) => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Login Required",
-        description: "Please log in to claim rewards",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setClaimingRewardId(rewardId);
-    claimRewardMutation.mutate(rewardId);
-  };
-
-  // Fetch games from API
-  const { data: games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames } = useQuery<Game[]>({
-    queryKey: ["/api/games"],
-  });
-
-  // Fetch leaderboard data - use first game from the list
-  const firstGameId = games?.[0]?.id;
-  const { data: leaderboardEntries, isLoading: leaderboardLoading, error: leaderboardError, refetch: refetchLeaderboard } = useQuery<LeaderboardEntryWithUser[]>({
-    queryKey: ["/api/leaderboard", firstGameId, selectedPeriod],
-    queryFn: async () => {
-      const res = await apiRequest("GET", `/api/leaderboard/${firstGameId}/${selectedPeriod}`);
-      return res.json();
-    },
-    enabled: !!firstGameId,
-  });
-
-  // Fetch achievements if user is authenticated
-  const { data: achievements, isLoading: achievementsLoading, error: achievementsError, refetch: refetchAchievements } = useQuery<Achievement[]>({
-    queryKey: ["/api/user/achievements"],
-    enabled: isAuthenticated,
-  });
-
-  // Fetch rewards from API
-  const { data: rewards, isLoading: rewardsLoading, error: rewardsError, refetch: refetchRewards } = useQuery<Reward[]>({
-    queryKey: ["/api/rewards"],
-  });
-
-  // Fetch user's claimed rewards
-  const { data: userRewards } = useQuery<any[]>({
-    queryKey: ["/api/user/rewards"],
-    enabled: isAuthenticated,
-  });
-
-  // Fetch recent match submissions (earnings)
-  interface MatchSubmission {
-    id: string;
-    gameId: string;
-    matchType: string;
-    notes: string | null;
-    screenshotUrl: string | null;
-    status: string;
-    pointsAwarded: number | null;
-    submittedAt: string;
-    reviewedAt: string | null;
-    gameName: string;
-    game?: Game;
-  }
-
-  const { data: recentEarnings, isLoading: earningsLoading, error: earningsError } = useQuery<MatchSubmission[]>({
-    queryKey: ["/api/match-submissions"],
-    enabled: isAuthenticated,
-  });
-
-  // Fetch active challenges
-  interface Challenge {
-    id: string;
-    title: string;
-    description: string;
-    sponsorName: string;
-    sponsorLogo?: string;
-    requirementCount: number;
-    bonusPoints: number;
-    endDate: string;
-    userProgress: number | null;
-    canClaim: boolean;
-    claimed: boolean;
-  }
-
-  const { data: challenges, isLoading: challengesLoading, error: challengesError, refetch: refetchChallenges } = useQuery<Challenge[]>({
-    queryKey: ["/api/challenges"],
-  });
-
-  const claimChallengeMutation = useMutation({
-    mutationFn: async (challengeId: string) => {
-      try {
-        const res = await apiRequest("POST", `/api/challenges/${challengeId}/claim`, {});
-        return await res.json();
-      } catch (error: any) {
-        const errorMessage = error.response
-          ? await error.response.json().then((data: any) => data.message).catch(() => "Failed to claim challenge")
-          : error.message || "Failed to claim challenge";
-        throw new Error(errorMessage);
-      }
-    },
-    onSuccess: (data) => {
-      setClaimingChallengeId(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/challenges"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      toast({
-        title: "Success!",
-        description: `Claimed ${data.pointsAwarded} bonus points! Your balance has been updated.`,
-      });
-    },
-    onError: (error: Error) => {
-      setClaimingChallengeId(null);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to claim challenge",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleClaimChallenge = (challengeId: string) => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Login Required",
-        description: "Please log in to claim challenge rewards",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setClaimingChallengeId(challengeId);
-    claimChallengeMutation.mutate(challengeId);
-  };
-
-  // Mock community feed (as requested to keep this mocked)
-  const communityFeed = [
-    { username: "ProGamer99", action: "unlocked achievement", game: "Tactical Warfare", details: "Perfect Victory - Won match without losing a round", time: "2m ago", type: "achievement" as const },
-    { username: "SkillMaster", action: "set new high score", game: "Speed Racer", details: "Track Record: Neon City - 1:42.350", time: "15m ago", type: "highscore" as const },
-    { username: "GameChamp", action: "reached milestone", game: "Arena Legends", details: "100 Wins Achievement Unlocked", time: "1h ago", type: "milestone" as const },
-    { username: "ElitePlayer", action: "unlocked achievement", game: "Battle Grounds", details: "Victory Royale - First Place Finish", time: "2h ago", type: "achievement" as const },
-  ];
-
-  // Helper function to format numbers
-  const formatNumber = (num: number): string => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
-    return num.toString();
-  };
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <Hero />
+      {/* Hero Section */}
+      <section className="container mx-auto px-4 py-24 text-center">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <Badge variant="outline" className="px-4 py-2 text-sm" data-testid="badge-membership">
+            Membership Rewards for Gamers
+          </Badge>
+          
+          <h1 className="text-6xl md:text-7xl font-bold font-heading tracking-tight" data-testid="text-hero-title">
+            Play. <span className="text-primary">Earn.</span> Loop.
+          </h1>
+          
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto" data-testid="text-hero-subtitle">
+            Subscribe to GG Loop and earn points for every ranked match you win. 
+            Redeem points for gaming gear, gift cards, and exclusive rewards.
+          </p>
 
-      {/* MISSION STATEMENT */}
-      <section className="relative py-24 bg-gradient-to-b from-card to-background overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0icmdiYSgyNTUsIDE0MCwgNjYsIDAuMDUpIi8+PC9nPjwvc3ZnPg==')] opacity-30" />
-        <div className="container mx-auto max-w-5xl px-6 relative z-10">
-          <div className="text-center space-y-8">
-            <Badge variant="outline" className="px-4 py-2 text-sm font-semibold border-primary/30 text-primary">
-              Our Mission
-            </Badge>
-            
-            <h2 className="text-5xl md:text-6xl font-black tracking-tight">
-              Your Passion. <span className="text-primary">Your Community.</span>
-            </h2>
-            
-            <div className="max-w-3xl mx-auto space-y-6 text-lg text-muted-foreground leading-relaxed">
-              <p className="text-xl text-foreground font-semibold">
-                For years, gamers have been told their passion is a "waste of time." <span className="text-primary">We're here to prove them wrong.</span>
-              </p>
-              
-              <p>
-                Remember when you were told to "log off" and "do something productive"? GG Loop is here to <span className="text-primary font-semibold">heal that inner kid</span> who loved gaming but was made to feel guilty about it. Your passion was never a waste—it was just waiting for the right platform.
-              </p>
-              
-              <p>
-                GG Loop was built to legitimize gaming as a rewarding membership experience. Whether you're streaming to 5 viewers or 5,000, you deserve recognition for your dedication. We believe every clutch play, every comeback, every grind session should unlock tangible perks.
-              </p>
-              
-              <p>
-                <span className="font-semibold text-foreground">Starting with zero followers?</span> Perfect. Our leaderboards and point system showcase skill, not just popularity. Climb the ranks. Unlock your path. Access partnerships and sponsorships <span className="text-primary font-semibold">through GG Loop</span> as you prove your dedication.
-              </p>
-              
-              <p className="text-2xl font-bold text-foreground pt-4">
-                Play. Unlock. LOOP. <span className="text-primary">Rinse and repeat.</span>
-              </p>
-              
-              <p className="text-base italic">
-                This is your access to glory. This is your path to proving that gaming isn't a waste—it's an opportunity. Welcome to the LOOP.
-              </p>
-            </div>
-            
-            <div className="pt-8">
-              <Link href="/subscription">
-                <Button size="lg" className="text-lg font-bold px-10 py-7 h-auto shadow-lg" data-testid="button-mission-cta">
-                  <Trophy className="h-5 w-5 mr-2" />
-                  Start Your Journey Free
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+            {isAuthenticated ? (
+              <Link href="/stats">
+                <Button size="lg" data-testid="button-dashboard">
+                  View Dashboard
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-            </div>
+            ) : (
+              <Link href="/subscription">
+                <Button size="lg" data-testid="button-sign-up">
+                  Sign Up Free
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+            )}
+            
+            <a 
+              href="https://discord.gg/ggloop" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" size="lg" data-testid="button-discord">
+                <Users className="mr-2 h-5 w-5" />
+                Join Discord
+              </Button>
+            </a>
+            
+            <Link href="/partners">
+              <Button variant="ghost" size="lg" data-testid="button-partner">
+                Partner With Us
+              </Button>
+            </Link>
           </div>
         </div>
-        
-        {/* Decorative elements */}
-        <div className="absolute top-10 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
       </section>
 
-      <main className="container mx-auto max-w-7xl px-4 py-16 space-y-24">
-        {/* SPONSORED CHALLENGES - Bonus points beyond monthly allocation */}
-        <section id="challenges" className="scroll-mt-20">
-          <div className="mb-8 text-center">
-            <h2 className="text-5xl font-bold font-heading tracking-tight flex items-center justify-center gap-3">
-              <Zap className="w-10 h-10 text-primary" />
-              Sponsored Challenges
-            </h2>
-            <p className="text-muted-foreground mt-3 text-lg max-w-2xl mx-auto">
-              Complete challenges from sponsors to unlock bonus points beyond your monthly tier allocation. Real brands, real perks.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {challengesLoading ? (
-              <>
-                {[1, 2, 3].map((i) => (
-                  <Card key={i} className="p-6">
-                    <Skeleton className="h-64 w-full" />
-                  </Card>
-                ))}
-              </>
-            ) : challengesError ? (
-              <div className="col-span-full">
-                <ErrorDisplay 
-                  message="Failed to load challenges. Please try again." 
-                  onRetry={() => refetchChallenges()} 
-                />
-              </div>
-            ) : challenges && challenges.length > 0 ? (
-              challenges.map((challenge) => (
-                <ChallengeCard
-                  key={challenge.id}
-                  id={challenge.id}
-                  title={challenge.title}
-                  description={challenge.description}
-                  sponsorName={challenge.sponsorName}
-                  sponsorLogo={challenge.sponsorLogo}
-                  requirementCount={challenge.requirementCount}
-                  bonusPoints={challenge.bonusPoints}
-                  userProgress={challenge.userProgress || 0}
-                  canClaim={challenge.canClaim}
-                  claimed={challenge.claimed}
-                  endDate={challenge.endDate}
-                  onClaim={handleClaimChallenge}
-                  isClaimLoading={claimingChallengeId === challenge.id}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
-                No active challenges at the moment. Check back soon for new sponsored challenges!
-              </div>
-            )}
-          </div>
-        </section>
+      {/* How It Works */}
+      <section className="container mx-auto px-4 py-24 bg-muted/30">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold font-heading mb-4" data-testid="text-how-it-works">
+            How It Works
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Three simple steps to start earning rewards
+          </p>
+        </div>
 
-        {/* REWARDS CATALOG - PRIORITY #1 */}
-        <section id="rewards" className="scroll-mt-20">
-          <div className="mb-8 text-center">
-            <h2 className="text-5xl font-bold font-heading tracking-tight flex items-center justify-center gap-3">
-              <span className="w-1 h-10 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
-              Redeem Membership Perks
-            </h2>
-            <p className="text-muted-foreground mt-3 text-lg max-w-2xl mx-auto">
-              Turn your membership points into rewards - gaming gear, subscriptions, and exclusive perks. Redeem anytime.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {rewardsLoading ? (
-              <>
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Card key={i} className="p-6">
-                    <Skeleton className="h-48 w-full" />
-                  </Card>
-                ))}
-              </>
-            ) : rewardsError ? (
-              <div className="col-span-full">
-                <ErrorDisplay 
-                  message="Failed to load rewards. Please try again." 
-                  onRetry={() => refetchRewards()} 
-                />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {/* Step 1: Play */}
+          <Card className="text-center p-8 hover-elevate" data-testid="card-step-play">
+            <CardContent className="space-y-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Gamepad2 className="h-8 w-8 text-primary" />
               </div>
-            ) : rewards && rewards.length > 0 ? (
-              rewards.slice(0, 9).map((reward) => {
-                const isClaimed = userRewards?.some(ur => ur.rewardId === reward.id) || false;
-                const canAfford = user ? user.totalPoints >= reward.pointsCost : false;
-                return (
-                  <RewardsCard
-                    key={reward.id}
-                    id={reward.id}
-                    title={reward.title}
-                    description={reward.description || ""}
-                    points={reward.pointsCost}
-                    isUnlocked={true}
-                    isClaimed={isClaimed}
-                    category={reward.category}
-                    onClaim={handleClaimReward}
-                    isClaimLoading={claimingRewardId === reward.id}
-                    canAfford={canAfford}
-                    currentPoints={user?.totalPoints || 0}
-                    imageUrl={reward.imageUrl}
-                  />
-                );
-              })
-            ) : (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
-                No rewards available at the moment.
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Recent Activity - Show match activity */}
-        {isAuthenticated && (
-          <section className="scroll-mt-20">
-            <div className="mb-8 text-center">
-              <h2 className="text-5xl font-bold font-heading tracking-tight flex items-center justify-center gap-3">
-                <Trophy className="w-10 h-10 text-primary" />
-                Your Recent Activity
-              </h2>
-              <p className="text-muted-foreground mt-3 text-lg max-w-2xl mx-auto">
-                Track your verified match wins and points earned. Report wins to boost your points!
+              <h3 className="text-2xl font-bold font-heading">1. Play</h3>
+              <p className="text-muted-foreground">
+                Link your Riot account and play ranked matches in League of Legends or Valorant
               </p>
-            </div>
-            
-            <Card className="p-6 border-primary/20 shadow-lg">{earningsLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-4 p-4">
-                    <Skeleton className="w-12 h-12 rounded-lg" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-3 w-16" />
-                    </div>
-                    <Skeleton className="h-8 w-16" />
-                  </div>
-                ))}
-              </div>
-            ) : earningsError ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Trophy className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Failed to load earnings. Please try again later.</p>
-              </div>
-            ) : !recentEarnings || recentEarnings.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Trophy className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-semibold mb-2">No match wins reported yet!</p>
-                <p className="text-sm mb-6">Go to My Stats to report your first win and start earning points</p>
-                <Button size="lg" variant="default" asChild data-testid="button-report-first-win">
-                  <Link href="/stats">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Report Your First Win
-                  </Link>
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-4">
-                  {recentEarnings.slice(0, 5).map((earning) => {
-                    const earnedDate = new Date(earning.submittedAt);
-                    const now = new Date();
-                    const diffMs = now.getTime() - earnedDate.getTime();
-                    const diffMins = Math.floor(diffMs / 60000);
-                    const diffHours = Math.floor(diffMs / 3600000);
-                    const diffDays = Math.floor(diffMs / 86400000);
-                    
-                    let timeAgo = "";
-                    if (diffMins < 1) timeAgo = "Just now";
-                    else if (diffMins < 60) timeAgo = `${diffMins}m ago`;
-                    else if (diffHours < 24) timeAgo = `${diffHours}h ago`;
-                    else timeAgo = `${diffDays}d ago`;
-
-                    return (
-                      <div 
-                        key={earning.id}
-                        className="flex items-center justify-between p-4 rounded-lg bg-primary/5 border border-primary/10 hover-elevate"
-                        data-testid={`earning-${earning.id}`}
-                      >
-                        <div className="flex items-center gap-4 flex-1">
-                          <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/30">
-                            <Trophy className="h-6 w-6 text-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold">{earning.gameName || earning.game?.title || "Unknown Game"}</span>
-                              <Badge variant="secondary" className="text-xs">
-                                {earning.matchType}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{timeAgo}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-primary font-mono" data-testid={`text-earning-points-${earning.id}`}>
-                            +{earning.pointsAwarded || 0}
-                          </div>
-                          <p className="text-xs text-muted-foreground">points</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                <div className="flex justify-center mt-6 gap-3">
-                  <Button variant="default" asChild data-testid="button-view-stats">
-                    <Link href="/stats">
-                      View My Stats Dashboard
-                    </Link>
-                  </Button>
-                  <Button variant="outline" asChild data-testid="button-report-win">
-                    <Link href="/stats">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Report Win
-                    </Link>
-                  </Button>
-                </div>
-              </>
-            )}
-            </Card>
-          </section>
-        )}
-
-        {/* Featured Games */}
-        <section id="games">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
-                <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
-                Featured Games
-              </h2>
-              <p className="text-muted-foreground mt-2 ml-4">Connect your gameplay and start earning rewards</p>
-            </div>
-            <Button variant="outline" data-testid="button-view-all-games">View All</Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {gamesLoading ? (
-              <>
-                {[1, 2, 3].map((i) => (
-                  <Card key={i} className="overflow-hidden border-primary/5">
-                    <Skeleton className="aspect-video w-full" />
-                    <div className="p-4 space-y-3">
-                      <Skeleton className="h-6 w-3/4" />
-                      <div className="flex items-center justify-between">
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="h-4 w-20" />
-                      </div>
-                      <Skeleton className="h-4 w-full" />
-                    </div>
-                  </Card>
-                ))}
-              </>
-            ) : gamesError ? (
-              <div className="col-span-full">
-                <ErrorDisplay 
-                  message="Failed to load games. Please try again." 
-                  onRetry={() => refetchGames()} 
-                />
-              </div>
-            ) : games && games.length > 0 ? (
-              games.map((game) => (
-                <GameCard
-                  key={game.id}
-                  title={game.title}
-                  image={game.imageUrl}
-                  category={game.category}
-                  players={formatNumber(game.players)}
-                  avgScore={game.avgScore.toLocaleString()}
-                  challenges={game.challenges}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12 text-muted-foreground">
-                No games available at the moment.
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Leaderboards */}
-        <section id="leaderboards">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
-                <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
-                Leaderboards
-              </h2>
-              <p className="text-muted-foreground mt-2 ml-4">See how you stack up against the competition</p>
-            </div>
-          </div>
-
-          <Card className="p-6 border-primary/20 hover:border-primary/30 transition-colors">
-            <Tabs 
-              defaultValue="weekly" 
-              className="w-full"
-              onValueChange={(value) => setSelectedPeriod(value as "daily" | "weekly" | "all-time")}
-            >
-              <TabsList className="mb-6">
-                <TabsTrigger value="daily" data-testid="tab-daily">Daily</TabsTrigger>
-                <TabsTrigger value="weekly" data-testid="tab-weekly">Weekly</TabsTrigger>
-                <TabsTrigger value="all-time" data-testid="tab-all-time">All-Time</TabsTrigger>
-              </TabsList>
-              
-              {["daily", "weekly", "all-time"].map((period) => (
-                <TabsContent key={period} value={period} className="space-y-2">
-                  {leaderboardLoading ? (
-                    <>
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className="flex items-center gap-4 p-4 rounded-lg">
-                          <Skeleton className="w-12 h-12 rounded-full" />
-                          <Skeleton className="w-12 h-12 rounded-full" />
-                          <div className="flex-1 space-y-2">
-                            <Skeleton className="h-4 w-32" />
-                            <Skeleton className="h-3 w-24" />
-                          </div>
-                          <Skeleton className="h-8 w-24" />
-                        </div>
-                      ))}
-                    </>
-                  ) : leaderboardError ? (
-                    <ErrorDisplay 
-                      message="Failed to load leaderboard. Please try again." 
-                      onRetry={() => refetchLeaderboard()} 
-                    />
-                  ) : leaderboardEntries && leaderboardEntries.length > 0 ? (
-                    leaderboardEntries.map((entry) => (
-                      <LeaderboardRow
-                        key={entry.id}
-                        rank={entry.rank}
-                        username={entry.user.email || entry.user.firstName || `Player ${entry.userId.substring(0, 8)}`}
-                        score={entry.score.toLocaleString()}
-                        games={0}
-                        isCurrentUser={user?.id === entry.userId}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      No leaderboard data available for this period.
-                    </div>
-                  )}
-                </TabsContent>
-              ))}
-            </Tabs>
+            </CardContent>
           </Card>
-        </section>
 
-        {/* Community Feed */}
-        <section id="community">
-          <div className="mb-8">
-            <h2 className="text-4xl font-bold font-heading tracking-tight flex items-center gap-3">
-              <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
-              Community Feed
-            </h2>
-            <p className="text-muted-foreground mt-2 ml-4">Recent achievements and highlights</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {communityFeed.map((item, idx) => (
-              <CommunityFeedItem key={idx} {...item} />
-            ))}
-          </div>
-          
-          <div className="flex justify-center mt-8">
-            <Button variant="outline" data-testid="button-load-more-feed">
-              Load More
-            </Button>
-          </div>
-        </section>
-
-        {/* How It Works */}
-        <section className="py-16">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold font-heading tracking-tight">How It Works</h2>
-            <p className="text-muted-foreground mt-2 text-lg">100% Automatic - No Screenshots, No Manual Submissions</p>
-          </div>
-
-          <div className="mb-12 p-6 bg-green-500/10 border-2 border-green-500/30 rounded-lg max-w-3xl mx-auto">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                <Zap className="h-6 w-6 text-green-600 dark:text-green-400" />
+          {/* Step 2: Earn */}
+          <Card className="text-center p-8 hover-elevate" data-testid="card-step-earn">
+            <CardContent className="space-y-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <TrendingUp className="h-8 w-8 text-primary" />
               </div>
+              <h3 className="text-2xl font-bold font-heading">2. Earn</h3>
+              <p className="text-muted-foreground">
+                Get monthly point allocations + bonus points for wins, streaks, and achievements
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Step 3: Loop */}
+          <Card className="text-center p-8 hover-elevate" data-testid="card-step-loop">
+            <CardContent className="space-y-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Gift className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-2xl font-bold font-heading">3. Loop</h3>
+              <p className="text-muted-foreground">
+                Redeem points for gaming gear, gift cards, and exclusive rewards
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Membership Tiers */}
+      <section className="container mx-auto px-4 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold font-heading mb-4" data-testid="text-membership-tiers">
+            Membership Tiers
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Choose the tier that matches your gaming dedication
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {/* Basic */}
+          <Card className="p-8 hover-elevate" data-testid="card-tier-basic">
+            <CardContent className="space-y-6">
               <div>
-                <h3 className="font-bold text-lg mb-2 text-green-700 dark:text-green-400">Fully Automated Tracking</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Once you link your League of Legends or Valorant account, we automatically check for new match wins <strong>every 10 minutes</strong>. 
-                  Win a game? Points are added to your account automatically. Check your Stats page anytime to see your progress in real-time.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="p-8 text-center border-primary/5 relative overflow-hidden group hover-elevate">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10">
-                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
-                  <Gamepad2 className="h-8 w-8 text-primary" />
+                <h3 className="text-2xl font-bold font-heading">Basic</h3>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <span className="text-4xl font-bold" data-testid="text-price-basic">$5</span>
+                  <span className="text-muted-foreground">/month</span>
                 </div>
-                <div className="mb-4 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full inline-block">STEP 1</div>
-                <h3 className="text-xl font-semibold mb-3">Link Your Riot Account</h3>
-                <p className="text-muted-foreground text-sm">Quick verification for League of Legends or Valorant. Takes 2 minutes, one-time setup.</p>
               </div>
-            </Card>
-
-            <Card className="p-8 text-center border-primary/5 relative overflow-hidden group hover-elevate">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10">
-                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
-                  <Zap className="h-8 w-8 text-primary" />
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span>3,000 monthly points</span>
                 </div>
-                <div className="mb-4 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full inline-block">STEP 2</div>
-                <h3 className="text-xl font-semibold mb-3">Play & Win Games</h3>
-                <p className="text-muted-foreground text-sm">Every match win is automatically detected and points are added to your balance instantly. No manual work required.</p>
-              </div>
-            </Card>
-
-            <Card className="p-8 text-center border-primary/5 relative overflow-hidden group hover-elevate">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10">
-                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20">
-                  <Trophy className="h-8 w-8 text-primary" />
-                </div>
-                <div className="mb-4 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full inline-block">STEP 3</div>
-                <h3 className="text-xl font-semibold mb-3">Redeem Real Rewards</h3>
-                <p className="text-muted-foreground text-sm">Trade points for gift cards, gaming gear, and subscriptions from our rewards catalog.</p>
-              </div>
-            </Card>
-          </div>
-        </section>
-
-        {/* Membership Tiers Benefits */}
-        <section className="py-16">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Membership Tier Benefits</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Choose your tier and receive fixed monthly point allocations to redeem for gaming gear and perks
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <Card className="p-8 relative overflow-hidden border-primary/10">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/50 to-transparent" />
-              <div className="text-center mb-6">
-                <Badge variant="outline" className="mb-4">BASIC</Badge>
-                <div className="text-4xl font-black text-primary mb-2">3,000</div>
-                <div className="text-sm text-muted-foreground">Points per Month</div>
-              </div>
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-primary" />
-                  <span>Monthly point allocation</span>
+                  <span>Bonus points for wins</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Award className="h-4 w-4 text-primary" />
-                  <span>Stats tracking</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Users className="h-4 w-4 text-primary" />
-                  <span>Leaderboards access</span>
+                <div className="flex items-center gap-2">
+                  <Gift className="h-4 w-4 text-primary" />
+                  <span>Access to rewards catalog</span>
                 </div>
               </div>
-              <div className="text-center pt-4 border-t border-border">
-                <div className="text-2xl font-bold">$5</div>
-                <div className="text-xs text-muted-foreground">per month</div>
-              </div>
-            </Card>
+              <Link href="/subscription">
+                <Button className="w-full" variant="outline" data-testid="button-basic">
+                  Get Started
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
 
-            <Card className="p-8 relative overflow-hidden border-primary/20">
-              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary to-transparent" />
-              <div className="text-center mb-6">
-                <Badge className="mb-4">PRO</Badge>
-                <div className="text-4xl font-black text-primary mb-2">10,000</div>
-                <div className="text-sm text-muted-foreground">Points per Month</div>
-              </div>
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-2 text-sm">
-                  <Trophy className="h-4 w-4 text-primary" />
-                  <span>Monthly point allocation</span>
+          {/* Pro - Featured */}
+          <Card className="p-8 border-primary shadow-lg hover-elevate" data-testid="card-tier-pro">
+            <CardContent className="space-y-6">
+              <div>
+                <Badge className="mb-2" data-testid="badge-popular">Most Popular</Badge>
+                <h3 className="text-2xl font-bold font-heading">Pro</h3>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <span className="text-4xl font-bold" data-testid="text-price-pro">$12</span>
+                  <span className="text-muted-foreground">/month</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Award className="h-4 w-4 text-primary" />
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span>10,000 monthly points</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-primary" />
+                  <span>2x bonus points</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Gift className="h-4 w-4 text-primary" />
                   <span>Priority rewards access</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Zap className="h-4 w-4 text-primary" />
-                  <span>Bonus challenge rewards</span>
-                </div>
               </div>
-              <div className="text-center pt-4 border-t border-border">
-                <div className="text-2xl font-bold">$12</div>
-                <div className="text-xs text-muted-foreground">per month</div>
-              </div>
-            </Card>
-
-            <Card className="p-8 relative overflow-hidden border-primary/30">
-              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-primary to-transparent" />
-              <div className="text-center mb-6">
-                <Badge className="mb-4 bg-primary text-primary-foreground">ELITE</Badge>
-                <div className="text-4xl font-black text-primary mb-2">25,000</div>
-                <div className="text-sm text-muted-foreground">Points per Month</div>
-              </div>
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-2 text-sm">
-                  <Trophy className="h-4 w-4 text-primary" />
-                  <span>Max monthly allocation</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Award className="h-4 w-4 text-primary" />
-                  <span>Exclusive premium rewards</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Zap className="h-4 w-4 text-primary" />
-                  <span>Enhanced challenge bonuses</span>
-                </div>
-              </div>
-              <div className="text-center pt-4 border-t border-border">
-                <div className="text-2xl font-bold">$25</div>
-                <div className="text-xs text-muted-foreground">per month</div>
-              </div>
-            </Card>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-16">
-          <Card className="p-12 text-center relative overflow-hidden border-primary/10">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/3 via-transparent to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-tl from-primary/5 via-transparent to-transparent" />
-            <div className="relative z-10">
-              <h2 className="text-4xl font-bold font-heading tracking-tight mb-4">Ready to Join?</h2>
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Join thousands of gamers who are already redeeming membership perks for gaming gear
-              </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Button size="lg" className="text-base font-semibold" data-testid="button-create-account">
-                  <Users className="mr-2 h-5 w-5" />
-                  Create Account
+              <Link href="/subscription">
+                <Button className="w-full" data-testid="button-pro">
+                  Get Started
                 </Button>
-                <Button size="lg" variant="outline" className="text-base font-semibold" data-testid="button-learn-more">
-                  Learn More
-                </Button>
-              </div>
-            </div>
+              </Link>
+            </CardContent>
           </Card>
-        </section>
-      </main>
-      
+
+          {/* Elite */}
+          <Card className="p-8 hover-elevate" data-testid="card-tier-elite">
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="text-2xl font-bold font-heading">Elite</h3>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <span className="text-4xl font-bold" data-testid="text-price-elite">$25</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <span>25,000 monthly points</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-primary" />
+                  <span>3x bonus points</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Gift className="h-4 w-4 text-primary" />
+                  <span>Exclusive elite rewards</span>
+                </div>
+              </div>
+              <Link href="/subscription">
+                <Button className="w-full" variant="outline" data-testid="button-elite">
+                  Get Started
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Rewards Preview - Static Mock Data */}
+      <section className="container mx-auto px-4 py-24 bg-muted/30">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold font-heading mb-4" data-testid="text-rewards-preview">
+            Redeem For Real Rewards
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Gaming gear, gift cards, and more
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-6xl mx-auto">
+          {MOCK_REWARDS.map((reward) => (
+            <Card key={reward.id} className="hover-elevate overflow-hidden" data-testid={`card-reward-${reward.id}`}>
+              <CardContent className="p-0">
+                <div className="aspect-square bg-muted flex items-center justify-center">
+                  <img 
+                    src={reward.imageUrl} 
+                    alt={reward.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-4 space-y-2">
+                  <h4 className="font-semibold text-sm line-clamp-2" data-testid={`text-reward-title-${reward.id}`}>
+                    {reward.title}
+                  </h4>
+                  <p className="text-primary font-bold font-mono" data-testid={`text-reward-points-${reward.id}`}>
+                    {reward.pointsCost.toLocaleString()} pts
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <Link href="/shop">
+            <Button size="lg" variant="outline" data-testid="button-view-all-rewards">
+              View All Rewards
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="container mx-auto px-4 py-24">
+        <Card className="bg-primary text-primary-foreground p-12 text-center" data-testid="card-cta">
+          <CardContent className="space-y-6">
+            <h2 className="text-4xl font-bold font-heading" data-testid="text-cta-title">
+              Ready to Start Earning?
+            </h2>
+            <p className="text-lg opacity-90 max-w-2xl mx-auto">
+              Join thousands of gamers already earning rewards for doing what they love.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+              {isAuthenticated ? (
+                <Link href="/stats">
+                  <Button 
+                    size="lg" 
+                    variant="secondary"
+                    data-testid="button-cta-dashboard"
+                  >
+                    View Dashboard
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/subscription">
+                  <Button 
+                    size="lg" 
+                    variant="secondary"
+                    data-testid="button-cta-sign-up"
+                  >
+                    Sign Up Free
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 }
