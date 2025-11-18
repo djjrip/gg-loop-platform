@@ -1,4 +1,4 @@
-import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, Package, TrendingUp } from "lucide-react";
+import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, Package, TrendingUp, DollarSign } from "lucide-react";
 import logoImage from "@assets/ChatGPT Image Nov 11, 2025, 06_17_23 PM_1763403383212.png";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -97,6 +97,14 @@ export default function Header() {
             >
               <Users className="h-3.5 w-3.5 text-primary" />
               Referrals
+            </Link>
+            <Link 
+              href="/affiliate" 
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+              data-testid="link-affiliate"
+            >
+              <DollarSign className="h-3.5 w-3.5 text-primary" />
+              Affiliate
             </Link>
             <a href="/#leaderboards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards">
               <BarChart3 className="h-3.5 w-3.5 text-primary" />
@@ -289,6 +297,14 @@ export default function Header() {
             >
               <Users className="h-3.5 w-3.5 text-primary" />
               Referrals
+            </Link>
+            <Link 
+              href="/affiliate" 
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+              data-testid="link-affiliate-mobile"
+            >
+              <DollarSign className="h-3.5 w-3.5 text-primary" />
+              Affiliate
             </Link>
             <a href="/#leaderboards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards-mobile">
               <BarChart3 className="h-3.5 w-3.5 text-primary" />
