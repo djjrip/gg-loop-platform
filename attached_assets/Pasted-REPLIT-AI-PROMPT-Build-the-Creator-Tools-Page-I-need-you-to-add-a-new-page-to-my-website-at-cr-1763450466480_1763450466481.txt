@@ -1,0 +1,91 @@
+REPLIT AI PROMPT — Build the Creator Tools Page
+
+**I need you to add a new page to my website at /creator-tools (ggloop.io/creator-tools).
+The site is a gaming rewards platform called GG LOOP.
+I want a fully designed “Creator Tools” hub with clean sections and clickable cards.
+Match the styling, color palette, components, and layout patterns already used on the site (dark theme, rose-gold accents, rounded cards, icons).
+
+📌 REQUIREMENTS**
+
+Create a new route /creator-tools and a corresponding page/component.
+
+Add the page to the navbar as “Creator Tools” right after “Shop.”
+
+Build the page with these five sections, each using the same card UI style as the homepage features:
+
+SECTION 1 — Build Your Brand
+
+Shopify (placeholder affiliate URL in env var SHOPIFY_AFFILIATE_URL)
+
+jAlbum (placeholder link)
+
+SECTION 2 — Grow as a Creator
+
+Clip editing apps (placeholder)
+
+Stream tools (placeholder)
+
+SECTION 3 — Sell Your Merch
+
+Shopify (same affiliate link)
+
+EasyShip (placeholder link)
+
+SECTION 4 — Monetize Your Audience
+
+Gemini Exchange (placeholder link)
+
+MarketXLS (placeholder link)
+
+IPRoyal (placeholder link)
+
+SECTION 5 — Level Up IRL
+
+Travel brands (placeholder)
+
+Coffee Bros (placeholder)
+
+CBD For Life (placeholder)
+
+FUNCTIONAL REQUIREMENTS:
+
+Each item should be displayed as a clickable card with:
+
+Logo image
+
+Short description
+
+“Learn More” button linking to the placeholder URL
+
+All links must be read from a config file or .env so I can update them later.
+
+Page must be fully responsive (mobile first).
+
+Use Tailwind or existing CSS utilities already in the project.
+
+Keep the aesthetic consistent with the rest of ggloop.io (dark mode, rose gold #b88675 accent, soft shadows).
+
+NAVBAR REQUIREMENT:
+
+Add “Creator Tools” to the main nav and have it route to /creator-tools.
+
+DELIVERABLES:
+
+All new files (routes + components/pages)
+
+Any updated nav/header files
+
+Styling or component updates if needed
+
+Code comments showing where to plug in real affiliate links
+
+Please generate the full code for this page, following the existing file structure of the project.
+If the stack uses React/Next, use JSX.
+If it uses Express + template engine, match that system.
+
+Do NOT change existing functionality — only add the new Creator Tools system.
+
+Output the entire solution with file paths and code blocks.
+
+Let me know if you need more information about my project structure before writing the code.
+**

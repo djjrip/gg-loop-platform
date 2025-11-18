@@ -14,6 +14,7 @@ import Partners from "@/pages/Partners";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Shop from "@/pages/Shop";
+import CreatorTools from "@/pages/CreatorTools";
 import Subscription from "@/pages/Subscription";
 
 // User pages
@@ -64,6 +65,7 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/partners" component={Partners} />
       <Route path="/shop" component={Shop} />
+      <Route path="/creator-tools" component={CreatorTools} />
       <Route path="/subscription" component={Subscription} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
