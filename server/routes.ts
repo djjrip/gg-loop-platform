@@ -89,17 +89,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   setupTwitchAuth(app);
   
-  // TikTok Site Verification (handle both verification file formats)
-  // Generic verification.txt endpoint - latest code for Replit URL
+  // TikTok Site Verification - Replit URL (3d3cea8a-85cf-4f88-8c67-be4be4d6239a-00-3jb9yp194k6jl.janeway.replit.dev)
   app.get(['/verification.txt', '/verification.txt/'], (req, res) => {
     res.type('text/plain');
-    res.send('tiktok-developers-site-verification=xvAJ8oTA6BY7EgC2Aw9YayYgd2hyivRY');
+    res.send('tiktok-developers-site-verification=PDhff2hq8ipXw4JhJXalxaRHIa5mV037');
   });
   
-  // Specific TikTok verification file for Replit URL (workspace.JaysonQuindao.repl.co)
-  app.get('/tiktokxvAJ8oTA6BY7EgC2Aw9YayYgd2hyivRY.txt', (req, res) => {
+  app.get('/tiktokPDhff2hq8ipXw4JhJXalxaRHIa5mV037.txt', (req, res) => {
     res.type('text/plain');
-    res.send('tiktok-developers-site-verification=xvAJ8oTA6BY7EgC2Aw9YayYgd2hyivRY');
+    res.send('tiktok-developers-site-verification=PDhff2hq8ipXw4JhJXalxaRHIa5mV037');
   });
   
   // HMAC signature validation middleware for gaming webhooks
