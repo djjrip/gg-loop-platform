@@ -89,8 +89,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   setupTwitchAuth(app);
   
-  // TikTok Site Verification (handle both with and without trailing slash)
+  // TikTok Site Verification (handle both verification file formats)
+  // Generic verification.txt endpoint
   app.get(['/verification.txt', '/verification.txt/'], (req, res) => {
+    res.type('text/plain');
+    res.send('tiktok-developers-site-verification=J4JXgssyod3YZXlNzMcrcQWCS0Ay0q0d');
+  });
+  
+  // Specific TikTok verification file with code in filename
+  app.get('/tiktokJ4JXgssyod3YZXlNzMcrcQWCS0Ay0q0d.txt', (req, res) => {
     res.type('text/plain');
     res.send('tiktok-developers-site-verification=J4JXgssyod3YZXlNzMcrcQWCS0Ay0q0d');
   });
