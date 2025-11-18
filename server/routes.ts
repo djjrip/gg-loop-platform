@@ -2300,10 +2300,18 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         });
       }
 
-      // Security: Verify subscription ownership - subscriber email must match authenticated user's email
+      // Security: Block guest users (must be authenticated with verified email)
       const userEmail = req.dbUser.email;
-      if (!verification.subscriberEmail || !userEmail) {
-        console.error("Manual sync blocked: Missing email data for ownership verification");
+      if (!userEmail) {
+        console.error("Manual sync blocked: Guest user attempted sync (no verified email)");
+        return res.status(401).json({
+          message: "You must be logged in with a verified account to sync subscriptions."
+        });
+      }
+
+      // Security: Verify subscription ownership - subscriber email must match authenticated user's email
+      if (!verification.subscriberEmail) {
+        console.error("Manual sync blocked: PayPal subscription has no subscriber email");
         return res.status(400).json({
           message: "Unable to verify subscription ownership. Contact support."
         });
