@@ -453,6 +453,59 @@ export async function setupAuth(app: Express) {
     }
   );
 
+  // TikTok OAuth routes
+  app.get("/api/auth/tiktok",
+    passport.authenticate("tiktok")
+  );
+
+  app.get("/api/auth/tiktok/callback",
+    passport.authenticate("tiktok", { failureRedirect: "/" }),
+    async (req, res) => {
+      // Regenerate session for security
+      const user = req.user;
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error('Session regeneration error:', err);
+          return res.redirect("/");
+        }
+        req.login(user!, async (err) => {
+          if (err) {
+            console.error('Login error:', err);
+            return res.redirect("/");
+          }
+          
+          // Update login streak and award GG Coins
+          try {
+            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
+            if (dbUser) {
+              const { updateLoginStreak } = await import('./lib/freeTier');
+              const streakResult = await updateLoginStreak(dbUser.id);
+              
+              // Store notification in session for frontend to display
+              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+                req.session.loginNotification = {
+                  streak: streakResult.currentStreak,
+                  coinsAwarded: streakResult.coinsAwarded,
+                  badgeUnlocked: streakResult.badgeUnlocked,
+                  timestamp: Date.now(),
+                };
+              }
+              
+              if (streakResult.coinsAwarded > 0) {
+                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+              }
+            }
+          } catch (error) {
+            console.error('[Login] Failed to update streak:', error);
+            // Don't block login on streak error
+          }
+          
+          res.redirect("/");
+        });
+      });
+    }
+  );
+
   // Riot OAuth routes
   app.get("/api/auth/riot",
     passport.authenticate("riot")
