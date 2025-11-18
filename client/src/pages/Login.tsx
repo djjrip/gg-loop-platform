@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy } from "lucide-react";
-import { SiDiscord, SiTwitch, SiTiktok } from "react-icons/si";
+import { SiDiscord, SiTwitch } from "react-icons/si";
 import { Link } from "wouter";
 
 export default function Login() {
@@ -11,10 +11,6 @@ export default function Login() {
 
   const handleTwitchLogin = () => {
     window.location.href = "/api/auth/twitch";
-  };
-
-  const handleTiktokLogin = () => {
-    window.location.href = "/api/auth/tiktok";
   };
 
   return (
@@ -49,16 +45,6 @@ export default function Login() {
           >
             <SiTwitch className="h-5 w-5" style={{ color: '#9146FF' }} />
             Continue with Twitch
-          </Button>
-
-          <Button
-            onClick={handleTiktokLogin}
-            variant="outline"
-            className="w-full h-12 text-base gap-3 hover-elevate active-elevate-2"
-            data-testid="button-tiktok-login"
-          >
-            <SiTiktok className="h-5 w-5" style={{ color: '#000000' }} />
-            Continue with TikTok
           </Button>
 
           <div className="relative my-6">
