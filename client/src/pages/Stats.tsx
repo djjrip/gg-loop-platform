@@ -93,7 +93,7 @@ export default function Stats() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
             <div>
               <h1 className="text-4xl font-bold font-heading mb-2" data-testid="text-welcome">
-                Welcome back, {user?.username}!
+                Welcome back, {user?.username || user?.email?.split('@')[0] || 'Player'}!
               </h1>
               <p className="text-muted-foreground">
                 Track your performance and redeem rewards
