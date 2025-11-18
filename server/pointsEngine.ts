@@ -105,6 +105,43 @@ export class PointsEngine {
     return Number(result[0]?.total || 0);
   }
 
+  async getExpiringPoints(userId: string, daysThreshold: number = 30, dbOrTx: DbOrTx = db): Promise<{ amount: number; earliestExpiration: Date | null }> {
+    const now = new Date();
+    const thresholdDate = new Date();
+    thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
+    
+    // Get total expiring positive transactions
+    const result = await dbOrTx
+      .select({ 
+        total: sql<number>`COALESCE(SUM(${pointTransactions.amount}), 0)`,
+        earliest: sql<Date>`MIN(${pointTransactions.expiresAt})`
+      })
+      .from(pointTransactions)
+      .where(
+        and(
+          eq(pointTransactions.userId, userId),
+          eq(pointTransactions.isExpired, false),
+          gte(pointTransactions.amount, 0),
+          sql`${pointTransactions.expiresAt} IS NOT NULL`,
+          sql`${pointTransactions.expiresAt} > ${now}`,
+          sql`${pointTransactions.expiresAt} <= ${thresholdDate}`
+        )
+      );
+    
+    const expiringTotal = Number(result[0]?.total || 0);
+    
+    // Get user's current available balance to avoid showing already-spent points
+    const userBalance = await this.getUserBalance(userId, dbOrTx);
+    
+    // Only warn about points they actually have (not already spent)
+    const actualExpiringAmount = Math.min(expiringTotal, Math.max(0, userBalance));
+    
+    return {
+      amount: actualExpiringAmount,
+      earliestExpiration: result[0]?.earliest || null
+    };
+  }
+
   async awardPoints(
     userId: string,
     amount: number,

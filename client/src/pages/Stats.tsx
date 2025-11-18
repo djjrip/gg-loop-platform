@@ -227,9 +227,24 @@ export default function Stats() {
                     </div>
                   </div>
                 ) : recentMatches.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p data-testid="text-no-matches">No matches found. Play some ranked games to see them here!</p>
+                  <div className="text-center py-12 space-y-6">
+                    <div className="flex items-center justify-center">
+                      <div className="relative">
+                        <Trophy className="h-20 w-20 text-muted-foreground/30" />
+                        <div className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Zap className="h-4 w-4 text-primary" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="max-w-md mx-auto">
+                      <h3 className="text-xl font-bold mb-2">No Matches Yet</h3>
+                      <p className="text-muted-foreground mb-4" data-testid="text-no-matches">
+                        Play ranked games in League of Legends or Valorant to start tracking your match history and earning bonus points!
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Remember: Game linking is optional. You still get your full monthly points allocation regardless!
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-3">

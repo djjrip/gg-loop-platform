@@ -671,6 +671,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/user/expiring-points', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const expiringData = await pointsEngine.getExpiringPoints(userId, 30);
+      res.json(expiringData);
+    } catch (error) {
+      console.error("Error fetching expiring points:", error);
+      res.status(500).json({ message: "Failed to fetch expiring points" });
+    }
+  });
+
   app.post('/api/user/username', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;

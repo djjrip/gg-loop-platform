@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 
 // Static mock rewards for marketing presentation
 const MOCK_REWARDS = [
@@ -26,11 +27,66 @@ const MOCK_REWARDS = [
 ];
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+
+  const { data: subscription } = useQuery<any>({
+    queryKey: ["/api/subscription/status"],
+    enabled: isAuthenticated,
+  });
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      
+      {/* Quick Stats Overview for Authenticated Users */}
+      {isAuthenticated && user && (
+        <div className="container mx-auto px-4 pt-6">
+          <Card className="max-w-4xl mx-auto" data-testid="card-quick-stats">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Trophy className="h-5 w-5 text-primary" />
+                    <h3 className="text-sm font-medium text-muted-foreground">Total Points</h3>
+                  </div>
+                  <p className="text-3xl font-bold" data-testid="text-total-points">{Number(user.totalPoints ?? 0).toLocaleString()}</p>
+                  <Link href="/shop">
+                    <Button variant="ghost" size="sm" className="mt-2" data-testid="button-shop-rewards">
+                      Shop Rewards <ArrowRight className="ml-1 h-3 w-3" />
+                    </Button>
+                  </Link>
+                </div>
+
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Zap className="h-5 w-5 text-primary" />
+                    <h3 className="text-sm font-medium text-muted-foreground">Login Streak</h3>
+                  </div>
+                  <p className="text-3xl font-bold" data-testid="text-login-streak">{user.loginStreak || 0} days</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Longest: {user.longestStreak || 0} days
+                  </p>
+                </div>
+
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    <h3 className="text-sm font-medium text-muted-foreground">Membership</h3>
+                  </div>
+                  <p className="text-3xl font-bold capitalize" data-testid="text-tier">
+                    {subscription?.tier || "Free"}
+                  </p>
+                  <Link href="/subscription">
+                    <Button variant="ghost" size="sm" className="mt-2" data-testid="button-upgrade">
+                      {subscription?.tier ? "Manage" : "Upgrade"} <ArrowRight className="ml-1 h-3 w-3" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
       
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-24 text-center">

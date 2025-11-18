@@ -4,8 +4,9 @@ import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, Gift, Download, Mail, Trophy, Truck, MapPin, CheckCircle2 } from "lucide-react";
+import { Package, Gift, Download, Mail, Trophy, Truck, MapPin, CheckCircle2, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 interface ClaimedReward {
   id: string;
@@ -256,17 +257,35 @@ export default function MyRewards() {
             })}
           </div>
         ) : (
-          <Card className="p-12">
-            <div className="text-center space-y-4">
-              <Gift className="h-16 w-16 mx-auto text-muted-foreground" />
-              <div>
-                <h3 className="text-xl font-semibold mb-2">No Rewards Yet</h3>
+          <Card className="p-12" data-testid="card-empty-rewards">
+            <div className="text-center space-y-6">
+              <div className="flex items-center justify-center">
+                <div className="relative">
+                  <Gift className="h-20 w-20 text-muted-foreground/30" />
+                  <div className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Trophy className="h-4 w-4 text-primary" />
+                  </div>
+                </div>
+              </div>
+              <div className="max-w-md mx-auto">
+                <h3 className="text-2xl font-bold mb-2">Your Rewards Await!</h3>
                 <p className="text-muted-foreground mb-6">
-                  Start earning points and claim your first reward!
+                  You haven't claimed any rewards yet. Browse our catalog and redeem your points for gaming gear, gift cards, and exclusive perks!
                 </p>
-                <Button onClick={() => window.location.href = '/#rewards'}>
-                  Browse Rewards
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link href="/shop">
+                    <Button size="lg" data-testid="button-browse-rewards">
+                      <Gift className="mr-2 h-4 w-4" />
+                      Browse Rewards
+                    </Button>
+                  </Link>
+                  <Link href="/subscription">
+                    <Button variant="outline" size="lg" data-testid="button-earn-more">
+                      <TrendingUp className="mr-2 h-4 w-4" />
+                      Earn More Points
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </Card>
