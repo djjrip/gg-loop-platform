@@ -35,6 +35,7 @@ import GGLoopCares from "@/pages/GGLoopCares";
 import AdminDashboard from "@/pages/AdminDashboard";
 import FounderControls from "@/pages/FounderControls";
 import FulfillmentDashboard from "@/pages/FulfillmentDashboard";
+import AdminFulfillment from "@/pages/AdminFulfillment";
 import RewardsManagement from "@/pages/RewardsManagement";
 import DailyOps from "@/pages/DailyOps";
 import SponsorManagement from "@/pages/SponsorManagement";
@@ -92,6 +93,7 @@ function Router() {
       <Route path="/admin/affiliates" component={AffiliateManagement} />
       <Route path="/admin/charities" component={CharityManagement} />
       <Route path="/admin/daily-ops" component={DailyOps} />
+      <Route path="/admin/fulfillment" component={AdminFulfillment} />
       <Route path="/fulfillment" component={FulfillmentDashboard} />
       
       {/* 404 */}

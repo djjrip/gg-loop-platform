@@ -1568,6 +1568,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/admin/redemptions', adminMiddleware, async (req: any, res) => {
+    try {
+      const redemptions = await db.select({
+        id: userRewards.id,
+        userId: userRewards.userId,
+        rewardId: userRewards.rewardId,
+        pointsSpent: userRewards.pointsSpent,
+        redeemedAt: userRewards.redeemedAt,
+        status: userRewards.status,
+        trackingNumber: userRewards.trackingNumber,
+        fulfillmentNotes: userRewards.fulfillmentNotes,
+        fulfilledAt: userRewards.fulfilledAt,
+        shippingAddress: userRewards.shippingAddress,
+        shippingCity: userRewards.shippingCity,
+        shippingState: userRewards.shippingState,
+        shippingZip: userRewards.shippingZip,
+        shippingCountry: userRewards.shippingCountry,
+        user: {
+          username: users.username,
+          email: users.email,
+        },
+        reward: {
+          title: rewards.title,
+          fulfillmentType: rewards.fulfillmentType,
+        }
+      })
+      .from(userRewards)
+      .innerJoin(users, eq(userRewards.userId, users.id))
+      .innerJoin(rewards, eq(userRewards.rewardId, rewards.id))
+      .orderBy(desc(userRewards.redeemedAt));
+      
+      res.json(redemptions);
+    } catch (error: any) {
+      console.error("Error fetching redemptions:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch redemptions" });
+    }
+  });
+
+  app.post('/api/admin/fulfill-redemption', adminMiddleware, async (req: any, res) => {
+    try {
+      const { redemptionId, trackingNumber, notes, giftCardCode } = z.object({
+        redemptionId: z.string(),
+        trackingNumber: z.string().optional(),
+        notes: z.string().optional(),
+        giftCardCode: z.string().optional(),
+      }).parse(req.body);
+
+      const fulfillmentData: any = { giftCardCode };
+      const updateData: any = {
+        status: 'fulfilled',
+        fulfilledAt: new Date(),
+        fulfillmentData: giftCardCode ? fulfillmentData : null,
+      };
+
+      if (trackingNumber) updateData.trackingNumber = trackingNumber;
+      if (notes) updateData.fulfillmentNotes = notes;
+
+      const [updated] = await db.update(userRewards)
+        .set(updateData)
+        .where(eq(userRewards.id, redemptionId))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "Redemption not found" });
+      }
+
+      console.log(`✅ Redemption fulfilled: ${redemptionId}`);
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error fulfilling redemption:", error);
+      res.status(400).json({ message: error.message || "Failed to fulfill redemption" });
+    }
+  });
+
   app.post('/api/admin/rewards', adminMiddleware, async (req: any, res) => {
     try {
       const rewardData = insertRewardSchema.parse(req.body);
