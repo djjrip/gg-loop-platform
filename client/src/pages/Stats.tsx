@@ -199,16 +199,19 @@ export default function Stats() {
                   <div className="text-center py-12 space-y-4">
                     <LinkIcon className="h-12 w-12 text-muted-foreground mx-auto" />
                     <div>
-                      <h3 className="font-semibold mb-2" data-testid="text-no-riot-account">Connect Your Riot Account</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Link your League of Legends or Valorant account to automatically track matches
+                      <h3 className="font-semibold mb-2" data-testid="text-no-riot-account">Optional: Track Your Match Stats</h3>
+                      <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+                        Link your League of Legends or Valorant account to automatically track match history and stats. This is completely optional - you can still redeem rewards with your monthly points allocation!
                       </p>
                       <Link href="/settings">
                         <Button data-testid="button-go-to-settings">
-                          Go to Settings
+                          Link Game Account
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </Link>
+                      <p className="text-xs text-muted-foreground mt-4">
+                        More games coming soon!
+                      </p>
                     </div>
                   </div>
                 ) : recentMatches.length === 0 ? (

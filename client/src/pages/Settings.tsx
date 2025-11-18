@@ -446,6 +446,48 @@ export default function Settings() {
               )}
             </CardContent>
           </Card>
+
+          {/* Coming Soon Games */}
+          <Card data-testid="card-coming-soon-games">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                More Games Coming Soon
+              </CardTitle>
+              <CardDescription>
+                We're expanding GG Loop to support more games. Stay tuned!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { name: "Fortnite", icon: "🎮" },
+                  { name: "Apex Legends", icon: "🎯" },
+                  { name: "Call of Duty", icon: "🎖️" },
+                  { name: "Counter-Strike 2", icon: "💥" },
+                  { name: "Overwatch 2", icon: "🦸" },
+                  { name: "Rocket League", icon: "🚗" },
+                ].map((game) => (
+                  <div
+                    key={game.name}
+                    className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30"
+                    data-testid={`game-${game.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    <div className="text-2xl">{game.icon}</div>
+                    <div>
+                      <p className="font-medium text-sm">{game.name}</p>
+                      <p className="text-xs text-muted-foreground">Coming Soon</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="text-sm text-center">
+                  <strong>GG Loop is for ALL gamers!</strong> You can join and redeem rewards with your monthly points even without linking game accounts. Game linking is optional for match tracking.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
