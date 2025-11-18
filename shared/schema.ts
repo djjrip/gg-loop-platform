@@ -23,6 +23,7 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   totalPoints: integer("total_points").notNull().default(0),
   ggCoins: integer("gg_coins").notNull().default(0), // Virtual currency for unlocking trials
+  primaryGame: varchar("primary_game"), // User's favorite game (free-form text)
   gamesConnected: integer("games_connected").notNull().default(0),
   stripeCustomerId: varchar("stripe_customer_id").unique(),
   stripeSubscriptionId: varchar("stripe_subscription_id").unique(),

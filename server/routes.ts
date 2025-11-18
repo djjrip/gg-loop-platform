@@ -179,46 +179,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Guest account creation
   app.post('/api/auth/guest', async (req: any, res) => {
     try {
-      const { email, game, riotId, tagLine, region } = req.body;
+      const { email, primaryGame, selectedGames = [], riotId, tagLine, region } = req.body;
       
-      if (!email || !game || !riotId || !tagLine || !region) {
-        return res.status(400).json({ message: "All fields are required" });
+      // Only email and primaryGame are required
+      if (!email || !primaryGame) {
+        return res.status(400).json({ message: "Email and primary game are required" });
       }
       
       // Generate UUID-based username for guest
       const guestId = crypto.randomUUID();
       const guestUsername = `guest_${guestId.split('-')[0]}`;
       
-      // Verify Riot account exists and get PUUID
-      const { RiotApiService } = await import('./riotApi');
-      const riotApi = new RiotApiService();
-      
-      let account;
-      try {
-        account = await riotApi.verifyAccount(riotId, tagLine, region);
-      } catch (error) {
-        return res.status(400).json({ 
-          message: `Could not verify Riot account "${riotId}#${tagLine}" in ${region} region. Please check your Riot ID and try again.` 
-        });
-      }
-      
-      // Create guest user with null oidcSub
+      // Create guest user with null oidcSub and primaryGame
       const user = await storage.createUser({
         oidcSub: null,
         email,
         username: guestUsername,
-        firstName: riotId,
-        lastName: `#${tagLine}`,
+        firstName: null,
+        lastName: null,
         profileImageUrl: null,
+        primaryGame, // Store user's favorite game
       });
       
-      // Link Riot account to user
-      await storage.linkRiotAccount(user.id, game, {
-        puuid: account.puuid,
-        gameName: account.gameName,
-        tagLine: account.tagLine,
-        region
-      });
+      // Create userGames records for selected games (non-verified initially)
+      if (selectedGames.length > 0) {
+        for (const gameId of selectedGames) {
+          try {
+            await storage.connectUserGame({
+              userId: user.id,
+              gameId,
+              accountName: null,
+            });
+          } catch (error) {
+            console.warn(`Failed to create userGame record for game ${gameId}:`, error);
+          }
+        }
+      }
+      
+      // If Riot account details provided, verify and add Riot metadata
+      if (riotId && tagLine && region && selectedGames.length > 0) {
+        const { RiotApiService } = await import('./riotApi');
+        const riotApi = new RiotApiService();
+        
+        try {
+          const account = await riotApi.verifyAccount(riotId, tagLine, region);
+          
+          // Link Riot account to each selected game's userGame record
+          for (const gameId of selectedGames) {
+            try {
+              await storage.linkRiotAccount(user.id, gameId, {
+                puuid: account.puuid,
+                gameName: account.gameName,
+                tagLine: account.tagLine,
+                region,
+              });
+            } catch (error) {
+              console.warn(`Failed to link Riot account for game ${gameId}:`, error);
+            }
+          }
+        } catch (error) {
+          console.warn(`Riot account verification failed for ${riotId}#${tagLine}, but user created successfully with unverified game selections`);
+        }
+      }
       
       // Store guest session
       req.session.guestUserId = user.id;

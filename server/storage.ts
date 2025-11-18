@@ -313,6 +313,7 @@ export class DbStorage implements IStorage {
     if (existing.length > 0) {
       const [updated] = await db.update(userGames)
         .set({
+          accountName: `${riotData.gameName}#${riotData.tagLine}`,
           riotPuuid: riotData.puuid,
           riotGameName: riotData.gameName,
           riotTagLine: riotData.tagLine,
