@@ -47,24 +47,6 @@ export default function SubscriptionPage() {
     enabled: isAuthenticated,
   });
 
-  const checkoutMutation = useMutation({
-    mutationFn: async (tier: string) => {
-      const response = await apiRequest("POST", "/api/create-checkout-session", { tier });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to start checkout",
-        variant: "destructive",
-      });
-    },
-  });
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
@@ -339,25 +321,22 @@ export default function SubscriptionPage() {
                       {cancelMutation.isPending ? "Canceling..." : "Cancel Subscription"}
                     </Button>
                   )}
-                  {subscription.status === "past_due" && (
-                    <Button
-                      variant="default"
-                      onClick={() => checkoutMutation.mutate(subscription.tier)}
-                      disabled={checkoutMutation.isPending}
-                      data-testid="button-update-payment"
-                    >
-                      {checkoutMutation.isPending ? "Loading..." : "Update Payment Method"}
-                    </Button>
+                  {subscription.status === "past_due" && paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds] && (
+                    <div className="flex flex-col gap-2">
+                      <p className="text-sm text-muted-foreground">
+                        To update your payment method, please cancel and create a new subscription:
+                      </p>
+                      <PayPalSubscriptionButton 
+                        planId={paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds]} 
+                        tier={subscription.tier}
+                      />
+                    </div>
                   )}
-                  {subscription.status === "canceling" && (
-                    <Button
-                      variant="default"
-                      onClick={() => checkoutMutation.mutate(subscription.tier)}
-                      disabled={checkoutMutation.isPending}
-                      data-testid="button-resubscribe"
-                    >
-                      {checkoutMutation.isPending ? "Loading..." : "Resubscribe"}
-                    </Button>
+                  {subscription.status === "canceling" && paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds] && (
+                    <PayPalSubscriptionButton 
+                      planId={paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds]} 
+                      tier={subscription.tier}
+                    />
                   )}
                 </CardFooter>
               </Card>
@@ -660,16 +639,13 @@ export default function SubscriptionPage() {
                         >
                           Cancel Current to Downgrade
                         </Button>
-                      ) : canUpgrade || !hasActiveSubscription ? (
-                        <Button
-                          className="w-full"
-                          variant={isElite ? "default" : "outline"}
-                          onClick={() => checkoutMutation.mutate(tier.id)}
-                          disabled={checkoutMutation.isPending}
-                          data-testid={`button-subscribe-${tier.id}`}
-                        >
-                          {checkoutMutation.isPending ? "Loading..." : `Subscribe to ${tier.name}`}
-                        </Button>
+                      ) : (canUpgrade || !hasActiveSubscription) && paypalPlanIds[tier.id as keyof typeof paypalPlanIds] ? (
+                        <div className="w-full">
+                          <PayPalSubscriptionButton 
+                            planId={paypalPlanIds[tier.id as keyof typeof paypalPlanIds]} 
+                            tier={tier.name}
+                          />
+                        </div>
                       ) : null}
                     </CardFooter>
                   </Card>
