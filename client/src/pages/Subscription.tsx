@@ -622,20 +622,11 @@ export default function SubscriptionPage() {
                 );
                 
                 // Block downgrades: if user has a higher tier, block lower tiers
-                const isDowngrade = subscription && (
+                const isDowngrade = Boolean(subscription && (
                   (subscription.tier === 'elite' && (tier.id === 'pro' || tier.id === 'basic')) ||
                   (subscription.tier === 'pro' && tier.id === 'basic')
-                );
+                ));
                 
-                // Debug logging
-                console.log(`Tier: ${tier.id}`, {
-                  isAuthenticated,
-                  isCurrentTier,
-                  isDowngrade,
-                  hasPayPalId: !!paypalPlanIds[tier.id as keyof typeof paypalPlanIds],
-                  paypalPlanId: paypalPlanIds[tier.id as keyof typeof paypalPlanIds],
-                  subscription
-                });
 
                 return (
                   <Card
