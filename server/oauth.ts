@@ -175,6 +175,62 @@ export async function setupAuth(app: Express) {
     }));
   }
 
+  // TikTok OAuth Strategy (Login Kit)
+  if (process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET) {
+    passport.use('tiktok', new OAuth2Strategy({
+      authorizationURL: 'https://www.tiktok.com/v2/auth/authorize/',
+      tokenURL: 'https://open.tiktokapis.com/v2/oauth/token/',
+      clientID: process.env.TIKTOK_CLIENT_KEY,
+      clientSecret: process.env.TIKTOK_CLIENT_SECRET,
+      callbackURL: `${baseUrl}/api/auth/tiktok/callback`,
+      scope: ['user.info.basic'],
+      state: true, // Enable CSRF protection
+    }, async (accessToken: string, refreshToken: string, params: any, profile: any, done: any) => {
+      try {
+        // Fetch user info from TikTok API
+        const userInfoResponse = await axios.get(
+          'https://open.tiktokapis.com/v2/user/info/',
+          {
+            params: { fields: 'open_id,union_id,avatar_url,display_name' },
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          }
+        );
+
+        const tiktokUser = userInfoResponse.data.data.user;
+        const oidcSub = `tiktok:${tiktokUser.open_id}`;
+        
+        // TikTok doesn't provide email, create virtual email
+        const virtualEmail = `${tiktokUser.open_id}@tiktok.ggloop.io`;
+
+        const authUser: AuthUser = {
+          provider: 'tiktok',
+          providerId: tiktokUser.open_id,
+          oidcSub,
+          email: virtualEmail,
+          displayName: tiktokUser.display_name || 'TikTok User',
+          profileImage: tiktokUser.avatar_url,
+          tiktokOpenId: tiktokUser.open_id,
+          tiktokUnionId: tiktokUser.union_id,
+        };
+
+        await storage.upsertUser({
+          oidcSub,
+          email: authUser.email,
+          firstName: tiktokUser.display_name || 'TikTok',
+          lastName: 'User',
+          profileImageUrl: authUser.profileImage,
+        });
+
+        done(null, authUser);
+      } catch (error) {
+        console.error('[TikTok OAuth] Error fetching user info:', error);
+        done(error as Error);
+      }
+    }));
+  }
+
   // Riot OAuth Strategy (RSO - Riot Sign-On)
   if (process.env.RIOT_CLIENT_ID && process.env.RIOT_CLIENT_SECRET) {
     passport.use('riot', new OAuth2Strategy({
