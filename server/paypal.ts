@@ -42,6 +42,7 @@ export async function verifyPayPalSubscription(subscriptionId: string): Promise<
   status?: string;
   planId?: string;
   tier?: string;
+  subscriberEmail?: string;
   error?: string;
 }> {
   if (!subscriptionsController) {
@@ -68,6 +69,7 @@ export async function verifyPayPalSubscription(subscriptionId: string): Promise<
     
     const status = (subscription as any).status;
     const planId = (subscription as any).planId;
+    const subscriberEmail = (subscription as any).subscriber?.email_address;
 
     // Strict plan ID mapping - only accept configured plan IDs
     // In production, only configured IDs are accepted (no fallback)
@@ -102,6 +104,7 @@ export async function verifyPayPalSubscription(subscriptionId: string): Promise<
         status,
         planId,
         tier,
+        subscriberEmail,
       };
     }
 

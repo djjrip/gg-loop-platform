@@ -796,6 +796,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Link League of Legends account
+  app.post('/api/riot/link/league', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { riotId, region = 'na1' } = req.body;
+      
+      if (!riotId || !riotId.includes('#')) {
+        return res.status(400).json({ 
+          message: "Riot ID in format GameName#TAG is required" 
+        });
+      }
+
+      const [gameName, tagLine] = riotId.split('#');
+      
+      // Verify account exists via Riot API
+      const { getRiotAPI, getRoutingRegion } = await import('./lib/riot');
+      const riotAPI = getRiotAPI();
+      const routingRegion = getRoutingRegion(region);
+      
+      const riotAccount = await riotAPI.getAccountByRiotId(gameName, tagLine, routingRegion);
+      
+      // Save to database
+      await db.insert(riotAccounts).values({
+        userId,
+        puuid: riotAccount.puuid,
+        gameName: riotAccount.gameName,
+        tagLine: riotAccount.tagLine,
+        region,
+        game: 'league',
+      }).onConflictDoUpdate({
+        target: [riotAccounts.userId, riotAccounts.game],
+        set: {
+          puuid: riotAccount.puuid,
+          gameName: riotAccount.gameName,
+          tagLine: riotAccount.tagLine,
+          region,
+          updatedAt: new Date(),
+        },
+      });
+
+      res.json({ 
+        success: true, 
+        account: {
+          gameName: riotAccount.gameName,
+          tagLine: riotAccount.tagLine,
+          region,
+          verified: true,
+        }
+      });
+    } catch (error: any) {
+      console.error("Error linking League account:", error);
+      res.status(400).json({ 
+        message: error.message || "Failed to link League account. Check your Riot ID format (GameName#Tag)" 
+      });
+    }
+  });
+
+  // Link Valorant account
+  app.post('/api/riot/link/valorant', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { riotId, region } = req.body;
+      
+      if (!riotId || !riotId.includes('#')) {
+        return res.status(400).json({ 
+          message: "Riot ID in format GameName#TAG is required" 
+        });
+      }
+
+      // Validate Valorant region
+      const validValorantRegions = ['na', 'eu', 'ap', 'kr', 'br', 'latam', 'pbe'];
+      if (!region || !validValorantRegions.includes(region.toLowerCase())) {
+        return res.status(400).json({
+          message: `Invalid Valorant region. Please select one of: ${validValorantRegions.join(', ')}`
+        });
+      }
+
+      const [gameName, tagLine] = riotId.split('#');
+      
+      // Verify account exists via Riot API
+      const { getRiotAPI, getValorantRoutingRegion } = await import('./lib/riot');
+      const riotAPI = getRiotAPI();
+      const routingRegion = getValorantRoutingRegion(region);
+      
+      const riotAccount = await riotAPI.getAccountByRiotId(gameName, tagLine, routingRegion);
+      
+      // Save to database
+      await db.insert(riotAccounts).values({
+        userId,
+        puuid: riotAccount.puuid,
+        gameName: riotAccount.gameName,
+        tagLine: riotAccount.tagLine,
+        region,
+        game: 'valorant',
+      }).onConflictDoUpdate({
+        target: [riotAccounts.userId, riotAccounts.game],
+        set: {
+          puuid: riotAccount.puuid,
+          gameName: riotAccount.gameName,
+          tagLine: riotAccount.tagLine,
+          region,
+          updatedAt: new Date(),
+        },
+      });
+
+      res.json({ 
+        success: true, 
+        account: {
+          gameName: riotAccount.gameName,
+          tagLine: riotAccount.tagLine,
+          region,
+          verified: true,
+        }
+      });
+    } catch (error: any) {
+      console.error("Error linking Valorant account:", error);
+      res.status(400).json({ 
+        message: error.message || "Failed to link Valorant account. Check your Riot ID format (GameName#Tag)" 
+      });
+    }
+  });
+
+  // Unlink League of Legends account
+  app.post('/api/riot/unlink/league', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      
+      // Delete the riot account
+      await db.delete(riotAccounts).where(
+        and(
+          eq(riotAccounts.userId, userId),
+          eq(riotAccounts.game, 'league')
+        )
+      );
+
+      res.json({ success: true, message: "League account unlinked successfully" });
+    } catch (error: any) {
+      console.error("Error unlinking League account:", error);
+      res.status(400).json({ 
+        message: error.message || "Failed to unlink League account" 
+      });
+    }
+  });
+
+  // Unlink Valorant account
+  app.post('/api/riot/unlink/valorant', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      
+      // Delete the riot account
+      await db.delete(riotAccounts).where(
+        and(
+          eq(riotAccounts.userId, userId),
+          eq(riotAccounts.game, 'valorant')
+        )
+      );
+
+      res.json({ success: true, message: "Valorant account unlinked successfully" });
+    } catch (error: any) {
+      console.error("Error unlinking Valorant account:", error);
+      res.status(400).json({ 
+        message: error.message || "Failed to unlink Valorant account" 
+      });
+    }
+  });
+
   // Get user's linked Riot account with sync stats
   app.get('/api/riot/account/:game', getUserMiddleware, async (req: any, res) => {
     try {
@@ -2091,6 +2257,128 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     } catch (error) {
       console.error("Error fetching subscription:", error);
       res.status(500).json({ message: "Failed to fetch subscription" });
+    }
+  });
+
+  // Manual PayPal subscription sync - for users who had issues during checkout
+  app.post('/api/paypal/manual-sync', getUserMiddleware, async (req: any, res) => {
+    const { subscriptionId } = req.body;
+    const userId = req.dbUser.id;
+
+    if (!subscriptionId) {
+      return res.status(400).json({ message: "PayPal Subscription ID is required" });
+    }
+
+    // Generate stable event ID for deduplication
+    const eventId = `paypal_approved_${subscriptionId}_${userId}`;
+    
+    try {
+      // Check if already processed
+      const existingEvent = await storage.checkEventProcessed(eventId);
+      if (existingEvent) {
+        console.log(`PayPal subscription ${subscriptionId} already synced for user ${userId}`);
+        const subscription = await storage.getSubscription(userId);
+        return res.json({ 
+          success: true,
+          message: "Subscription already synced",
+          tier: subscription?.tier || "unknown"
+        });
+      }
+
+      const verification = await verifyPayPalSubscription(subscriptionId);
+      
+      if (!verification.valid) {
+        console.error("PayPal subscription verification failed:", verification.error);
+        return res.status(400).json({ 
+          message: verification.error || "Invalid PayPal subscription" 
+        });
+      }
+
+      if (!verification.tier) {
+        return res.status(400).json({ 
+          message: "Could not determine subscription tier" 
+        });
+      }
+
+      // Security: Verify subscription ownership - subscriber email must match authenticated user's email
+      const userEmail = req.dbUser.email;
+      if (!verification.subscriberEmail || !userEmail) {
+        console.error("Manual sync blocked: Missing email data for ownership verification");
+        return res.status(400).json({
+          message: "Unable to verify subscription ownership. Contact support."
+        });
+      }
+
+      if (verification.subscriberEmail.toLowerCase() !== userEmail.toLowerCase()) {
+        console.error(`Manual sync blocked: Email mismatch. Subscriber: ${verification.subscriberEmail}, User: ${userEmail}`);
+        return res.status(403).json({
+          message: "This subscription belongs to a different account. Please use the correct PayPal account."
+        });
+      }
+
+      const tierLower = verification.tier;
+      const currentDate = new Date();
+      const nextBillingDate = new Date(currentDate);
+      nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+
+      const existingSubscription = await storage.getSubscription(userId);
+      let subscriptionDbId: string;
+      
+      if (existingSubscription) {
+        await storage.updateSubscription(existingSubscription.id, {
+          tier: tierLower,
+          status: "active",
+          stripeSubscriptionId: subscriptionId,
+          currentPeriodEnd: nextBillingDate,
+        });
+        subscriptionDbId = existingSubscription.id;
+        
+        await storage.logSubscriptionEvent({
+          subscriptionId: existingSubscription.id,
+          eventType: "subscription.manual_sync",
+          stripeEventId: eventId,
+          eventData: {
+            previousTier: existingSubscription.tier,
+            newTier: tierLower,
+            paypalSubscriptionId: subscriptionId,
+            status: verification.status,
+          },
+        });
+      } else {
+        const newSub = await storage.createSubscription({
+          userId,
+          tier: tierLower,
+          status: "active",
+          stripeSubscriptionId: subscriptionId,
+          currentPeriodStart: currentDate,
+          currentPeriodEnd: nextBillingDate,
+        });
+        subscriptionDbId = newSub.id;
+        
+        await storage.logSubscriptionEvent({
+          subscriptionId: newSub.id,
+          eventType: "subscription.manual_sync_created",
+          stripeEventId: eventId,
+          eventData: {
+            tier: tierLower,
+            paypalSubscriptionId: subscriptionId,
+            status: verification.status,
+          },
+        });
+      }
+
+      await pointsEngine.awardMonthlySubscriptionPoints(userId, tierLower, subscriptionId);
+
+      res.json({ 
+        success: true,
+        message: "Subscription synced successfully!",
+        tier: tierLower
+      });
+    } catch (error: any) {
+      console.error("Error syncing PayPal subscription:", error);
+      res.status(500).json({ 
+        message: error.message || "Failed to sync subscription" 
+      });
     }
   });
 

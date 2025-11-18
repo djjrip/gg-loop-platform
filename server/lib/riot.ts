@@ -75,13 +75,41 @@ const VALORANT_REGIONS = {
 } as const;
 
 // Get routing region from platform region
-function getRoutingRegion(platform: string): string {
+export function getRoutingRegion(platform: string): string {
   for (const [routing, platforms] of Object.entries(ROUTING_REGIONS)) {
     if ((platforms as readonly string[]).includes(platform)) {
       return routing;
     }
   }
   return 'americas'; // default
+}
+
+// Get routing region from Valorant region
+export function getValorantRoutingRegion(valorantRegion: string): string {
+  if (!valorantRegion || typeof valorantRegion !== 'string') {
+    console.warn(`[Riot] Invalid Valorant region provided: ${valorantRegion}, defaulting to americas`);
+    return 'americas';
+  }
+  
+  const regionMap: Record<string, string> = {
+    na: 'americas',
+    br: 'americas',
+    latam: 'americas',
+    pbe: 'americas', // Public Beta Environment
+    eu: 'europe',
+    kr: 'asia',
+    ap: 'asia',
+  };
+  
+  const normalized = valorantRegion.toLowerCase().trim();
+  const routing = regionMap[normalized];
+  
+  if (!routing) {
+    console.warn(`[Riot] Unknown Valorant region: ${valorantRegion}, defaulting to americas`);
+    return 'americas';
+  }
+  
+  return routing;
 }
 
 export class RiotAPI {

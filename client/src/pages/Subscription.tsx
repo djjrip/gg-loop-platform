@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Trophy, Zap, Star, Flame, Gift, Sparkles, Coins } from "lucide-react";
+import { Check, X, Trophy, Zap, Star, Flame, Gift, Sparkles, Coins, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import type { Subscription } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -20,6 +20,8 @@ export default function SubscriptionPage() {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [referralCode, setReferralCode] = useState("");
+  const [paypalSubId, setPaypalSubId] = useState("");
+  const [showManualSync, setShowManualSync] = useState(false);
 
   const { data: subscription, isLoading: subLoading } = useQuery<Subscription | null>({
     queryKey: ["/api/subscription/status"],
@@ -111,6 +113,30 @@ export default function SubscriptionPage() {
       toast({
         title: "Unable to Redeem",
         description: error.message || "Failed to redeem trial",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const manualSyncMutation = useMutation({
+    mutationFn: async (subscriptionId: string) => {
+      const response = await apiRequest("POST", "/api/paypal/manual-sync", { subscriptionId });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Subscription Synced! 🎉",
+        description: `Your ${data.tier} subscription is now active!`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      setPaypalSubId("");
+      setShowManualSync(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync subscription. Check your PayPal Subscription ID.",
         variant: "destructive",
       });
     },
@@ -222,6 +248,61 @@ export default function SubscriptionPage() {
             </div>
           )}
         </div>
+
+        {/* Manual Sync for PayPal Subscription Issues */}
+        {isAuthenticated && !subscription?.tier && (
+          <div className="mb-8 max-w-2xl mx-auto">
+            <Card className="border-accent/30 bg-accent/5">
+              <CardHeader className="pb-3">
+                <button
+                  onClick={() => setShowManualSync(!showManualSync)}
+                  className="flex items-center justify-between w-full text-left hover-elevate p-2 -m-2 rounded-md"
+                  data-testid="button-toggle-manual-sync"
+                >
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-accent-foreground" />
+                    <CardTitle className="text-base">Subscription Not Showing?</CardTitle>
+                  </div>
+                  {showManualSync ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </button>
+              </CardHeader>
+              {showManualSync && (
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    If you completed payment but your subscription isn't showing, manually sync it using your PayPal Subscription ID.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="paypal-sub-id" className="text-sm">
+                      PayPal Subscription ID
+                    </Label>
+                    <Input
+                      id="paypal-sub-id"
+                      placeholder="I-XXXXXXXXXX"
+                      value={paypalSubId}
+                      onChange={(e) => setPaypalSubId(e.target.value)}
+                      data-testid="input-paypal-subscription-id"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Find this in your PayPal account under Subscriptions
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => paypalSubId && manualSyncMutation.mutate(paypalSubId)}
+                    disabled={!paypalSubId || manualSyncMutation.isPending}
+                    className="w-full"
+                    data-testid="button-sync-subscription"
+                  >
+                    {manualSyncMutation.isPending ? "Syncing..." : "Sync Subscription"}
+                  </Button>
+                </CardContent>
+              )}
+            </Card>
+          </div>
+        )}
 
         {isAuthenticated && subLoading ? (
           <div className="grid md:grid-cols-2 gap-8 mb-12">
