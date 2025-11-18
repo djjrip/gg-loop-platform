@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import Header from "@/components/Header";
+import { useLocation } from "wouter";
+import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,7 @@ import {
   MapPin,
   ExternalLink
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -55,15 +56,32 @@ interface Redemption {
 }
 
 export default function AdminFulfillment() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedRedemption, setSelectedRedemption] = useState<Redemption | null>(null);
   const [trackingNumber, setTrackingNumber] = useState("");
   const [notes, setNotes] = useState("");
   const [giftCardCode, setGiftCardCode] = useState("");
 
+  const isAdmin = user?.email?.includes("@ggloop.io");
+
+  // Client-side admin check - redirect non-admins and guests
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        // Redirect unauthenticated users to login
+        setLocation("/login");
+      } else if (!isAdmin) {
+        // Redirect authenticated non-admins to home
+        setLocation("/");
+      }
+    }
+  }, [user, isAdmin, authLoading, setLocation]);
+
   const { data: redemptions, isLoading } = useQuery<Redemption[]>({
     queryKey: ["/api/admin/redemptions"],
+    enabled: isAdmin, // Only fetch if admin
   });
 
   const fulfillMutation = useMutation({
@@ -95,12 +113,24 @@ export default function AdminFulfillment() {
     },
   });
 
-  if (!user?.email?.includes("@ggloop.io")) {
+  // Show loading while checking auth
+  if (authLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-4 py-24 text-center">
-          <h1 className="text-4xl font-bold mb-4">Access Denied</h1>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied only for authenticated non-admins (will redirect immediately)
+  if (!user || !isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
           <p className="text-muted-foreground">Admin access required</p>
         </div>
       </div>
@@ -138,8 +168,7 @@ export default function AdminFulfillment() {
   };
 
   return (
-    <>
-      <Header />
+    <AdminLayout>
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2" data-testid="text-admin-title">Manual Fulfillment Dashboard</h1>
@@ -150,36 +179,36 @@ export default function AdminFulfillment() {
 
         {/* Summary Cards */}
         <div className="grid gap-6 md:grid-cols-3 mb-8">
-          <Card>
+          <Card data-testid="card-pending-count">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold flex items-center gap-2">
+              <div className="text-3xl font-bold flex items-center gap-2" data-testid="text-pending-count">
                 <Clock className="h-6 w-6 text-yellow-500" />
                 {pendingRedemptions.length}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-testid="card-fulfilled-count">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Fulfilled</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold flex items-center gap-2">
+              <div className="text-3xl font-bold flex items-center gap-2" data-testid="text-fulfilled-count">
                 <CheckCircle className="h-6 w-6 text-green-500" />
                 {fulfilledRedemptions.length}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-testid="card-total-count">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold flex items-center gap-2">
+              <div className="text-3xl font-bold flex items-center gap-2" data-testid="text-total-count">
                 <Package className="h-6 w-6 text-primary" />
                 {redemptions?.length || 0}
               </div>
@@ -388,6 +417,6 @@ export default function AdminFulfillment() {
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </AdminLayout>
   );
 }
