@@ -7,14 +7,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Trophy, Zap, Star, Flame, Gift, Sparkles, Coins, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, X, Trophy, Zap, Star, Flame, Gift, Sparkles, Coins, AlertCircle, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import type { Subscription } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import PayPalSubscriptionButton from "@/components/PayPalSubscriptionButton";
+
+function getRemainingDays(endDate: string | Date): number {
+  const end = new Date(endDate);
+  const now = new Date();
+  const diffTime = end.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+}
 
 export default function SubscriptionPage() {
   const { user, isAuthenticated } = useAuth();
@@ -22,6 +30,16 @@ export default function SubscriptionPage() {
   const [referralCode, setReferralCode] = useState("");
   const [paypalSubId, setPaypalSubId] = useState("");
   const [showManualSync, setShowManualSync] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // Update countdown timers every hour to keep them accurate
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60 * 60 * 1000); // Update every hour
+
+    return () => clearInterval(interval);
+  }, []);
 
   const { data: subscription, isLoading: subLoading } = useQuery<Subscription | null>({
     queryKey: ["/api/subscription/status"],
@@ -159,11 +177,11 @@ export default function SubscriptionPage() {
         { text: "10 GG Coins per match win", included: true },
         { text: "50 GG Coins per 7-day login streak", included: true },
         { text: "100 coin monthly cap", included: true },
-        { text: "Unlock 7-day trial with 500 coins", included: true },
+        { text: "Unlock 7-day Basic tier trial with 500 coins", included: true },
         { text: "Track match wins & achievements", included: true },
         { text: "Leaderboard rankings", included: true },
-        { text: "Monthly point allocation", included: false },
-        { text: "Rewards catalog access", included: false },
+        { text: "Monthly point allocation (subscribe for this!)", included: false, highlight: true },
+        { text: "Rewards catalog access (subscribe for this!)", included: false, highlight: true },
       ],
     },
     {
@@ -171,15 +189,16 @@ export default function SubscriptionPage() {
       name: "Basic",
       price: 5,
       icon: Trophy,
-      description: "Monthly point allocation for membership rewards",
+      description: "Start redeeming gaming gear and rewards",
+      pointsHighlight: "3,000 monthly points",
       features: [
+        { text: "Access rewards catalog - redeem for gaming gear, peripherals & subscriptions", included: true, highlight: true },
         { text: "3,000 points deposited monthly", included: true },
         { text: "Automatic point allocation on billing cycle", included: true },
         { text: "Track match wins & achievements", included: true },
-        { text: "Access to rewards catalog", included: true },
         { text: "Leaderboard rankings", included: true },
         { text: "Achievement tracking", included: true },
-        { text: "1.5x or 2x point multiplier", included: false },
+        { text: "Bonus challenge eligibility", included: false },
         { text: "Priority support", included: false },
       ],
     },
@@ -188,15 +207,16 @@ export default function SubscriptionPage() {
       name: "Pro",
       price: 12,
       icon: Flame,
-      description: "Enhanced monthly point allocation",
+      description: "More points, more rewards every month",
       badge: "7-Day Free Trial",
       freeTrial: "7 days free",
+      pointsHighlight: "10,000 monthly points",
       features: [
         { text: "7-day free trial, then $12/month", included: true },
-        { text: "10,000 points deposited monthly", included: true },
+        { text: "Access rewards catalog - unlock better rewards faster", included: true, highlight: true },
+        { text: "10,000 points deposited monthly (3.3x Basic)", included: true },
         { text: "Automatic point allocation on billing cycle", included: true },
-        { text: "Bonus challenge eligibility", included: true },
-        { text: "Access to rewards catalog", included: true },
+        { text: "Bonus challenge eligibility for extra points", included: true },
         { text: "Leaderboard rankings", included: true },
         { text: "Achievement tracking", included: true },
         { text: "Priority support", included: true },
@@ -208,15 +228,16 @@ export default function SubscriptionPage() {
       name: "Elite",
       price: 25,
       icon: Star,
-      description: "Premium monthly point allocation",
+      description: "Maximum rewards - redeem premium gear monthly",
       badge: "3-Day Free Trial",
       freeTrial: "3 days free",
+      pointsHighlight: "25,000 monthly points",
       features: [
         { text: "3-day free trial, then $25/month", included: true },
-        { text: "25,000 points deposited monthly", included: true },
+        { text: "Access rewards catalog - redeem premium rewards every month", included: true, highlight: true },
+        { text: "25,000 points deposited monthly (8.3x Basic!)", included: true },
         { text: "Automatic point allocation on billing cycle", included: true },
-        { text: "Priority bonus challenge access", included: true },
-        { text: "Access to rewards catalog", included: true },
+        { text: "Priority bonus challenge access for extra points", included: true },
         { text: "Leaderboard rankings", included: true },
         { text: "Achievement tracking", included: true },
         { text: "Priority support", included: true },
@@ -351,26 +372,43 @@ export default function SubscriptionPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-3 gap-4 text-sm mb-4">
-                    <div>
-                      <p className="text-muted-foreground">
-                        {subscription.status === "canceling" ? "Ends On" : "Renews On"}
-                      </p>
-                      <p className="font-semibold" data-testid="text-period-end">
-                        {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
-                      </p>
+                  <div className="bg-background/50 rounded-lg p-4 mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-primary" />
+                        <p className="text-sm font-medium">Days Until {subscription.status === "canceling" ? "Expiration" : "Renewal"}</p>
+                      </div>
+                      <div className="text-3xl font-bold font-mono text-primary" data-testid="text-days-remaining">
+                        {getRemainingDays(subscription.currentPeriodEnd)}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">Days Remaining</p>
-                      <p className="font-semibold" data-testid="text-days-remaining">
-                        {Math.max(0, Math.ceil((new Date(subscription.currentPeriodEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} days
-                      </p>
+                    <div className="w-full bg-muted rounded-full h-2 mb-3">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all" 
+                        style={{ 
+                          width: `${Math.max(0, Math.min(100, (getRemainingDays(subscription.currentPeriodEnd) / 30) * 100))}%` 
+                        }}
+                      />
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">Monthly Allocation</p>
-                      <p className="font-semibold" data-testid="text-monthly-points">
-                        {subscription.tier === "elite" ? "25,000" : subscription.tier === "pro" ? "10,000" : "3,000"} points
-                      </p>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground mb-1">
+                          {subscription.status === "canceling" ? "Ends On" : "Renews On"}
+                        </p>
+                        <p className="font-semibold" data-testid="text-period-end">
+                          {new Date(subscription.currentPeriodEnd).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-1">Monthly Allocation</p>
+                        <p className="font-semibold" data-testid="text-monthly-points">
+                          {subscription.tier === "elite" ? "25,000" : subscription.tier === "pro" ? "10,000" : "3,000"} points
+                        </p>
+                      </div>
                     </div>
                   </div>
                   
@@ -536,15 +574,32 @@ export default function SubscriptionPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="bg-background/50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-primary" />
+                        <p className="text-sm font-medium">Days Remaining</p>
+                      </div>
+                      <div className="text-3xl font-bold font-mono text-primary" data-testid="text-trial-days-remaining">
+                        {getRemainingDays(userData.freeTrialEndsAt)}
+                      </div>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2 mb-3">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all" 
+                        style={{ 
+                          width: `${Math.max(0, Math.min(100, (getRemainingDays(userData.freeTrialEndsAt) / 7) * 100))}%` 
+                        }}
+                      />
+                    </div>
                     <p className="text-sm text-muted-foreground mb-1">Trial Ends On</p>
-                    <p className="text-xl font-bold" data-testid="text-trial-end-date">
+                    <p className="text-lg font-semibold mb-2" data-testid="text-trial-end-date">
                       {new Date(userData.freeTrialEndsAt).toLocaleDateString('en-US', { 
                         month: 'long', 
                         day: 'numeric', 
                         year: 'numeric' 
                       })}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-2">
+                    <p className="text-xs text-muted-foreground">
                       Subscribe before your trial ends to keep your points and continue earning rewards!
                     </p>
                   </div>
@@ -620,19 +675,28 @@ export default function SubscriptionPage() {
                     </CardHeader>
 
                     <CardContent className="flex-1">
+                      {!isFree && (tier as any).pointsHighlight && (
+                        <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Zap className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-semibold text-primary">Monthly Points</span>
+                          </div>
+                          <p className="text-2xl font-bold font-mono">{(tier as any).pointsHighlight}</p>
+                        </div>
+                      )}
                       <ul className="space-y-3">
-                        {tier.features.map((feature, idx) => (
-                          <li key={idx} className="flex items-start gap-2">
+                        {tier.features.map((feature: any, idx) => (
+                          <li key={idx} className={`flex items-start gap-2 ${feature.highlight && feature.included ? 'bg-primary/5 -mx-2 px-2 py-2 rounded-lg border border-primary/20' : ''} ${feature.highlight && !feature.included ? 'bg-muted/30 -mx-2 px-2 py-2 rounded-lg border border-muted' : ''}`}>
                             {feature.included ? (
-                              <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                              <Check className={`w-5 h-5 shrink-0 mt-0.5 ${feature.highlight ? 'text-primary' : 'text-primary'}`} />
                             ) : (
                               <X className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
                             )}
                             <span
                               className={
                                 feature.included
-                                  ? "text-foreground"
-                                  : "text-muted-foreground"
+                                  ? feature.highlight ? "text-foreground font-semibold" : "text-foreground"
+                                  : feature.highlight ? "text-muted-foreground font-medium" : "text-muted-foreground"
                               }
                               data-testid={`text-feature-${tier.id}-${idx}`}
                             >
@@ -712,15 +776,20 @@ export default function SubscriptionPage() {
                           Current Plan
                         </Button>
                       ) : isDowngrade ? (
-                        <Button
-                          className="w-full"
-                          variant="outline"
-                          disabled
-                          data-testid={`button-downgrade-${tier.id}`}
-                        >
-                          Cancel Current to Downgrade
-                        </Button>
-                      ) : (canUpgrade || !hasActiveSubscription) && paypalPlanIds[tier.id as keyof typeof paypalPlanIds] ? (
+                        <div className="w-full space-y-2">
+                          <Button
+                            className="w-full"
+                            variant="outline"
+                            disabled
+                            data-testid={`button-downgrade-disabled-${tier.id}`}
+                          >
+                            Downgrade Not Available
+                          </Button>
+                          <p className="text-xs text-muted-foreground text-center">
+                            Cancel your current subscription first to switch to this tier
+                          </p>
+                        </div>
+                      ) : !isDowngrade && paypalPlanIds[tier.id as keyof typeof paypalPlanIds] ? (
                         <div className="w-full">
                           <PayPalSubscriptionButton 
                             planId={paypalPlanIds[tier.id as keyof typeof paypalPlanIds]} 
