@@ -90,21 +90,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupTwitchAuth(app);
   
   // TikTok Site Verification (handle both verification file formats)
-  // Generic verification.txt endpoint - latest code
+  // Generic verification.txt endpoint - latest code for Replit URL
   app.get(['/verification.txt', '/verification.txt/'], (req, res) => {
     res.type('text/plain');
-    res.send('tiktok-developers-site-verification=RR8Re5jO4KnTlfxP5ykYLqgikwzFrLa0');
+    res.send('tiktok-developers-site-verification=xvAJ8oTA6BY7EgC2Aw9YayYgd2hyivRY');
   });
   
-  // Specific TikTok verification files with code in filename (all versions)
-  app.get('/tiktokJ4JXgssyod3YZXlNzMcrcQWCS0Ay0q0d.txt', (req, res) => {
+  // Specific TikTok verification file for Replit URL (workspace.JaysonQuindao.repl.co)
+  app.get('/tiktokxvAJ8oTA6BY7EgC2Aw9YayYgd2hyivRY.txt', (req, res) => {
     res.type('text/plain');
-    res.send('tiktok-developers-site-verification=J4JXgssyod3YZXlNzMcrcQWCS0Ay0q0d');
-  });
-  
-  app.get('/tiktokRR8Re5jO4KnTlfxP5ykYLqgikwzFrLa0.txt', (req, res) => {
-    res.type('text/plain');
-    res.send('tiktok-developers-site-verification=RR8Re5jO4KnTlfxP5ykYLqgikwzFrLa0');
+    res.send('tiktok-developers-site-verification=xvAJ8oTA6BY7EgC2Aw9YayYgd2hyivRY');
   });
   
   // HMAC signature validation middleware for gaming webhooks
