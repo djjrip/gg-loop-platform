@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import {
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import OnboardingModal from "@/components/OnboardingModal";
 
 // Static mock rewards for marketing presentation
 const MOCK_REWARDS = [
@@ -28,15 +30,33 @@ const MOCK_REWARDS = [
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const { data: subscription } = useQuery<any>({
     queryKey: ["/api/subscription/status"],
     enabled: isAuthenticated,
   });
 
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const hasSeenOnboarding = localStorage.getItem("ggloop_onboarding_completed");
+      if (!hasSeenOnboarding) {
+        const timer = setTimeout(() => setShowOnboarding(true), 800);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isAuthenticated, user]);
+
+  const handleOnboardingClose = () => {
+    setShowOnboarding(false);
+    localStorage.setItem("ggloop_onboarding_completed", "true");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      
+      <OnboardingModal isOpen={showOnboarding} onClose={handleOnboardingClose} />
       
       {/* Quick Stats Overview for Authenticated Users */}
       {isAuthenticated && user && (
