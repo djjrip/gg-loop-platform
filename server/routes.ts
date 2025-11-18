@@ -2083,68 +2083,6 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     }
   });
 
-  app.post('/api/create-checkout-session', getUserMiddleware, async (req: any, res) => {
-    try {
-      if (!stripe) {
-        return res.status(503).json({ message: "Stripe not configured. Please add STRIPE_SECRET_KEY." });
-      }
-
-      const user = req.dbUser;
-
-      const { tier = "basic" } = req.body;
-      
-      let priceId: string | undefined;
-      if (tier === "basic") {
-        priceId = process.env.STRIPE_BASIC_PRICE_ID;
-      } else if (tier === "pro") {
-        priceId = process.env.STRIPE_PRO_PRICE_ID;
-      } else if (tier === "elite") {
-        priceId = process.env.STRIPE_ELITE_PRICE_ID;
-      } else {
-        return res.status(400).json({ message: `Invalid tier: ${tier}` });
-      }
-
-      if (!priceId) {
-        return res.status(400).json({ message: `Price ID not configured for ${tier} tier` });
-      }
-
-      let customerId = user.stripeCustomerId;
-      if (!customerId) {
-        const customer = await stripe.customers.create({
-          email: user.email || undefined,
-          metadata: { userId: user.id }
-        });
-        customerId = customer.id;
-        await storage.updateUserStripeInfo(user.id, customerId);
-      }
-
-      const baseUrl = process.env.REPLIT_DOMAINS 
-        ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
-        : 'http://localhost:5000';
-
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        payment_method_types: ['card'],
-        line_items: [{
-          price: priceId,
-          quantity: 1,
-        }],
-        mode: 'subscription',
-        success_url: `${baseUrl}/subscription/success`,
-        cancel_url: `${baseUrl}/subscription/cancel`,
-        metadata: { userId: user.id, tier },
-        subscription_data: {
-          metadata: { userId: user.id, tier }
-        }
-      });
-
-      res.json({ sessionId: session.id, url: session.url });
-    } catch (error: any) {
-      console.error("Error creating checkout session:", error);
-      res.status(500).json({ message: error.message || "Failed to create checkout session" });
-    }
-  });
-
   app.get('/api/subscription/status', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
