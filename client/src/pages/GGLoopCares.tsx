@@ -32,15 +32,18 @@ interface CharityCampaign {
 }
 
 export default function GGLoopCares() {
-  const { data: charities = [], isLoading: charitiesLoading } = useQuery<Charity[]>({
+  const { data: charities = [], isLoading: charitiesLoading, isError: charitiesError } = useQuery<Charity[]>({
     queryKey: ["/api/charities"],
+    retry: false,
   });
 
-  const { data: campaigns = [], isLoading: campaignsLoading } = useQuery<CharityCampaign[]>({
+  const { data: campaigns = [], isLoading: campaignsLoading, isError: campaignsError } = useQuery<CharityCampaign[]>({
     queryKey: ["/api/charity-campaigns"],
+    retry: false,
   });
 
   const totalImpact = charities.reduce((sum, charity) => sum + charity.totalDonated, 0);
+  const isComingSoon = charitiesError || campaignsError;
 
   const categoryColors: Record<string, string> = {
     education: "bg-blue-500",
@@ -66,9 +69,15 @@ export default function GGLoopCares() {
             As a founder-led initiative, we carefully select and support nonprofits and charities 
             that align with our mission of empowering gamers and making a positive impact.
           </p>
+          {isComingSoon && (
+            <Badge variant="outline" className="mt-4 text-lg px-4 py-2" data-testid="badge-coming-soon">
+              Coming Soon - Beta Launch
+            </Badge>
+          )}
         </div>
 
         {/* Impact Stats */}
+        {!isComingSoon && (
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           <Card>
             <CardHeader>
@@ -109,9 +118,10 @@ export default function GGLoopCares() {
             </CardContent>
           </Card>
         </div>
+        )}
 
         {/* Active Campaigns */}
-        {campaigns.length > 0 && (
+        {!isComingSoon && campaigns.length > 0 && (
           <div className="mb-12">
             <h2 className="text-3xl font-bold mb-6">Active Campaigns</h2>
             <div className="grid md:grid-cols-2 gap-6">
@@ -159,6 +169,7 @@ export default function GGLoopCares() {
         )}
 
         {/* Partner Charities */}
+        {!isComingSoon && (
         <div>
           <h2 className="text-3xl font-bold mb-6">Our Partner Charities</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -218,8 +229,9 @@ export default function GGLoopCares() {
             ))}
           </div>
         </div>
+        )}
 
-        {charities.length === 0 && !charitiesLoading && (
+        {charities.length === 0 && !charitiesLoading && isComingSoon && (
           <div className="text-center py-12">
             <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Coming Soon</h3>

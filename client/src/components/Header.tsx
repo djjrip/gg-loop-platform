@@ -99,7 +99,7 @@ export default function Header() {
               Referrals
             </Link>
             <Link 
-              href="/affiliate" 
+              href="/affiliate-program" 
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
               data-testid="link-affiliate"
             >
@@ -315,7 +315,7 @@ export default function Header() {
               Referrals
             </Link>
             <Link 
-              href="/affiliate" 
+              href="/affiliate-program" 
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
               data-testid="link-affiliate-mobile"
             >
