@@ -34,14 +34,14 @@ export default function Footer() {
               </li>
               <li>
                 <a 
-                  href="https://tiktok.com/@gg.loop" 
+                  href="https://tiktok.me/jaysonbq" 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 hover-elevate px-2 py-1 rounded-md"
-                  data-testid="link-tiktok"
+                  data-testid="link-tiktok-founder"
                 >
                   <SiTiktok className="h-4 w-4" />
-                  Follow on TikTok
+                  Founder on TikTok
                 </a>
               </li>
             </ul>
