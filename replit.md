@@ -3,6 +3,14 @@
 ## ⚠️ URGENT REMINDERS
 - **RIOT_API_KEY expires Friday, Nov 14th 2025 @ 11:37 AM PT** - Renew at https://developer.riotgames.com/ before expiration!
 
+## Recent Changes (November 2025)
+- **Beta Launch Preparation Complete**: Platform ready for soft launch with 10-20 beta testers
+- **Manual Fulfillment System**: Admin dashboard for managing reward redemptions (digital gift cards and physical shipments)
+- **New Member Onboarding**: Interactive welcome modal with guided tour explaining platform features, tiers, and rewards
+- **Beta Tester Invitation**: Production-ready invitation template with realistic 48-72 hour fulfillment SLA
+- **Transaction Safety**: Implemented atomic rollback for failed redemptions with proper refund mechanism
+- **Admin Security**: Multi-layer access control with client-side redirects and server-side adminMiddleware
+
 ## Overview
 GG Loop is a tiered membership program for gamers that provides fixed monthly point allocations redeemable for gaming gear, peripherals, and subscriptions. The platform integrates match stats tracking, leaderboards, achievement displays, and sponsored challenge bonuses to boost community engagement and recognize player dedication. The core vision is to transform gaming passion into tangible membership perks, providing a unique loyalty program for dedicated gamers and aspiring content creators.
 
@@ -28,6 +36,9 @@ The backend is powered by Express.js with TypeScript. Data persistence is handle
 *   **Points Engine**: Manages point allocation and redemption with transactional integrity. All points expire after 12 months.
 *   **Rewards Catalog**: Offers rewards priced in points with automatic inventory management and transactional redemption.
 *   **My Rewards System**: A dedicated section for users to view claimed rewards, fulfillment status, and tracking information.
+*   **Manual Reward Fulfillment**: Admin dashboard for processing redemptions with 48-72 hour turnaround. Supports digital gift card codes and physical shipment tracking.
+*   **New Member Onboarding**: Interactive welcome modal with guided tour for first-time users explaining tiers, rewards, and platform features.
+*   **Admin Fulfillment Dashboard**: Secure admin-only interface at /admin/fulfillment for managing pending and fulfilled redemptions with comprehensive test coverage.
 *   **Gaming Webhook Integration**: Securely integrates with gaming platforms using HMAC-SHA256 validation for automatic point awards based on match wins, achievements, and tournament placements.
 *   **Trophy Case (Public Profiles)**: A premium collectible display system showcasing TrophyCards with rarity tiers and achievement dates.
 *   **Manual Match Reporting**: Allows users to report match results for stats tracking accuracy.
@@ -36,6 +47,7 @@ The backend is powered by Express.js with TypeScript. Data persistence is handle
 *   **Recent Activity**: A homepage activity feed displaying the last 5 match wins across all users.
 *   **Sponsored Challenges**: Enables users to unlock capped bonus points beyond monthly tier allocations through brand-sponsored challenges.
 *   **Twitch Account Linking**: Secure OAuth integration allowing users to link Twitch accounts.
+*   **Affiliate Outreach Program**: Dedicated portal for applying to become a GG Loop affiliate with automatic email notifications.
 
 ### System Design Choices
 The database schema includes core tables for users, games, subscriptions, point transactions, rewards, achievements, leaderboards, and match submissions. Key design principles include transactional safety for all point operations, idempotency for webhook events, comprehensive error handling, and real-time cache invalidation.
