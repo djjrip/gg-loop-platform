@@ -1281,7 +1281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // STEP 2: Create pending redemption record AND deduct points atomically (with idempotency)
-      let pendingRewardId: string;
+      let pendingRewardId: string = '';
       let isRetry = false;
 
       // Check for RECENT pending record (last 5 minutes) for idempotency
@@ -1347,10 +1347,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // STEP 3: Place Tango order (redemption intent already recorded)
-      let order;
+      let order: any = null;
       let finalStatus: 'fulfilled' | 'failed';
       let trackingNumber: string | null = null;
-      let fulfillmentData: any;
+      let fulfillmentData: any = null;
       let fulfilledAt: Date | null = null;
       
       try {
@@ -3349,7 +3349,6 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       );
 
       res.json({
-        success: true,
         ...result,
         message: amount > 0 
           ? `Successfully added ${amount} points` 
@@ -3855,7 +3854,11 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
       const result = await db
         .insert(charityCampaigns)
-        .values(validated)
+        .values({
+          ...validated,
+          startDate: validated.startDate ? new Date(validated.startDate) : null,
+          endDate: validated.endDate ? new Date(validated.endDate) : null,
+        })
         .returning();
 
       res.json(result[0]);
@@ -3887,7 +3890,12 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
       await db
         .update(charityCampaigns)
-        .set({ ...validated, updatedAt: new Date() })
+        .set({ 
+          ...validated, 
+          startDate: validated.startDate ? new Date(validated.startDate) : undefined,
+          endDate: validated.endDate ? new Date(validated.endDate) : undefined,
+          updatedAt: new Date() 
+        })
         .where(eq(charityCampaigns.id, id));
 
       res.json({ success: true });
