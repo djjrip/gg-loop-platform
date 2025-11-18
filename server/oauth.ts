@@ -30,15 +30,17 @@ export function getSession() {
 }
 
 interface AuthUser {
-  provider: 'google' | 'twitch' | 'discord' | 'riot';
+  provider: 'google' | 'twitch' | 'discord' | 'riot' | 'tiktok';
   providerId: string;
-  oidcSub: string; // Format: "google:12345", "twitch:67890", "discord:abc123", or "riot:puuid123"
+  oidcSub: string; // Format: "google:12345", "twitch:67890", "discord:abc123", "riot:puuid123", or "tiktok:openid123"
   email: string;
   displayName: string;
   profileImage?: string;
   riotPuuid?: string; // For Riot OAuth - the unique player ID
   riotGameName?: string; // For Riot OAuth - the in-game name
   riotTagLine?: string; // For Riot OAuth - the tag line (#NA1, etc)
+  tiktokOpenId?: string; // For TikTok OAuth - the unique open ID
+  tiktokUnionId?: string; // For TikTok OAuth - union ID across apps
 }
 
 export async function setupAuth(app: Express) {
