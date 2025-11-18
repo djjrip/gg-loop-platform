@@ -92,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // TikTok Site Verification (handle both with and without trailing slash)
   app.get(['/verification.txt', '/verification.txt/'], (req, res) => {
     res.type('text/plain');
-    res.send('tiktok-developers-site-verification=UQeieLaHhEcZXxa5cUZtG3Ws1ROaQfI7');
+    res.send('tiktok-developers-site-verification=v7XEB5uCySUXflulG0mH1PovftkHjd0J');
   });
   
   // HMAC signature validation middleware for gaming webhooks
