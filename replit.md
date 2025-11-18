@@ -28,7 +28,7 @@ The platform features a complete UI redesign inspired by NBA Top Shot, incorpora
 The backend is powered by Express.js with TypeScript. Data persistence is handled by PostgreSQL (Neon) using Drizzle ORM. Authentication uses multi-provider OAuth with Discord, Twitch, and Google via Passport.js, alongside Replit Auth (OIDC). Stripe is integrated for subscription payment processing. TanStack Query v5 is utilized for state management. Automatic match synchronization via Riot API runs every 10 minutes for League of Legends and Valorant.
 
 ### Feature Specifications
-*   **Multi-Provider Authentication**: Users can log in via Discord, Twitch, or Google OAuth.
+*   **Multi-Provider Authentication**: Users can log in via Discord, Twitch, Google, or TikTok OAuth.
 *   **Automatic Riot Match Sync**: Background service runs every 10 minutes to sync League of Legends and Valorant matches for stats tracking.
 *   **Performance Dashboard**: Dedicated stats page displays user's match history, win/loss records, win rate, and total points earned from synced Riot matches.
 *   **Riot Account Linking**: Users can link League of Legends and/or Valorant accounts in Settings page.
@@ -55,10 +55,86 @@ The database schema includes core tables for users, games, subscriptions, point 
 ## External Dependencies
 *   **Database**: PostgreSQL (Neon)
 *   **ORM**: Drizzle ORM
-*   **Authentication**: Passport.js (Discord, Twitch, Google OAuth), Replit Auth (OIDC)
+*   **Authentication**: Passport.js (Discord, Twitch, Google, TikTok OAuth), Replit Auth (OIDC)
 *   **Payments**: Stripe
 *   **Reward Fulfillment**: Tango Card API (planned integration for gift card delivery)
 *   **Gaming APIs**: Riot Games API (League of Legends, Valorant)
 *   **Frontend Libraries**: React, Vite, Tailwind CSS, shadcn/ui, TanStack Query v5
 *   **Backend Framework**: Express.js
 *   **Validation**: Zod
+
+## Setup Instructions
+
+### TikTok Login Kit OAuth Setup
+
+**Purpose**: Enable users to log in to GG Loop using their TikTok accounts.
+
+**⚠️ Important**: TikTok Login Kit requires app approval before it works in production. The entire process takes 5-7 business days.
+
+#### Step 1: Create TikTok Developer Account
+1. Visit https://developers.tiktok.com/
+2. Sign in with your TikTok account
+3. Complete developer registration
+
+#### Step 2: Create a New App
+1. Go to **Manage Apps** in the developer portal
+2. Click **Create App**
+3. Fill in required details:
+   - **App Name**: GG Loop
+   - **App Category**: Gaming & Entertainment
+   - **App Description**: Gaming membership rewards platform with tiered subscriptions, points redemption, and match stats tracking
+   - **App Icon**: Upload GG Loop logo (512x512px minimum)
+
+#### Step 3: Add Login Kit Product
+1. In your app dashboard, click **Add Products**
+2. Select **Login Kit**
+3. Configure Login Kit settings:
+   - **Redirect URIs**: Add these URLs (one per line):
+     - Production: `https://ggloop.io/api/auth/tiktok/callback`
+     - Development: `https://YOUR_REPL_URL.replit.dev/api/auth/tiktok/callback`
+   - **Terms of Service URL**: `https://ggloop.io/terms`
+   - **Privacy Policy URL**: `https://ggloop.io/privacy`
+
+#### Step 4: Get API Credentials
+1. Navigate to **Manage Apps** → Select your app
+2. Copy your credentials:
+   - **Client Key** (this is your CLIENT_ID)
+   - **Client Secret** (keep this secure!)
+
+#### Step 5: Add Environment Secrets in Replit
+1. In Replit, go to **Tools** → **Secrets**
+2. Add these secrets:
+   ```
+   TIKTOK_CLIENT_KEY=your_client_key_here
+   TIKTOK_CLIENT_SECRET=your_client_secret_here
+   ```
+
+#### Step 6: Submit for Review
+1. In TikTok Developer Portal, click **Submit for Review**
+2. Wait 1-3 business days for approval
+3. You'll receive an email when approved
+
+**⚠️ Before Approval**: TikTok OAuth will redirect to an error page. After approval, it will work seamlessly.
+
+**Scopes Requested**: `user.info.basic` (display name, avatar, open_id)
+
+**Note**: TikTok Login Kit does NOT provide user email addresses. We generate virtual emails in the format: `{open_id}@tiktok.ggloop.io`
+
+---
+
+### TikTok Integration Opportunities
+
+**Current Implementation**: TikTok Login Kit (OAuth authentication)
+
+**Future Opportunities**:
+1. **TikTok Gaming Partnership Program**: Apply at https://cp-game.tiktok.com/ for official collaborations
+2. **BytePlus Creator Rewards**: Explore partnership with BytePlus (TikTok's tech division) for creator reward systems
+3. **Share Kit**: Enable members to share GG Loop rewards/achievements to TikTok (future enhancement)
+4. **Content Posting API**: Auto-post weekly leaderboards to founder's TikTok (@jaysonbq) (future enhancement)
+
+**⚠️ TikTok Live API Limitation**: TikTok does NOT offer an official public API for:
+- Live stream events (gifts, comments, follows)
+- Custom point/reward systems for viewers
+- Automated point earning based on live engagement
+
+**Unofficial libraries exist** (tiktok-live-connector) but violate TikTok ToS and are not production-ready. For scalable point earning through live streaming, consider **Twitch API** (already integrated) or **YouTube Live API** as alternatives.

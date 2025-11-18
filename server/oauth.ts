@@ -215,12 +215,22 @@ export async function setupAuth(app: Express) {
           tiktokUnionId: tiktokUser.union_id,
         };
 
+        // Upsert user with basic info
         await storage.upsertUser({
           oidcSub,
           email: authUser.email,
           firstName: tiktokUser.display_name || 'TikTok',
           lastName: 'User',
           profileImageUrl: authUser.profileImage,
+        });
+
+        // Connect TikTok account with tokens and TikTok-specific fields
+        await storage.connectTiktokAccount(oidcSub, {
+          openId: tiktokUser.open_id,
+          unionId: tiktokUser.union_id,
+          username: tiktokUser.display_name || 'TikTok User',
+          accessToken,
+          refreshToken,
         });
 
         done(null, authUser);
