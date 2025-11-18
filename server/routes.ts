@@ -90,16 +90,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupTwitchAuth(app);
   
   // TikTok Site Verification (handle both verification file formats)
-  // Generic verification.txt endpoint
+  // Generic verification.txt endpoint - latest code
   app.get(['/verification.txt', '/verification.txt/'], (req, res) => {
+    res.type('text/plain');
+    res.send('tiktok-developers-site-verification=RR8Re5jO4KnTlfxP5ykYLqgikwzFrLa0');
+  });
+  
+  // Specific TikTok verification files with code in filename (all versions)
+  app.get('/tiktokJ4JXgssyod3YZXlNzMcrcQWCS0Ay0q0d.txt', (req, res) => {
     res.type('text/plain');
     res.send('tiktok-developers-site-verification=J4JXgssyod3YZXlNzMcrcQWCS0Ay0q0d');
   });
   
-  // Specific TikTok verification file with code in filename
-  app.get('/tiktokJ4JXgssyod3YZXlNzMcrcQWCS0Ay0q0d.txt', (req, res) => {
+  app.get('/tiktokRR8Re5jO4KnTlfxP5ykYLqgikwzFrLa0.txt', (req, res) => {
     res.type('text/plain');
-    res.send('tiktok-developers-site-verification=J4JXgssyod3YZXlNzMcrcQWCS0Ay0q0d');
+    res.send('tiktok-developers-site-verification=RR8Re5jO4KnTlfxP5ykYLqgikwzFrLa0');
   });
   
   // HMAC signature validation middleware for gaming webhooks
