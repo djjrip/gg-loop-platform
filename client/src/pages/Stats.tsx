@@ -4,7 +4,8 @@ import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, TrendingUp, Gift, Zap, Link as LinkIcon, ArrowRight } from "lucide-react";
+import { Trophy, TrendingUp, Gift, Zap, Link as LinkIcon, ArrowRight, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
 import type { Reward } from "@shared/schema";
 import OnlineUsersCounter from "@/components/OnlineUsersCounter";
@@ -105,6 +106,17 @@ export default function Stats() {
             </div>
           </div>
         </div>
+
+        {/* Optional Game Linking Banner */}
+        {!hasLinkedAccounts && (
+          <Alert className="mb-6 border-primary/20 bg-primary/5" data-testid="alert-game-linking-optional">
+            <Info className="h-5 w-5 text-primary" />
+            <AlertDescription className="ml-2">
+              <span className="font-semibold">GG Loop is for all gamers!</span> Your monthly subscription gives you points to redeem rewards. 
+              Linking game accounts is <span className="font-semibold">completely optional</span> - it just enables automatic match tracking and bonus point opportunities.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Points Balance - Large Display */}
         <Card className="mb-8 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20" data-testid="card-points-balance">
