@@ -12,112 +12,112 @@ export default function Privacy() {
             <span className="w-1 h-8 bg-primary shadow-[0_0_10px_rgba(255,140,66,0.5)]" />
             Privacy Policy
           </h1>
-          <p className="text-muted-foreground mt-2 ml-4">Last updated: November 10, 2024</p>
+          <p className="text-muted-foreground mt-2 ml-4">Last Updated: November 18, 2025</p>
         </div>
 
         <Card className="p-8 space-y-6 border-primary/20">
           <section>
-            <h2 className="text-2xl font-bold font-heading mb-4">1. Information We Collect</h2>
-            <p className="text-muted-foreground mb-3">We collect the following types of information:</p>
-            <ul className="space-y-2 text-muted-foreground list-disc list-inside">
-              <li><strong>Account Information:</strong> Name, email address, profile picture</li>
-              <li><strong>Gaming Data:</strong> Connected gaming accounts, match history, achievements</li>
-              <li><strong>Payment Information:</strong> Processed securely through Stripe (we do not store credit card details)</li>
-              <li><strong>Usage Data:</strong> Pages visited, features used, time spent on platform</li>
-              <li><strong>Device Information:</strong> Browser type, IP address, operating system</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold font-heading mb-4">2. How We Use Your Information</h2>
-            <ul className="space-y-2 text-muted-foreground list-disc list-inside">
-              <li>Process subscriptions and reward redemptions</li>
-              <li>Track gameplay achievements and award points</li>
-              <li>Send service updates and reward fulfillment emails</li>
-              <li>Improve platform features and user experience</li>
-              <li>Prevent fraud and ensure platform security</li>
-              <li>Comply with legal obligations</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold font-heading mb-4">3. Information Sharing</h2>
-            <p className="text-muted-foreground mb-3">We do not sell your personal information. We may share data with:</p>
-            <ul className="space-y-2 text-muted-foreground list-disc list-inside">
-              <li><strong>Payment Processors:</strong> Stripe for subscription billing</li>
-              <li><strong>Gaming Platforms:</strong> To verify achievements and match history</li>
-              <li><strong>Service Providers:</strong> Email delivery, analytics, hosting</li>
-              <li><strong>Legal Requirements:</strong> When required by law or to protect our rights</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold font-heading mb-4">4. Data Security</h2>
             <p className="text-muted-foreground">
-              We implement industry-standard security measures to protect your data, including encryption, secure servers, and regular security audits. However, no method of transmission over the Internet is 100% secure.
+              GG LOOP ("we," "us," "our") operates the gaming rewards platform available at ggloop.io ("Platform"). This Privacy Policy explains how we collect, use, and protect information when you use the Platform. If you do not agree, please do not use GG LOOP.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold font-heading mb-4">5. Your Rights</h2>
+            <h2 className="text-2xl font-bold font-heading mb-4">1. Information We Collect</h2>
             <ul className="space-y-2 text-muted-foreground list-disc list-inside">
-              <li><strong>Access:</strong> Request a copy of your personal data</li>
-              <li><strong>Correction:</strong> Update incorrect or incomplete information</li>
-              <li><strong>Deletion:</strong> Request deletion of your account and data</li>
-              <li><strong>Export:</strong> Download your data in a portable format</li>
-              <li><strong>Opt-out:</strong> Unsubscribe from marketing emails</li>
+              <li><strong>Account information:</strong> email address, username, and basic profile details you provide.</li>
+              <li><strong>Game-related information:</strong> in-game IDs, match data, rank or stats obtained via third-party game APIs (for example, Riot Games APIs).</li>
+              <li><strong>Usage data:</strong> pages visited, actions taken on the Platform, device information, IP address, and general location (city/region level).</li>
+              <li><strong>Payment information:</strong> handled by our third-party payment processors; we do not store full card numbers.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold font-heading mb-4">6. Cookies and Tracking</h2>
-            <p className="text-muted-foreground mb-3">We use cookies and similar technologies to:</p>
+            <h2 className="text-2xl font-bold font-heading mb-4">2. How We Use Information</h2>
+            <p className="text-muted-foreground mb-3">We use your information to:</p>
             <ul className="space-y-2 text-muted-foreground list-disc list-inside">
-              <li>Keep you logged in</li>
-              <li>Remember your preferences</li>
-              <li>Analyze platform usage</li>
-              <li>Improve user experience</li>
+              <li>Create and manage your GG LOOP account and profile.</li>
+              <li>Verify your in-game activity and award points or rewards.</li>
+              <li>Operate, maintain, and improve the Platform.</li>
+              <li>Prevent fraud, abuse, match manipulation, or security issues.</li>
+              <li>Communicate with you about your account, updates, and promotions (where allowed).</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold font-heading mb-4">3. Third-Party Services</h2>
+            <p className="text-muted-foreground mb-3">We may integrate with:</p>
+            <ul className="space-y-2 text-muted-foreground list-disc list-inside">
+              <li>Game APIs (e.g., Riot Games) to fetch match and account data.</li>
+              <li>Social platforms (e.g., TikTok, Discord) for login or sharing features.</li>
+              <li>Payment providers for processing subscription fees or purchases.</li>
             </ul>
             <p className="text-muted-foreground mt-3">
-              You can control cookies through your browser settings, but this may limit platform functionality.
+              These third parties have their own privacy policies, and your use of their services is governed by those policies.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold font-heading mb-4">7. Children's Privacy</h2>
-            <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
-              <p className="text-sm font-semibold mb-2">AGE RESTRICTION</p>
-              <p className="text-sm text-muted-foreground">
-                GG Loop is intended for users 18 years and older. We do not knowingly collect information from anyone under 18. If we discover that a user under 18 has provided personal information, we will immediately delete that data.
-              </p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold font-heading mb-4">8. Data Retention</h2>
-            <p className="text-muted-foreground">
-              We retain your information for as long as your account is active or as needed to provide services. After account deletion, we may retain certain data for legal compliance, fraud prevention, and dispute resolution.
+            <h2 className="text-2xl font-bold font-heading mb-4">4. Cookies and Similar Technologies</h2>
+            <p className="text-muted-foreground mb-3">
+              We may use cookies or similar technologies to remember your preferences, keep you logged in, and understand how users interact with the Platform. You can usually manage cookies through your browser settings, but disabling them may impact some features.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold font-heading mb-4">9. International Users</h2>
-            <p className="text-muted-foreground">
-              Your information may be transferred to and processed in the United States or other countries where our service providers operate. By using GG Loop, you consent to this transfer.
+            <h2 className="text-2xl font-bold font-heading mb-4">5. Data Sharing</h2>
+            <p className="text-muted-foreground mb-3">We may share information with:</p>
+            <ul className="space-y-2 text-muted-foreground list-disc list-inside">
+              <li>Service providers who help us host, operate, analyze, or support the Platform.</li>
+              <li>Partners, sponsors, or reward providers when needed to deliver rewards.</li>
+              <li>Authorities or third parties when required by law or to protect our rights, users, or the public.</li>
+            </ul>
+            <p className="text-muted-foreground mt-3">
+              We do not sell your personal information.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold font-heading mb-4">10. Changes to Privacy Policy</h2>
+            <h2 className="text-2xl font-bold font-heading mb-4">6. Data Retention</h2>
             <p className="text-muted-foreground">
-              We may update this Privacy Policy periodically. We will notify you of material changes via email and update the "Last updated" date above. Continued use after changes indicates acceptance.
+              We keep your information for as long as needed to operate the Platform, comply with legal obligations, resolve disputes, and enforce our agreements.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold font-heading mb-4">7. Your Choices</h2>
+            <ul className="space-y-2 text-muted-foreground list-disc list-inside">
+              <li>You can update or correct certain account details in your profile settings.</li>
+              <li>You may request deletion of your account by contacting us at jaysonquindao@ggloop.io.</li>
+              <li>You may opt out of certain marketing communications by following the instructions in those messages.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold font-heading mb-4">8. Security</h2>
+            <p className="text-muted-foreground">
+              We use reasonable technical and organizational measures to protect your information. However, no system is completely secure, and we cannot guarantee absolute security.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold font-heading mb-4">9. Children's Privacy</h2>
+            <p className="text-muted-foreground">
+              GG LOOP is not intended for children under 13 (or the minimum age of digital consent in your region). If we learn that we have collected personal information from a child without appropriate consent, we will take steps to delete it.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold font-heading mb-4">10. Changes to This Policy</h2>
+            <p className="text-muted-foreground">
+              We may update this Privacy Policy from time to time. We will post the updated version on the Platform and update the "Last Updated" date.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-bold font-heading mb-4">11. Contact Us</h2>
             <p className="text-muted-foreground">
-              For privacy-related questions or to exercise your rights, contact us at: privacy@ggloop.io
+              If you have questions about this Privacy Policy, contact us at <a href="mailto:jaysonquindao@ggloop.io" className="text-primary hover:underline">jaysonquindao@ggloop.io</a> and include "Privacy" in the subject line.
             </p>
           </section>
         </Card>

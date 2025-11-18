@@ -89,6 +89,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   setupTwitchAuth(app);
   
+  // TikTok Site Verification
+  app.get('/verification.txt', (req, res) => {
+    res.type('text/plain');
+    res.send('tiktok-developers-site-verification=jdtgoWGZ5fGpCTuDSBWlYEtoHivH7yo6');
+  });
+  
   // HMAC signature validation middleware for gaming webhooks
   const webhookAuth = createWebhookSignatureMiddleware(storage);
 

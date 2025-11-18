@@ -1,0 +1,135 @@
+You are helping me build my production app GG LOOP on Replit.
+I need you to add a Terms of Service page and wire it into the existing site without breaking anything.
+
+Goals
+
+Detect what stack this project is using (plain HTML, Express, React, etc.) and follow the existing structure and styling.
+
+Create a new page/route that is publicly accessible at:
+https://<this-project-domain>/terms
+
+If this is an Express app, create a /terms route and a corresponding view/template.
+
+If this is a React/SPA, create a Terms page/component and a route for /terms.
+
+If this is static HTML, add a terms.html file and make sure it’s served correctly.
+
+Use the same global layout/header/footer as the rest of the site so it looks native to GG LOOP.
+
+On this page, render the following GG LOOP Terms of Service content, formatted cleanly with headings, paragraphs, and spacing that’s easy to read on desktop and mobile.
+
+Add a “Terms of Service” link in the site footer that points to /terms.
+
+Do not remove or break any existing routes, components, or styles.
+
+Here is the full Terms of Service content. Please insert and format this nicely on the /terms page:
+
+GG LOOP – TERMS OF SERVICE
+Last Updated: [Month] [Day], 2025
+
+Welcome to GG LOOP (“GG LOOP,” “we,” “us,” or “our”). These Terms of Service (“Terms”) govern your access to and use of our website, services, and features available at ggloop.io (the “Platform”).
+
+By accessing or using the Platform, you agree to be bound by these Terms. If you do not agree, do not use GG LOOP.
+
+Eligibility
+
+You must be at least 13 years old (or the minimum age of digital consent in your country) to use GG LOOP.
+
+If you are under the age of majority in your jurisdiction, you may only use the Platform with permission from a parent or legal guardian.
+
+You are responsible for ensuring that using GG LOOP and participating in any rewards programs is lawful in your region.
+
+Description of the Service
+GG LOOP is a gaming rewards platform that allows players of supported games (such as League of Legends and Valorant) to earn points and rewards based on verified in-game activity, such as match wins, participation in events, and other actions.
+
+Key features may include:
+– Account creation and player profiles
+– Verification of in-game accounts using third-party APIs
+– Points, tiers, or subscription-based access
+– Rewards such as digital gift cards, gaming gear, or sponsor perks
+– Community features, leaderboards, or challenges
+
+GG LOOP is not a gambling platform and does not offer wagering, betting, or games of chance.
+We may modify, add, or remove features at any time.
+
+Accounts and Security
+
+To use certain features, you may need to create an account on the Platform. You agree to provide accurate, current, and complete information.
+
+You are responsible for maintaining the confidentiality of your login credentials and for all activity under your account.
+
+You agree to notify us immediately at [support email] if you suspect any unauthorized use of your account.
+
+We reserve the right to suspend or terminate accounts that violate these Terms or appear to be fraudulent or abusive.
+
+Subscriptions, Payments, and Billing
+
+GG LOOP may offer free and paid tiers, including subscription plans with monthly or recurring fees.
+
+By subscribing to a paid plan, you authorize us and our payment processors to charge the applicable fees to your selected payment method.
+
+All fees are displayed before purchase and, unless otherwise stated, are non-refundable.
+
+You may cancel your subscription at any time, but cancellation will typically apply at the end of the current billing period.
+
+We may change subscription prices or plans. Any changes will be communicated in advance and will only apply to future billing cycles.
+
+Points, Rewards, and Limitations
+
+Points are a virtual reward with no cash value outside of the Platform. They cannot be sold, transferred (except as explicitly allowed by us), or redeemed for cash.
+
+Earning points may depend on: verified match results, compliance with game rules and Platform rules, subscription tier, or event participation.
+
+We may impose caps or limits on points or rewards per user.
+
+We reserve the right to review and reverse points or rewards if we detect fraud, abuse, account sharing, match manipulation, or other suspicious behavior.
+
+Rewards are provided “as available” and may be subject to third-party terms (e.g., gift card issuers, shipping providers, sponsors).
+
+Use of Third-Party Services and Game APIs
+
+GG LOOP may integrate with third-party services (e.g., Riot Games APIs, TikTok, Discord, payment providers).
+
+Your use of these third-party services is subject to their own terms and policies.
+
+We are not endorsed by, directly affiliated with, or officially sponsored by Riot Games, TikTok, or any other third party unless explicitly stated.
+
+Game account verification and match data accuracy depend on these third-party services. We are not responsible for outages, inaccuracies, or changes in their systems.
+
+Acceptable Use and Community Rules
+You agree not to:
+– Use GG LOOP for any unlawful, fraudulent, or abusive purpose.
+– Manipulate match results, use bots, exploit bugs, or attempt to earn rewards dishonestly.
+– Harass, threaten, or abuse other users, or share hateful, discriminatory, or explicit content.
+– Reverse engineer, interfere with, or disrupt the Platform or its infrastructure.
+– Use multiple accounts or false identities to circumvent limits or bans.
+We may suspend or terminate accounts or remove rewards for violations.
+
+Intellectual Property
+Platform content (logos, branding, designs, software, etc.) is owned by GG LOOP or its licensors. You get a limited, non-exclusive, non-transferable license to use the Platform for personal, non-commercial purposes. You may not copy, modify, distribute, or create derivative works without our permission.
+
+User Content
+You retain ownership of content you submit (e.g., usernames, clips, comments). You grant GG LOOP a non-exclusive, worldwide, royalty-free license to use, display, and reproduce that content to operate and promote the Platform. You represent that your content does not infringe others’ rights.
+
+Disclaimer of Warranties
+The Platform is provided “as is” and “as available.” We do not guarantee uninterrupted or error-free operation, or the accuracy of match data or reward availability. Your use is at your own risk.
+
+Limitation of Liability
+To the fullest extent allowed by law, GG LOOP is not liable for indirect, incidental, special, consequential, or punitive damages, or for loss of profits, data, or goodwill. Our total liability is limited to the amount you paid us in the last 3 months or USD $50, whichever is greater.
+
+Indemnification
+You agree to indemnify and hold harmless GG LOOP from claims, damages, or expenses arising from your use of the Platform, your violation of these Terms, or your violation of others’ rights.
+
+Termination
+We may suspend or terminate your access at any time, especially for violations or fraud. Upon termination, your right to use the Platform ends and unused points or rewards may be forfeited, subject to applicable law.
+
+Changes to the Terms
+We may update these Terms and will post the updated version with a new “Last Updated” date. Continued use means you accept the new Terms.
+
+Governing Law
+These Terms are governed by the laws of the State of Texas, USA. Disputes will be resolved in the state or federal courts located in Texas.
+
+Contact
+For questions about these Terms, display a contact email and link to ggloop.io.
+
+When you’re done, show me which file(s) you created or changed and how to preview the /terms page locally and on the deployed URL.
