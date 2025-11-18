@@ -327,12 +327,12 @@ export default function Header() {
               Shop
             </Link>
             <Link 
-              href="/tiktok-content" 
+              href="/creator-tools" 
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
-              data-testid="link-tiktok-content-mobile"
+              data-testid="link-creator-tools-mobile"
             >
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              TikTok Content
+              <Megaphone className="h-3.5 w-3.5 text-primary" />
+              Creator Tools
             </Link>
             <Link 
               href="/about" 
