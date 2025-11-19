@@ -957,50 +957,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Unlink League of Legends account
-  app.post('/api/riot/unlink/league', getUserMiddleware, async (req: any, res) => {
-    try {
-      const userId = req.dbUser.id;
-      
-      // Delete the riot account
-      await db.delete(riotAccounts).where(
-        and(
-          eq(riotAccounts.userId, userId),
-          eq(riotAccounts.game, 'league')
-        )
-      );
-
-      res.json({ success: true, message: "League account unlinked successfully" });
-    } catch (error: any) {
-      console.error("Error unlinking League account:", error);
-      res.status(400).json({ 
-        message: error.message || "Failed to unlink League account" 
-      });
-    }
-  });
-
-  // Unlink Valorant account
-  app.post('/api/riot/unlink/valorant', getUserMiddleware, async (req: any, res) => {
-    try {
-      const userId = req.dbUser.id;
-      
-      // Delete the riot account
-      await db.delete(riotAccounts).where(
-        and(
-          eq(riotAccounts.userId, userId),
-          eq(riotAccounts.game, 'valorant')
-        )
-      );
-
-      res.json({ success: true, message: "Valorant account unlinked successfully" });
-    } catch (error: any) {
-      console.error("Error unlinking Valorant account:", error);
-      res.status(400).json({ 
-        message: error.message || "Failed to unlink Valorant account" 
-      });
-    }
-  });
-
   // Get user's linked Riot account with sync stats
   app.get('/api/riot/account/:game', getUserMiddleware, async (req: any, res) => {
     try {
