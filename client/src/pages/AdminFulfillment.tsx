@@ -48,6 +48,8 @@ interface Redemption {
   user: {
     username: string | null;
     email: string | null;
+    isFounder: boolean;
+    founderNumber: number | null;
   };
   reward: {
     title: string;
@@ -239,6 +241,14 @@ export default function AdminFulfillment() {
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold">{redemption.reward.title}</h3>
                         {getStatusBadge(redemption.status)}
+                        {redemption.user.isFounder && (
+                          <Badge 
+                            variant="default" 
+                            className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-xs font-bold"
+                          >
+                            FOUNDER #{redemption.user.founderNumber}
+                          </Badge>
+                        )}
                         <Badge variant="outline" className="text-xs">
                           {redemption.reward.fulfillmentType}
                         </Badge>

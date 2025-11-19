@@ -7,7 +7,7 @@ import {
   challengeCompletions, insertChallengeSchema, insertChallengeCompletionSchema,
   insertGameSchema, insertUserGameSchema, insertLeaderboardEntrySchema, 
   insertAchievementSchema, insertRewardSchema, insertUserRewardSchema, userRewards,
-  rewards,
+  rewards, subscriptions,
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
   insertReferralSchema, processedRiotMatches, referrals, affiliateApplications,
   charities, charityCampaigns
@@ -1621,6 +1621,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: {
           username: users.username,
           email: users.email,
+          isFounder: users.isFounder,
+          founderNumber: users.founderNumber,
         },
         reward: {
           title: rewards.title,
@@ -1630,7 +1632,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .from(userRewards)
       .innerJoin(users, eq(userRewards.userId, users.id))
       .innerJoin(rewards, eq(userRewards.rewardId, rewards.id))
-      .orderBy(desc(userRewards.redeemedAt));
+      .orderBy(
+        sql`CASE WHEN ${users.isFounder} = true THEN 0 ELSE 1 END`, // Founders first
+        sql`CASE WHEN ${userRewards.status} = 'pending' THEN 0 ELSE 1 END`, // Pending first
+        desc(userRewards.redeemedAt) // Then by date
+      );
       
       res.json(redemptions);
     } catch (error: any) {
@@ -1735,6 +1741,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if reward is Founder-only (contains "Founder Exclusive" in title)
+      if (reward.title.includes('Founder Exclusive') || reward.title.includes('🏆')) {
+        if (!user.isFounder) {
+          return res.status(403).json({ 
+            message: "This reward is exclusive to Founder Badge members (first 100 signups only)" 
+          });
+        }
       }
       
       // For physical items, require complete and valid shipping address
@@ -2648,6 +2663,92 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       }
       
       res.status(500).json({ message: error.message || "Failed to process subscription" });
+    }
+  });
+
+  // PayPal Webhook Handler - Recurring Payments
+  app.post('/api/webhooks/paypal', async (req, res) => {
+    try {
+      const event = req.body;
+      const eventType = event.event_type;
+      
+      console.log(`[PayPal Webhook] Received event: ${eventType}`);
+      
+      // Handle PAYMENT.SALE.COMPLETED (monthly recurring payment)
+      if (eventType === 'PAYMENT.SALE.COMPLETED') {
+        const subscriptionId = event.resource?.billing_agreement_id;
+        const saleId = event.resource?.id;
+        
+        if (!subscriptionId || !saleId) {
+          console.error('[PayPal Webhook] Missing subscription or sale ID');
+          return res.status(400).json({ message: 'Missing required data' });
+        }
+        
+        // Find user by PayPal subscription ID
+        const subscription = await db
+          .select()
+          .from(subscriptions)
+          .where(eq(subscriptions.stripeSubscriptionId, subscriptionId))
+          .limit(1);
+        
+        if (!subscription[0]) {
+          console.error(`[PayPal Webhook] Subscription not found: ${subscriptionId}`);
+          return res.status(404).json({ message: 'Subscription not found' });
+        }
+        
+        const userId = subscription[0].userId;
+        const tier = subscription[0].tier;
+        
+        // Check idempotency
+        const eventId = `paypal_sale_${saleId}`;
+        const existingEvent = await storage.checkEventProcessed(eventId);
+        if (existingEvent) {
+          console.log(`[PayPal Webhook] Sale ${saleId} already processed`);
+          return res.json({ received: true, message: 'Already processed' });
+        }
+        
+        // Award monthly points
+        await pointsEngine.awardMonthlySubscriptionPoints(userId, tier, saleId);
+        
+        // Log event
+        await storage.logSubscriptionEvent({
+          subscriptionId: subscription[0].id,
+          eventType: 'payment.sale.completed',
+          stripeEventId: eventId,
+          eventData: {
+            saleId,
+            paypalSubscriptionId: subscriptionId,
+            tier,
+          },
+        });
+        
+        console.log(`[PayPal Webhook] Awarded monthly points for ${tier} tier to user ${userId}`);
+      }
+      
+      // Handle BILLING.SUBSCRIPTION.CANCELLED
+      if (eventType === 'BILLING.SUBSCRIPTION.CANCELLED') {
+        const subscriptionId = event.resource?.id;
+        
+        if (!subscriptionId) {
+          return res.status(400).json({ message: 'Missing subscription ID' });
+        }
+        
+        const subscription = await db
+          .select()
+          .from(subscriptions)
+          .where(eq(subscriptions.stripeSubscriptionId, subscriptionId))
+          .limit(1);
+        
+        if (subscription[0]) {
+          await storage.updateSubscription(subscription[0].id, { status: 'canceled' });
+          console.log(`[PayPal Webhook] Subscription ${subscriptionId} cancelled`);
+        }
+      }
+      
+      res.json({ received: true });
+    } catch (error: any) {
+      console.error('[PayPal Webhook] Error:', error);
+      res.status(500).json({ message: error.message || 'Webhook processing failed' });
     }
   });
 

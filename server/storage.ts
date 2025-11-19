@@ -186,6 +186,35 @@ export class DbStorage implements IStorage {
             tx
           );
           console.log(`🎉 Awarded 1,000 bonus points to Founder #${founderNumber}`);
+          
+          // Send Discord notification for new founder
+          try {
+            const discordWebhookUrl = process.env.DISCORD_FOUNDER_WEBHOOK_URL;
+            if (discordWebhookUrl) {
+              const displayName = user.firstName 
+                ? `${user.firstName} ${user.lastName || ''}`.trim()
+                : user.email?.split('@')[0] || 'New Member';
+              
+              await fetch(discordWebhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  embeds: [{
+                    title: `🏆 Founder #${founderNumber} Joined!`,
+                    description: `${displayName} just became Founder #${founderNumber} of GG Loop!`,
+                    color: 0xF59E0B, // Amber color
+                    fields: [
+                      { name: 'Bonus Points', value: '1,000 pts', inline: true },
+                      { name: 'Spots Remaining', value: `${100 - founderNumber}/100`, inline: true }
+                    ],
+                    timestamp: new Date().toISOString()
+                  }]
+                })
+              });
+            }
+          } catch (discordError) {
+            console.error('Discord notification failed:', discordError);
+          }
         }
         
         return user;
@@ -487,7 +516,10 @@ export class DbStorage implements IStorage {
       .innerJoin(rewards, eq(userRewards.rewardId, rewards.id))
       .innerJoin(users, eq(userRewards.userId, users.id))
       .where(eq(userRewards.status, "pending"))
-      .orderBy(desc(userRewards.redeemedAt));
+      .orderBy(
+        sql`CASE WHEN ${users.isFounder} = true THEN 0 ELSE 1 END`, // Founders first
+        desc(userRewards.redeemedAt) // Then by redemption date
+      );
     
     return result.map(r => ({ ...r.user_rewards, reward: r.rewards, user: r.users }));
   }
