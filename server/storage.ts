@@ -355,6 +355,18 @@ export class DbStorage implements IStorage {
       .limit(1);
 
     if (existing.length > 0) {
+      // If switching to a different PUUID, clean up old leaderboard entries
+      if (existing[0].riotPuuid && existing[0].riotPuuid !== riotData.puuid) {
+        console.log(`[Storage] User ${userId} switching Riot account for game ${gameId}. Cleaning up leaderboard entries.`);
+        const { leaderboardEntries } = await import('@shared/schema');
+        await db.delete(leaderboardEntries).where(
+          and(
+            eq(leaderboardEntries.userId, userId),
+            eq(leaderboardEntries.gameId, gameId)
+          )
+        );
+      }
+
       const [updated] = await db.update(userGames)
         .set({
           accountName: `${riotData.gameName}#${riotData.tagLine}`,
