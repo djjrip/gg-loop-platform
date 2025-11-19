@@ -85,23 +85,9 @@ app.use((req, res, next) => {
       console.error("Failed to start streaming verifier:", err);
     });
     
-    // Start points expiration service (enforces 12-month expiration rule)
-    import("./pointsExpirationService").then(({ pointsExpirationService }) => {
-      // Run every 24 hours to mark expired points and reconcile balances
-      pointsExpirationService.start(24);
-      
-      // Graceful shutdown
-      const stopExpiration = () => {
-        log('Stopping points expiration service...');
-        pointsExpirationService.stop();
-      };
-      
-      process.on('SIGTERM', stopExpiration);
-      process.on('SIGINT', stopExpiration);
-      server.on('close', stopExpiration);
-    }).catch((err) => {
-      console.error("Failed to start points expiration service:", err);
-    });
+    // NOTE: Points expiration disabled for beta launch
+    // TODO: Implement proper FIFO allocation tracking post-beta
+    // See server/pointsExpirationService.ts for details
     
     // Start Riot match sync service with achievement detection
     Promise.all([
