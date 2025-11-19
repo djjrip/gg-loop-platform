@@ -76,6 +76,11 @@ export const EARNING_RULES: Record<string, EarningRule> = {
     basePoints: 50,
     tierMultipliers: { basic: 1.0, pro: 2.0, elite: 3.0 },
   },
+  FOUNDER_BONUS: {
+    type: "founder_bonus",
+    basePoints: 1000,
+    tierMultipliers: { basic: 1.0, pro: 1.0, elite: 1.0 }, // Fixed 1,000 points regardless of tier
+  },
 };
 
 export class PointsEngine {

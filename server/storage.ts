@@ -173,6 +173,21 @@ export class DbStorage implements IStorage {
           .values({ ...userData, referralCode, isFounder, founderNumber })
           .returning();
         
+        // Award 1,000 bonus points to founders
+        if (isFounder && founderNumber) {
+          const { pointsEngine } = await import('./pointsEngine');
+          await pointsEngine.awardPoints(
+            user.id,
+            1000,
+            'FOUNDER_BONUS',
+            `founder-${founderNumber}`,
+            'signup',
+            `Founder #${founderNumber} Bonus - Welcome to GG Loop!`,
+            tx
+          );
+          console.log(`🎉 Awarded 1,000 bonus points to Founder #${founderNumber}`);
+        }
+        
         return user;
       });
     }
