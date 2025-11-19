@@ -296,7 +296,7 @@ export const riotAccounts = pgTable("riot_accounts", {
 
 export const processedRiotMatches = pgTable("processed_riot_matches", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  riotAccountId: varchar("riot_account_id").notNull().references(() => riotAccounts.id),
+  riotAccountId: varchar("riot_account_id").notNull().references(() => riotAccounts.id, { onDelete: 'cascade' }),
   matchId: text("match_id").notNull(),
   gameEndedAt: timestamp("game_ended_at").notNull(),
   isWin: boolean("is_win").notNull(),
