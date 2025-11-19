@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { CheckCircle2, AlertCircle, Link2, Unlink, Gamepad2, Trophy } from "lucide-react";
+import { CheckCircle2, AlertCircle, Link2, Gamepad2, Trophy } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 type RiotAccountStatus = {
@@ -74,7 +74,7 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/riot/matches"] });
       toast({
         title: "League account linked!",
-        description: "Your matches will sync automatically every 10 minutes.",
+        description: "Your matches will sync automatically every 5 minutes.",
       });
       setLeagueRiotId("");
     },
@@ -82,28 +82,6 @@ export default function Settings() {
       toast({
         title: "Failed to link account",
         description: error.message || "Please check your Riot ID and region",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const unlinkLeagueMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/riot/unlink/league", {});
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/riot/account/league"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/riot/matches"] });
-      toast({
-        title: "League account unlinked",
-        description: "Your account has been disconnected.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to unlink account",
-        description: error.message || "Please try again",
         variant: "destructive",
       });
     },
@@ -119,7 +97,7 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/riot/matches"] });
       toast({
         title: "Valorant account linked!",
-        description: "Your matches will sync automatically every 10 minutes.",
+        description: "Your matches will sync automatically every 5 minutes.",
       });
       setValorantRiotId("");
     },
@@ -127,28 +105,6 @@ export default function Settings() {
       toast({
         title: "Failed to link account",
         description: error.message || "Please check your Riot ID and region",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const unlinkValorantMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/riot/unlink/valorant", {});
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/riot/account/valorant"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/riot/matches"] });
-      toast({
-        title: "Valorant account unlinked",
-        description: "Your account has been disconnected.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to unlink account",
-        description: error.message || "Please try again",
         variant: "destructive",
       });
     },
@@ -218,47 +174,80 @@ export default function Settings() {
                 </div>
               ) : leagueAccount?.linked ? (
                 <div className="space-y-4">
-                  <div className="flex items-start justify-between p-4 border rounded-lg bg-muted/30">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        <span className="font-semibold" data-testid="text-league-connected">Connected</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Riot ID: <span className="font-mono" data-testid="text-league-riot-id">{leagueAccount.gameName}#{leagueAccount.tagLine}</span>
-                      </p>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Region: {LEAGUE_REGIONS.find(r => r.value === leagueAccount.region)?.label || leagueAccount.region}
-                      </p>
-                      {leagueAccount.lastSyncedAt && (
-                        <p className="text-sm text-muted-foreground">
-                          Last synced: {formatDistanceToNow(new Date(leagueAccount.lastSyncedAt))} ago
-                        </p>
-                      )}
-                      {leagueAccount.totalMatches !== undefined && (
-                        <div className="flex items-center gap-4 mt-3">
-                          <Badge variant="secondary" data-testid="badge-league-matches">
-                            <Trophy className="h-3 w-3 mr-1" />
-                            {leagueAccount.totalMatches} matches
-                          </Badge>
-                          {leagueAccount.wins !== undefined && (
-                            <Badge variant="default" data-testid="badge-league-wins">
-                              {leagueAccount.wins}W {leagueAccount.losses}L
-                            </Badge>
-                          )}
-                        </div>
-                      )}
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      <span className="font-semibold" data-testid="text-league-connected">Connected</span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => unlinkLeagueMutation.mutate()}
-                      disabled={unlinkLeagueMutation.isPending}
-                      data-testid="button-unlink-league"
-                    >
-                      <Unlink className="h-4 w-4 mr-2" />
-                      Disconnect
-                    </Button>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Riot ID: <span className="font-mono" data-testid="text-league-riot-id">{leagueAccount.gameName}#{leagueAccount.tagLine}</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Region: {LEAGUE_REGIONS.find(r => r.value === leagueAccount.region)?.label || leagueAccount.region}
+                    </p>
+                    {leagueAccount.lastSyncedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last synced: {formatDistanceToNow(new Date(leagueAccount.lastSyncedAt))} ago
+                      </p>
+                    )}
+                    {leagueAccount.totalMatches !== undefined && (
+                      <div className="flex items-center gap-4 mt-3">
+                        <Badge variant="secondary" data-testid="badge-league-matches">
+                          <Trophy className="h-3 w-3 mr-1" />
+                          {leagueAccount.totalMatches} matches
+                        </Badge>
+                        {leagueAccount.wins !== undefined && (
+                          <Badge variant="default" data-testid="badge-league-wins">
+                            {leagueAccount.wins}W {leagueAccount.losses}L
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-4 border rounded-lg bg-blue-500/10 border-blue-500/20">
+                    <p className="text-sm font-medium mb-3">Switch to a different account</p>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="league-riot-id-switch">New Riot ID</Label>
+                        <Input
+                          id="league-riot-id-switch"
+                          data-testid="input-league-riot-id"
+                          placeholder="GameName#TAG"
+                          value={leagueRiotId}
+                          onChange={(e) => setLeagueRiotId(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="league-region-switch">Region</Label>
+                        <Select value={leagueRegion} onValueChange={setLeagueRegion}>
+                          <SelectTrigger id="league-region-switch" data-testid="select-league-region">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {LEAGUE_REGIONS.map((region) => (
+                              <SelectItem key={region.value} value={region.value}>
+                                {region.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <Button
+                        onClick={handleLinkLeague}
+                        disabled={linkLeagueMutation.isPending}
+                        className="w-full"
+                        data-testid="button-update-league"
+                      >
+                        <Link2 className="mr-2 h-4 w-4" />
+                        {linkLeagueMutation.isPending ? "Updating..." : "Update League Account"}
+                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Your match history will be preserved when switching accounts.
+                      </p>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -344,47 +333,80 @@ export default function Settings() {
                 </div>
               ) : valorantAccount?.linked ? (
                 <div className="space-y-4">
-                  <div className="flex items-start justify-between p-4 border rounded-lg bg-muted/30">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        <span className="font-semibold" data-testid="text-valorant-connected">Connected</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Riot ID: <span className="font-mono" data-testid="text-valorant-riot-id">{valorantAccount.gameName}#{valorantAccount.tagLine}</span>
-                      </p>
-                      <p className="text-sm text-muted-foreground mb-1">
-                        Region: {VALORANT_REGIONS.find(r => r.value === valorantAccount.region)?.label || valorantAccount.region}
-                      </p>
-                      {valorantAccount.lastSyncedAt && (
-                        <p className="text-sm text-muted-foreground">
-                          Last synced: {formatDistanceToNow(new Date(valorantAccount.lastSyncedAt))} ago
-                        </p>
-                      )}
-                      {valorantAccount.totalMatches !== undefined && (
-                        <div className="flex items-center gap-4 mt-3">
-                          <Badge variant="secondary" data-testid="badge-valorant-matches">
-                            <Trophy className="h-3 w-3 mr-1" />
-                            {valorantAccount.totalMatches} matches
-                          </Badge>
-                          {valorantAccount.wins !== undefined && (
-                            <Badge variant="default" data-testid="badge-valorant-wins">
-                              {valorantAccount.wins}W {valorantAccount.losses}L
-                            </Badge>
-                          )}
-                        </div>
-                      )}
+                  <div className="p-4 border rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      <span className="font-semibold" data-testid="text-valorant-connected">Connected</span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => unlinkValorantMutation.mutate()}
-                      disabled={unlinkValorantMutation.isPending}
-                      data-testid="button-unlink-valorant"
-                    >
-                      <Unlink className="h-4 w-4 mr-2" />
-                      Disconnect
-                    </Button>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Riot ID: <span className="font-mono" data-testid="text-valorant-riot-id">{valorantAccount.gameName}#{valorantAccount.tagLine}</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Region: {VALORANT_REGIONS.find(r => r.value === valorantAccount.region)?.label || valorantAccount.region}
+                    </p>
+                    {valorantAccount.lastSyncedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last synced: {formatDistanceToNow(new Date(valorantAccount.lastSyncedAt))} ago
+                      </p>
+                    )}
+                    {valorantAccount.totalMatches !== undefined && (
+                      <div className="flex items-center gap-4 mt-3">
+                        <Badge variant="secondary" data-testid="badge-valorant-matches">
+                          <Trophy className="h-3 w-3 mr-1" />
+                          {valorantAccount.totalMatches} matches
+                        </Badge>
+                        {valorantAccount.wins !== undefined && (
+                          <Badge variant="default" data-testid="badge-valorant-wins">
+                            {valorantAccount.wins}W {valorantAccount.losses}L
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-4 border rounded-lg bg-blue-500/10 border-blue-500/20">
+                    <p className="text-sm font-medium mb-3">Switch to a different account</p>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="valorant-riot-id-switch">New Riot ID</Label>
+                        <Input
+                          id="valorant-riot-id-switch"
+                          data-testid="input-valorant-riot-id"
+                          placeholder="GameName#TAG"
+                          value={valorantRiotId}
+                          onChange={(e) => setValorantRiotId(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="valorant-region-switch">Region</Label>
+                        <Select value={valorantRegion} onValueChange={setValorantRegion}>
+                          <SelectTrigger id="valorant-region-switch" data-testid="select-valorant-region">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {VALORANT_REGIONS.map((region) => (
+                              <SelectItem key={region.value} value={region.value}>
+                                {region.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <Button
+                        onClick={handleLinkValorant}
+                        disabled={linkValorantMutation.isPending}
+                        className="w-full"
+                        data-testid="button-update-valorant"
+                      >
+                        <Link2 className="mr-2 h-4 w-4" />
+                        {linkValorantMutation.isPending ? "Updating..." : "Update Valorant Account"}
+                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Your match history will be preserved when switching accounts.
+                      </p>
+                    </div>
                   </div>
                 </div>
               ) : (
