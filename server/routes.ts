@@ -856,7 +856,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const riotAccount = await riotAPI.getAccountByRiotId(gameName, tagLine, routingRegion);
       
-      // Save to database
+      // Check if user already has a League account linked
+      const [existingAccount] = await db.select().from(riotAccounts).where(
+        and(
+          eq(riotAccounts.userId, userId),
+          eq(riotAccounts.game, 'league')
+        )
+      );
+
+      // If switching to a different player (different PUUID), delete old match history
+      // This prevents showing stats from a different player's account
+      if (existingAccount && existingAccount.puuid !== riotAccount.puuid) {
+        console.log(`[Riot Link] User ${userId} switching League accounts. Deleting old matches (PUUID: ${existingAccount.puuid} -> ${riotAccount.puuid})`);
+        await db.delete(processedRiotMatches).where(
+          eq(processedRiotMatches.riotAccountId, existingAccount.id)
+        );
+      }
+      
+      // Save to database (update if exists, insert if new)
       await db.insert(riotAccounts).values({
         userId,
         puuid: riotAccount.puuid,
@@ -921,7 +938,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const riotAccount = await riotAPI.getAccountByRiotId(gameName, tagLine, routingRegion);
       
-      // Save to database
+      // Check if user already has a Valorant account linked
+      const [existingAccount] = await db.select().from(riotAccounts).where(
+        and(
+          eq(riotAccounts.userId, userId),
+          eq(riotAccounts.game, 'valorant')
+        )
+      );
+
+      // If switching to a different player (different PUUID), delete old match history
+      // This prevents showing stats from a different player's account
+      if (existingAccount && existingAccount.puuid !== riotAccount.puuid) {
+        console.log(`[Riot Link] User ${userId} switching Valorant accounts. Deleting old matches (PUUID: ${existingAccount.puuid} -> ${riotAccount.puuid})`);
+        await db.delete(processedRiotMatches).where(
+          eq(processedRiotMatches.riotAccountId, existingAccount.id)
+        );
+      }
+      
+      // Save to database (update if exists, insert if new)
       await db.insert(riotAccounts).values({
         userId,
         puuid: riotAccount.puuid,
