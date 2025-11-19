@@ -149,3 +149,109 @@ export async function cancelPayPalSubscription(subscriptionId: string, reason?: 
     };
   }
 }
+
+export async function verifyPayPalWebhook(
+  headers: Record<string, string>,
+  body: any
+): Promise<{ valid: boolean; error?: string }> {
+  // Security: Fail closed - reject webhooks if credentials not configured
+  if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
+    console.error("CRITICAL: PayPal credentials not configured - rejecting webhook");
+    return { 
+      valid: false, 
+      error: "PayPal webhook verification unavailable: credentials not configured" 
+    };
+  }
+
+  try {
+    // PayPal webhook verification requires specific headers
+    const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+    
+    // Security: Fail closed - reject webhooks if webhook ID not configured
+    if (!webhookId) {
+      console.error("CRITICAL: PAYPAL_WEBHOOK_ID not configured - rejecting webhook");
+      return { 
+        valid: false, 
+        error: "PayPal webhook verification unavailable: webhook ID not configured" 
+      };
+    }
+
+    const transmissionId = headers['paypal-transmission-id'];
+    const transmissionTime = headers['paypal-transmission-time'];
+    const certUrl = headers['paypal-cert-url'];
+    const transmissionSig = headers['paypal-transmission-sig'];
+    const authAlgo = headers['paypal-auth-algo'];
+
+    if (!transmissionId || !transmissionTime || !certUrl || !transmissionSig || !authAlgo) {
+      return { 
+        valid: false, 
+        error: "Missing required PayPal webhook headers" 
+      };
+    }
+
+    // Verify webhook using PayPal's verify-webhook-signature API
+    const apiUrl = process.env.NODE_ENV === "production"
+      ? "https://api-m.paypal.com"
+      : "https://api-m.sandbox.paypal.com";
+
+    // Get OAuth token
+    const authResponse = await fetch(`${apiUrl}/v1/oauth2/token`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64')}`,
+      },
+      body: 'grant_type=client_credentials',
+    });
+
+    if (!authResponse.ok) {
+      throw new Error(`PayPal auth failed: ${authResponse.statusText}`);
+    }
+
+    const authData = await authResponse.json();
+    const accessToken = authData.access_token;
+
+    // Verify webhook signature
+    const verifyResponse = await fetch(`${apiUrl}/v1/notifications/verify-webhook-signature`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        transmission_id: transmissionId,
+        transmission_time: transmissionTime,
+        cert_url: certUrl,
+        auth_algo: authAlgo,
+        transmission_sig: transmissionSig,
+        webhook_id: webhookId,
+        webhook_event: body,
+      }),
+    });
+
+    if (!verifyResponse.ok) {
+      return { 
+        valid: false, 
+        error: `PayPal verification failed: ${verifyResponse.statusText}` 
+      };
+    }
+
+    const verifyData = await verifyResponse.json();
+    
+    if (verifyData.verification_status === 'SUCCESS') {
+      return { valid: true };
+    }
+
+    return { 
+      valid: false, 
+      error: `Verification status: ${verifyData.verification_status}` 
+    };
+  } catch (error: any) {
+    console.error("PayPal webhook verification error:", error);
+    return { 
+      valid: false, 
+      error: error.message || "Webhook verification failed" 
+    };
+  }
+}

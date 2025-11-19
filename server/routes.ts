@@ -16,8 +16,7 @@ import { and, eq, sql, inArray, desc } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./oauth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { z } from "zod";
-import Stripe from "stripe";
-import { verifyPayPalSubscription, cancelPayPalSubscription } from "./paypal";
+import { verifyPayPalSubscription, cancelPayPalSubscription, verifyPayPalWebhook } from "./paypal";
 import { pointsEngine } from "./pointsEngine";
 import { createWebhookSignatureMiddleware } from "./webhookSecurity";
 import { twitchAPI } from "./lib/twitch";
@@ -25,10 +24,6 @@ import { calculateReferralReward, FREE_TRIAL_DURATION_DAYS } from "./lib/referra
 import crypto from 'crypto';
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { tangoCardService } from "./tangoCardService";
-
-const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-10-29.clover" })
-  : null;
 
 // Middleware that accepts BOTH guest sessions AND OAuth sessions
 const requireAuth = async (req: any, res: any, next: any) => {
@@ -2669,10 +2664,17 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
   // PayPal Webhook Handler - Recurring Payments
   app.post('/api/webhooks/paypal', async (req, res) => {
     try {
+      // Verify webhook signature for security
+      const verification = await verifyPayPalWebhook(req.headers as Record<string, string>, req.body);
+      if (!verification.valid) {
+        console.error(`[PayPal Webhook] Signature verification failed: ${verification.error}`);
+        return res.status(401).json({ message: 'Webhook signature verification failed' });
+      }
+      
       const event = req.body;
       const eventType = event.event_type;
       
-      console.log(`[PayPal Webhook] Received event: ${eventType}`);
+      console.log(`[PayPal Webhook] Verified event: ${eventType}`);
       
       // Handle PAYMENT.SALE.COMPLETED (monthly recurring payment)
       if (eventType === 'PAYMENT.SALE.COMPLETED') {
@@ -2773,16 +2775,10 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       }
 
       if (subscription.stripeSubscriptionId) {
-        const paypalResult = await cancelPayPalSubscription(
+        await cancelPayPalSubscription(
           subscription.stripeSubscriptionId,
           "User requested cancellation"
         );
-        
-        if (!paypalResult.success && stripe) {
-          await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
-            cancel_at_period_end: true
-          });
-        }
       }
 
       await storage.updateSubscription(subscription.id, {
