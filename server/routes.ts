@@ -10,7 +10,7 @@ import {
   rewards, subscriptions,
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
   insertReferralSchema, processedRiotMatches, referrals, affiliateApplications,
-  charities, charityCampaigns
+  charities, charityCampaigns, games, leaderboardEntries
 } from "@shared/schema";
 import { and, eq, sql, inArray, desc } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./oauth";
@@ -864,13 +864,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         )
       );
 
-      // If switching to a different player (different PUUID), delete old match history
+      // If switching to a different player (different PUUID), delete old match history and leaderboard entries
       // This prevents showing stats from a different player's account
       if (existingAccount && existingAccount.puuid !== riotAccount.puuid) {
-        console.log(`[Riot Link] User ${userId} switching League accounts. Deleting old matches (PUUID: ${existingAccount.puuid} -> ${riotAccount.puuid})`);
+        console.log(`[Riot Link] User ${userId} switching League accounts. Deleting old data (PUUID: ${existingAccount.puuid} -> ${riotAccount.puuid})`);
+        
+        // Delete match history
         await db.delete(processedRiotMatches).where(
           eq(processedRiotMatches.riotAccountId, existingAccount.id)
         );
+
+        // Delete leaderboard entries (they're tied to the old account's performance)
+        const [leagueGame] = await db.select().from(games).where(eq(games.title, 'League of Legends')).limit(1);
+        if (leagueGame) {
+          await db.delete(leaderboardEntries).where(
+            and(
+              eq(leaderboardEntries.userId, userId),
+              eq(leaderboardEntries.gameId, leagueGame.id)
+            )
+          );
+        }
       }
       
       // Save to database (update if exists, insert if new)
@@ -946,13 +959,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         )
       );
 
-      // If switching to a different player (different PUUID), delete old match history
+      // If switching to a different player (different PUUID), delete old match history and leaderboard entries
       // This prevents showing stats from a different player's account
       if (existingAccount && existingAccount.puuid !== riotAccount.puuid) {
-        console.log(`[Riot Link] User ${userId} switching Valorant accounts. Deleting old matches (PUUID: ${existingAccount.puuid} -> ${riotAccount.puuid})`);
+        console.log(`[Riot Link] User ${userId} switching Valorant accounts. Deleting old data (PUUID: ${existingAccount.puuid} -> ${riotAccount.puuid})`);
+        
+        // Delete match history
         await db.delete(processedRiotMatches).where(
           eq(processedRiotMatches.riotAccountId, existingAccount.id)
         );
+
+        // Delete leaderboard entries (they're tied to the old account's performance)
+        const [valorantGame] = await db.select().from(games).where(eq(games.title, 'Valorant')).limit(1);
+        if (valorantGame) {
+          await db.delete(leaderboardEntries).where(
+            and(
+              eq(leaderboardEntries.userId, userId),
+              eq(leaderboardEntries.gameId, valorantGame.id)
+            )
+          );
+        }
       }
       
       // Save to database (update if exists, insert if new)
