@@ -206,7 +206,15 @@ export default function Settings() {
                   </div>
 
                   <div className="p-4 border rounded-lg bg-blue-500/10 border-blue-500/20">
-                    <p className="text-sm font-medium mb-3">Switch to a different account</p>
+                    <p className="text-sm font-medium mb-2">Switch to a different account</p>
+                    <div className="mb-3 p-3 rounded-md bg-background/50 border border-blue-500/30">
+                      <p className="text-xs text-muted-foreground mb-1">When you switch accounts:</p>
+                      <ul className="text-xs text-muted-foreground space-y-0.5 ml-4">
+                        <li>✅ Points are preserved (tied to subscription)</li>
+                        <li>✅ Achievements already earned stay unlocked</li>
+                        <li>⚠️ Match history resets (from different player)</li>
+                      </ul>
+                    </div>
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="league-riot-id-switch">New Riot ID</Label>
@@ -244,9 +252,6 @@ export default function Settings() {
                         <Link2 className="mr-2 h-4 w-4" />
                         {linkLeagueMutation.isPending ? "Updating..." : "Update League Account"}
                       </Button>
-                      <p className="text-xs text-muted-foreground">
-                        Your match history will be preserved when switching accounts.
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -365,7 +370,15 @@ export default function Settings() {
                   </div>
 
                   <div className="p-4 border rounded-lg bg-blue-500/10 border-blue-500/20">
-                    <p className="text-sm font-medium mb-3">Switch to a different account</p>
+                    <p className="text-sm font-medium mb-2">Switch to a different account</p>
+                    <div className="mb-3 p-3 rounded-md bg-background/50 border border-blue-500/30">
+                      <p className="text-xs text-muted-foreground mb-1">When you switch accounts:</p>
+                      <ul className="text-xs text-muted-foreground space-y-0.5 ml-4">
+                        <li>✅ Points are preserved (tied to subscription)</li>
+                        <li>✅ Achievements already earned stay unlocked</li>
+                        <li>⚠️ Match history resets (from different player)</li>
+                      </ul>
+                    </div>
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="valorant-riot-id-switch">New Riot ID</Label>
@@ -403,9 +416,6 @@ export default function Settings() {
                         <Link2 className="mr-2 h-4 w-4" />
                         {linkValorantMutation.isPending ? "Updating..." : "Update Valorant Account"}
                       </Button>
-                      <p className="text-xs text-muted-foreground">
-                        Your match history will be preserved when switching accounts.
-                      </p>
                     </div>
                   </div>
                 </div>
