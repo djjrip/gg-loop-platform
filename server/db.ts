@@ -1,6 +1,4 @@
 import { sql } from "drizzle-orm";
-import Database from "better-sqlite3";
-import { drizzle as drizzleSqlite } from "drizzle-orm/better-sqlite3";
 import { drizzle as drizzlePostgres } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "@shared/schema";
@@ -22,6 +20,10 @@ if (usePostgres && databaseUrl) {
 } else {
     // Development: SQLite (local)
     console.log('📁 Using SQLite database (local.db)');
+    // Dynamic import to avoid production build issues with better-sqlite3
+    const { default: Database } = await import("better-sqlite3");
+    const { drizzle: drizzleSqlite } = await import("drizzle-orm/better-sqlite3");
+
     const sqlite = new Database("local.db");
     db = drizzleSqlite(sqlite, { schema });
     client = sqlite;
