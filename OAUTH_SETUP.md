@@ -1,79 +1,53 @@
 # OAuth Login Setup Guide
 
-**Your OAuth logins are currently broken because redirect URLs don't match.**
+**Your OAuth logins are currently broken because of missing environment variables and mismatched redirect URLs.**
 
-## Quick Fix (5 minutes)
+## 1. Configure Environment Variables
 
-Your current Replit domain: `https://3d3cea8a-85cf-4f88-8c67-be4be4d6239a-00-3jb9yp194k6jl.janeway.replit.dev`
+You are missing critical credentials in your `.env` file.
 
-### 1. Discord OAuth Setup
+1.  Open `.env` in your project root.
+2.  Copy the contents from `.env.template` (I just created this for you) into `.env`.
+3.  **You must fill in the `CLIENT_ID` and `CLIENT_SECRET` for each provider.**
 
-1. Go to https://discord.com/developers/applications
-2. Select your GG Loop application
-3. Click "OAuth2" in left sidebar
-4. Under "Redirects", click "Add Redirect"
-5. Paste: `https://3d3cea8a-85cf-4f88-8c67-be4be4d6239a-00-3jb9yp194k6jl.janeway.replit.dev/api/auth/discord/callback`
-6. Click "Save Changes"
+## 2. Update Redirect URLs (Developer Portals)
 
-### 2. Twitch OAuth Setup
+Since you are running locally on Windows, your domain is `http://localhost:5000`.
 
-1. Go to https://dev.twitch.tv/console/apps
-2. Select your GG Loop application
-3. Under "OAuth Redirect URLs", click "Add a new URL"
-4. Paste: `https://3d3cea8a-85cf-4f88-8c67-be4be4d6239a-00-3jb9yp194k6jl.janeway.replit.dev/api/auth/twitch/callback`
-5. Click "Save"
+### Discord OAuth Setup
+1.  Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2.  Select your GG Loop application -> **OAuth2**
+3.  Under "Redirects", add:
+    `http://localhost:5000/api/auth/discord/callback`
+4.  Copy **Client ID** and **Client Secret** to your `.env` file.
 
-### 3. Google OAuth Setup
+### Twitch OAuth Setup
+1.  Go to [Twitch Console](https://dev.twitch.tv/console/apps)
+2.  Select your GG Loop application
+3.  Under "OAuth Redirect URLs", add:
+    `http://localhost:5000/api/auth/twitch/callback`
+4.  Copy **Client ID** and **Client Secret** to your `.env` file.
 
-1. Go to https://console.cloud.google.com/apis/credentials
-2. Select your OAuth 2.0 Client
-3. Under "Authorized redirect URIs", click "Add URI"
-4. Paste: `https://3d3cea8a-85cf-4f88-8c67-be4be4d6239a-00-3jb9yp194k6jl.janeway.replit.dev/api/auth/google/callback`
-5. Click "Save"
+### Google OAuth Setup
+1.  Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2.  Select your OAuth 2.0 Client
+3.  Under "Authorized redirect URIs", add:
+    `http://localhost:5000/api/auth/google/callback`
+4.  Copy **Client ID** and **Client Secret** to your `.env` file.
 
 ---
 
-## ⚠️ Important Notes
+## 3. Verify Base URL
 
-### Domain Changes
-**Every time your Replit domain changes, you'll need to update these URLs again.**
-
-To get your current domain:
-```bash
-echo $REPLIT_DOMAINS
+Ensure your `.env` file has:
+```env
+BASE_URL=http://localhost:5000
 ```
 
-### Better Solution: Use Custom Domain
-
-Once you have ggloop.io set up, use these permanent URLs instead:
-
-- Discord: `https://ggloop.io/api/auth/discord/callback`
-- Twitch: `https://ggloop.io/api/auth/twitch/callback`
-- Google: `https://ggloop.io/api/auth/google/callback`
-
-These will never change!
-
 ---
 
-## Testing After Setup
+## Troubleshooting
 
-1. Go to `/login`
-2. Try each login button
-3. You should be redirected to Discord/Twitch/Google
-4. After authorizing, you should return to GG Loop homepage
-5. Your profile should appear in the header
-
----
-
-## If Login Still Fails
-
-Check browser console for errors:
-- Press F12
-- Click "Console" tab
-- Try logging in again
-- Copy any error messages
-
-Common issues:
-- ❌ "redirect_uri_mismatch" → URL not added to developer portal
-- ❌ "invalid_client" → Wrong client ID/secret in env variables
-- ❌ "access_denied" → User canceled authorization
+-   **"redirect_uri_mismatch"**: You didn't add `http://localhost:5000/...` to the developer portal.
+-   **"invalid_client"**: Your Client ID/Secret in `.env` is wrong.
+-   **Login loop**: Ensure `SESSION_SECRET` is set in `.env`.

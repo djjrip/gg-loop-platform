@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { 
+import {
   users, games, userGames, leaderboardEntries, achievements, rewards, userRewards,
   subscriptions, subscriptionEvents, pointTransactions, apiPartners, gamingEvents, matchSubmissions, referrals, checklistItems,
   type User, type InsertUser, type UpsertUser,
@@ -34,23 +34,23 @@ export interface IStorage {
   connectTwitchAccount(oidcSub: string, twitchData: { twitchId: string; twitchUsername: string; accessToken: string; refreshToken: string }): Promise<User>;
   disconnectTwitchAccount(userId: string): Promise<User>;
   connectTiktokAccount(oidcSub: string, tiktokData: { openId: string; unionId?: string; username: string; accessToken: string; refreshToken: string }): Promise<User>;
-  
+
   getAllGames(): Promise<Game[]>;
   getGame(id: string): Promise<Game | undefined>;
   createGame(game: InsertGame): Promise<Game>;
-  
+
   getUserGames(userId: string): Promise<(UserGame & { game: Game })[]>;
   connectUserGame(userGame: InsertUserGame): Promise<UserGame>;
   linkRiotAccount(userId: string, gameId: string, riotData: { puuid: string; gameName: string; tagLine: string; region: string }): Promise<UserGame>;
   getRiotAccount(userId: string, gameId: string): Promise<UserGame | undefined>;
   verifyRiotAccount(userId: string, gameId: string): Promise<boolean>;
-  
+
   getLeaderboard(gameId: string, period: string, limit?: number): Promise<(LeaderboardEntry & { user: User })[]>;
   upsertLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
-  
+
   getUserAchievements(userId: string, limit?: number): Promise<(Achievement & { game: Game })[]>;
   createAchievement(achievement: InsertAchievement): Promise<Achievement>;
-  
+
   getAllRewards(): Promise<Reward[]>;
   getReward(id: string): Promise<Reward | undefined>;
   createReward(reward: InsertReward): Promise<Reward>;
@@ -60,27 +60,27 @@ export interface IStorage {
   getAllPendingRewards(): Promise<(UserReward & { reward: Reward; user: User })[]>;
   updateUserRewardStatus(userRewardId: string, status: string, fulfillmentData?: any): Promise<UserReward>;
   redeemReward(userReward: InsertUserReward): Promise<UserReward>;
-  
+
   getSubscription(userId: string): Promise<Subscription | undefined>;
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
   updateSubscription(subscriptionId: string, updates: Partial<InsertSubscription>): Promise<Subscription>;
   logSubscriptionEvent(event: InsertSubscriptionEvent): Promise<SubscriptionEvent>;
-  
+
   getPointTransactions(userId: string, limit?: number): Promise<PointTransaction[]>;
-  
+
   getApiPartner(apiKey: string): Promise<ApiPartner | undefined>;
   createApiPartner(partner: InsertApiPartner & { apiSecret: string }): Promise<ApiPartner>;
   updateApiPartner(partnerId: string, updates: Partial<InsertApiPartner>): Promise<ApiPartner>;
-  
+
   logGamingEvent(event: InsertGamingEvent): Promise<GamingEvent>;
   updateGamingEvent(eventId: string, updates: Partial<{ status: string; pointsAwarded: number | null; transactionId: string | null; errorMessage: string | null; retryCount: number; processedAt: Date }>): Promise<GamingEvent>;
   getEventByExternalId(partnerId: string, externalEventId: string): Promise<GamingEvent | undefined>;
-  
+
   getUserMatchSubmissions(userId: string): Promise<(MatchSubmission & { game: Game })[]>;
   createMatchSubmission(submission: InsertMatchSubmission): Promise<MatchSubmission>;
   updateMatchSubmission(submissionId: string, updates: Partial<{ status: string; pointsAwarded: number | null; reviewedBy: string | null; reviewNotes: string | null; reviewedAt: Date }>): Promise<MatchSubmission>;
   getMatchSubmissionByRiotMatchId(userId: string, riotMatchId: string): Promise<MatchSubmission | undefined>;
-  
+
   getUserByReferralCode(referralCode: string): Promise<User | undefined>;
   createReferral(referral: InsertReferral): Promise<Referral>;
   getReferralsByReferrer(referrerId: string): Promise<(Referral & { referredUser: User })[]>;
@@ -89,7 +89,7 @@ export interface IStorage {
   getReferralLeaderboard(limit?: number): Promise<{ user: User; referralCount: number; totalPoints: number }[]>;
   startFreeTrial(userId: string): Promise<User>;
   getDailyMetrics(): Promise<any>;
-  
+
   getChecklistItems(date: string): Promise<ChecklistItem[]>;
   upsertChecklistItem(item: InsertChecklistItem): Promise<ChecklistItem>;
   toggleChecklistItem(date: string, taskId: string, taskLabel: string, completed: boolean): Promise<ChecklistItem>;
@@ -119,7 +119,7 @@ export class DbStorage implements IStorage {
   async upsertUser(userData: UpsertUser): Promise<User> {
     let referralCode: string | undefined;
     let codeExists = true;
-    
+
     while (codeExists) {
       referralCode = generateReferralCode();
       const existing = await this.getUserByReferralCode(referralCode);
@@ -130,8 +130,8 @@ export class DbStorage implements IStorage {
     const existingUser = userData.oidcSub ? await this.getUserByOidcSub(userData.oidcSub) : undefined;
 
     // If not found by oidcSub, check by email (for multi-provider support)
-    const existingEmailUser = !existingUser && userData.email 
-      ? await this.getUserByEmail(userData.email) 
+    const existingEmailUser = !existingUser && userData.email
+      ? await this.getUserByEmail(userData.email)
       : undefined;
 
     // If user exists with same email but different provider, link the new provider
@@ -154,8 +154,8 @@ export class DbStorage implements IStorage {
     if (!existingUser && !existingEmailUser) {
       return db.transaction(async (tx) => {
         // Advisory lock (id=1001) to serialize founder assignment even when table is empty
-        await tx.execute(sql`SELECT pg_advisory_xact_lock(1001)`);
-        
+        // await tx.execute(sql`SELECT pg_advisory_xact_lock(1001)`);
+
         // Get next founder number (safe now that we have advisory lock)
         const [lastFounder] = await tx
           .select({ founderNumber: users.founderNumber })
@@ -163,7 +163,7 @@ export class DbStorage implements IStorage {
           .where(sql`${users.founderNumber} IS NOT NULL`)
           .orderBy(sql`${users.founderNumber} DESC`)
           .limit(1);
-        
+
         const nextFounderNumber = (lastFounder?.founderNumber || 0) + 1;
         const isFounder = nextFounderNumber <= 100;
         const founderNumber = isFounder ? nextFounderNumber : undefined;
@@ -172,7 +172,7 @@ export class DbStorage implements IStorage {
           .insert(users)
           .values({ ...userData, referralCode, isFounder, founderNumber })
           .returning();
-        
+
         // Award 1,000 bonus points to founders
         if (isFounder && founderNumber) {
           const { pointsEngine } = await import('./pointsEngine');
@@ -186,15 +186,15 @@ export class DbStorage implements IStorage {
             tx
           );
           console.log(`🎉 Awarded 1,000 bonus points to Founder #${founderNumber}`);
-          
+
           // Send Discord notification for new founder
           try {
             const discordWebhookUrl = process.env.DISCORD_FOUNDER_WEBHOOK_URL;
             if (discordWebhookUrl) {
-              const displayName = user.firstName 
+              const displayName = user.firstName
                 ? `${user.firstName} ${user.lastName || ''}`.trim()
                 : user.email?.split('@')[0] || 'New Member';
-              
+
               await fetch(discordWebhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -216,7 +216,7 @@ export class DbStorage implements IStorage {
             console.error('Discord notification failed:', discordError);
           }
         }
-        
+
         return user;
       });
     }
@@ -225,7 +225,7 @@ export class DbStorage implements IStorage {
     if (!userData.oidcSub) {
       throw new Error("Cannot update user without OIDC sub");
     }
-    
+
     const [user] = await db
       .update(users)
       .set({
@@ -237,7 +237,7 @@ export class DbStorage implements IStorage {
       })
       .where(eq(users.oidcSub, userData.oidcSub))
       .returning();
-    
+
     return user;
   }
 
@@ -249,10 +249,10 @@ export class DbStorage implements IStorage {
   async updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string): Promise<User> {
     const [user] = await db
       .update(users)
-      .set({ 
+      .set({
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscriptionId || null,
-        updatedAt: new Date() 
+        updatedAt: new Date()
       })
       .where(eq(users.id, userId))
       .returning();
@@ -337,7 +337,7 @@ export class DbStorage implements IStorage {
       .from(userGames)
       .innerJoin(games, eq(userGames.gameId, games.id))
       .where(eq(userGames.userId, userId));
-    
+
     return result.map(r => ({ ...r.user_games, game: r.games }));
   }
 
@@ -428,7 +428,7 @@ export class DbStorage implements IStorage {
       ))
       .orderBy(leaderboardEntries.rank)
       .limit(limit);
-    
+
     return result.map(r => ({ ...r.leaderboard_entries, user: r.users }));
   }
 
@@ -455,14 +455,14 @@ export class DbStorage implements IStorage {
       .where(eq(achievements.userId, userId))
       .orderBy(desc(achievements.achievedAt))
       .limit(limit);
-    
+
     return result.map(r => ({ ...r.achievements, game: r.games }));
   }
 
   async createAchievement(insertAchievement: InsertAchievement): Promise<Achievement> {
     return await db.transaction(async (tx) => {
       const [achievement] = await tx.insert(achievements).values(insertAchievement).returning();
-      
+
       await pointsEngine.awardPoints(
         insertAchievement.userId,
         insertAchievement.pointsAwarded,
@@ -472,7 +472,7 @@ export class DbStorage implements IStorage {
         insertAchievement.title,
         tx
       );
-      
+
       return achievement;
     });
   }
@@ -517,7 +517,7 @@ export class DbStorage implements IStorage {
       .innerJoin(rewards, eq(userRewards.rewardId, rewards.id))
       .where(eq(userRewards.userId, userId))
       .orderBy(desc(userRewards.redeemedAt));
-    
+
     return result.map(r => ({ ...r.user_rewards, reward: r.rewards }));
   }
 
@@ -532,14 +532,14 @@ export class DbStorage implements IStorage {
         sql`CASE WHEN ${users.isFounder} = true THEN 0 ELSE 1 END`, // Founders first
         desc(userRewards.redeemedAt) // Then by redemption date
       );
-    
+
     return result.map(r => ({ ...r.user_rewards, reward: r.rewards, user: r.users }));
   }
 
   async updateUserRewardStatus(userRewardId: string, status: string, fulfillmentData?: any): Promise<UserReward> {
     const [userReward] = await db
       .update(userRewards)
-      .set({ 
+      .set({
         status,
         fulfillmentData: fulfillmentData || null
       })
@@ -578,7 +578,7 @@ export class DbStorage implements IStorage {
       if (reward[0].stock !== null) {
         await tx
           .update(rewards)
-          .set({ 
+          .set({
             stock: sql`${rewards.stock} - 1`,
             inStock: sql`${rewards.stock} > 1`
           })
@@ -636,7 +636,7 @@ export class DbStorage implements IStorage {
       .insert(apiPartners)
       .values(partner)
       .returning();
-    
+
     return newPartner;
   }
 
@@ -688,7 +688,7 @@ export class DbStorage implements IStorage {
       .innerJoin(games, eq(matchSubmissions.gameId, games.id))
       .where(eq(matchSubmissions.userId, userId))
       .orderBy(desc(matchSubmissions.submittedAt));
-    
+
     return result.map(row => ({
       ...row.matchSubmission,
       game: row.game,
@@ -752,7 +752,7 @@ export class DbStorage implements IStorage {
       .innerJoin(users, eq(referrals.referredUserId, users.id))
       .where(eq(referrals.referrerId, referrerId))
       .orderBy(desc(referrals.createdAt));
-    
+
     return result.map(row => ({
       ...row.referral,
       referredUser: row.referredUser,
@@ -796,7 +796,7 @@ export class DbStorage implements IStorage {
       .having(sql`COUNT(${referrals.id}) > 0`)
       .orderBy(desc(sql`COUNT(${referrals.id})`))
       .limit(limit);
-    
+
     return result;
   }
 
@@ -826,12 +826,12 @@ export class DbStorage implements IStorage {
 
     // Get all subscriptions
     const allSubs = await db.select().from(subscriptions).where(eq(subscriptions.status, 'active'));
-    
+
     // Calculate MRR and tier breakdown
     const tierPrices = { basic: 500, pro: 1200, elite: 2500 };
     let mrrTotal = 0;
     const activeSubscribers = { basic: 0, pro: 0, elite: 0, total: 0 };
-    
+
     allSubs.forEach(sub => {
       const tier = sub.tier as 'basic' | 'pro' | 'elite';
       mrrTotal += tierPrices[tier] || 0;
@@ -844,7 +844,7 @@ export class DbStorage implements IStorage {
       .select({ total: sql<number>`COALESCE(SUM(CASE WHEN type = 'payment_succeeded' THEN amount ELSE 0 END), 0)` })
       .from(subscriptionEvents)
       .where(gte(subscriptionEvents.createdAt, todayStart));
-    
+
     const revenueThisWeek = await db
       .select({ total: sql<number>`COALESCE(SUM(CASE WHEN type = 'payment_succeeded' THEN amount ELSE 0 END), 0)` })
       .from(subscriptionEvents)
@@ -857,7 +857,7 @@ export class DbStorage implements IStorage {
 
     // Get fulfillment metrics
     const pendingRewards = await db
-      .select({ 
+      .select({
         count: sql<number>`COUNT(*)::int`,
         value: sql<number>`COALESCE(SUM(points_spent), 0)::int`
       })
@@ -878,7 +878,7 @@ export class DbStorage implements IStorage {
       .select({ count: sql<number>`COUNT(*)::int` })
       .from(users)
       .where(gte(users.createdAt, todayStart));
-    
+
     const newSignupsWeekResult = await db
       .select({ count: sql<number>`COUNT(*)::int` })
       .from(users)

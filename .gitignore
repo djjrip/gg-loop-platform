@@ -14,3 +14,5 @@ backups/
 *SECRETS*
 *.env.local
 .env.backup
+.env
+.local/

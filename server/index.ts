@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+console.log("Starting server...");
+
 const app = express();
 
 declare module 'http' {
@@ -73,22 +75,21 @@ app.use((req, res, next) => {
   const port = parseInt(process.env.PORT || '5000', 10);
   server.listen({
     port,
-    host: "0.0.0.0",
-    reusePort: true,
+    host: "127.0.0.1",
   }, () => {
     log(`serving on port ${port}`);
-    
+
     // Start streaming verification monitoring
     import("./streamingVerifier").then(({ streamingVerifier }) => {
       streamingVerifier.startMonitoring();
     }).catch((err) => {
       console.error("Failed to start streaming verifier:", err);
     });
-    
+
     // NOTE: Points expiration disabled for beta launch
     // TODO: Implement proper FIFO allocation tracking post-beta
     // See server/pointsExpirationService.ts for details
-    
+
     // Start Riot match sync service with achievement detection
     Promise.all([
       import("./matchSyncService"),
@@ -96,21 +97,21 @@ app.use((req, res, next) => {
     ]).then(([{ startMatchSyncService, stopMatchSyncService, initializeAchievementDetector }, { storage }]) => {
       // Initialize achievement detector with storage instance
       initializeAchievementDetector(storage);
-      
+
       // Start match sync service
       startMatchSyncService();
-      
+
       // Graceful shutdown handlers
       process.on('SIGTERM', () => {
         log('SIGTERM received, stopping match sync service...');
         stopMatchSyncService();
       });
-      
+
       process.on('SIGINT', () => {
         log('SIGINT received, stopping match sync service...');
         stopMatchSyncService();
       });
-      
+
       server.on('close', () => {
         stopMatchSyncService();
       });

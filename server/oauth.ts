@@ -17,13 +17,13 @@ export function getSession() {
     checkPeriod: 86400000, // Clean up expired sessions every 24h
   });
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
     },
   });
@@ -155,7 +155,7 @@ export async function setupAuth(app: Express) {
           oidcSub,
           email,
           displayName: profile.username,
-          profileImage: profile.avatar 
+          profileImage: profile.avatar
             ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
             : undefined,
         };
@@ -200,7 +200,7 @@ export async function setupAuth(app: Express) {
 
         const tiktokUser = userInfoResponse.data.data.user;
         const oidcSub = `tiktok:${tiktokUser.open_id}`;
-        
+
         // TikTok doesn't provide email, create virtual email
         const virtualEmail = `${tiktokUser.open_id}@tiktok.ggloop.io`;
 
@@ -263,7 +263,7 @@ export async function setupAuth(app: Express) {
         const accountResponse = await axios.get(
           'https://americas.api.riotgames.com/riot/account/v1/accounts/me',
           {
-            headers: { 
+            headers: {
               'Authorization': `Bearer ${accessToken}`,
               'X-Riot-Token': process.env.RIOT_API_KEY // Also include API key
             }
@@ -272,7 +272,7 @@ export async function setupAuth(app: Express) {
 
         const riotAccount = accountResponse.data;
         const oidcSub = `riot:${riotAccount.puuid}`;
-        
+
         // Create email from Riot account (Riot OAuth doesn't provide email directly)
         // Format: gameName-tagLine@riot.gg (virtual email for our system)
         const virtualEmail = `${riotAccount.gameName.toLowerCase()}-${riotAccount.tagLine.toLowerCase()}@riot.gg`;
@@ -324,14 +324,14 @@ export async function setupAuth(app: Express) {
             console.error('Login error:', err);
             return res.redirect("/");
           }
-          
+
           // Update login streak and award GG Coins
           try {
             const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
             if (dbUser) {
               const { updateLoginStreak } = await import('./lib/freeTier');
               const streakResult = await updateLoginStreak(dbUser.id);
-              
+
               // Store notification in session for frontend to display
               if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
                 req.session.loginNotification = {
@@ -341,7 +341,7 @@ export async function setupAuth(app: Express) {
                   timestamp: Date.now(),
                 };
               }
-              
+
               if (streakResult.coinsAwarded > 0) {
                 console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
               }
@@ -350,7 +350,7 @@ export async function setupAuth(app: Express) {
             console.error('[Login] Failed to update streak:', error);
             // Don't block login on streak error
           }
-          
+
           res.redirect("/");
         });
       });
@@ -377,14 +377,14 @@ export async function setupAuth(app: Express) {
             console.error('Login error:', err);
             return res.redirect("/");
           }
-          
+
           // Update login streak and award GG Coins
           try {
             const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
             if (dbUser) {
               const { updateLoginStreak } = await import('./lib/freeTier');
               const streakResult = await updateLoginStreak(dbUser.id);
-              
+
               // Store notification in session for frontend to display
               if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
                 req.session.loginNotification = {
@@ -394,7 +394,7 @@ export async function setupAuth(app: Express) {
                   timestamp: Date.now(),
                 };
               }
-              
+
               if (streakResult.coinsAwarded > 0) {
                 console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
               }
@@ -403,7 +403,7 @@ export async function setupAuth(app: Express) {
             console.error('[Login] Failed to update streak:', error);
             // Don't block login on streak error
           }
-          
+
           res.redirect("/");
         });
       });
@@ -430,14 +430,14 @@ export async function setupAuth(app: Express) {
             console.error('Login error:', err);
             return res.redirect("/");
           }
-          
+
           // Update login streak and award GG Coins
           try {
             const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
             if (dbUser) {
               const { updateLoginStreak } = await import('./lib/freeTier');
               const streakResult = await updateLoginStreak(dbUser.id);
-              
+
               // Store notification in session for frontend to display
               if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
                 req.session.loginNotification = {
@@ -447,7 +447,7 @@ export async function setupAuth(app: Express) {
                   timestamp: Date.now(),
                 };
               }
-              
+
               if (streakResult.coinsAwarded > 0) {
                 console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
               }
@@ -456,7 +456,7 @@ export async function setupAuth(app: Express) {
             console.error('[Login] Failed to update streak:', error);
             // Don't block login on streak error
           }
-          
+
           res.redirect("/");
         });
       });
@@ -483,14 +483,14 @@ export async function setupAuth(app: Express) {
             console.error('Login error:', err);
             return res.redirect("/");
           }
-          
+
           // Update login streak and award GG Coins
           try {
             const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
             if (dbUser) {
               const { updateLoginStreak } = await import('./lib/freeTier');
               const streakResult = await updateLoginStreak(dbUser.id);
-              
+
               // Store notification in session for frontend to display
               if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
                 req.session.loginNotification = {
@@ -500,7 +500,7 @@ export async function setupAuth(app: Express) {
                   timestamp: Date.now(),
                 };
               }
-              
+
               if (streakResult.coinsAwarded > 0) {
                 console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
               }
@@ -509,7 +509,7 @@ export async function setupAuth(app: Express) {
             console.error('[Login] Failed to update streak:', error);
             // Don't block login on streak error
           }
-          
+
           res.redirect("/");
         });
       });
@@ -536,14 +536,14 @@ export async function setupAuth(app: Express) {
             console.error('Login error:', err);
             return res.redirect("/");
           }
-          
+
           // Update login streak and award GG Coins
           try {
             const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
             if (dbUser) {
               const { updateLoginStreak } = await import('./lib/freeTier');
               const streakResult = await updateLoginStreak(dbUser.id);
-              
+
               // Store notification in session for frontend to display
               if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
                 req.session.loginNotification = {
@@ -553,7 +553,7 @@ export async function setupAuth(app: Express) {
                   timestamp: Date.now(),
                 };
               }
-              
+
               if (streakResult.coinsAwarded > 0) {
                 console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
               }
@@ -562,7 +562,7 @@ export async function setupAuth(app: Express) {
             console.error('[Login] Failed to update streak:', error);
             // Don't block login on streak error
           }
-          
+
           res.redirect("/");
         });
       });
