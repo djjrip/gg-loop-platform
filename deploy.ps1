@@ -9,7 +9,8 @@ if ($status) {
     Write-Host "📝 Changes detected. Committing..." -ForegroundColor Yellow
     git add .
     git commit -m "Deploy to Railway - PostgreSQL schema restored"
-} else {
+}
+else {
     Write-Host "✅ No changes to commit" -ForegroundColor Green
 }
 
@@ -30,4 +31,4 @@ Write-Host "6. Set environment variables (see DEPLOY_NOW.md)" -ForegroundColor W
 Write-Host ""
 Write-Host "📖 Full guide: DEPLOY_NOW.md" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "💰 Once live, cancel Replit and save $15-35/month!" -ForegroundColor Green
+Write-Host '💰 Once live, cancel Replit and save $15-35/month!' -ForegroundColor Green
