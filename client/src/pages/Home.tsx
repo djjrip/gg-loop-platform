@@ -3,10 +3,10 @@ import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Gamepad2, 
-  TrendingUp, 
-  Gift, 
+import {
+  Gamepad2,
+  TrendingUp,
+  Gift,
   Zap,
   Trophy,
   Users,
@@ -55,9 +55,14 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
+      {/* RAILWAY DEPLOYMENT PROOF BANNER */}
+      <div className="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white py-4 px-4 text-center font-bold text-lg shadow-lg">
+        🚀 DEPLOYED FROM RAILWAY - REPLIT IS DEAD 💀 | Saving $180-420/year!
+      </div>
+
       <OnboardingModal isOpen={showOnboarding} onClose={handleOnboardingClose} />
-      
+
       {/* Quick Stats Overview for Authenticated Users */}
       {isAuthenticated && user && (
         <div className="container mx-auto px-4 pt-6">
@@ -107,23 +112,23 @@ export default function Home() {
           </Card>
         </div>
       )}
-      
+
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-24 text-center">
         <div className="max-w-4xl mx-auto space-y-8">
           <Badge variant="outline" className="px-4 py-2 text-sm" data-testid="badge-membership">
             Membership Rewards for Gamers
           </Badge>
-          
+
           <h1 className="text-7xl md:text-8xl font-bold font-heading tracking-tight" data-testid="text-hero-title">
             Play. <span className="text-primary">Earn.</span> Loop.
           </h1>
-          
+
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto" data-testid="text-hero-subtitle">
-            Subscribe to GG Loop and earn points for every ranked match you win. 
+            Subscribe to GG Loop and earn points for every ranked match you win.
             Redeem points for gaming gear, gift cards, and exclusive rewards.
           </p>
-          
+
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-lg">
             <span className="text-sm font-medium text-primary">✨ Try Pro free for 7 days or Elite free for 3 days</span>
           </div>
@@ -144,10 +149,10 @@ export default function Home() {
                 </Button>
               </Link>
             )}
-            
-            <a 
-              href="https://discord.gg/X6GXg2At2D" 
-              target="_blank" 
+
+            <a
+              href="https://discord.gg/X6GXg2At2D"
+              target="_blank"
               rel="noopener noreferrer"
             >
               <Button variant="outline" size="lg" data-testid="button-discord">
@@ -155,7 +160,7 @@ export default function Home() {
                 Join Discord
               </Button>
             </a>
-            
+
             <Link href="/partners">
               <Button variant="ghost" size="lg" data-testid="button-partner">
                 Partner With Us
@@ -225,16 +230,16 @@ export default function Home() {
             <Target className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-primary">Our Mission</span>
           </div>
-          
+
           <h2 className="text-4xl md:text-5xl font-bold font-heading" data-testid="text-mission-title">
             Rewarding Gamers for Their Dedication
           </h2>
-          
+
           <div className="space-y-4 text-lg text-muted-foreground">
             <p>
               Remember when you were told to "log off" and "do something productive"? GG Loop is here to <span className="text-primary font-semibold">heal that inner kid</span> who loved gaming but was made to feel guilty about it. Your passion was never a waste—it was just waiting for the right platform.
             </p>
-            
+
             <p>
               We built a <span className="text-primary font-semibold">membership rewards program</span> that gives you fixed monthly point allocations to redeem for real gaming gear - without relying on sponsorships, ads, or grinding for views.
             </p>
@@ -565,8 +570,8 @@ export default function Home() {
             <Card key={reward.id} className="hover-elevate overflow-hidden" data-testid={`card-reward-${reward.id}`}>
               <CardContent className="p-0">
                 <div className="aspect-square bg-muted flex items-center justify-center">
-                  <img 
-                    src={reward.imageUrl} 
+                  <img
+                    src={reward.imageUrl}
                     alt={reward.title}
                     className="w-full h-full object-cover"
                     loading="lazy"
@@ -608,8 +613,8 @@ export default function Home() {
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
               {isAuthenticated ? (
                 <Link href="/stats">
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     variant="secondary"
                     data-testid="button-cta-dashboard"
                   >
@@ -619,8 +624,8 @@ export default function Home() {
                 </Link>
               ) : (
                 <Link href="/subscription">
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     variant="secondary"
                     data-testid="button-cta-sign-up"
                   >
