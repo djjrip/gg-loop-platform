@@ -145,47 +145,47 @@ export async function setupAuth(app: Express) {
     strategies.twitch = true;
   }
 
-  // Discord OAuth Strategy
-  if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
-    passport.use(new DiscordStrategy({
-      clientID: process.env.DISCORD_CLIENT_ID,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET,
-      callbackURL: `${baseUrl}/api/auth/discord/callback`,
-      scope: ['identify', 'email'],
-    }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
-      try {
-        const email = profile.email;
-        if (!email) {
-          return done(new Error("No email from Discord"));
-        }
-
-        const oidcSub = `discord:${profile.id}`;
-        const authUser: AuthUser = {
-          provider: 'discord',
-          providerId: profile.id,
-          oidcSub,
-          email,
-          displayName: profile.username,
-          profileImage: profile.avatar
-            ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
-            : undefined,
-        };
-
-        await storage.upsertUser({
-          oidcSub,
-          email: authUser.email,
-          firstName: profile.username,
-          lastName: '',
-          profileImageUrl: authUser.profileImage,
-        });
-
-        done(null, authUser);
-      } catch (error) {
-        done(error as Error);
+  // Discord OAuth Strategy - ALWAYS REGISTERED
+  // if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
+  passport.use(new DiscordStrategy({
+    clientID: process.env.DISCORD_CLIENT_ID || "1437711568925098034",
+    clientSecret: process.env.DISCORD_CLIENT_SECRET || "ajAFv8eiuMMalUaig3mHlQCjczsc1gyc",
+    callbackURL: `${baseUrl}/api/auth/discord/callback`,
+    scope: ['identify', 'email'],
+  }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+    try {
+      const email = profile.email;
+      if (!email) {
+        return done(new Error("No email from Discord"));
       }
-    }));
-    strategies.discord = true;
-  }
+
+      const oidcSub = `discord:${profile.id}`;
+      const authUser: AuthUser = {
+        provider: 'discord',
+        providerId: profile.id,
+        oidcSub,
+        email,
+        displayName: profile.username,
+        profileImage: profile.avatar
+          ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
+          : undefined,
+      };
+
+      await storage.upsertUser({
+        oidcSub,
+        email: authUser.email,
+        firstName: profile.username,
+        lastName: '',
+        profileImageUrl: authUser.profileImage,
+      });
+
+      done(null, authUser);
+    } catch (error) {
+      done(error as Error);
+    }
+  }));
+  strategies.discord = true;
+  // }
 
   // TikTok OAuth Strategy (Login Kit)
   if (process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET) {
