@@ -56,10 +56,7 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* RAILWAY DEPLOYMENT PROOF BANNER */}
-      <div className="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white py-4 px-4 text-center font-bold text-lg shadow-lg">
-        🚀 DEPLOYED FROM RAILWAY - REPLIT IS DEAD 💀 | Saving $180-420/year!
-      </div>
+
 
       <OnboardingModal isOpen={showOnboarding} onClose={handleOnboardingClose} />
 

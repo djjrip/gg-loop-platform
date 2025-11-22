@@ -8,7 +8,7 @@ $status = git status --porcelain
 if ($status) {
     Write-Host "📝 Changes detected. Committing..." -ForegroundColor Yellow
     git add .
-    git commit -m "Deploy to Railway - PostgreSQL schema restored"
+    git commit -m "Remove Replit banner and deploy to Railway"
 }
 else {
     Write-Host "✅ No changes to commit" -ForegroundColor Green
@@ -21,14 +21,6 @@ git push origin main
 Write-Host ""
 Write-Host "✅ Code pushed to GitHub!" -ForegroundColor Green
 Write-Host ""
-Write-Host "🎯 Next steps:" -ForegroundColor Cyan
-Write-Host "1. Go to https://railway.app" -ForegroundColor White
-Write-Host "2. Click 'Start a New Project'" -ForegroundColor White
-Write-Host "3. Select 'Deploy from GitHub repo'" -ForegroundColor White
-Write-Host "4. Choose 'djjrip/gg-loop-platform'" -ForegroundColor White
-Write-Host "5. Add PostgreSQL database" -ForegroundColor White
-Write-Host "6. Set environment variables (see DEPLOY_NOW.md)" -ForegroundColor White
+Write-Host "🎯 Railway will now automatically redeploy your site." -ForegroundColor Cyan
+Write-Host "   This usually takes 2-3 minutes." -ForegroundColor White
 Write-Host ""
-Write-Host "📖 Full guide: DEPLOY_NOW.md" -ForegroundColor Cyan
-Write-Host ""
-Write-Host '💰 Once live, cancel Replit and save $15-35/month!' -ForegroundColor Green
