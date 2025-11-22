@@ -440,12 +440,12 @@ export async function setupAuth(app: Express) {
 
   // Discord OAuth routes
   app.get("/api/auth/discord",
-    checkStrategy('discord'),
+    // checkStrategy('discord'), // Temporarily disabled to force init
     passport.authenticate("discord")
   );
 
   app.get("/api/auth/discord/callback",
-    checkStrategy('discord'),
+    // checkStrategy('discord'), // Temporarily disabled to force init
     passport.authenticate("discord", { failureRedirect: "/" }),
     async (req, res) => {
       // Regenerate session for security
