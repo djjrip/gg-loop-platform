@@ -16,10 +16,10 @@ declare module 'express-session' {
       streak: number;
       coinsAwarded: number;
       badgeUnlocked?: string;
-      timestamp: number;
+      timestamp: string;
     };
     twitchState?: string;
   }
 }
 
-export {};
+export { };

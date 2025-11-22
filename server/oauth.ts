@@ -364,7 +364,7 @@ export async function setupAuth(app: Express) {
                   streak: streakResult.currentStreak,
                   coinsAwarded: streakResult.coinsAwarded,
                   badgeUnlocked: streakResult.badgeUnlocked,
-                  timestamp: Date.now(),
+                  timestamp: Date.now().toString(),
                 };
               }
 
@@ -419,7 +419,7 @@ export async function setupAuth(app: Express) {
                   streak: streakResult.currentStreak,
                   coinsAwarded: streakResult.coinsAwarded,
                   badgeUnlocked: streakResult.badgeUnlocked,
-                  timestamp: Date.now(),
+                  timestamp: Date.now().toString(),
                 };
               }
 
@@ -474,7 +474,7 @@ export async function setupAuth(app: Express) {
                   streak: streakResult.currentStreak,
                   coinsAwarded: streakResult.coinsAwarded,
                   badgeUnlocked: streakResult.badgeUnlocked,
-                  timestamp: Date.now(),
+                  timestamp: Date.now().toString(),
                 };
               }
 
@@ -529,7 +529,7 @@ export async function setupAuth(app: Express) {
                   streak: streakResult.currentStreak,
                   coinsAwarded: streakResult.coinsAwarded,
                   badgeUnlocked: streakResult.badgeUnlocked,
-                  timestamp: Date.now(),
+                  timestamp: Date.now().toString(),
                 };
               }
 
@@ -584,7 +584,7 @@ export async function setupAuth(app: Express) {
                   streak: streakResult.currentStreak,
                   coinsAwarded: streakResult.coinsAwarded,
                   badgeUnlocked: streakResult.badgeUnlocked,
-                  timestamp: Date.now(),
+                  timestamp: Date.now().toString(),
                 };
               }
 
