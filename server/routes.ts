@@ -280,7 +280,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const state = crypto.randomBytes(16).toString('hex');
       req.session.twitchState = state;
 
-      const redirectUri = `${process.env.REPL_ID ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : 'http://localhost:5000'}/api/twitch/callback`;
+      const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+      const redirectUri = `${baseUrl}/api/auth/twitch/callback`;
       const authUrl = twitchAPI.getAuthorizationUrl(redirectUri, state);
 
       res.json({ authUrl });
@@ -301,7 +302,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       delete req.session.twitchState;
 
-      const redirectUri = `${process.env.REPL_ID ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : 'http://localhost:5000'}/api/twitch/callback`;
+      const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+      const redirectUri = `${baseUrl}/api/auth/twitch/callback`;
       const tokens = await twitchAPI.exchangeCodeForTokens(code as string, redirectUri);
       const twitchUser = await twitchAPI.getUserInfo(twitchAPI.encryptToken(tokens.access_token));
 
