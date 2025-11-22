@@ -55,6 +55,15 @@ export async function setupAuth(app: Express) {
   // Determine base URL - use custom domain if available, otherwise use Replit URL
   const baseUrl = process.env.BASE_URL || 'https://ggloop.io';
 
+  // Track registered strategies to conditionally register routes
+  const strategies = {
+    google: false,
+    twitch: false,
+    discord: false,
+    tiktok: false,
+    riot: false
+  };
+
   // Google OAuth Strategy
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     passport.use(new GoogleStrategy({
@@ -92,6 +101,7 @@ export async function setupAuth(app: Express) {
         done(error as Error);
       }
     }));
+    strategies.google = true;
   }
 
   // Twitch OAuth Strategy
@@ -132,6 +142,7 @@ export async function setupAuth(app: Express) {
         done(error as Error);
       }
     }));
+    strategies.twitch = true;
   }
 
   // Discord OAuth Strategy
@@ -173,6 +184,7 @@ export async function setupAuth(app: Express) {
         done(error as Error);
       }
     }));
+    strategies.discord = true;
   }
 
   // TikTok OAuth Strategy (Login Kit)
@@ -239,6 +251,7 @@ export async function setupAuth(app: Express) {
         done(error as Error);
       }
     }));
+    strategies.tiktok = true;
   }
 
   // Riot OAuth Strategy (RSO - Riot Sign-On)
@@ -302,14 +315,27 @@ export async function setupAuth(app: Express) {
         done(error as Error);
       }
     }));
+    strategies.riot = true;
   }
+
+  // Helper to handle missing strategy errors
+  const checkStrategy = (strategy: keyof typeof strategies) => (req: any, res: any, next: any) => {
+    if (!strategies[strategy]) {
+      return res.status(501).json({
+        message: `Authentication strategy '${strategy}' is not configured. Please check environment variables.`
+      });
+    }
+    next();
+  };
 
   // Google OAuth routes
   app.get("/api/auth/google",
+    checkStrategy('google'),
     passport.authenticate("google", { scope: ["profile", "email"] })
   );
 
   app.get("/api/auth/google/callback",
+    checkStrategy('google'),
     passport.authenticate("google", { failureRedirect: "/" }),
     async (req, res) => {
       // Regenerate session for security
@@ -359,10 +385,12 @@ export async function setupAuth(app: Express) {
 
   // Twitch OAuth routes
   app.get("/api/auth/twitch",
+    checkStrategy('twitch'),
     passport.authenticate("twitch")
   );
 
   app.get("/api/auth/twitch/callback",
+    checkStrategy('twitch'),
     passport.authenticate("twitch", { failureRedirect: "/" }),
     async (req, res) => {
       // Regenerate session for security
@@ -412,10 +440,12 @@ export async function setupAuth(app: Express) {
 
   // Discord OAuth routes
   app.get("/api/auth/discord",
+    checkStrategy('discord'),
     passport.authenticate("discord")
   );
 
   app.get("/api/auth/discord/callback",
+    checkStrategy('discord'),
     passport.authenticate("discord", { failureRedirect: "/" }),
     async (req, res) => {
       // Regenerate session for security
@@ -465,10 +495,12 @@ export async function setupAuth(app: Express) {
 
   // TikTok OAuth routes
   app.get("/api/auth/tiktok",
+    checkStrategy('tiktok'),
     passport.authenticate("tiktok")
   );
 
   app.get("/api/auth/tiktok/callback",
+    checkStrategy('tiktok'),
     passport.authenticate("tiktok", { failureRedirect: "/" }),
     async (req, res) => {
       // Regenerate session for security
@@ -518,10 +550,12 @@ export async function setupAuth(app: Express) {
 
   // Riot OAuth routes
   app.get("/api/auth/riot",
+    checkStrategy('riot'),
     passport.authenticate("riot")
   );
 
   app.get("/api/auth/riot/callback",
+    checkStrategy('riot'),
     passport.authenticate("riot", { failureRedirect: "/" }),
     async (req, res) => {
       // Regenerate session for security
