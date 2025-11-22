@@ -6,27 +6,52 @@ import { Strategy as DiscordStrategy } from "passport-discord";
 import { Strategy as OAuth2Strategy } from "passport-oauth2";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 import axios from "axios";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
-  const MemoryStore = createMemoryStore(session);
-  const sessionStore = new MemoryStore({
-    checkPeriod: 86400000, // Clean up expired sessions every 24h
-  });
-  return session({
-    secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: sessionTtl,
-    },
-  });
+
+  // Use PostgreSQL session store in production, memory store in development
+  if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
+    const pgStore = connectPg(session);
+    const sessionStore = new pgStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: true,
+      ttl: sessionTtl / 1000, // PostgreSQL store expects seconds, not milliseconds
+      tableName: "sessions",
+    });
+    return session({
+      secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+      store: sessionStore,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: true,
+        maxAge: sessionTtl,
+      },
+    });
+  } else {
+    // Development: use memory store
+    const createMemoryStore = require('memorystore');
+    const MemoryStore = createMemoryStore(session);
+    const sessionStore = new MemoryStore({
+      checkPeriod: 86400000,
+    });
+    return session({
+      secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+      store: sessionStore,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: false,
+        maxAge: sessionTtl,
+      },
+    });
+  }
 }
 
 interface AuthUser {
