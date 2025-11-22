@@ -52,7 +52,7 @@ export default function Login() {
         </CardHeader>
         <CardContent className="space-y-3">
           <Button
-            onClick={() => handleLogin('discord')}
+            onClick={() => window.location.href = "/api/auth/discord"}
             variant="outline"
             className="w-full h-12 text-base gap-3 hover-elevate active-elevate-2"
             data-testid="button-discord-login"
