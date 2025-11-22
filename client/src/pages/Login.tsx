@@ -3,14 +3,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Trophy } from "lucide-react";
 import { SiDiscord, SiTwitch } from "react-icons/si";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
-  const handleDiscordLogin = () => {
-    window.location.href = "/api/auth/discord";
-  };
+  const { toast } = useToast();
 
-  const handleTwitchLogin = () => {
-    window.location.href = "/api/auth/twitch";
+  const handleLogin = async (provider: string) => {
+    try {
+      // Check if the provider is configured before redirecting
+      const response = await fetch(`/api/auth/${provider}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.status === 501) {
+        const data = await response.json();
+        toast({
+          variant: "destructive",
+          title: "Configuration Missing",
+          description: data.message || `${provider} login is not configured yet.`,
+        });
+        return;
+      }
+
+      // If configured (or redirects), proceed with actual login
+      window.location.href = `/api/auth/${provider}`;
+    } catch (error) {
+      console.error("Login check failed:", error);
+      // Fallback to direct redirect if check fails
+      window.location.href = `/api/auth/${provider}`;
+    }
   };
 
   return (
@@ -28,7 +52,7 @@ export default function Login() {
         </CardHeader>
         <CardContent className="space-y-3">
           <Button
-            onClick={handleDiscordLogin}
+            onClick={() => handleLogin('discord')}
             variant="outline"
             className="w-full h-12 text-base gap-3 hover-elevate active-elevate-2"
             data-testid="button-discord-login"
@@ -38,7 +62,7 @@ export default function Login() {
           </Button>
 
           <Button
-            onClick={handleTwitchLogin}
+            onClick={() => handleLogin('twitch')}
             variant="outline"
             className="w-full h-12 text-base gap-3 hover-elevate active-elevate-2"
             data-testid="button-twitch-login"
@@ -48,7 +72,7 @@ export default function Login() {
           </Button>
 
           <Button
-            onClick={() => window.location.href = "/api/auth/google"}
+            onClick={() => handleLogin('google')}
             variant="outline"
             className="w-full h-12 text-base gap-3 hover-elevate active-elevate-2"
             data-testid="button-google-login"
