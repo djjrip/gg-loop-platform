@@ -28,7 +28,7 @@ export function getDiscordAuthUrl(req: Request, res: Response) {
     // Store state in session for verification later (optional but recommended)
     req.session.discordState = state;
     const url = discordOAuth.createAuthorizationURL(state, ["identify", "email"]);
-    res.redirect(url);
+    res.redirect(url.toString());
 }
 
 /**
@@ -36,22 +36,37 @@ export function getDiscordAuthUrl(req: Request, res: Response) {
  * upserts the user in our DB, creates a minimal session (only oidcSub), and redirects home.
  */
 export async function handleDiscordCallback(req: Request, res: Response) {
+    console.log("[Arctic] Starting Discord callback handling");
     const { code, state } = req.query as { code?: string; state?: string };
+
     if (!code || !state) {
+        console.error("[Arctic] Missing code or state");
         return res.redirect("/");
     }
+
     // Verify state if we stored it earlier
     if (req.session.discordState && req.session.discordState !== state) {
-        console.error("Discord OAuth state mismatch");
+        console.error("[Arctic] Discord OAuth state mismatch");
         return res.redirect("/");
     }
+
     try {
+        console.log("[Arctic] Validating authorization code...");
         const tokens = await discordOAuth.validateAuthorizationCode(code);
+        console.log("[Arctic] Tokens received. Access token length:", tokens.accessToken().length);
+
         // Fetch user profile from Discord API
+        console.log("[Arctic] Fetching user profile...");
         const userRes = await fetch("https://discord.com/api/users/@me", {
-            headers: { Authorization: `Bearer ${tokens.access_token}` },
+            headers: { Authorization: `Bearer ${tokens.accessToken()}` },
         });
+
+        if (!userRes.ok) {
+            throw new Error(`Failed to fetch Discord profile: ${userRes.status} ${userRes.statusText}`);
+        }
+
         const profile = await userRes.json();
+        console.log("[Arctic] Profile fetched:", profile.id, profile.username);
 
         const oidcSub = `discord:${profile.id}`;
         const authUser = {
@@ -66,6 +81,7 @@ export async function handleDiscordCallback(req: Request, res: Response) {
         };
 
         // Upsert user (basic info only – no Date objects)
+        console.log("[Arctic] Upserting user to DB...");
         await storage.upsertUser({
             oidcSub,
             email: authUser.email,
@@ -73,24 +89,35 @@ export async function handleDiscordCallback(req: Request, res: Response) {
             lastName: "",
             profileImageUrl: authUser.profileImage,
         });
+        console.log("[Arctic] User upserted.");
 
         // Regenerate session and login with minimal object
+        console.log("[Arctic] Regenerating session...");
         req.session.regenerate((err) => {
             if (err) {
-                console.error("Session regeneration error:", err);
-                return res.redirect("/");
+                console.error("[Arctic] Session regeneration error:", err);
+                return res.status(500).json({ error: "Session regeneration failed", details: err.message });
             }
+
+            console.log("[Arctic] Logging in user with oidcSub:", oidcSub);
             req.login({ oidcSub }, (loginErr) => {
                 if (loginErr) {
-                    console.error("Login error:", loginErr);
-                    return res.redirect("/");
+                    console.error("[Arctic] Login error:", loginErr);
+                    return res.status(500).json({ error: "Login failed", details: loginErr.message });
                 }
                 // Optionally update streak, points, etc. (reuse existing logic if needed)
+                console.log("[Arctic] Login successful. Redirecting to /");
                 res.redirect("/");
             });
         });
-    } catch (e) {
-        console.error("Discord OAuth callback error:", e);
-        res.redirect("/");
+    } catch (e: any) {
+        console.error("[Arctic] Discord OAuth callback CRITICAL error:", e);
+        // RETURN THE ERROR TO THE USER SO WE CAN SEE IT
+        res.status(500).json({
+            message: "Critical Error in Discord Callback",
+            error: e.message,
+            stack: e.stack,
+            type: e.constructor.name
+        });
     }
 }
