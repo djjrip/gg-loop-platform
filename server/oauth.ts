@@ -295,6 +295,9 @@ export async function setupAuth(app: Express) {
   app.get("/api/auth/discord", getDiscordAuthUrl);
   app.get("/api/auth/discord/callback", handleDiscordCallback);
 
+  // Version check endpoint
+  app.get("/api/version", (req, res) => res.json({ version: "arctic-fix-v2", timestamp: Date.now() }));
+
   // Google OAuth routes
   app.get("/api/auth/google",
     checkStrategy('google'),
