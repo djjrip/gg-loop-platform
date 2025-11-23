@@ -2,7 +2,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 // @ts-ignore - no type definitions available for passport-twitch-new
 import { Strategy as TwitchStrategy } from "passport-twitch-new";
-import { Strategy as DiscordStrategy } from "passport-discord";
+// import { Strategy as DiscordStrategy } from "passport-discord"; // No longer used – replaced by arctic
 import { Strategy as OAuth2Strategy } from "passport-oauth2";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
@@ -145,47 +145,7 @@ export async function setupAuth(app: Express) {
     strategies.twitch = true;
   }
 
-  // Discord OAuth Strategy - ALWAYS REGISTERED
-  // if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
-  passport.use(new DiscordStrategy({
-    clientID: process.env.DISCORD_CLIENT_ID || "1437711568925098034",
-    clientSecret: process.env.DISCORD_CLIENT_SECRET || "ajAFv8eiuMMalUaig3mHlQCjczsc1gyc",
-    callbackURL: `${baseUrl}/api/auth/discord/callback`,
-    scope: ['identify', 'email'],
-  }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
-    try {
-      const email = profile.email;
-      if (!email) {
-        return done(new Error("No email from Discord"));
-      }
-
-      const oidcSub = `discord:${profile.id}`;
-      const authUser: AuthUser = {
-        provider: 'discord',
-        providerId: profile.id,
-        oidcSub,
-        email,
-        displayName: profile.username,
-        profileImage: profile.avatar
-          ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
-          : undefined,
-      };
-
-      await storage.upsertUser({
-        oidcSub,
-        email: authUser.email,
-        firstName: profile.username,
-        lastName: '',
-        profileImageUrl: authUser.profileImage,
-      });
-
-      done(null, authUser);
-    } catch (error) {
-      done(error as Error);
-    }
-  }));
-  strategies.discord = true;
-  // }
+  // Old Passport Discord strategy removed – replaced by arctic implementation
 
   // TikTok OAuth Strategy (Login Kit)
   if (process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET) {
@@ -328,6 +288,13 @@ export async function setupAuth(app: Express) {
     next();
   };
 
+  // Import arctic Discord handlers
+  import { getDiscordAuthUrl, handleDiscordCallback } from "./arcticDiscord";
+
+  // Discord OAuth routes using arctic
+  app.get("/api/auth/discord", getDiscordAuthUrl);
+  app.get("/api/auth/discord/callback", handleDiscordCallback);
+
   // Google OAuth routes
   app.get("/api/auth/google",
     checkStrategy('google'),
@@ -392,61 +359,6 @@ export async function setupAuth(app: Express) {
   app.get("/api/auth/twitch/callback",
     checkStrategy('twitch'),
     passport.authenticate("twitch", { failureRedirect: "/" }),
-    async (req, res) => {
-      // Regenerate session for security
-      const user = req.user;
-      req.session.regenerate((err) => {
-        if (err) {
-          console.error('Session regeneration error:', err);
-          return res.redirect("/");
-        }
-        req.login(user!, async (err) => {
-          if (err) {
-            console.error('Login error:', err);
-            return res.redirect("/");
-          }
-
-          // Update login streak and award GG Coins
-          try {
-            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
-            if (dbUser) {
-              const { updateLoginStreak } = await import('./lib/freeTier');
-              const streakResult = await updateLoginStreak(dbUser.id);
-
-              // Store notification in session for frontend to display
-              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-                req.session.loginNotification = {
-                  streak: streakResult.currentStreak,
-                  coinsAwarded: streakResult.coinsAwarded,
-                  badgeUnlocked: streakResult.badgeUnlocked,
-                  timestamp: Date.now(),
-                };
-              }
-
-              if (streakResult.coinsAwarded > 0) {
-                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-              }
-            }
-          } catch (error) {
-            console.error('[Login] Failed to update streak:', error);
-            // Don't block login on streak error
-          }
-
-          res.redirect("/");
-        });
-      });
-    }
-  );
-
-  // Discord OAuth routes
-  app.get("/api/auth/discord",
-    // checkStrategy('discord'), // Temporarily disabled to force init
-    passport.authenticate("discord")
-  );
-
-  app.get("/api/auth/discord/callback",
-    // checkStrategy('discord'), // Temporarily disabled to force init
-    passport.authenticate("discord", { failureRedirect: "/" }),
     async (req, res) => {
       // Regenerate session for security
       const user = req.user;
