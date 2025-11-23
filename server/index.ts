@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
-console.log("Starting server...");
+console.log("Starting server... (Arctic Fix v3 - Force Redeploy)");
 
 const app = express();
 
