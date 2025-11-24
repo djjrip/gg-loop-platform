@@ -10,38 +10,51 @@ import createMemoryStore from "memorystore";
 import { storage } from "./storage";
 import axios from "axios";
 
+import connectPg from "connect-pg-simple";
+
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
-  const MemoryStore = createMemoryStore(session);
-  const sessionStore = new MemoryStore({
-    checkPeriod: 86400000, // Clean up expired sessions every 24h
-    serializer: {
-      stringify: (sess: any) => {
-        // Convert any Date objects to timestamps before storing
-        return JSON.stringify(sess, (key, value) => {
-          if (value instanceof Date) {
-            return value.getTime();
-          }
-          return value;
-        });
-      },
-      parse: (sessStr: string) => {
-        return JSON.parse(sessStr);
-      }
-    }
-  });
 
-  return session({
-    secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: sessionTtl,
-    },
-  });
+  // Use PostgreSQL session store if DATABASE_URL is available, otherwise use MemoryStore
+  if (process.env.DATABASE_URL) {
+    const PgStore = connectPg(session);
+    const sessionStore = new PgStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: false,
+      ttl: sessionTtl / 1000, // convert to seconds
+      tableName: "sessions",
+    });
+
+    return session({
+      secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+      store: sessionStore,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: sessionTtl,
+      },
+    });
+  } else {
+    // Fallback to MemoryStore for local dev without DATABASE_URL
+    const MemoryStore = createMemoryStore(session);
+    const sessionStore = new MemoryStore({
+      checkPeriod: 86400000,
+    });
+
+    return session({
+      secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+      store: sessionStore,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: sessionTtl,
+      },
+    });
+  }
 }
 
 interface AuthUser {
@@ -390,48 +403,38 @@ export async function setupAuth(app: Express) {
     checkStrategy('twitch'),
     passport.authenticate("twitch", { failureRedirect: "/" }),
     async (req, res) => {
-      // Regenerate session for security
-      const user = req.user;
-      req.session.regenerate((err) => {
-        if (err) {
-          console.error('Session regeneration error:', err);
-          return res.redirect("/");
-        }
-        req.login(user!, async (err) => {
-          if (err) {
-            console.error('Login error:', err);
-            return res.redirect("/");
-          }
+      try {
+        // User is already authenticated by passport.authenticate
+        // No need to regenerate session or call req.login again
 
-          // Update login streak and award GG Coins
-          try {
-            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
-            if (dbUser) {
-              const { updateLoginStreak } = await import('./lib/freeTier');
-              const streakResult = await updateLoginStreak(dbUser.id);
+        // Update login streak and award GG Coins
+        if (req.user && (req.user as any).oidcSub) {
+          const dbUser = await storage.getUserByOidcSub((req.user as any).oidcSub);
+          if (dbUser) {
+            const { updateLoginStreak } = await import('./lib/freeTier');
+            const streakResult = await updateLoginStreak(dbUser.id);
 
-              // Store notification in session for frontend to display
-              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-                req.session.loginNotification = {
-                  streak: streakResult.currentStreak,
-                  coinsAwarded: streakResult.coinsAwarded,
-                  badgeUnlocked: streakResult.badgeUnlocked,
-                  timestamp: Date.now(),
-                };
-              }
-
-              if (streakResult.coinsAwarded > 0) {
-                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-              }
+            // Store ONLY primitive values in session
+            if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+              req.session.loginNotification = {
+                streak: Number(streakResult.currentStreak),
+                coinsAwarded: Number(streakResult.coinsAwarded),
+                badgeUnlocked: streakResult.badgeUnlocked ? String(streakResult.badgeUnlocked) : undefined,
+                timestamp: Number(Date.now()),
+              };
             }
-          } catch (error) {
-            console.error('[Login] Failed to update streak:', error);
-            // Don't block login on streak error
-          }
 
-          res.redirect("/");
-        });
-      });
+            if (streakResult.coinsAwarded > 0) {
+              console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+            }
+          }
+        }
+
+        res.redirect("/");
+      } catch (error) {
+        console.error('[Twitch OAuth Callback] Error:', error);
+        res.redirect("/");
+      }
     }
   );
 
@@ -445,48 +448,38 @@ export async function setupAuth(app: Express) {
     checkStrategy('tiktok'),
     passport.authenticate("tiktok", { failureRedirect: "/" }),
     async (req, res) => {
-      // Regenerate session for security
-      const user = req.user;
-      req.session.regenerate((err) => {
-        if (err) {
-          console.error('Session regeneration error:', err);
-          return res.redirect("/");
-        }
-        req.login(user!, async (err) => {
-          if (err) {
-            console.error('Login error:', err);
-            return res.redirect("/");
-          }
+      try {
+        // User is already authenticated by passport.authenticate
+        // No need to regenerate session or call req.login again
 
-          // Update login streak and award GG Coins
-          try {
-            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
-            if (dbUser) {
-              const { updateLoginStreak } = await import('./lib/freeTier');
-              const streakResult = await updateLoginStreak(dbUser.id);
+        // Update login streak and award GG Coins
+        if (req.user && (req.user as any).oidcSub) {
+          const dbUser = await storage.getUserByOidcSub((req.user as any).oidcSub);
+          if (dbUser) {
+            const { updateLoginStreak } = await import('./lib/freeTier');
+            const streakResult = await updateLoginStreak(dbUser.id);
 
-              // Store notification in session for frontend to display
-              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-                req.session.loginNotification = {
-                  streak: streakResult.currentStreak,
-                  coinsAwarded: streakResult.coinsAwarded,
-                  badgeUnlocked: streakResult.badgeUnlocked,
-                  timestamp: Date.now(),
-                };
-              }
-
-              if (streakResult.coinsAwarded > 0) {
-                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-              }
+            // Store ONLY primitive values in session
+            if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+              req.session.loginNotification = {
+                streak: Number(streakResult.currentStreak),
+                coinsAwarded: Number(streakResult.coinsAwarded),
+                badgeUnlocked: streakResult.badgeUnlocked ? String(streakResult.badgeUnlocked) : undefined,
+                timestamp: Number(Date.now()),
+              };
             }
-          } catch (error) {
-            console.error('[Login] Failed to update streak:', error);
-            // Don't block login on streak error
-          }
 
-          res.redirect("/");
-        });
-      });
+            if (streakResult.coinsAwarded > 0) {
+              console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+            }
+          }
+        }
+
+        res.redirect("/");
+      } catch (error) {
+        console.error('[TikTok OAuth Callback] Error:', error);
+        res.redirect("/");
+      }
     }
   );
 
@@ -500,48 +493,38 @@ export async function setupAuth(app: Express) {
     checkStrategy('riot'),
     passport.authenticate("riot", { failureRedirect: "/" }),
     async (req, res) => {
-      // Regenerate session for security
-      const user = req.user;
-      req.session.regenerate((err) => {
-        if (err) {
-          console.error('Session regeneration error:', err);
-          return res.redirect("/");
-        }
-        req.login(user!, async (err) => {
-          if (err) {
-            console.error('Login error:', err);
-            return res.redirect("/");
-          }
+      try {
+        // User is already authenticated by passport.authenticate
+        // No need to regenerate session or call req.login again
 
-          // Update login streak and award GG Coins
-          try {
-            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
-            if (dbUser) {
-              const { updateLoginStreak } = await import('./lib/freeTier');
-              const streakResult = await updateLoginStreak(dbUser.id);
+        // Update login streak and award GG Coins
+        if (req.user && (req.user as any).oidcSub) {
+          const dbUser = await storage.getUserByOidcSub((req.user as any).oidcSub);
+          if (dbUser) {
+            const { updateLoginStreak } = await import('./lib/freeTier');
+            const streakResult = await updateLoginStreak(dbUser.id);
 
-              // Store notification in session for frontend to display
-              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-                req.session.loginNotification = {
-                  streak: streakResult.currentStreak,
-                  coinsAwarded: streakResult.coinsAwarded,
-                  badgeUnlocked: streakResult.badgeUnlocked,
-                  timestamp: Date.now(),
-                };
-              }
-
-              if (streakResult.coinsAwarded > 0) {
-                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-              }
+            // Store ONLY primitive values in session
+            if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+              req.session.loginNotification = {
+                streak: Number(streakResult.currentStreak),
+                coinsAwarded: Number(streakResult.coinsAwarded),
+                badgeUnlocked: streakResult.badgeUnlocked ? String(streakResult.badgeUnlocked) : undefined,
+                timestamp: Number(Date.now()),
+              };
             }
-          } catch (error) {
-            console.error('[Login] Failed to update streak:', error);
-            // Don't block login on streak error
-          }
 
-          res.redirect("/");
-        });
-      });
+            if (streakResult.coinsAwarded > 0) {
+              console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+            }
+          }
+        }
+
+        res.redirect("/");
+      } catch (error) {
+        console.error('[Riot OAuth Callback] Error:', error);
+        res.redirect("/");
+      }
     }
   );
 
