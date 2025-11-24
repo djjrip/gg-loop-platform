@@ -95,25 +95,29 @@ export async function setupAuth(app: Express) {
         }
 
         const oidcSub = `google:${profile.id}`;
+
+        // Create a clean user object with ONLY primitive types (no Date objects)
         const authUser: AuthUser = {
           provider: 'google',
-          providerId: profile.id,
-          oidcSub,
-          email,
-          displayName: profile.displayName,
-          profileImage: profile.photos?.[0]?.value,
+          providerId: String(profile.id),
+          oidcSub: String(oidcSub),
+          email: String(email),
+          displayName: String(profile.displayName || email.split('@')[0]),
+          profileImage: profile.photos?.[0]?.value ? String(profile.photos[0].value) : undefined,
         };
 
         await storage.upsertUser({
           oidcSub,
           email: authUser.email,
-          firstName: profile.name?.givenName,
-          lastName: profile.name?.familyName,
+          firstName: profile.name?.givenName || authUser.displayName,
+          lastName: profile.name?.familyName || '',
           profileImageUrl: authUser.profileImage,
         });
 
+        // Return ONLY the clean authUser object (no profile, no tokens)
         done(null, authUser);
       } catch (error) {
+        console.error('[Google OAuth] Error:', error);
         done(error as Error);
       }
     }));
@@ -136,13 +140,15 @@ export async function setupAuth(app: Express) {
         }
 
         const oidcSub = `twitch:${profile.id}`;
+
+        // Create a clean user object with ONLY primitive types
         const authUser: AuthUser = {
           provider: 'twitch',
-          providerId: profile.id,
-          oidcSub,
-          email,
-          displayName: profile.display_name || profile.login,
-          profileImage: profile.profile_image_url,
+          providerId: String(profile.id),
+          oidcSub: String(oidcSub),
+          email: String(email),
+          displayName: String(profile.display_name || profile.login || email.split('@')[0]),
+          profileImage: profile.profile_image_url ? String(profile.profile_image_url) : undefined,
         };
 
         await storage.upsertUser({
@@ -155,6 +161,7 @@ export async function setupAuth(app: Express) {
 
         done(null, authUser);
       } catch (error) {
+        console.error('[Twitch OAuth] Error:', error);
         done(error as Error);
       }
     }));
