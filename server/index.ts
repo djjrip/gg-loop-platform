@@ -26,6 +26,19 @@ console.log("Starting server... (DEPLOY: 2024-11-24 16:40 CST - Login Fix v2)");
 
 const app = express();
 
+// Defensive middleware – strip stray Date objects from session to avoid Date serialization errors
+app.use((req, _res, next) => {
+  if (req.session) {
+    for (const [key, value] of Object.entries(req.session)) {
+      if (value instanceof Date) {
+        (req.session as any)[key] = value.getTime();
+        console.warn(`⚠️ Converted stray Date in session key "${key}" to timestamp`);
+      }
+    }
+  }
+  next();
+});
+
 declare module 'http' {
   interface IncomingMessage {
     rawBody: string
@@ -42,7 +55,10 @@ app.use(requestId);
 app.use(metricsMiddleware);
 app.use(express.urlencoded({ extended: false }));
 
-// Register /metrics endpoint after other middlewares
+app.get('/debug/session', (req, res) => {
+  // Return the current session object for debugging purposes
+  res.json({ session: req.session ?? null });
+});
 registerMetricsEndpoint(app);
 
 app.use((req, res, next) => {
@@ -62,6 +78,27 @@ app.use((req, res, next) => {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        // -------------------------------------------------
+        // Global response‑header sanitiser – catches any stray Date
+        // -------------------------------------------------
+        const originalWriteHead = res.writeHead;
+        res.writeHead = function (statusCode: number, reason?: string, headers?: NodeJS.OutgoingHttpHeaders) {
+          if (typeof reason === 'object' && headers === undefined) {
+            headers = reason;
+            reason = undefined;
+          }
+          const hdrs = headers || {};
+          for (const [key, val] of Object.entries(hdrs)) {
+            if (val instanceof Date) {
+              console.warn(`⚠️ Header "${key}" contained a Date – converting to string`);
+              hdrs[key] = val.toUTCString();
+            }
+            if (Array.isArray(val)) {
+              hdrs[key] = val.map(v => (v instanceof Date ? v.toUTCString() : v));
+            }
+          }
+          return originalWriteHead.call(this, statusCode, reason as any, hdrs);
+        };
       }
 
       if (logLine.length > 80) {

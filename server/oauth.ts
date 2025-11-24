@@ -34,6 +34,7 @@ export function getSession() {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: sessionTtl,
+        expires: undefined,
       },
     });
   } else {
@@ -52,6 +53,7 @@ export function getSession() {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: sessionTtl,
+        expires: undefined,
       },
     });
   }
