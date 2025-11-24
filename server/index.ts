@@ -66,6 +66,41 @@ app.use((req, res, next) => {
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
+  // -------------------------------------------------
+  // Global response‑header sanitiser – catches any stray Date
+  // -------------------------------------------------
+  const originalWriteHead = res.writeHead.bind(res);
+  res.writeHead = function (statusCode: number, statusMessageOrHeaders?: any, maybeHeaders?: any) {
+    let statusMessage: string | undefined;
+    let headers: any;
+
+    if (typeof statusMessageOrHeaders === 'string') {
+      statusMessage = statusMessageOrHeaders;
+      headers = maybeHeaders;
+    } else {
+      headers = statusMessageOrHeaders;
+    }
+
+    const hdrs = { ...(headers || {}) };
+
+    // Scan every header value for Date instances
+    for (const [key, val] of Object.entries(hdrs)) {
+      if (val instanceof Date) {
+        console.warn(`⚠️ Header "${key}" contained a Date – converting to string`);
+        hdrs[key] = val.toUTCString();
+      }
+      if (Array.isArray(val)) {
+        hdrs[key] = val.map((v: any) => (v instanceof Date ? v.toUTCString() : v));
+      }
+    }
+
+    // Call the original writeHead with the correct signature
+    if (statusMessage !== undefined) {
+      return originalWriteHead(statusCode, statusMessage, hdrs);
+    }
+    return originalWriteHead(statusCode, hdrs);
+  };
+
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
     capturedJsonResponse = bodyJson;
@@ -78,27 +113,6 @@ app.use((req, res, next) => {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-        // -------------------------------------------------
-        // Global response‑header sanitiser – catches any stray Date
-        // -------------------------------------------------
-        const originalWriteHead = res.writeHead;
-        res.writeHead = function (statusCode: number, reason?: string, headers?: NodeJS.OutgoingHttpHeaders) {
-          if (typeof reason === 'object' && headers === undefined) {
-            headers = reason;
-            reason = undefined;
-          }
-          const hdrs = headers || {};
-          for (const [key, val] of Object.entries(hdrs)) {
-            if (val instanceof Date) {
-              console.warn(`⚠️ Header "${key}" contained a Date – converting to string`);
-              hdrs[key] = val.toUTCString();
-            }
-            if (Array.isArray(val)) {
-              hdrs[key] = val.map(v => (v instanceof Date ? v.toUTCString() : v));
-            }
-          }
-          return originalWriteHead.call(this, statusCode, reason as any, hdrs);
-        };
       }
 
       if (logLine.length > 80) {
