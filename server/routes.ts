@@ -1911,6 +1911,31 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           : `Buy and email gift card code to ${req.dbUser.email}`}
       `);
 
+      // Discord Notification for Admins
+      try {
+        const discordWebhookUrl = process.env.DISCORD_ADMIN_WEBHOOK_URL;
+        if (discordWebhookUrl) {
+          await fetch(discordWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              embeds: [{
+                title: '🎁 New Reward Redemption!',
+                description: `**User:** ${req.dbUser.email}\n**Reward:** ${reward.title}\n**Cost:** ${reward.pointsCost} pts`,
+                color: 0x10B981, // Emerald Green
+                fields: [
+                  { name: 'Fulfillment Type', value: reward.fulfillmentType, inline: true },
+                  { name: 'Action Required', value: 'Check Admin Panel to fulfill', inline: true }
+                ],
+                timestamp: new Date().toISOString()
+              }]
+            })
+          });
+        }
+      } catch (discordError) {
+        console.error('Failed to send Discord notification:', discordError);
+      }
+
       // TODO: Add email notification - see Replit docs for email integration
 
       res.json(userReward);

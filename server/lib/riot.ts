@@ -29,7 +29,7 @@ class RateLimiter {
 
   async waitForSlot(): Promise<void> {
     const now = Date.now();
-    
+
     // Clean up requests older than 2 minutes
     this.recentRequests = this.recentRequests.filter(
       timestamp => now - timestamp < 120000
@@ -90,7 +90,7 @@ export function getValorantRoutingRegion(valorantRegion: string): string {
     console.warn(`[Riot] Invalid Valorant region provided: ${valorantRegion}, defaulting to americas`);
     return 'americas';
   }
-  
+
   const regionMap: Record<string, string> = {
     na: 'americas',
     br: 'americas',
@@ -100,15 +100,15 @@ export function getValorantRoutingRegion(valorantRegion: string): string {
     kr: 'asia',
     ap: 'asia',
   };
-  
+
   const normalized = valorantRegion.toLowerCase().trim();
   const routing = regionMap[normalized];
-  
+
   if (!routing) {
     console.warn(`[Riot] Unknown Valorant region: ${valorantRegion}, defaulting to americas`);
     return 'americas';
   }
-  
+
   return routing;
 }
 
@@ -138,7 +138,7 @@ export class RiotAPI {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const axiosError = error as AxiosError;
-        
+
         // Handle rate limiting
         if (axiosError.response?.status === 429) {
           const retryAfter = axiosError.response.headers['retry-after'];
@@ -155,6 +155,7 @@ export class RiotAPI {
 
         // Handle 403 - API key issue
         if (axiosError.response?.status === 403) {
+          console.error('🚨 RIOT API KEY ERROR: The key is invalid or expired. Please renew it at https://developer.riotgames.com/');
           throw new Error('Invalid API key or unauthorized access');
         }
       }
@@ -238,7 +239,7 @@ export class RiotAPI {
     if (!player) return false;
 
     const playerTeam = player.team;
-    
+
     // Check if that team won
     const teams = match.teams;
     const playerTeamData = teams.find((t: any) => t.teamId === playerTeam);

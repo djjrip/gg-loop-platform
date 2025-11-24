@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { 
-  Gift, 
+import { useToast } from "@/hooks/use-toast";
+import {
+  Gift,
   Gamepad2,
   Headphones,
   CreditCard,
@@ -16,50 +17,76 @@ import {
   Crown,
   Sparkles,
   Star,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
 import { Link } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
-// Mock rewards data for MVP presentation
-const MOCK_REWARDS = [
-  // Gift Cards
-  { id: '1', title: 'Steam Gift Card $25', category: 'gift-cards', pointsCost: 12000, rarity: 'rare', imageUrl: 'https://images.unsplash.com/photo-1633969707708-3f9644786f8d?w=800&h=600&fit=crop', description: 'Instantly delivered digital gift card for Steam platform' },
-  { id: '2', title: 'Amazon Gift Card $50', category: 'gift-cards', pointsCost: 25000, rarity: 'epic', imageUrl: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&h=600&fit=crop', description: 'Versatile gift card for millions of products' },
-  { id: '3', title: 'Discord Nitro 1 Year', category: 'subscriptions', pointsCost: 15000, rarity: 'rare', imageUrl: 'https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=800&h=600&fit=crop', description: 'Premium Discord features for one year' },
-  { id: '4', title: 'PlayStation Store $100', category: 'gift-cards', pointsCost: 50000, rarity: 'legendary', imageUrl: 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&h=600&fit=crop', description: 'PlayStation Network wallet credit' },
-  
-  // Gaming Gear
-  { id: '5', title: 'Razer DeathAdder V3', category: 'gaming-gear', pointsCost: 35000, rarity: 'epic', imageUrl: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=800&h=600&fit=crop', description: 'Professional gaming mouse with 30K DPI sensor' },
-  { id: '6', title: 'HyperX Cloud II Headset', category: 'gaming-gear', pointsCost: 28000, rarity: 'epic', imageUrl: 'https://images.unsplash.com/photo-1599669454699-248893623440?w=800&h=600&fit=crop', description: '7.1 surround sound gaming headset' },
-  { id: '7', title: 'Logitech G Pro X Keyboard', category: 'gaming-gear', pointsCost: 42000, rarity: 'legendary', imageUrl: 'https://images.unsplash.com/photo-1545127398-14699f92334b?w=800&h=600&fit=crop', description: 'Mechanical gaming keyboard with RGB' },
-  { id: '8', title: 'SteelSeries Mousepad XXL', category: 'gaming-gear', pointsCost: 8000, rarity: 'common', imageUrl: 'https://images.unsplash.com/photo-1605034313761-73ea4a0cfbf3?w=800&h=600&fit=crop', description: 'Extended gaming surface with anti-slip base' },
-  
-  // More Gift Cards
-  { id: '9', title: 'Xbox Gift Card $25', category: 'gift-cards', pointsCost: 12000, rarity: 'rare', imageUrl: 'https://images.unsplash.com/photo-1621259182978-fbf93132d53d?w=800&h=600&fit=crop', description: 'Microsoft Store and Xbox credit' },
-  { id: '10', title: 'Riot Points 5000 RP', category: 'gift-cards', pointsCost: 20000, rarity: 'epic', imageUrl: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=800&h=600&fit=crop', description: 'League of Legends in-game currency' },
-  { id: '11', title: 'Visa Prepaid Card $100', category: 'gift-cards', pointsCost: 52000, rarity: 'legendary', imageUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop', description: 'Use anywhere Visa is accepted' },
-  { id: '12', title: 'Google Play $15', category: 'gift-cards', pointsCost: 7000, rarity: 'common', imageUrl: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&h=600&fit=crop', description: 'Android apps, games, and media' },
-];
+interface Reward {
+  id: string;
+  title: string;
+  description: string;
+  pointsCost: number;
+  imageUrl: string;
+  category: string;
+  tier: number;
+  inStock: boolean;
+  fulfillmentType: string;
+}
 
-const rarityConfig = {
-  legendary: { color: 'from-amber-600 to-orange-600', border: 'border-amber-600/40', icon: Crown, label: 'Legendary' },
-  epic: { color: 'from-purple-600 to-purple-700', border: 'border-purple-600/40', icon: Sparkles, label: 'Epic' },
-  rare: { color: 'from-blue-600 to-blue-700', border: 'border-blue-600/40', icon: Star, label: 'Rare' },
-  common: { color: 'from-slate-500 to-slate-600', border: 'border-slate-500/40', icon: Zap, label: 'Common' },
+const rarityConfig: Record<number, { color: string; border: string; icon: any; label: string }> = {
+  4: { color: 'from-amber-600 to-orange-600', border: 'border-amber-600/40', icon: Crown, label: 'Legendary' },
+  3: { color: 'from-purple-600 to-purple-700', border: 'border-purple-600/40', icon: Sparkles, label: 'Epic' },
+  2: { color: 'from-blue-600 to-blue-700', border: 'border-blue-600/40', icon: Star, label: 'Rare' },
+  1: { color: 'from-slate-500 to-slate-600', border: 'border-slate-500/40', icon: Zap, label: 'Common' },
 };
 
 export default function Shop() {
   const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  // Fetch rewards from API
+  const { data: rewards, isLoading } = useQuery<Reward[]>({
+    queryKey: ['/api/rewards'],
+  });
+
+  // Redemption mutation
+  const redeemMutation = useMutation({
+    mutationFn: async (rewardId: string) => {
+      const res = await apiRequest('POST', '/api/user/rewards/redeem', { rewardId });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] }); // Refresh user points
+      queryClient.invalidateQueries({ queryKey: ['/api/user/rewards'] }); // Refresh user rewards
+
+      toast({
+        title: "Reward Redeemed!",
+        description: "Your request has been received. We will process it shortly and email you the details.",
+        variant: "default",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Redemption Failed",
+        description: error.message || "Could not redeem reward. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Filter rewards
-  const filteredRewards = MOCK_REWARDS.filter(reward => {
+  const filteredRewards = rewards?.filter(reward => {
     const matchesCategory = selectedCategory === 'all' || reward.category === selectedCategory;
     const matchesSearch = reward.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         reward.description.toLowerCase().includes(searchQuery.toLowerCase());
+      (reward.description && reward.description.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
-  });
+  }) || [];
 
   const categories = [
     { value: 'all', label: 'All Rewards', icon: Gift },
@@ -68,10 +95,17 @@ export default function Shop() {
     { value: 'subscriptions', label: 'Subscriptions', icon: Headphones },
   ];
 
+  const handleRedeem = (reward: Reward) => {
+    if (!confirm(`Are you sure you want to redeem ${reward.title} for ${reward.pointsCost.toLocaleString()} points?`)) {
+      return;
+    }
+    redeemMutation.mutate(reward.id);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-8">
@@ -120,7 +154,11 @@ export default function Shop() {
         </div>
 
         {/* Rewards Grid */}
-        {filteredRewards.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : filteredRewards.length === 0 ? (
           <div className="text-center py-16">
             <Gift className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
             <h3 className="text-xl font-semibold mb-2" data-testid="text-no-results">No rewards found</h3>
@@ -129,13 +167,14 @@ export default function Shop() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRewards.map((reward) => {
-              const config = rarityConfig[reward.rarity as keyof typeof rarityConfig];
+              const config = rarityConfig[reward.tier] || rarityConfig[1];
               const Icon = config.icon;
               const canAfford = isAuthenticated && user && user.totalPoints >= reward.pointsCost;
-              
+              const isRedeeming = redeemMutation.isPending && redeemMutation.variables === reward.id;
+
               return (
-                <Card 
-                  key={reward.id} 
+                <Card
+                  key={reward.id}
                   className={`overflow-hidden hover-elevate ${config.border}`}
                   data-testid={`card-reward-${reward.id}`}
                 >
@@ -149,12 +188,18 @@ export default function Shop() {
 
                   {/* Image */}
                   <div className="aspect-video bg-muted relative overflow-hidden">
-                    <img 
-                      src={reward.imageUrl} 
-                      alt={reward.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
+                    {reward.imageUrl ? (
+                      <img
+                        src={reward.imageUrl}
+                        alt={reward.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-secondary">
+                        <Gift className="h-12 w-12 text-muted-foreground/50" />
+                      </div>
+                    )}
                   </div>
 
                   {/* Content */}
@@ -183,13 +228,18 @@ export default function Shop() {
                         </Button>
                       </Link>
                     ) : canAfford ? (
-                      <Button 
-                        className="w-full" 
+                      <Button
+                        className="w-full"
                         data-testid={`button-redeem-${reward.id}`}
-                        disabled
+                        onClick={() => handleRedeem(reward)}
+                        disabled={isRedeeming || !reward.inStock}
                       >
-                        <Gift className="mr-2 h-4 w-4" />
-                        Redeem (Coming Soon)
+                        {isRedeeming ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Gift className="mr-2 h-4 w-4" />
+                        )}
+                        {reward.inStock ? 'Redeem Reward' : 'Out of Stock'}
                       </Button>
                     ) : (
                       <div className="space-y-2">
@@ -215,8 +265,8 @@ export default function Shop() {
           <CardContent className="py-8 text-center">
             <h3 className="text-xl font-bold mb-2">How Redemption Works</h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Redeem your points for instant digital delivery of gift cards and gaming gear. 
-              Rewards are typically delivered within 24 hours to your registered email address.
+              Redeem your points for instant digital delivery of gift cards and gaming gear.
+              Rewards are processed manually by our team within 24 hours.
             </p>
           </CardContent>
         </Card>

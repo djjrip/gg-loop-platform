@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+import { twitchErrorLogger } from "./middleware/twitchErrorLogger";
 import { setupVite, serveStatic, log } from "./vite";
 
 console.log("Starting server... (Arctic Fix v3 - Force Redeploy)");
@@ -16,6 +17,7 @@ app.use(express.json({
     req.rawBody = buf.toString((encoding as BufferEncoding) || 'utf8');
   }
 }));
+app.use(twitchErrorLogger);
 app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {

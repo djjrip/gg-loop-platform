@@ -8,7 +8,7 @@
   - Example generation: `openssl rand -base64 32`
 
 ### 2. Riot API Production Key
-- [ ] `RIOT_API_KEY` - Your approved production API key from Riot Games
+- [x] `RIOT_API_KEY` - Your approved production API key from Riot Games
   - Obtain from: https://developer.riotgames.com/
   - **IMPORTANT**: Use your own production key (starts with RGAPI-)
   - Current approved game: League of Legends
@@ -41,6 +41,10 @@
 
 ### 7. Base URL (If deploying)
 - [ ] `BASE_URL` - Your production domain (e.g., `https://ggloop.io`)
+
+### 8. Notifications (Optional but Recommended)
+- [ ] `DISCORD_ADMIN_WEBHOOK_URL` - Discord Webhook URL for admin notifications (e.g., new redemptions)
+- [ ] `DISCORD_FOUNDER_WEBHOOK_URL` - Discord Webhook URL for public founder announcements
 
 ## Pre-Launch Verification
 
