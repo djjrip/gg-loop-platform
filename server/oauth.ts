@@ -15,6 +15,20 @@ export function getSession() {
   const MemoryStore = createMemoryStore(session);
   const sessionStore = new MemoryStore({
     checkPeriod: 86400000, // Clean up expired sessions every 24h
+    serializer: {
+      stringify: (sess: any) => {
+        // Convert any Date objects to timestamps before storing
+        return JSON.stringify(sess, (key, value) => {
+          if (value instanceof Date) {
+            return value.getTime();
+          }
+          return value;
+        });
+      },
+      parse: (sessStr: string) => {
+        return JSON.parse(sessStr);
+      }
+    }
   });
 
   return session({
