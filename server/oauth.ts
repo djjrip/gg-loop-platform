@@ -57,8 +57,15 @@ export async function setupAuth(app: Express) {
     next();
   });
 
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+  passport.serializeUser((user: any, cb) => {
+    // Only store oidcSub to prevent Date serialization issues
+    cb(null, { oidcSub: user.oidcSub });
+  });
+
+  passport.deserializeUser((obj: any, cb) => {
+    // Return the minimal user object
+    cb(null, obj);
+  });
 
   // Determine base URL - use custom domain if available, otherwise use Replit URL
   const baseUrl = process.env.BASE_URL || 'https://ggloop.io';
