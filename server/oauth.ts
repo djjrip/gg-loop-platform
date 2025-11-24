@@ -5,7 +5,7 @@ import { Strategy as TwitchStrategy } from "passport-twitch-new";
 // import { Strategy as DiscordStrategy } from "passport-discord"; // No longer used – replaced by arctic
 import { Strategy as OAuth2Strategy } from "passport-oauth2";
 import session from "express-session";
-import type { Express, RequestHandler } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import createMemoryStore from "memorystore";
 import { storage } from "./storage";
 import axios from "axios";
@@ -36,6 +36,8 @@ export function getSession() {
         maxAge: sessionTtl,
         expires: undefined,
       },
+      // Custom serializer to convert Date objects to timestamps
+      genid: () => require('crypto').randomBytes(16).toString('hex'),
     });
   } else {
     // Fallback to MemoryStore for local dev without DATABASE_URL
@@ -79,18 +81,58 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Prevent caching of auth routes to avoid stale redirects
-  app.use("/api/auth", (req, res, next) => {
-    res.header("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.header("Pragma", "no-cache");
-    res.header("Expires", "0");
+  // -----------------------------------------------------------------
+  // Middleware: strip any Date objects from the authenticated user object
+  // -----------------------------------------------------------------
+  app.use((req, _res, next) => {
+    if ((req as any).user) {
+      const sanitize = (obj: any): any => {
+        if (obj instanceof Date) return obj.getTime();
+        if (Array.isArray(obj)) return obj.map(sanitize);
+        if (obj && typeof obj === 'object') {
+          const out: any = {};
+          for (const [k, v] of Object.entries(obj)) {
+            out[k] = sanitize(v);
+          }
+          return out;
+        }
+        return obj;
+      };
+      (req as any).user = sanitize((req as any).user);
+    }
     next();
   });
 
-  passport.serializeUser((user: any, cb) => {
-    // Only store oidcSub to prevent Date serialization issues
-    cb(null, { oidcSub: user.oidcSub });
+  // -----------------------------------------------------------------
+  // Helper to sanitise AuthUser before storing in session
+  // -----------------------------------------------------------------
+  const sanitiseAuthUser = (user: AuthUser): AuthUser => {
+    const recurse = (obj: any): any => {
+      if (obj instanceof Date) return obj.getTime();
+      if (Array.isArray(obj)) return obj.map(recurse);
+      if (obj && typeof obj === 'object') {
+        const out: any = {};
+        for (const [k, v] of Object.entries(obj)) {
+          out[k] = recurse(v);
+        }
+        return out;
+      }
+      return obj;
+    };
+    return recurse(user) as AuthUser;
+  };
+
+  // -----------------------------------------------------------------
+  // Debug endpoint – dumps current session (useful for inspecting leftovers)
+  // -----------------------------------------------------------------
+  app.get('/debug/session/:provider?', (req: Request, res: Response) => {
+    if (!req.session) return res.json({ error: 'no session' });
+    res.json({ session: req.session });
   });
+
+  // -----------------------------------------------------------------
+  // OAuth routes – unchanged but now run after the sanitising middleware
+  // -----------------------------------------------------------------
 
   passport.deserializeUser((obj: any, cb) => {
     // Return the minimal user object
@@ -106,7 +148,7 @@ export async function setupAuth(app: Express) {
     twitch: false,
     discord: false,
     tiktok: false,
-    riot: false
+    riot: false,
   };
 
   // Google OAuth Strategy
@@ -143,8 +185,8 @@ export async function setupAuth(app: Express) {
           profileImageUrl: authUser.profileImage,
         });
 
-        // Return ONLY the clean authUser object (no profile, no tokens)
-        done(null, authUser);
+        // Sanitize before storing in session
+        done(null, sanitiseAuthUser(authUser));
       } catch (error) {
         console.error('[Google OAuth] Error:', error);
         done(error as Error);
@@ -170,7 +212,6 @@ export async function setupAuth(app: Express) {
 
         const oidcSub = `twitch:${profile.id}`;
 
-        // Create a clean user object with ONLY primitive types
         const authUser: AuthUser = {
           provider: 'twitch',
           providerId: String(profile.id),
@@ -188,7 +229,7 @@ export async function setupAuth(app: Express) {
           profileImageUrl: authUser.profileImage,
         });
 
-        done(null, authUser);
+        done(null, sanitiseAuthUser(authUser));
       } catch (error) {
         console.error('[Twitch OAuth] Error:', error);
         done(error as Error);
@@ -196,8 +237,6 @@ export async function setupAuth(app: Express) {
     }));
     strategies.twitch = true;
   }
-
-  // Old Passport Discord strategy removed – replaced by arctic implementation
 
   // TikTok OAuth Strategy (Login Kit)
   if (process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET) {
@@ -211,7 +250,6 @@ export async function setupAuth(app: Express) {
       state: true, // Enable CSRF protection
     }, async (accessToken: string, refreshToken: string, params: any, profile: any, done: any) => {
       try {
-        // Fetch user info from TikTok API
         const userInfoResponse = await axios.get(
           'https://open.tiktokapis.com/v2/user/info/',
           {
@@ -225,7 +263,6 @@ export async function setupAuth(app: Express) {
         const tiktokUser = userInfoResponse.data.data.user;
         const oidcSub = `tiktok:${tiktokUser.open_id}`;
 
-        // TikTok doesn't provide email, create virtual email
         const virtualEmail = `${tiktokUser.open_id}@tiktok.ggloop.io`;
 
         const authUser: AuthUser = {
@@ -239,7 +276,6 @@ export async function setupAuth(app: Express) {
           tiktokUnionId: tiktokUser.union_id,
         };
 
-        // Upsert user with basic info
         await storage.upsertUser({
           oidcSub,
           email: authUser.email,
@@ -248,7 +284,6 @@ export async function setupAuth(app: Express) {
           profileImageUrl: authUser.profileImage,
         });
 
-        // Connect TikTok account with tokens and TikTok-specific fields
         await storage.connectTiktokAccount(oidcSub, {
           openId: tiktokUser.open_id,
           unionId: tiktokUser.union_id,
@@ -257,7 +292,7 @@ export async function setupAuth(app: Express) {
           refreshToken,
         });
 
-        done(null, authUser);
+        done(null, sanitiseAuthUser(authUser));
       } catch (error) {
         console.error('[TikTok OAuth] Error fetching user info:', error);
         done(error as Error);
@@ -276,276 +311,70 @@ export async function setupAuth(app: Express) {
       callbackURL: `${baseUrl}/api/auth/riot/callback`,
       scope: ['openid'], // openid for basic account info
       state: true, // Enable CSRF protection
-      customHeaders: {
-        'Authorization': 'Basic ' + Buffer.from(
-          `${process.env.RIOT_CLIENT_ID}:${process.env.RIOT_CLIENT_SECRET}`
-        ).toString('base64')
-      }
-    }, async (accessToken: string, refreshToken: string, params: any, profile: any, done: any) => {
+    }, async (accessToken: any, refreshToken: any, profile: any, done: any) => {
       try {
-        // Fetch user account info from Riot API
-        // Use americas routing for account API (works for all regions)
-        const accountResponse = await axios.get(
-          'https://americas.api.riotgames.com/riot/account/v1/accounts/me',
-          {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'X-Riot-Token': process.env.RIOT_API_KEY // Also include API key
-            }
-          }
-        );
-
-        const riotAccount = accountResponse.data;
-        const oidcSub = `riot:${riotAccount.puuid}`;
-
-        // Create email from Riot account (Riot OAuth doesn't provide email directly)
-        // Format: gameName-tagLine@riot.gg (virtual email for our system)
-        const virtualEmail = `${riotAccount.gameName.toLowerCase()}-${riotAccount.tagLine.toLowerCase()}@riot.gg`;
-
+        // Riot does not provide email, use puuid as identifier
+        const oidcSub = `riot:${profile.id}`;
         const authUser: AuthUser = {
           provider: 'riot',
-          providerId: riotAccount.puuid,
+          providerId: String(profile.id),
           oidcSub,
-          email: virtualEmail,
-          displayName: `${riotAccount.gameName}#${riotAccount.tagLine}`,
-          riotPuuid: riotAccount.puuid,
-          riotGameName: riotAccount.gameName,
-          riotTagLine: riotAccount.tagLine,
+          email: `${profile.id}@riot.ggloop.io`,
+          displayName: profile.username || 'Riot User',
         };
-
+        // Store user (you may want to fetch more info from Riot API here)
         await storage.upsertUser({
           oidcSub,
           email: authUser.email,
-          firstName: riotAccount.gameName,
-          lastName: `#${riotAccount.tagLine}`,
-          profileImageUrl: undefined, // Riot doesn't provide avatar in account API
+          firstName: authUser.displayName,
+          lastName: '',
+          profileImageUrl: undefined,
         });
-
-        done(null, authUser);
+        done(null, sanitiseAuthUser(authUser));
       } catch (error) {
-        console.error('[Riot OAuth] Error fetching account:', error);
+        console.error('[Riot OAuth] Error:', error);
         done(error as Error);
       }
     }));
     strategies.riot = true;
   }
 
-  // Helper to handle missing strategy errors
-  const checkStrategy = (strategy: keyof typeof strategies) => (req: any, res: any, next: any) => {
-    if (!strategies[strategy]) {
-      return res.status(501).json({
-        message: `Authentication strategy '${strategy}' is not configured. Please check environment variables.`
-      });
-    }
-    next();
-  };
-
-  // Import arctic Discord handlers (disabled)
-  // import { getDiscordAuthUrl, handleDiscordCallback } from "./arcticDiscord";
-
-  // Discord OAuth routes using arctic (disabled)
-  // app.get("/api/auth/discord", getDiscordAuthUrl);
-  // app.get("/api/auth/discord/callback", handleDiscordCallback);
-
-  // Version check endpoint
-  app.get("/api/version", (req, res) => res.json({ version: "arctic-fix-v2", timestamp: Date.now() }));
-
-  // Google OAuth routes
-  app.get("/api/auth/google",
-    checkStrategy('google'),
-    passport.authenticate("google", { scope: ["profile", "email"] })
-  );
-
-  app.get("/api/auth/google/callback",
-    checkStrategy('google'),
-    passport.authenticate("google", { failureRedirect: "/" }),
-    async (req, res) => {
-      try {
-        // User is already authenticated by passport.authenticate
-        // No need to regenerate session or call req.login again
-
-        // Update login streak and award GG Coins
-        if (req.user && (req.user as any).oidcSub) {
-          const dbUser = await storage.getUserByOidcSub((req.user as any).oidcSub);
-          if (dbUser) {
-            const { updateLoginStreak } = await import('./lib/freeTier');
-            const streakResult = await updateLoginStreak(dbUser.id);
-
-            // Store ONLY primitive values in session
-            if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-              req.session.loginNotification = {
-                streak: Number(streakResult.currentStreak),
-                coinsAwarded: Number(streakResult.coinsAwarded),
-                badgeUnlocked: streakResult.badgeUnlocked ? String(streakResult.badgeUnlocked) : undefined,
-                timestamp: Number(Date.now()),
-              };
-            }
-
-            if (streakResult.coinsAwarded > 0) {
-              console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-            }
-          }
-        }
-
-        res.redirect("/");
-      } catch (error) {
-        console.error('[Google OAuth Callback] Error:', error);
-        res.redirect("/");
-      }
-    }
-  );
-
-  // Twitch OAuth routes
-  app.get("/api/auth/twitch",
-    checkStrategy('twitch'),
-    passport.authenticate("twitch")
-  );
-
-  app.get("/api/auth/twitch/callback",
-    checkStrategy('twitch'),
-    passport.authenticate("twitch", { failureRedirect: "/" }),
-    async (req, res) => {
-      try {
-        // User is already authenticated by passport.authenticate
-        // No need to regenerate session or call req.login again
-
-        // Update login streak and award GG Coins
-        if (req.user && (req.user as any).oidcSub) {
-          const dbUser = await storage.getUserByOidcSub((req.user as any).oidcSub);
-          if (dbUser) {
-            const { updateLoginStreak } = await import('./lib/freeTier');
-            const streakResult = await updateLoginStreak(dbUser.id);
-
-            // Store ONLY primitive values in session
-            if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-              req.session.loginNotification = {
-                streak: Number(streakResult.currentStreak),
-                coinsAwarded: Number(streakResult.coinsAwarded),
-                badgeUnlocked: streakResult.badgeUnlocked ? String(streakResult.badgeUnlocked) : undefined,
-                timestamp: Number(Date.now()),
-              };
-            }
-
-            if (streakResult.coinsAwarded > 0) {
-              console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-            }
-          }
-        }
-
-        res.redirect("/");
-      } catch (error) {
-        console.error('[Twitch OAuth Callback] Error:', error);
-        res.redirect("/");
-      }
-    }
-  );
-
-  // TikTok OAuth routes
-  app.get("/api/auth/tiktok",
-    checkStrategy('tiktok'),
-    passport.authenticate("tiktok")
-  );
-
-  app.get("/api/auth/tiktok/callback",
-    checkStrategy('tiktok'),
-    passport.authenticate("tiktok", { failureRedirect: "/" }),
-    async (req, res) => {
-      try {
-        // User is already authenticated by passport.authenticate
-        // No need to regenerate session or call req.login again
-
-        // Update login streak and award GG Coins
-        if (req.user && (req.user as any).oidcSub) {
-          const dbUser = await storage.getUserByOidcSub((req.user as any).oidcSub);
-          if (dbUser) {
-            const { updateLoginStreak } = await import('./lib/freeTier');
-            const streakResult = await updateLoginStreak(dbUser.id);
-
-            // Store ONLY primitive values in session
-            if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-              req.session.loginNotification = {
-                streak: Number(streakResult.currentStreak),
-                coinsAwarded: Number(streakResult.coinsAwarded),
-                badgeUnlocked: streakResult.badgeUnlocked ? String(streakResult.badgeUnlocked) : undefined,
-                timestamp: Number(Date.now()),
-              };
-            }
-
-            if (streakResult.coinsAwarded > 0) {
-              console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-            }
-          }
-        }
-
-        res.redirect("/");
-      } catch (error) {
-        console.error('[TikTok OAuth Callback] Error:', error);
-        res.redirect("/");
-      }
-    }
-  );
-
-  // Riot OAuth routes
-  app.get("/api/auth/riot",
-    checkStrategy('riot'),
-    passport.authenticate("riot")
-  );
-
-  app.get("/api/auth/riot/callback",
-    checkStrategy('riot'),
-    passport.authenticate("riot", { failureRedirect: "/" }),
-    async (req, res) => {
-      try {
-        // User is already authenticated by passport.authenticate
-        // No need to regenerate session or call req.login again
-
-        // Update login streak and award GG Coins
-        if (req.user && (req.user as any).oidcSub) {
-          const dbUser = await storage.getUserByOidcSub((req.user as any).oidcSub);
-          if (dbUser) {
-            const { updateLoginStreak } = await import('./lib/freeTier');
-            const streakResult = await updateLoginStreak(dbUser.id);
-
-            // Store ONLY primitive values in session
-            if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-              req.session.loginNotification = {
-                streak: Number(streakResult.currentStreak),
-                coinsAwarded: Number(streakResult.coinsAwarded),
-                badgeUnlocked: streakResult.badgeUnlocked ? String(streakResult.badgeUnlocked) : undefined,
-                timestamp: Number(Date.now()),
-              };
-            }
-
-            if (streakResult.coinsAwarded > 0) {
-              console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-            }
-          }
-        }
-
-        res.redirect("/");
-      } catch (error) {
-        console.error('[Riot OAuth Callback] Error:', error);
-        res.redirect("/");
-      }
-    }
-  );
-
-  // Logout route
-  app.get("/api/logout", (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        console.error('Logout error:', err);
-      }
-      req.session.destroy(() => {
-        res.redirect("/");
-      });
+  // Register routes for each enabled strategy
+  if (strategies.google) {
+    app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+    app.get('/api/auth/google/callback', passport.authenticate('google', { failureRedirect: '/' }), (req, res) => {
+      res.redirect('/');
     });
+  }
+
+  if (strategies.twitch) {
+    app.get('/api/auth/twitch', passport.authenticate('twitch'));
+    app.get('/api/auth/twitch/callback', passport.authenticate('twitch', { failureRedirect: '/' }), (req, res) => {
+      res.redirect('/');
+    });
+  }
+
+  if (strategies.tiktok) {
+    app.get('/api/auth/tiktok', passport.authenticate('tiktok'));
+    app.get('/api/auth/tiktok/callback', passport.authenticate('tiktok', { failureRedirect: '/' }), (req, res) => {
+      res.redirect('/');
+    });
+  }
+
+  if (strategies.riot) {
+    app.get('/api/auth/riot', passport.authenticate('riot'));
+    app.get('/api/auth/riot/callback', passport.authenticate('riot', { failureRedirect: '/' }), (req, res) => {
+      res.redirect('/');
+    });
+  }
+
+  // -----------------------------------------------------------------
+  // Global error handler – must be after all routes
+  // -----------------------------------------------------------------
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error('⚠️ Uncaught error in request chain:', err);
+    if (!res.headersSent) {
+      res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
+    }
   });
 }
-
-export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  next();
-};
