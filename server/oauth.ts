@@ -16,6 +16,7 @@ export function getSession() {
   const sessionStore = new MemoryStore({
     checkPeriod: 86400000, // Clean up expired sessions every 24h
   });
+
   return session({
     secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
     store: sessionStore,
@@ -303,12 +304,12 @@ export async function setupAuth(app: Express) {
     next();
   };
 
-  // Import arctic Discord handlers
-  import { getDiscordAuthUrl, handleDiscordCallback } from "./arcticDiscord";
+  // Import arctic Discord handlers (disabled)
+  // import { getDiscordAuthUrl, handleDiscordCallback } from "./arcticDiscord";
 
-  // Discord OAuth routes using arctic
-  app.get("/api/auth/discord", getDiscordAuthUrl);
-  app.get("/api/auth/discord/callback", handleDiscordCallback);
+  // Discord OAuth routes using arctic (disabled)
+  // app.get("/api/auth/discord", getDiscordAuthUrl);
+  // app.get("/api/auth/discord/callback", handleDiscordCallback);
 
   // Version check endpoint
   app.get("/api/version", (req, res) => res.json({ version: "arctic-fix-v2", timestamp: Date.now() }));
