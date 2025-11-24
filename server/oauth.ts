@@ -177,13 +177,7 @@ export async function setupAuth(app: Express) {
           profileImage: profile.photos?.[0]?.value ? String(profile.photos[0].value) : undefined,
         };
 
-        await storage.upsertUser({
-          oidcSub,
-          email: authUser.email,
-          firstName: profile.name?.givenName || authUser.displayName,
-          lastName: profile.name?.familyName || '',
-          profileImageUrl: authUser.profileImage,
-        });
+        console.log('🔍 Google authUser before sanitise:', authUser);
 
         // Sanitize before storing in session
         done(null, sanitiseAuthUser(authUser));
@@ -221,13 +215,7 @@ export async function setupAuth(app: Express) {
           profileImage: profile.profile_image_url ? String(profile.profile_image_url) : undefined,
         };
 
-        await storage.upsertUser({
-          oidcSub,
-          email: authUser.email,
-          firstName: authUser.displayName,
-          lastName: '',
-          profileImageUrl: authUser.profileImage,
-        });
+        console.log('🔍 Twitch authUser before sanitise:', authUser);
 
         done(null, sanitiseAuthUser(authUser));
       } catch (error) {
