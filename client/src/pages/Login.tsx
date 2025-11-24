@@ -51,6 +51,7 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
+          {/* Discord Login - Temporarily Disabled
           <Button
             onClick={() => window.location.href = "/api/auth/discord"}
             variant="outline"
@@ -60,6 +61,7 @@ export default function Login() {
             <SiDiscord className="h-5 w-5" style={{ color: '#5865F2' }} />
             Continue with Discord
           </Button>
+          */}
 
           <Button
             onClick={() => handleLogin('twitch')}
