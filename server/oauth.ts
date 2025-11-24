@@ -290,248 +290,266 @@ export async function setupAuth(app: Express) {
         console.error('[Riot OAuth] Error fetching account:', error);
         done(error as Error);
       }
-      // app.get("/api/auth/discord", getDiscordAuthUrl);
-      // app.get("/api/auth/discord/callback", handleDiscordCallback);
+    }));
+    strategies.riot = true;
+  }
 
-      // Version check endpoint
-      app.get("/api/version", (req, res) => res.json({ version: "arctic-fix-v2", timestamp: Date.now() }));
+  // Helper to handle missing strategy errors
+  const checkStrategy = (strategy: keyof typeof strategies) => (req: any, res: any, next: any) => {
+    if (!strategies[strategy]) {
+      return res.status(501).json({
+        message: `Authentication strategy '${strategy}' is not configured. Please check environment variables.`
+      });
+    }
+    next();
+  };
 
-      // Google OAuth routes
-      app.get("/api/auth/google",
-        checkStrategy('google'),
-        passport.authenticate("google", { scope: ["profile", "email"] })
-      );
+  // Import arctic Discord handlers (disabled)
+  // import { getDiscordAuthUrl, handleDiscordCallback } from "./arcticDiscord";
 
-      app.get("/api/auth/google/callback",
-        checkStrategy('google'),
-        passport.authenticate("google", { failureRedirect: "/" }),
-        async (req, res) => {
-          // Regenerate session for security
-          const user = req.user;
-          req.session.regenerate((err) => {
-            if (err) {
-              console.error('Session regeneration error:', err);
-              return res.redirect("/");
-            }
-            req.login(user!, async (err) => {
-              if (err) {
-                console.error('Login error:', err);
-                return res.redirect("/");
-              }
+  // Discord OAuth routes using arctic (disabled)
+  // app.get("/api/auth/discord", getDiscordAuthUrl);
+  // app.get("/api/auth/discord/callback", handleDiscordCallback);
 
-              // Update login streak and award GG Coins
-              try {
-                const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
-                if (dbUser) {
-                  const { updateLoginStreak } = await import('./lib/freeTier');
-                  const streakResult = await updateLoginStreak(dbUser.id);
+  // Version check endpoint
+  app.get("/api/version", (req, res) => res.json({ version: "arctic-fix-v2", timestamp: Date.now() }));
 
-                  // Store notification in session for frontend to display
-                  if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-                    req.session.loginNotification = {
-                      streak: streakResult.currentStreak,
-                      coinsAwarded: streakResult.coinsAwarded,
-                      badgeUnlocked: streakResult.badgeUnlocked,
-                      timestamp: Date.now(),
-                    };
-                  }
+  // Google OAuth routes
+  app.get("/api/auth/google",
+    checkStrategy('google'),
+    passport.authenticate("google", { scope: ["profile", "email"] })
+  );
 
-                  if (streakResult.coinsAwarded > 0) {
-                    console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-                  }
-                }
-              } catch (error) {
-                console.error('[Login] Failed to update streak:', error);
-                // Don't block login on streak error
-              }
-
-              res.redirect("/");
-            });
-          });
+  app.get("/api/auth/google/callback",
+    checkStrategy('google'),
+    passport.authenticate("google", { failureRedirect: "/" }),
+    async (req, res) => {
+      // Regenerate session for security
+      const user = req.user;
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error('Session regeneration error:', err);
+          return res.redirect("/");
         }
-      );
-
-      // Twitch OAuth routes
-      app.get("/api/auth/twitch",
-        checkStrategy('twitch'),
-        passport.authenticate("twitch")
-      );
-
-      app.get("/api/auth/twitch/callback",
-        checkStrategy('twitch'),
-        passport.authenticate("twitch", { failureRedirect: "/" }),
-        async (req, res) => {
-          // Regenerate session for security
-          const user = req.user;
-          req.session.regenerate((err) => {
-            if (err) {
-              console.error('Session regeneration error:', err);
-              return res.redirect("/");
-            }
-            req.login(user!, async (err) => {
-              if (err) {
-                console.error('Login error:', err);
-                return res.redirect("/");
-              }
-
-              // Update login streak and award GG Coins
-              try {
-                const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
-                if (dbUser) {
-                  const { updateLoginStreak } = await import('./lib/freeTier');
-                  const streakResult = await updateLoginStreak(dbUser.id);
-
-                  // Store notification in session for frontend to display
-                  if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-                    req.session.loginNotification = {
-                      streak: streakResult.currentStreak,
-                      coinsAwarded: streakResult.coinsAwarded,
-                      badgeUnlocked: streakResult.badgeUnlocked,
-                      timestamp: Date.now(),
-                    };
-                  }
-
-                  if (streakResult.coinsAwarded > 0) {
-                    console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-                  }
-                }
-              } catch (error) {
-                console.error('[Login] Failed to update streak:', error);
-                // Don't block login on streak error
-              }
-
-              res.redirect("/");
-            });
-          });
-        }
-      );
-
-      // TikTok OAuth routes
-      app.get("/api/auth/tiktok",
-        checkStrategy('tiktok'),
-        passport.authenticate("tiktok")
-      );
-
-      app.get("/api/auth/tiktok/callback",
-        checkStrategy('tiktok'),
-        passport.authenticate("tiktok", { failureRedirect: "/" }),
-        async (req, res) => {
-          // Regenerate session for security
-          const user = req.user;
-          req.session.regenerate((err) => {
-            if (err) {
-              console.error('Session regeneration error:', err);
-              return res.redirect("/");
-            }
-            req.login(user!, async (err) => {
-              if (err) {
-                console.error('Login error:', err);
-                return res.redirect("/");
-              }
-
-              // Update login streak and award GG Coins
-              try {
-                const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
-                if (dbUser) {
-                  const { updateLoginStreak } = await import('./lib/freeTier');
-                  const streakResult = await updateLoginStreak(dbUser.id);
-
-                  // Store notification in session for frontend to display
-                  if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-                    req.session.loginNotification = {
-                      streak: streakResult.currentStreak,
-                      coinsAwarded: streakResult.coinsAwarded,
-                      badgeUnlocked: streakResult.badgeUnlocked,
-                      timestamp: Date.now(),
-                    };
-                  }
-
-                  if (streakResult.coinsAwarded > 0) {
-                    console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-                  }
-                }
-              } catch (error) {
-                console.error('[Login] Failed to update streak:', error);
-                // Don't block login on streak error
-              }
-
-              res.redirect("/");
-            });
-          });
-        }
-      );
-
-      // Riot OAuth routes
-      app.get("/api/auth/riot",
-        checkStrategy('riot'),
-        passport.authenticate("riot")
-      );
-
-      app.get("/api/auth/riot/callback",
-        checkStrategy('riot'),
-        passport.authenticate("riot", { failureRedirect: "/" }),
-        async (req, res) => {
-          // Regenerate session for security
-          const user = req.user;
-          req.session.regenerate((err) => {
-            if (err) {
-              console.error('Session regeneration error:', err);
-              return res.redirect("/");
-            }
-            req.login(user!, async (err) => {
-              if (err) {
-                console.error('Login error:', err);
-                return res.redirect("/");
-              }
-
-              // Update login streak and award GG Coins
-              try {
-                const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
-                if (dbUser) {
-                  const { updateLoginStreak } = await import('./lib/freeTier');
-                  const streakResult = await updateLoginStreak(dbUser.id);
-
-                  // Store notification in session for frontend to display
-                  if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-                    req.session.loginNotification = {
-                      streak: streakResult.currentStreak,
-                      coinsAwarded: streakResult.coinsAwarded,
-                      badgeUnlocked: streakResult.badgeUnlocked,
-                      timestamp: Date.now(),
-                    };
-                  }
-
-                  if (streakResult.coinsAwarded > 0) {
-                    console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-                  }
-                }
-              } catch (error) {
-                console.error('[Login] Failed to update streak:', error);
-                // Don't block login on streak error
-              }
-
-              res.redirect("/");
-            });
-          });
-        }
-      );
-
-      // Logout route
-      app.get("/api/logout", (req, res) => {
-        req.logout((err) => {
+        req.login(user!, async (err) => {
           if (err) {
-            console.error('Logout error:', err);
+            console.error('Login error:', err);
+            return res.redirect("/");
           }
-          req.session.destroy(() => {
-            res.redirect("/");
-          });
+
+          // Update login streak and award GG Coins
+          try {
+            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
+            if (dbUser) {
+              const { updateLoginStreak } = await import('./lib/freeTier');
+              const streakResult = await updateLoginStreak(dbUser.id);
+
+              // Store notification in session for frontend to display
+              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+                req.session.loginNotification = {
+                  streak: streakResult.currentStreak,
+                  coinsAwarded: streakResult.coinsAwarded,
+                  badgeUnlocked: streakResult.badgeUnlocked,
+                  timestamp: Date.now(),
+                };
+              }
+
+              if (streakResult.coinsAwarded > 0) {
+                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+              }
+            }
+          } catch (error) {
+            console.error('[Login] Failed to update streak:', error);
+            // Don't block login on streak error
+          }
+
+          res.redirect("/");
         });
       });
     }
+  );
+
+  // Twitch OAuth routes
+  app.get("/api/auth/twitch",
+    checkStrategy('twitch'),
+    passport.authenticate("twitch")
+  );
+
+  app.get("/api/auth/twitch/callback",
+    checkStrategy('twitch'),
+    passport.authenticate("twitch", { failureRedirect: "/" }),
+    async (req, res) => {
+      // Regenerate session for security
+      const user = req.user;
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error('Session regeneration error:', err);
+          return res.redirect("/");
+        }
+        req.login(user!, async (err) => {
+          if (err) {
+            console.error('Login error:', err);
+            return res.redirect("/");
+          }
+
+          // Update login streak and award GG Coins
+          try {
+            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
+            if (dbUser) {
+              const { updateLoginStreak } = await import('./lib/freeTier');
+              const streakResult = await updateLoginStreak(dbUser.id);
+
+              // Store notification in session for frontend to display
+              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+                req.session.loginNotification = {
+                  streak: streakResult.currentStreak,
+                  coinsAwarded: streakResult.coinsAwarded,
+                  badgeUnlocked: streakResult.badgeUnlocked,
+                  timestamp: Date.now(),
+                };
+              }
+
+              if (streakResult.coinsAwarded > 0) {
+                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+              }
+            }
+          } catch (error) {
+            console.error('[Login] Failed to update streak:', error);
+            // Don't block login on streak error
+          }
+
+          res.redirect("/");
+        });
+      });
+    }
+  );
+
+  // TikTok OAuth routes
+  app.get("/api/auth/tiktok",
+    checkStrategy('tiktok'),
+    passport.authenticate("tiktok")
+  );
+
+  app.get("/api/auth/tiktok/callback",
+    checkStrategy('tiktok'),
+    passport.authenticate("tiktok", { failureRedirect: "/" }),
+    async (req, res) => {
+      // Regenerate session for security
+      const user = req.user;
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error('Session regeneration error:', err);
+          return res.redirect("/");
+        }
+        req.login(user!, async (err) => {
+          if (err) {
+            console.error('Login error:', err);
+            return res.redirect("/");
+          }
+
+          // Update login streak and award GG Coins
+          try {
+            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
+            if (dbUser) {
+              const { updateLoginStreak } = await import('./lib/freeTier');
+              const streakResult = await updateLoginStreak(dbUser.id);
+
+              // Store notification in session for frontend to display
+              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+                req.session.loginNotification = {
+                  streak: streakResult.currentStreak,
+                  coinsAwarded: streakResult.coinsAwarded,
+                  badgeUnlocked: streakResult.badgeUnlocked,
+                  timestamp: Date.now(),
+                };
+              }
+
+              if (streakResult.coinsAwarded > 0) {
+                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+              }
+            }
+          } catch (error) {
+            console.error('[Login] Failed to update streak:', error);
+            // Don't block login on streak error
+          }
+
+          res.redirect("/");
+        });
+      });
+    }
+  );
+
+  // Riot OAuth routes
+  app.get("/api/auth/riot",
+    checkStrategy('riot'),
+    passport.authenticate("riot")
+  );
+
+  app.get("/api/auth/riot/callback",
+    checkStrategy('riot'),
+    passport.authenticate("riot", { failureRedirect: "/" }),
+    async (req, res) => {
+      // Regenerate session for security
+      const user = req.user;
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error('Session regeneration error:', err);
+          return res.redirect("/");
+        }
+        req.login(user!, async (err) => {
+          if (err) {
+            console.error('Login error:', err);
+            return res.redirect("/");
+          }
+
+          // Update login streak and award GG Coins
+          try {
+            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
+            if (dbUser) {
+              const { updateLoginStreak } = await import('./lib/freeTier');
+              const streakResult = await updateLoginStreak(dbUser.id);
+
+              // Store notification in session for frontend to display
+              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+                req.session.loginNotification = {
+                  streak: streakResult.currentStreak,
+                  coinsAwarded: streakResult.coinsAwarded,
+                  badgeUnlocked: streakResult.badgeUnlocked,
+                  timestamp: Date.now(),
+                };
+              }
+
+              if (streakResult.coinsAwarded > 0) {
+                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+              }
+            }
+          } catch (error) {
+            console.error('[Login] Failed to update streak:', error);
+            // Don't block login on streak error
+          }
+
+          res.redirect("/");
+        });
+      });
+    }
+  );
+
+  // Logout route
+  app.get("/api/logout", (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        console.error('Logout error:', err);
+      }
+      req.session.destroy(() => {
+        res.redirect("/");
+      });
+    });
+  });
+}
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      next();
-    };
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+};
