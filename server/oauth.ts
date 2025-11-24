@@ -331,48 +331,38 @@ export async function setupAuth(app: Express) {
     checkStrategy('google'),
     passport.authenticate("google", { failureRedirect: "/" }),
     async (req, res) => {
-      // Regenerate session for security
-      const user = req.user;
-      req.session.regenerate((err) => {
-        if (err) {
-          console.error('Session regeneration error:', err);
-          return res.redirect("/");
-        }
-        req.login(user!, async (err) => {
-          if (err) {
-            console.error('Login error:', err);
-            return res.redirect("/");
-          }
+      try {
+        // User is already authenticated by passport.authenticate
+        // No need to regenerate session or call req.login again
 
-          // Update login streak and award GG Coins
-          try {
-            const dbUser = await storage.getUserByOidcSub((user as any).oidcSub);
-            if (dbUser) {
-              const { updateLoginStreak } = await import('./lib/freeTier');
-              const streakResult = await updateLoginStreak(dbUser.id);
+        // Update login streak and award GG Coins
+        if (req.user && (req.user as any).oidcSub) {
+          const dbUser = await storage.getUserByOidcSub((req.user as any).oidcSub);
+          if (dbUser) {
+            const { updateLoginStreak } = await import('./lib/freeTier');
+            const streakResult = await updateLoginStreak(dbUser.id);
 
-              // Store notification in session for frontend to display
-              if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
-                req.session.loginNotification = {
-                  streak: streakResult.currentStreak,
-                  coinsAwarded: streakResult.coinsAwarded,
-                  badgeUnlocked: streakResult.badgeUnlocked,
-                  timestamp: Date.now(),
-                };
-              }
-
-              if (streakResult.coinsAwarded > 0) {
-                console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
-              }
+            // Store ONLY primitive values in session
+            if (streakResult.coinsAwarded > 0 || streakResult.badgeUnlocked || streakResult.currentStreak > 1) {
+              req.session.loginNotification = {
+                streak: Number(streakResult.currentStreak),
+                coinsAwarded: Number(streakResult.coinsAwarded),
+                badgeUnlocked: streakResult.badgeUnlocked ? String(streakResult.badgeUnlocked) : undefined,
+                timestamp: Number(Date.now()),
+              };
             }
-          } catch (error) {
-            console.error('[Login] Failed to update streak:', error);
-            // Don't block login on streak error
-          }
 
-          res.redirect("/");
-        });
-      });
+            if (streakResult.coinsAwarded > 0) {
+              console.log(`[Login] Awarded ${streakResult.coinsAwarded} GG Coins for ${streakResult.currentStreak}-day streak`);
+            }
+          }
+        }
+
+        res.redirect("/");
+      } catch (error) {
+        console.error('[Google OAuth Callback] Error:', error);
+        res.redirect("/");
+      }
     }
   );
 
