@@ -1,78 +1,10 @@
-import passport from "passport";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-// @ts-ignore - no type definitions available for passport-twitch-new
-import { Strategy as TwitchStrategy } from "passport-twitch-new";
-// import { Strategy as DiscordStrategy } from "passport-discord"; // No longer used – replaced by arctic
-import { Strategy as OAuth2Strategy } from "passport-oauth2";
-import session from "express-session";
-import type { Express, Request, Response, NextFunction } from "express";
-import createMemoryStore from "memorystore";
-import { storage } from "./storage";
-import axios from "axios";
-
-import connectPg from "connect-pg-simple";
-
-export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000;
-
-  // Use PostgreSQL session store if DATABASE_URL is available, otherwise use MemoryStore
-  if (process.env.DATABASE_URL) {
-    const PgStore = connectPg(session);
-    const sessionStore = new PgStore({
-      conString: process.env.DATABASE_URL,
-      createTableIfMissing: false,
-      ttl: sessionTtl / 1000, // convert to seconds
-      tableName: "sessions",
-    });
-
-    return session({
-      secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
-      store: sessionStore,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: sessionTtl,
-        expires: undefined,
-      },
-      // Custom serializer to convert Date objects to timestamps
-      genid: () => require('crypto').randomBytes(16).toString('hex'),
-    });
-  } else {
-    // Fallback to MemoryStore for local dev without DATABASE_URL
-    const MemoryStore = createMemoryStore(session);
-    const sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
-    });
-
-    return session({
-      secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
-      store: sessionStore,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: sessionTtl,
-        expires: undefined,
-      },
-    });
-  }
-}
-
-interface AuthUser {
-  provider: 'google' | 'twitch' | 'discord' | 'riot' | 'tiktok';
-  providerId: string;
-  oidcSub: string; // Format: "google:12345", "twitch:67890", "discord:abc123", "riot:puuid123", or "tiktok:openid123"
-  email: string;
-  displayName: string;
-  profileImage?: string;
-  riotPuuid?: string; // For Riot OAuth - the unique player ID
-  riotGameName?: string; // For Riot OAuth - the in-game name
-  riotTagLine?: string; // For Riot OAuth - the tag line (#NA1, etc)
-  tiktokOpenId?: string; // For TikTok OAuth - the unique open ID
-  tiktokUnionId?: string; // For TikTok OAuth - union ID across apps
+displayName: string;
+profileImage ?: string;
+riotPuuid ?: string; // For Riot OAuth - the unique player ID
+riotGameName ?: string; // For Riot OAuth - the in-game name
+riotTagLine ?: string; // For Riot OAuth - the tag line (#NA1, etc)
+tiktokOpenId ?: string; // For TikTok OAuth - the unique open ID
+tiktokUnionId ?: string; // For TikTok OAuth - union ID across apps
 }
 
 export async function setupAuth(app: Express) {
