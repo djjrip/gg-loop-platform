@@ -132,24 +132,6 @@ export class DbStorage implements IStorage {
     // If not found by oidcSub, check by email (for multi-provider support)
     const existingEmailUser = !existingUser && userData.email
       ? await this.getUserByEmail(userData.email)
-      : undefined;
-
-    // If user exists with same email but different provider, link the new provider
-    if (existingEmailUser && userData.oidcSub) {
-      const [user] = await db
-        .update(users)
-        .set({
-          oidcSub: userData.oidcSub, // Update to new provider
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          profileImageUrl: userData.profileImageUrl,
-          updatedAt: new Date().toISOString() as any.toISOString() as any,
-        })
-        .where(eq(users.id, existingEmailUser.id))
-        .returning();
-      return user;
-    }
-
     // For new users only, use transaction to safely assign founder status
     if (!existingUser && !existingEmailUser) {
       return db.transaction(async (tx) => {
