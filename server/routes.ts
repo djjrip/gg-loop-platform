@@ -3357,7 +3357,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       const updates = insertSponsorSchema.partial().parse(req.body);
 
       const [updatedSponsor] = await db.update(sponsors)
-        .set({ ...updates, updatedAt: new Date().toISOString() as any })
+        .set({ ...updates, updatedAt: new Date() })
         .where(eq(sponsors.id, id))
         .returning();
 
@@ -3413,7 +3413,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       const [updated] = await db.update(sponsors)
         .set({
           totalBudget: sponsor.totalBudget + amount,
-          updatedAt: new Date().toISOString() as any
+          updatedAt: new Date()
         })
         .where(eq(sponsors.id, id))
         .returning();
@@ -3902,7 +3902,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       });
 
       const validated = schema.parse(req.body);
-      const updateData: any = { ...validated, updatedAt: new Date().toISOString() as any };
+      const updateData: any = { ...validated, updatedAt: new Date() };
 
       if (validated.status === 'approved') {
         updateData.approvedAt = new Date();
@@ -4045,7 +4045,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
       await db
         .update(charities)
-        .set({ ...validated, updatedAt: new Date().toISOString() as any })
+        .set({ ...validated, updatedAt: new Date() })
         .where(eq(charities.id, id));
 
       res.json({ success: true });
@@ -4160,7 +4160,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           ...validated,
           startDate: validated.startDate ? new Date(validated.startDate) : undefined,
           endDate: validated.endDate ? new Date(validated.endDate) : undefined,
-          updatedAt: new Date().toISOString() as any
+          updatedAt: new Date()
         })
         .where(eq(charityCampaigns.id, id));
 

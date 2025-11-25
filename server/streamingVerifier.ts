@@ -165,7 +165,7 @@ export class StreamingVerifier {
         twitchStreamId: streamStatus.streamId,
         gameId: supportedGame.id,
         gameName: supportedGame.name,
-        streamStartedAt: new Date(streamStatus.startedAt).toISOString() as any,
+        streamStartedAt: new Date(streamStatus.startedAt),
         viewerCount: streamStatus.viewerCount,
         status: 'active',
         lastCheckedAt: new Date(),
@@ -210,7 +210,7 @@ export class StreamingVerifier {
             durationMinutes: totalMinutesStreamed,
             viewerCount: streamStatus.viewerCount,
             pointsAwarded: currentPointsAwarded + newPoints,
-            lastCheckedAt: now.toISOString() as any,
+            lastCheckedAt: now,
           })
           .where(eq(streamingSessions.id, session.id));
 
@@ -224,7 +224,7 @@ export class StreamingVerifier {
           .set({
             durationMinutes: totalMinutesStreamed,
             viewerCount: streamStatus.viewerCount,
-            lastCheckedAt: now.toISOString() as any,
+            lastCheckedAt: now,
           })
           .where(eq(streamingSessions.id, session.id));
       }
@@ -254,7 +254,7 @@ export class StreamingVerifier {
           .update(streamingSessions)
           .set({
             status: 'completed',
-            streamEndedAt: now.toISOString() as any,
+            streamEndedAt: now,
             durationMinutes: minutesStreamed,
           })
           .where(eq(streamingSessions.id, session.id));

@@ -87,7 +87,7 @@ export class PointsEngine {
   async getUserBalance(userId: string, dbOrTx: DbOrTx = db): Promise<number> {
     const user = await dbOrTx.select().from(users).where(eq(users.id, userId)).limit(1);
     if (!user[0]) throw new Error("User not found");
-    
+
     const expiredPoints = await this.getExpiredUnclaimedPoints(userId, dbOrTx);
     return user[0].totalPoints - expiredPoints;
   }
@@ -106,7 +106,7 @@ export class PointsEngine {
           sql`${pointTransactions.expiresAt} < ${now}`
         )
       );
-    
+
     return Number(result[0]?.total || 0);
   }
 
@@ -114,10 +114,10 @@ export class PointsEngine {
     const now = new Date();
     const thresholdDate = new Date();
     thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
-    
+
     // Get total expiring positive transactions
     const result = await dbOrTx
-      .select({ 
+      .select({
         total: sql<number>`COALESCE(SUM(${pointTransactions.amount}), 0)`,
         earliest: sql<Date>`MIN(${pointTransactions.expiresAt})`
       })
@@ -132,15 +132,15 @@ export class PointsEngine {
           sql`${pointTransactions.expiresAt} <= ${thresholdDate}`
         )
       );
-    
+
     const expiringTotal = Number(result[0]?.total || 0);
-    
+
     // Get user's current available balance to avoid showing already-spent points
     const userBalance = await this.getUserBalance(userId, dbOrTx);
-    
+
     // Only warn about points they actually have (not already spent)
     const actualExpiringAmount = Math.min(expiringTotal, Math.max(0, userBalance));
-    
+
     return {
       amount: actualExpiringAmount,
       earliestExpiration: result[0]?.earliest || null
@@ -216,7 +216,7 @@ export class PointsEngine {
 
       await tx
         .update(users)
-        .set({ totalPoints: newBalance, updatedAt: new Date().toISOString() as any })
+        .set({ totalPoints: newBalance, updatedAt: new Date() })
         .where(eq(users.id, userId));
 
       return transaction;
@@ -263,7 +263,7 @@ export class PointsEngine {
 
       await tx
         .update(users)
-        .set({ totalPoints: newBalance, updatedAt: new Date().toISOString() as any })
+        .set({ totalPoints: newBalance, updatedAt: new Date() })
         .where(eq(users.id, userId));
 
       return transaction;
@@ -283,7 +283,7 @@ export class PointsEngine {
     dbOrTx?: DbOrTx
   ): Promise<PointTransaction | null> {
     const amount = MONTHLY_SUBSCRIPTION_POINTS[tier as keyof typeof MONTHLY_SUBSCRIPTION_POINTS];
-    
+
     if (!amount) {
       throw new Error(`Invalid tier: ${tier}`);
     }
@@ -331,7 +331,7 @@ export class PointsEngine {
 
       await tx
         .update(users)
-        .set({ totalPoints: newBalance, updatedAt: new Date().toISOString() as any })
+        .set({ totalPoints: newBalance, updatedAt: new Date() })
         .where(eq(users.id, userId));
 
       console.log(`[PointsEngine] Awarded ${amount} monthly points to user ${userId} (${tier} tier)`);
@@ -384,7 +384,7 @@ export class PointsEngine {
 
       await tx
         .update(users)
-        .set({ totalPoints: newBalance, updatedAt: new Date().toISOString() as any })
+        .set({ totalPoints: newBalance, updatedAt: new Date() })
         .where(eq(users.id, userId));
 
       return transaction;

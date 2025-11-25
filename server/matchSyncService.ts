@@ -133,7 +133,7 @@ async function syncLeagueAccount(account: typeof riotAccounts.$inferSelect): Pro
     await db.insert(processedRiotMatches).values({
       riotAccountId: account.id,
       matchId,
-      gameEndedAt: gameEndedAt.toISOString() as any,
+      gameEndedAt: gameEndedAt,
       isWin: didWin,
       pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
       transactionId: null,
@@ -202,7 +202,7 @@ async function syncValorantAccount(account: typeof riotAccounts.$inferSelect): P
     await db.insert(processedRiotMatches).values({
       riotAccountId: account.id,
       matchId,
-      gameEndedAt: gameEndedAt.toISOString() as any,
+      gameEndedAt: gameEndedAt,
       isWin: didWin,
       pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
       transactionId: null,
@@ -258,7 +258,7 @@ async function syncTFTAccount(account: typeof riotAccounts.$inferSelect): Promis
     await db.insert(processedRiotMatches).values({
       riotAccountId: account.id,
       matchId,
-      gameEndedAt: gameEndedAt.toISOString() as any,
+      gameEndedAt: gameEndedAt,
       isWin: isTopFour, // Top 4 placement counts as a win
       pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
       transactionId: null,
