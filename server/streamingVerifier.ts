@@ -168,7 +168,7 @@ export class StreamingVerifier {
         streamStartedAt: new Date(streamStatus.startedAt).toISOString() as any,
         viewerCount: streamStatus.viewerCount,
         status: 'active',
-        lastCheckedAt: new Date().toISOString() as any,
+        lastCheckedAt: new Date(),
       });
 
       console.log(

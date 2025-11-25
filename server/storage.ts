@@ -258,7 +258,7 @@ export class DbStorage implements IStorage {
         twitchUsername: twitchData.twitchUsername,
         twitchAccessToken: twitchData.accessToken,
         twitchRefreshToken: twitchData.refreshToken,
-        twitchConnectedAt: new Date().toISOString() as any,
+        twitchConnectedAt: new Date(),
         updatedAt: new Date(),
       })
       .where(eq(users.oidcSub, oidcSub))
@@ -291,7 +291,7 @@ export class DbStorage implements IStorage {
         tiktokUsername: tiktokData.username,
         tiktokAccessToken: tiktokData.accessToken,
         tiktokRefreshToken: tiktokData.refreshToken,
-        tiktokConnectedAt: new Date().toISOString() as any,
+        tiktokConnectedAt: new Date(),
         updatedAt: new Date(),
       })
       .where(eq(users.oidcSub, oidcSub))

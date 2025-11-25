@@ -816,7 +816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gameName: riotAccount.gameName,
           tagLine: riotAccount.tagLine,
           region,
-          updatedAt: new Date().toISOString() as any,
+          updatedAt: new Date(),
         },
       });
 
@@ -903,7 +903,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gameName: riotAccount.gameName,
           tagLine: riotAccount.tagLine,
           region,
-          updatedAt: new Date().toISOString() as any,
+          updatedAt: new Date(),
         },
       });
 
@@ -998,7 +998,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gameName: riotAccount.gameName,
           tagLine: riotAccount.tagLine,
           region,
-          updatedAt: new Date().toISOString() as any,
+          updatedAt: new Date(),
         },
       });
 
@@ -2144,7 +2144,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
                           THEN NOW() 
                         END
                       )`,
-                      updatedAt: new Date().toISOString() as any
+                      updatedAt: new Date()
                     }
                   });
               }
@@ -2320,7 +2320,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
             transactionId: transaction.id,
             ipAddress: req.ip || req.headers['x-forwarded-for'] as string,
             userAgent: req.headers['user-agent'] as string,
-            updatedAt: new Date().toISOString() as any
+            updatedAt: new Date()
           })
           .where(eq(challengeCompletions.id, completion.id));
 
@@ -2330,7 +2330,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           .set({
             pointsDistributed: challenge.pointsDistributed + challenge.bonusPoints,
             currentCompletions: challenge.currentCompletions + 1,
-            updatedAt: new Date().toISOString() as any
+            updatedAt: new Date()
           })
           .where(eq(challenges.id, challenge.id));
 
