@@ -816,7 +816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gameName: riotAccount.gameName,
           tagLine: riotAccount.tagLine,
           region,
-          updatedAt: new Date(),
+          updatedAt: new Date().toISOString() as any,
         },
       });
 
@@ -903,7 +903,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gameName: riotAccount.gameName,
           tagLine: riotAccount.tagLine,
           region,
-          updatedAt: new Date(),
+          updatedAt: new Date().toISOString() as any,
         },
       });
 
@@ -998,7 +998,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gameName: riotAccount.gameName,
           tagLine: riotAccount.tagLine,
           region,
-          updatedAt: new Date(),
+          updatedAt: new Date().toISOString() as any,
         },
       });
 
@@ -2144,7 +2144,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
                           THEN NOW() 
                         END
                       )`,
-                      updatedAt: new Date()
+                      updatedAt: new Date().toISOString() as any
                     }
                   });
               }
@@ -2320,7 +2320,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
             transactionId: transaction.id,
             ipAddress: req.ip || req.headers['x-forwarded-for'] as string,
             userAgent: req.headers['user-agent'] as string,
-            updatedAt: new Date()
+            updatedAt: new Date().toISOString() as any
           })
           .where(eq(challengeCompletions.id, completion.id));
 
@@ -2330,7 +2330,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           .set({
             pointsDistributed: challenge.pointsDistributed + challenge.bonusPoints,
             currentCompletions: challenge.currentCompletions + 1,
-            updatedAt: new Date()
+            updatedAt: new Date().toISOString() as any
           })
           .where(eq(challenges.id, challenge.id));
 
@@ -3357,7 +3357,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       const updates = insertSponsorSchema.partial().parse(req.body);
 
       const [updatedSponsor] = await db.update(sponsors)
-        .set({ ...updates, updatedAt: new Date() })
+        .set({ ...updates, updatedAt: new Date().toISOString() as any })
         .where(eq(sponsors.id, id))
         .returning();
 
@@ -3413,7 +3413,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       const [updated] = await db.update(sponsors)
         .set({
           totalBudget: sponsor.totalBudget + amount,
-          updatedAt: new Date()
+          updatedAt: new Date().toISOString() as any
         })
         .where(eq(sponsors.id, id))
         .returning();
@@ -3902,7 +3902,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       });
 
       const validated = schema.parse(req.body);
-      const updateData: any = { ...validated, updatedAt: new Date() };
+      const updateData: any = { ...validated, updatedAt: new Date().toISOString() as any };
 
       if (validated.status === 'approved') {
         updateData.approvedAt = new Date();
@@ -4045,7 +4045,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
       await db
         .update(charities)
-        .set({ ...validated, updatedAt: new Date() })
+        .set({ ...validated, updatedAt: new Date().toISOString() as any })
         .where(eq(charities.id, id));
 
       res.json({ success: true });
@@ -4160,7 +4160,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           ...validated,
           startDate: validated.startDate ? new Date(validated.startDate) : undefined,
           endDate: validated.endDate ? new Date(validated.endDate) : undefined,
-          updatedAt: new Date()
+          updatedAt: new Date().toISOString() as any
         })
         .where(eq(charityCampaigns.id, id));
 

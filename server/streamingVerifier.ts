@@ -31,7 +31,7 @@ export class StreamingVerifier {
 
     this.isRunning = true;
     console.log('Starting streaming verification monitoring...');
-    
+
     // Run immediately, then every interval
     this.checkActiveStreams();
     this.intervalHandle = setInterval(() => this.checkActiveStreams(), this.checkInterval);
@@ -101,7 +101,7 @@ export class StreamingVerifier {
 
     // Verify the game being streamed is supported
     const supportedGame = this.getSupportedGame(streamStatus.gameName);
-    
+
     if (!supportedGame) {
       console.log(
         `[StreamVerifier] ${user.twitchUsername} is streaming ${streamStatus.gameName} - not a supported game`
@@ -165,10 +165,10 @@ export class StreamingVerifier {
         twitchStreamId: streamStatus.streamId,
         gameId: supportedGame.id,
         gameName: supportedGame.name,
-        streamStartedAt: new Date(streamStatus.startedAt),
+        streamStartedAt: new Date(streamStatus.startedAt).toISOString() as any,
         viewerCount: streamStatus.viewerCount,
         status: 'active',
-        lastCheckedAt: new Date(),
+        lastCheckedAt: new Date().toISOString() as any,
       });
 
       console.log(
@@ -188,13 +188,13 @@ export class StreamingVerifier {
       const now = new Date();
       const startedAt = new Date(session.streamStartedAt);
       const totalMinutesStreamed = Math.floor((now.getTime() - startedAt.getTime()) / 60000);
-      
+
       // Calculate how many full hours have been completed
       const currentPointsAwarded = session.pointsAwarded || 0;
       const hoursAlreadyPaid = currentPointsAwarded / supportedGame.pointsPerHour;
       const totalHoursStreamed = totalMinutesStreamed / 60;
       const hoursToPayFor = totalHoursStreamed - hoursAlreadyPaid;
-      
+
       // Only award points for full hours completed
       const fullHoursToAward = Math.floor(hoursToPayFor);
       const newPoints = fullHoursToAward * supportedGame.pointsPerHour;
@@ -210,7 +210,7 @@ export class StreamingVerifier {
             durationMinutes: totalMinutesStreamed,
             viewerCount: streamStatus.viewerCount,
             pointsAwarded: currentPointsAwarded + newPoints,
-            lastCheckedAt: now,
+            lastCheckedAt: now.toISOString() as any,
           })
           .where(eq(streamingSessions.id, session.id));
 
@@ -224,7 +224,7 @@ export class StreamingVerifier {
           .set({
             durationMinutes: totalMinutesStreamed,
             viewerCount: streamStatus.viewerCount,
-            lastCheckedAt: now,
+            lastCheckedAt: now.toISOString() as any,
           })
           .where(eq(streamingSessions.id, session.id));
       }
@@ -254,7 +254,7 @@ export class StreamingVerifier {
           .update(streamingSessions)
           .set({
             status: 'completed',
-            streamEndedAt: now,
+            streamEndedAt: now.toISOString() as any,
             durationMinutes: minutesStreamed,
           })
           .where(eq(streamingSessions.id, session.id));

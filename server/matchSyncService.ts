@@ -17,19 +17,19 @@ export function initializeAchievementDetector(storage: IStorage) {
 
 export async function startMatchSyncService() {
   console.log('[MatchSync] Starting match sync service...');
-  
+
   // Run immediately on startup (with error protection)
   try {
     await syncAllAccounts();
   } catch (error) {
     console.error('[MatchSync] Error during initial sync, will retry on next interval:', error);
   }
-  
+
   // Then run every 10 minutes
   syncInterval = setInterval(async () => {
     await syncAllAccounts();
   }, SYNC_INTERVAL_MS);
-  
+
   console.log(`[MatchSync] Service started. Syncing every ${SYNC_INTERVAL_MS / 1000 / 60} minutes.`);
 }
 
@@ -44,21 +44,21 @@ export function stopMatchSyncService() {
 async function syncAllAccounts() {
   try {
     console.log('[MatchSync] Starting sync cycle...');
-    
+
     // Get all linked Riot accounts
     const accounts = await db.select().from(riotAccounts);
-    
+
     if (accounts.length === 0) {
       console.log('[MatchSync] No Riot accounts linked. Skipping sync.');
       return;
     }
-    
+
     console.log(`[MatchSync] Syncing ${accounts.length} accounts...`);
-    
+
     for (const account of accounts) {
       try {
         let newMatchesRecorded = false;
-        
+
         if (account.game === 'league') {
           newMatchesRecorded = await syncLeagueAccount(account);
         } else if (account.game === 'valorant') {
@@ -66,7 +66,7 @@ async function syncAllAccounts() {
         } else if (account.game === 'tft') {
           newMatchesRecorded = await syncTFTAccount(account);
         }
-        
+
         // Check for new achievements if new matches were recorded
         if (newMatchesRecorded && achievementDetector) {
           console.log(`[MatchSync] Checking achievements for user ${account.userId}...`);
@@ -77,7 +77,7 @@ async function syncAllAccounts() {
         // Continue with next account even if this one fails
       }
     }
-    
+
     console.log('[MatchSync] Sync cycle completed.');
   } catch (error) {
     console.error('[MatchSync] Fatal error during sync:', error);
@@ -87,19 +87,19 @@ async function syncAllAccounts() {
 async function syncLeagueAccount(account: typeof riotAccounts.$inferSelect): Promise<boolean> {
   const riotAPI = getRiotAPI();
   let newMatchesFound = false;
-  
+
   // Determine regional routing
   const platformRegion = account.region; // e.g., "na1", "euw1"
   const routingRegion = platformRegion.startsWith('na') || platformRegion.startsWith('br') || platformRegion.startsWith('la') ? 'americas' :
-                       platformRegion.startsWith('kr') || platformRegion.startsWith('jp') ? 'asia' :
-                       platformRegion.startsWith('oc') || platformRegion.startsWith('ph') || platformRegion.startsWith('sg') || platformRegion.startsWith('th') || platformRegion.startsWith('tw') || platformRegion.startsWith('vn') ? 'sea' :
-                       'europe';
-  
+    platformRegion.startsWith('kr') || platformRegion.startsWith('jp') ? 'asia' :
+      platformRegion.startsWith('oc') || platformRegion.startsWith('ph') || platformRegion.startsWith('sg') || platformRegion.startsWith('th') || platformRegion.startsWith('tw') || platformRegion.startsWith('vn') ? 'sea' :
+        'europe';
+
   // Fetch recent match IDs
   const matchIds = await riotAPI.getLeagueMatchIds(account.puuid, platformRegion, { count: MATCHES_TO_CHECK });
-  
+
   console.log(`[MatchSync] Found ${matchIds.length} recent League matches for ${account.gameName}#${account.tagLine}`);
-  
+
   for (const matchId of matchIds) {
     // Check if already processed
     const [existing] = await db.select().from(processedRiotMatches).where(
@@ -108,65 +108,65 @@ async function syncLeagueAccount(account: typeof riotAccounts.$inferSelect): Pro
         eq(processedRiotMatches.riotAccountId, account.id)
       )
     );
-    
+
     if (existing) {
       continue; // Already processed this match
     }
-    
+
     // Fetch match details
     const matchData = await riotAPI.getLeagueMatch(matchId, platformRegion);
-    
+
     // Find this player's participation
     const participant = matchData.info.participants.find((p: any) => p.puuid === account.puuid);
-    
+
     if (!participant) {
       console.warn(`[MatchSync] Player not found in match ${matchId}`);
       continue;
     }
-    
+
     const didWin = participant.win;
     const gameEndedAt = new Date(matchData.info.gameEndTimestamp);
-    
+
     // Record match for stats tracking (no points awarded - handled by monthly subscription allocation)
     console.log(`[MatchSync] - Recording match ${matchId} for stats (${didWin ? 'Win' : 'Loss'}). Points awarded via subscription tier, not match outcomes.`);
-    
+
     await db.insert(processedRiotMatches).values({
       riotAccountId: account.id,
       matchId,
-      gameEndedAt,
+      gameEndedAt: gameEndedAt.toISOString() as any,
       isWin: didWin,
       pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
       transactionId: null,
     });
-    
+
     newMatchesFound = true;
   }
-  
+
   return newMatchesFound;
 }
 
 async function syncValorantAccount(account: typeof riotAccounts.$inferSelect): Promise<boolean> {
   const riotAPI = getRiotAPI();
   let newMatchesFound = false;
-  
+
   // Determine regional routing for Valorant
   const routingRegion = account.region.startsWith('na') || account.region.startsWith('br') || account.region.startsWith('latam') ? 'na' :
-                       account.region.startsWith('eu') ? 'eu' :
-                       account.region.startsWith('kr') ? 'kr' :
-                       account.region.startsWith('ap') ? 'ap' : 'na';
-  
+    account.region.startsWith('eu') ? 'eu' :
+      account.region.startsWith('kr') ? 'kr' :
+        account.region.startsWith('ap') ? 'ap' : 'na';
+
   // Fetch recent match IDs
   // NOTE: Unlike League's match API, Valorant's matchlist endpoint does NOT support
   // a 'count' parameter to limit results. We must fetch the full history and slice
   // client-side. This is acceptable for small limits (5 matches) but could hit rate
   // limits for users with very large match histories. Consider adding pagination if needed.
   const matchIds = await riotAPI.getValorantMatchIds(account.puuid, routingRegion);
-  
+
   // Only check the most recent matches (client-side limit due to API limitation)
   const recentMatchIds = matchIds.slice(0, MATCHES_TO_CHECK);
-  
+
   console.log(`[MatchSync] Found ${recentMatchIds.length} recent Valorant matches for ${account.gameName}#${account.tagLine}`);
-  
+
   for (const matchId of recentMatchIds) {
     // Check if already processed
     const [existing] = await db.select().from(processedRiotMatches).where(
@@ -175,54 +175,54 @@ async function syncValorantAccount(account: typeof riotAccounts.$inferSelect): P
         eq(processedRiotMatches.riotAccountId, account.id)
       )
     );
-    
+
     if (existing) {
       continue; // Already processed this match
     }
-    
+
     // Fetch match details
     const matchData = await riotAPI.getValorantMatch(matchId, routingRegion);
-    
+
     // Find this player's participation
     const participant = matchData.players.find((p: any) => p.puuid === account.puuid);
-    
+
     if (!participant) {
       console.warn(`[MatchSync] Player not found in match ${matchId}`);
       continue;
     }
-    
+
     const didWin = participant.won;
     const gameStartMillis = matchData.matchInfo?.gameStartMillis || Date.now();
     const gameLengthMillis = matchData.matchInfo?.gameLengthMillis || 0;
     const gameEndedAt = new Date(gameStartMillis + gameLengthMillis);
-    
+
     // Record match for stats tracking (no points awarded - handled by monthly subscription allocation)
-    console.log(`[MatchSync] - Recording match ${matchId} for stats (${didWin ? 'Win' : 'Loss'}). Points awarded via subscription tier, not match outcomes.`);
-    
+    console.log(`[Match Sync] - Recording match ${matchId} for stats (${didWin ? 'Win' : 'Loss'}). Points awarded via subscription tier, not match outcomes.`);
+
     await db.insert(processedRiotMatches).values({
       riotAccountId: account.id,
       matchId,
-      gameEndedAt,
+      gameEndedAt: gameEndedAt.toISOString() as any,
       isWin: didWin,
       pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
       transactionId: null,
     });
-    
+
     newMatchesFound = true;
   }
-  
+
   return newMatchesFound;
 }
 
 async function syncTFTAccount(account: typeof riotAccounts.$inferSelect): Promise<boolean> {
   const riotAPI = getRiotAPI();
   let newMatchesFound = false;
-  
+
   // Fetch recent match IDs (pass platform region directly, getTFTMatchIds handles routing internally)
   const matchIds = await riotAPI.getTFTMatchIds(account.puuid, account.region, { count: MATCHES_TO_CHECK });
-  
+
   console.log(`[MatchSync] Found ${matchIds.length} recent TFT matches for ${account.gameName}#${account.tagLine}`);
-  
+
   for (const matchId of matchIds) {
     // Check if already processed
     const [existing] = await db.select().from(processedRiotMatches).where(
@@ -231,41 +231,41 @@ async function syncTFTAccount(account: typeof riotAccounts.$inferSelect): Promis
         eq(processedRiotMatches.riotAccountId, account.id)
       )
     );
-    
+
     if (existing) {
       continue; // Already processed this match
     }
-    
+
     // Fetch match details (pass platform region directly, getTFTMatch handles routing internally)
     const matchData = await riotAPI.getTFTMatch(matchId, account.region);
-    
+
     // Find this player's participation
     const participant = matchData.info.participants.find((p: any) => p.puuid === account.puuid);
-    
+
     if (!participant) {
       console.warn(`[MatchSync] Player not found in match ${matchId}`);
       continue;
     }
-    
+
     // In TFT, placement 1-4 is considered a "win" (top half of 8 players)
     const placement = participant.placement;
     const isTopFour = placement <= 4;
     const gameEndedAt = new Date(matchData.info.game_datetime);
-    
+
     // Record match for stats tracking (no points awarded - handled by monthly subscription allocation)
     console.log(`[MatchSync] - Recording TFT match ${matchId} for stats (Placement: ${placement}, ${isTopFour ? 'Top 4' : 'Bottom 4'}). Points awarded via subscription tier, not match outcomes.`);
-    
+
     await db.insert(processedRiotMatches).values({
       riotAccountId: account.id,
       matchId,
-      gameEndedAt,
+      gameEndedAt: gameEndedAt.toISOString() as any,
       isWin: isTopFour, // Top 4 placement counts as a win
       pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
       transactionId: null,
     });
-    
+
     newMatchesFound = true;
   }
-  
+
   return newMatchesFound;
 }

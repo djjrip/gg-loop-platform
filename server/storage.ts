@@ -143,7 +143,7 @@ export class DbStorage implements IStorage {
           firstName: userData.firstName,
           lastName: userData.lastName,
           profileImageUrl: userData.profileImageUrl,
-          updatedAt: new Date(),
+          updatedAt: new Date().toISOString() as any.toISOString() as any,
         })
         .where(eq(users.id, existingEmailUser.id))
         .returning();
@@ -233,7 +233,7 @@ export class DbStorage implements IStorage {
         firstName: userData.firstName,
         lastName: userData.lastName,
         profileImageUrl: userData.profileImageUrl,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString() as any,
       })
       .where(eq(users.oidcSub, userData.oidcSub))
       .returning();
@@ -252,7 +252,7 @@ export class DbStorage implements IStorage {
       .set({
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscriptionId || null,
-        updatedAt: new Date()
+        updatedAt: new Date().toISOString() as any
       })
       .where(eq(users.id, userId))
       .returning();
@@ -262,7 +262,7 @@ export class DbStorage implements IStorage {
   async updateUsername(userId: string, username: string): Promise<User> {
     const [user] = await db
       .update(users)
-      .set({ username, updatedAt: new Date() })
+      .set({ username, updatedAt: new Date().toISOString() as any })
       .where(eq(users.id, userId))
       .returning();
     return user;
@@ -276,8 +276,8 @@ export class DbStorage implements IStorage {
         twitchUsername: twitchData.twitchUsername,
         twitchAccessToken: twitchData.accessToken,
         twitchRefreshToken: twitchData.refreshToken,
-        twitchConnectedAt: new Date(),
-        updatedAt: new Date(),
+        twitchConnectedAt: new Date().toISOString() as any,
+        updatedAt: new Date().toISOString() as any,
       })
       .where(eq(users.oidcSub, oidcSub))
       .returning();
@@ -293,7 +293,7 @@ export class DbStorage implements IStorage {
         twitchAccessToken: null,
         twitchRefreshToken: null,
         twitchConnectedAt: null,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString() as any,
       })
       .where(eq(users.id, userId))
       .returning();
@@ -309,8 +309,8 @@ export class DbStorage implements IStorage {
         tiktokUsername: tiktokData.username,
         tiktokAccessToken: tiktokData.accessToken,
         tiktokRefreshToken: tiktokData.refreshToken,
-        tiktokConnectedAt: new Date(),
-        updatedAt: new Date(),
+        tiktokConnectedAt: new Date().toISOString() as any,
+        updatedAt: new Date().toISOString() as any,
       })
       .where(eq(users.oidcSub, oidcSub))
       .returning();
@@ -602,7 +602,7 @@ export class DbStorage implements IStorage {
   async updateSubscription(subscriptionId: string, updates: Partial<InsertSubscription>): Promise<Subscription> {
     const [subscription] = await db
       .update(subscriptions)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...updates, updatedAt: new Date().toISOString() as any })
       .where(eq(subscriptions.id, subscriptionId))
       .returning();
     return subscription;
@@ -643,7 +643,7 @@ export class DbStorage implements IStorage {
   async updateApiPartner(partnerId: string, updates: Partial<InsertApiPartner>): Promise<ApiPartner> {
     const [partner] = await db
       .update(apiPartners)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...updates, updatedAt: new Date().toISOString() as any })
       .where(eq(apiPartners.id, partnerId))
       .returning();
     return partner;
@@ -810,7 +810,7 @@ export class DbStorage implements IStorage {
       .set({
         freeTrialStartedAt: trialStartDate,
         freeTrialEndsAt: trialEndDate,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString() as any,
       })
       .where(eq(users.id, userId))
       .returning();
