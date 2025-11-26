@@ -22,7 +22,7 @@ import { registerRoutes } from "./routes";
 import { twitchErrorLogger } from "./middleware/twitchErrorLogger";
 import { setupVite, serveStatic, log } from "./vite";
 
-console.log("Starting server... (DEPLOY: 2024-11-24 16:40 CST - Login Fix v2)");
+console.log("Starting server... (DEPLOY: 2025-11-26 01:47 CST - isAuthenticated fix)");
 
 const app = express();
 
