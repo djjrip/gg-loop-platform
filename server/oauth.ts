@@ -23,7 +23,7 @@ export function getSession() {
       conObject: {
         connectionString: process.env.DATABASE_URL,
       },
-      createTableIfMissing: true,
+      createTableIfMissing: false,
     });
     console.log('🐘 Using PostgreSQL session store');
   } else {
