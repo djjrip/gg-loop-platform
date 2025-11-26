@@ -13,7 +13,7 @@ import {
   charities, charityCampaigns, games, leaderboardEntries
 } from "@shared/schema";
 import { and, eq, sql, inArray, desc } from "drizzle-orm";
-import { setupAuth, isAuthenticated } from "./oauth";
+import { setupAuth } from "./oauth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { z } from "zod";
 import { verifyPayPalSubscription, cancelPayPalSubscription, verifyPayPalWebhook } from "./paypal";
