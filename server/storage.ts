@@ -132,6 +132,8 @@ export class DbStorage implements IStorage {
     // If not found by oidcSub, check by email (for multi-provider support)
     const existingEmailUser = !existingUser && userData.email
       ? await this.getUserByEmail(userData.email)
+      : undefined;
+
     // For new users only, use transaction to safely assign founder status
     if (!existingUser && !existingEmailUser) {
       return db.transaction(async (tx) => {
