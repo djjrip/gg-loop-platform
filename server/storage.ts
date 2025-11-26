@@ -236,7 +236,7 @@ export class DbStorage implements IStorage {
       .set({
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscriptionId || null,
-        updatedAt: new Date()
+        updatedAt: sql`NOW()`
       })
       .where(eq(users.id, userId))
       .returning();
@@ -358,7 +358,7 @@ export class DbStorage implements IStorage {
           riotGameName: riotData.gameName,
           riotTagLine: riotData.tagLine,
           riotRegion: riotData.region,
-          verifiedAt: new Date(),
+          verifiedAt: sql`NOW()`,
         })
         .where(eq(userGames.id, existing[0].id))
         .returning();
@@ -374,7 +374,7 @@ export class DbStorage implements IStorage {
         riotGameName: riotData.gameName,
         riotTagLine: riotData.tagLine,
         riotRegion: riotData.region,
-        verifiedAt: new Date(),
+        verifiedAt: sql`NOW()`,
       })
       .returning();
 
