@@ -14,6 +14,7 @@ import {
 } from "@shared/schema";
 import { and, eq, sql, inArray, desc } from "drizzle-orm";
 import { setupAuth } from "./oauth";
+import { isAuthenticated } from "./replitAuth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { z } from "zod";
 import { verifyPayPalSubscription, cancelPayPalSubscription, verifyPayPalWebhook } from "./paypal";
