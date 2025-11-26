@@ -14,23 +14,37 @@ import connectPg from "connect-pg-simple";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
+  let store;
 
-  // FORCE MemoryStore to avoid PostgreSQL Date serialization errors
-  // PostgreSQL session store (connect-pg-simple) fails when Date objects are in session
-  const MemoryStore = createMemoryStore(session);
-  const sessionStore = new MemoryStore({
-    checkPeriod: 86400000,
-  });
+  if (process.env.DATABASE_URL && process.env.NODE_ENV === 'production') {
+    // Use PostgreSQL session store for production persistence
+    const PgStore = connectPg(session);
+    store = new PgStore({
+      conObject: {
+        connectionString: process.env.DATABASE_URL,
+      },
+      createTableIfMissing: true,
+    });
+    console.log('🐘 Using PostgreSQL session store');
+  } else {
+    // Use MemoryStore for local development
+    const MemoryStore = createMemoryStore(session);
+    store = new MemoryStore({
+      checkPeriod: 86400000,
+    });
+    console.log('🧠 Using MemoryStore for sessions (local dev)');
+  }
 
   return session({
     secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
-    store: sessionStore,
+    store: store,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
+      sameSite: 'lax', // Important for OAuth callbacks
     },
   });
 }
@@ -38,15 +52,15 @@ export function getSession() {
 interface AuthUser {
   provider: 'google' | 'twitch' | 'discord' | 'riot' | 'tiktok';
   providerId: string;
-  oidcSub: string; // Format: "google:12345", "twitch:67890", "discord:abc123", "riot:puuid123", or "tiktok:openid123"
+  oidcSub: string;
   email: string;
   displayName: string;
   profileImage?: string;
-  riotPuuid?: string; // For Riot OAuth - the unique player ID
-  riotGameName?: string; // For Riot OAuth - the in-game name
-  riotTagLine?: string; // For Riot OAuth - the tag line (#NA1, etc)
-  tiktokOpenId?: string; // For TikTok OAuth - the unique open ID
-  tiktokUnionId?: string; // For TikTok OAuth - union ID across apps
+  riotPuuid?: string;
+  riotGameName?: string;
+  riotTagLine?: string;
+  tiktokOpenId?: string;
+  tiktokUnionId?: string;
 }
 
 export async function setupAuth(app: Express) {
@@ -56,69 +70,16 @@ export async function setupAuth(app: Express) {
   app.use(passport.session());
 
   // -----------------------------------------------------------------
-  // Middleware: strip any Date objects from the authenticated user object
-  // -----------------------------------------------------------------
-  app.use((req, _res, next) => {
-    if ((req as any).user) {
-      const sanitize = (obj: any): any => {
-        if (obj instanceof Date) return obj.getTime();
-        if (Array.isArray(obj)) return obj.map(sanitize);
-        if (obj && typeof obj === 'object') {
-          const out: any = {};
-          for (const [k, v] of Object.entries(obj)) {
-            out[k] = sanitize(v);
-          }
-          return out;
-        }
-        return obj;
-      };
-      (req as any).user = sanitize((req as any).user);
-    }
-    next();
-  });
-
-  // -----------------------------------------------------------------
-  // Helper to sanitise AuthUser before storing in session
-  // -----------------------------------------------------------------
-  const sanitiseAuthUser = (user: AuthUser): AuthUser => {
-    const recurse = (obj: any): any => {
-      if (obj instanceof Date) return obj.getTime();
-      if (Array.isArray(obj)) return obj.map(recurse);
-      if (obj && typeof obj === 'object') {
-        const out: any = {};
-        for (const [k, v] of Object.entries(obj)) {
-          out[k] = recurse(v);
-        }
-        return out;
-      }
-      return obj;
-    };
-    return recurse(user) as AuthUser;
-  };
-
-  // -----------------------------------------------------------------
-  // Debug endpoint ΓÇô dumps current session (useful for inspecting leftovers)
+  // Debug endpoint
   // -----------------------------------------------------------------
   app.get('/debug/session/:provider?', (req: Request, res: Response) => {
     if (!req.session) return res.json({ error: 'no session' });
     res.json({ session: req.session });
   });
 
-  // -----------------------------------------------------------------
-  // OAuth routes ΓÇô unchanged but now run after the sanitising middleware
-  // -----------------------------------------------------------------
-
-  passport.serializeUser((user: any, done) => {
-    done(null, user);
-  });
-
-  passport.deserializeUser((obj: any, cb) => {
-    // Return the minimal user object
-    cb(null, obj);
-  });
-
   // Determine base URL - use custom domain if available, otherwise use Replit URL
   const baseUrl = process.env.BASE_URL || 'https://ggloop.io';
+  console.log(`🌍 Auth Base URL configured as: ${baseUrl}`);
 
   // Track registered strategies to conditionally register routes
   const strategies = {
@@ -138,8 +99,10 @@ export async function setupAuth(app: Express) {
       state: true, // Enable CSRF protection
     }, async (accessToken, refreshToken, profile, done) => {
       try {
+        console.log(`🔑 Google OAuth callback received for ID: ${profile.id}`);
         const email = profile.emails?.[0]?.value;
         if (!email) {
+          console.error('❌ No email found in Google profile');
           return done(new Error("No email from Google"));
         }
 
@@ -155,7 +118,7 @@ export async function setupAuth(app: Express) {
           profileImage: profile.photos?.[0]?.value ? String(profile.photos[0].value) : undefined,
         };
 
-        await storage.upsertUser({
+        const user = await storage.upsertUser({
           oidcSub,
           email: authUser.email,
           firstName: profile.name?.givenName || authUser.displayName,
@@ -163,8 +126,8 @@ export async function setupAuth(app: Express) {
           profileImageUrl: authUser.profileImage,
         });
 
-        // Sanitize before storing in session
-        done(null, sanitiseAuthUser(authUser));
+        // No need to sanitize - we are serializing only the ID now
+        done(null, user);
       } catch (error) {
         console.error('[Google OAuth] Error:', error);
         done(error as Error);
@@ -183,8 +146,10 @@ export async function setupAuth(app: Express) {
       state: true, // Enable CSRF protection
     }, async (accessToken: any, refreshToken: any, profile: any, done: any) => {
       try {
+        console.log(`🔑 Twitch OAuth callback received for ID: ${profile.id}`);
         const email = profile.email;
         if (!email) {
+          console.error('❌ No email found in Twitch profile');
           return done(new Error("No email from Twitch"));
         }
 
@@ -199,7 +164,7 @@ export async function setupAuth(app: Express) {
           profileImage: profile.profile_image_url ? String(profile.profile_image_url) : undefined,
         };
 
-        await storage.upsertUser({
+        const user = await storage.upsertUser({
           oidcSub,
           email: authUser.email,
           firstName: authUser.displayName,
@@ -207,7 +172,7 @@ export async function setupAuth(app: Express) {
           profileImageUrl: authUser.profileImage,
         });
 
-        done(null, sanitiseAuthUser(authUser));
+        done(null, user);
       } catch (error) {
         console.error('[Twitch OAuth] Error:', error);
         done(error as Error);
@@ -254,7 +219,7 @@ export async function setupAuth(app: Express) {
           tiktokUnionId: tiktokUser.union_id,
         };
 
-        await storage.upsertUser({
+        const user = await storage.upsertUser({
           oidcSub,
           email: authUser.email,
           firstName: tiktokUser.display_name || 'TikTok',
@@ -270,7 +235,7 @@ export async function setupAuth(app: Express) {
           refreshToken,
         });
 
-        done(null, sanitiseAuthUser(authUser));
+        done(null, user);
       } catch (error) {
         console.error('[TikTok OAuth] Error fetching user info:', error);
         done(error as Error);
@@ -301,14 +266,14 @@ export async function setupAuth(app: Express) {
           displayName: profile.username || 'Riot User',
         };
         // Store user (you may want to fetch more info from Riot API here)
-        await storage.upsertUser({
+        const user = await storage.upsertUser({
           oidcSub,
           email: authUser.email,
           firstName: authUser.displayName,
           lastName: '',
           profileImageUrl: undefined,
         });
-        done(null, sanitiseAuthUser(authUser));
+        done(null, user);
       } catch (error) {
         console.error('[Riot OAuth] Error:', error);
         done(error as Error);
