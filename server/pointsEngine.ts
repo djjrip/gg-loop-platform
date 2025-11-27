@@ -199,7 +199,6 @@ export class PointsEngine {
 
       const expiresAtDate = new Date();
       expiresAtDate.setMonth(expiresAtDate.getMonth() + 12);
-      const expiresAt = expiresAtDate.toISOString();
 
       const [transaction] = await tx
         .insert(pointTransactions)
@@ -211,7 +210,7 @@ export class PointsEngine {
           sourceType,
           balanceAfter: newBalance,
           description: description || `Earned from ${type}`,
-          expiresAt,
+          expiresAt: expiresAtDate,
         })
         .returning();
 
@@ -247,7 +246,6 @@ export class PointsEngine {
 
       const expiresAtDate = new Date();
       expiresAtDate.setMonth(expiresAtDate.getMonth() + 12);
-      const expiresAt = expiresAtDate.toISOString();
 
       const [transaction] = await tx
         .insert(pointTransactions)
@@ -259,7 +257,7 @@ export class PointsEngine {
           sourceType: "challenge",
           balanceAfter: newBalance,
           description: `Bonus from challenge: ${challengeTitle}`,
-          expiresAt,
+          expiresAt: expiresAtDate,
         })
         .returning();
 
@@ -316,7 +314,6 @@ export class PointsEngine {
 
       const expiresAtDate = new Date();
       expiresAtDate.setMonth(expiresAtDate.getMonth() + 12);
-      const expiresAt = expiresAtDate.toISOString();
 
       const [transaction] = await tx
         .insert(pointTransactions)
@@ -328,7 +325,7 @@ export class PointsEngine {
           sourceType: "invoice",
           balanceAfter: newBalance,
           description: `${tier.toUpperCase()} tier monthly points`,
-          expiresAt,
+          expiresAt: expiresAtDate,
         })
         .returning();
 
