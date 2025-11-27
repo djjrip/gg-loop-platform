@@ -50,11 +50,11 @@ export default function Login() {
             Choose your preferred login method to unlock membership rewards
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           <Button
             onClick={() => handleLogin('discord')}
             variant="outline"
-            className="w-full h-12 text-base gap-3 hover-elevate active-elevate-2"
+            className="w-full h-14 text-base gap-3 hover-elevate active-elevate-2 transition-all duration-200 hover:border-[#5865F2] hover:bg-[#5865F2]/5"
             data-testid="button-discord-login"
           >
             <SiDiscord className="h-5 w-5" style={{ color: '#5865F2' }} />
@@ -65,7 +65,7 @@ export default function Login() {
           <Button
             onClick={() => handleLogin('twitch')}
             variant="outline"
-            className="w-full h-12 text-base gap-3 hover-elevate active-elevate-2"
+            className="w-full h-14 text-base gap-3 hover-elevate active-elevate-2 transition-all duration-200 hover:border-[#9146FF] hover:bg-[#9146FF]/5"
             data-testid="button-twitch-login"
           >
             <SiTwitch className="h-5 w-5" style={{ color: '#9146FF' }} />
@@ -75,7 +75,7 @@ export default function Login() {
           <Button
             onClick={() => handleLogin('google')}
             variant="outline"
-            className="w-full h-12 text-base gap-3 hover-elevate active-elevate-2"
+            className="w-full h-14 text-base gap-3 hover-elevate active-elevate-2 transition-all duration-200 hover:border-[#4285F4] hover:bg-[#4285F4]/5"
             data-testid="button-google-login"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -111,7 +111,7 @@ export default function Login() {
           <Button
             onClick={() => window.location.href = "/quick-start"}
             variant="ghost"
-            className="w-full h-12 text-base gap-3"
+            className="w-full h-14 text-base gap-3 transition-all duration-200 hover:bg-accent"
             data-testid="button-guest-login"
           >
             <Trophy className="h-5 w-5" />
