@@ -216,7 +216,7 @@ export class PointsEngine {
 
       await tx
         .update(users)
-        .set({ totalPoints: newBalance, updatedAt: new Date() })
+        .set({ totalPoints: newBalance, updatedAt: sql`NOW()` })
         .where(eq(users.id, userId));
 
       return transaction;
@@ -263,7 +263,7 @@ export class PointsEngine {
 
       await tx
         .update(users)
-        .set({ totalPoints: newBalance, updatedAt: new Date() })
+        .set({ totalPoints: newBalance, updatedAt: sql`NOW()` })
         .where(eq(users.id, userId));
 
       return transaction;
@@ -331,7 +331,7 @@ export class PointsEngine {
 
       await tx
         .update(users)
-        .set({ totalPoints: newBalance, updatedAt: new Date() })
+        .set({ totalPoints: newBalance, updatedAt: sql`NOW()` })
         .where(eq(users.id, userId));
 
       console.log(`[PointsEngine] Awarded ${amount} monthly points to user ${userId} (${tier} tier)`);
@@ -384,7 +384,7 @@ export class PointsEngine {
 
       await tx
         .update(users)
-        .set({ totalPoints: newBalance, updatedAt: new Date() })
+        .set({ totalPoints: newBalance, updatedAt: sql`NOW()` })
         .where(eq(users.id, userId));
 
       return transaction;
