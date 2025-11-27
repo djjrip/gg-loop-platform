@@ -2023,6 +2023,114 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     }
   });
 
+  // User Rewards History
+  app.get('/api/user/rewards', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const userRedemptions = await db
+        .select({
+          id: userRewards.id,
+          title: rewards.title,
+          pointsSpent: userRewards.pointsSpent,
+          status: userRewards.status,
+          redeemedAt: userRewards.redeemedAt,
+          fulfillmentData: userRewards.fulfillmentData,
+        })
+        .from(userRewards)
+        .leftJoin(rewards, eq(userRewards.rewardId, rewards.id))
+        .where(eq(userRewards.userId, userId))
+        .orderBy(desc(userRewards.redeemedAt));
+
+      res.json(userRedemptions);
+    } catch (error) {
+      console.error("Error fetching user rewards:", error);
+      res.status(500).json({ message: "Failed to fetch rewards history" });
+    }
+  });
+
+  // Redeem Reward
+  app.post('/api/user/rewards/redeem', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { rewardId } = req.body;
+
+      if (!rewardId) {
+        return res.status(400).json({ message: "Reward ID is required" });
+      }
+
+      // Execute redemption in a transaction
+      const result = await db.transaction(async (tx) => {
+        // 1. Get reward with lock
+        const [reward] = await tx
+          .select()
+          .from(rewards)
+          .where(eq(rewards.id, rewardId))
+          .for("update")
+          .limit(1);
+
+        if (!reward) {
+          throw new Error("Reward not found");
+        }
+
+        if (!reward.inStock || (reward.stock !== null && reward.stock <= 0)) {
+          throw new Error("Reward is out of stock");
+        }
+
+        // 2. Deduct points (this checks balance internally)
+        await pointsEngine.spendPoints(
+          userId,
+          reward.pointsCost,
+          "reward_redemption",
+          reward.id,
+          "reward",
+          `Redeemed: ${reward.title}`,
+          tx
+        );
+
+        // 3. Create redemption record
+        const [redemption] = await tx
+          .insert(userRewards)
+          .values({
+            userId,
+            rewardId,
+            pointsSpent: reward.pointsCost,
+            status: "pending", // Default to pending for manual fulfillment
+            redeemedAt: sql`NOW()`,
+          })
+          .returning();
+
+        // 4. Update stock if tracked
+        if (reward.stock !== null) {
+          await tx
+            .update(rewards)
+            .set({
+              stock: sql`${rewards.stock} - 1`,
+              inStock: sql`CASE WHEN ${rewards.stock} - 1 <= 0 THEN false ELSE true END`
+            })
+            .where(eq(rewards.id, rewardId));
+        }
+
+        return redemption;
+      });
+
+      // TODO: Send email notification to admin (using ADMIN_EMAILS env var)
+      console.log(`[Redemption] User ${userId} redeemed reward ${rewardId}. Order ID: ${result.id}`);
+
+      res.json({ success: true, message: "Reward redeemed successfully!", orderId: result.id });
+
+    } catch (error: any) {
+      console.error("Redemption error:", error);
+      if (error.message.includes("Insufficient points")) {
+        return res.status(400).json({ message: "Insufficient points" });
+      }
+      if (error.message.includes("out of stock")) {
+        return res.status(400).json({ message: "Reward is out of stock" });
+      }
+      res.status(500).json({ message: error.message || "Failed to redeem reward" });
+    }
+  });
+
+
   // Match submission routes
   app.get('/api/match-submissions', getUserMiddleware, async (req: any, res) => {
     try {
