@@ -1,3 +1,4 @@
+// v1.0.1 - Force rebuild
 import type { Express } from "express";
 import { storage } from "./storage";
 import { isAuthenticated } from "./auth";
