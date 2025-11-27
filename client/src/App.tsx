@@ -42,6 +42,7 @@ import SponsorManagement from "@/pages/SponsorManagement";
 import AffiliateManagement from "@/pages/admin/AffiliateManagement";
 import CharityManagement from "@/pages/admin/CharityManagement";
 import UserManagement from "@/pages/admin/UserManagement";
+import FounderHub from "@/pages/admin/FounderHub";
 
 // 404
 import NotFound from "@/pages/not-found";
@@ -96,6 +97,7 @@ function Router() {
       <Route path="/admin/daily-ops" component={DailyOps} />
       <Route path="/admin/fulfillment" component={AdminFulfillment} />
       <Route path="/admin/users" component={UserManagement} />
+      <Route path="/admin/founder-hub" component={FounderHub} />
       <Route path="/fulfillment" component={FulfillmentDashboard} />
 
       {/* 404 */}

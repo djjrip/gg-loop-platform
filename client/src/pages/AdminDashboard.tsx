@@ -229,9 +229,9 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <Button variant="outline" size="sm" className="w-full" asChild>
-                <Link href="/admin/founder-controls">
+                <Link href="/admin/founder-hub">
                   <Shield className="h-4 w-4 mr-2" />
-                  Founder Controls
+                  Open Founder's Hub
                 </Link>
               </Button>
             </CardContent>
