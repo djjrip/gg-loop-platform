@@ -33,7 +33,7 @@ export default function Header() {
     enabled: isAuthenticated,
     retry: false,
   });
-  
+
   const isAdmin = adminCheck?.isAdmin || false;
 
   useEffect(() => {
@@ -54,8 +54,14 @@ export default function Header() {
     window.location.href = "/login";
   };
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/';
+    }
   };
 
   return (
@@ -68,11 +74,11 @@ export default function Header() {
               <span className="font-bold text-3xl tracking-tight">GG LOOP</span>
             </div>
           </Link>
-          
+
           <nav className="hidden md:flex items-center gap-6">
-            <Link 
-              href="/" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-home-nav"
             >
               <Trophy className="h-3.5 w-3.5 text-primary" />
@@ -82,25 +88,25 @@ export default function Header() {
               <Gamepad2 className="h-3.5 w-3.5 text-primary" />
               Games
             </a>
-            <Link 
-              href="/stats" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/stats"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-stats"
             >
               <Activity className="h-3.5 w-3.5 text-primary" />
               My Stats
             </Link>
-            <Link 
-              href="/referrals" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/referrals"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-referrals"
             >
               <Users className="h-3.5 w-3.5 text-primary" />
               Referrals
             </Link>
-            <Link 
-              href="/affiliate-program" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/affiliate-program"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-affiliate"
             >
               <DollarSign className="h-3.5 w-3.5 text-primary" />
@@ -110,33 +116,33 @@ export default function Header() {
               <BarChart3 className="h-3.5 w-3.5 text-primary" />
               Leaderboards
             </a>
-            <Link 
-              href="/shop" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/shop"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-shop"
             >
               <Gift className="h-3.5 w-3.5 text-primary" />
               Shop
             </Link>
-            <Link 
-              href="/creator-tools" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/creator-tools"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-creator-tools"
             >
               <Megaphone className="h-3.5 w-3.5 text-primary" />
               Creator Tools
             </Link>
-            <Link 
-              href="/gg-loop-cares" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/gg-loop-cares"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-gg-loop-cares"
             >
               <Heart className="h-3.5 w-3.5 text-primary" />
               GG Loop Cares
             </Link>
-            <Link 
-              href="/about" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/about"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-about"
             >
               <Trophy className="h-3.5 w-3.5 text-primary" />
@@ -162,7 +168,7 @@ export default function Header() {
               )}
             </div>
           )}
-          
+
           <Button
             size="icon"
             variant="ghost"
@@ -286,9 +292,9 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t">
           <nav className="flex flex-col gap-2 p-4">
-            <Link 
-              href="/" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-home-mobile"
             >
               <Trophy className="h-3.5 w-3.5 text-primary" />
@@ -298,25 +304,25 @@ export default function Header() {
               <Gamepad2 className="h-3.5 w-3.5 text-primary" />
               Games
             </a>
-            <Link 
-              href="/stats" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/stats"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-stats-mobile"
             >
               <Activity className="h-3.5 w-3.5 text-primary" />
               My Stats
             </Link>
-            <Link 
-              href="/referrals" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/referrals"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-referrals-mobile"
             >
               <Users className="h-3.5 w-3.5 text-primary" />
               Referrals
             </Link>
-            <Link 
-              href="/affiliate-program" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/affiliate-program"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-affiliate-mobile"
             >
               <DollarSign className="h-3.5 w-3.5 text-primary" />
@@ -326,42 +332,42 @@ export default function Header() {
               <BarChart3 className="h-3.5 w-3.5 text-primary" />
               Leaderboards
             </a>
-            <Link 
-              href="/shop" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/shop"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-shop-mobile"
             >
               <Gift className="h-3.5 w-3.5 text-primary" />
               Shop
             </Link>
-            <Link 
-              href="/creator-tools" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/creator-tools"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-creator-tools-mobile"
             >
               <Megaphone className="h-3.5 w-3.5 text-primary" />
               Creator Tools
             </Link>
-            <Link 
-              href="/gg-loop-cares" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/gg-loop-cares"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-gg-loop-cares-mobile"
             >
               <Heart className="h-3.5 w-3.5 text-primary" />
               GG Loop Cares
             </Link>
-            <Link 
-              href="/about" 
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+            <Link
+              href="/about"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-about-mobile"
             >
               <Trophy className="h-3.5 w-3.5 text-primary" />
               About
             </Link>
             {isAuthenticated && user && user.isFounder && (
-              <Link 
-                href="/launch-dashboard" 
-                className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+              <Link
+                href="/launch-dashboard"
+                className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
                 data-testid="link-launch-dashboard-mobile"
               >
                 <Rocket className="h-3.5 w-3.5 text-primary" />
@@ -371,25 +377,25 @@ export default function Header() {
             {isAuthenticated && user ? (
               <>
                 <div className="border-t my-2" />
-                <Link 
+                <Link
                   href={`/profile/${user.id}`}
-                  className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+                  className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
                   data-testid="link-profile-mobile"
                 >
                   <Trophy className="h-3.5 w-3.5 text-primary" />
                   My Profile
                 </Link>
-                <Link 
-                  href="/my-rewards" 
-                  className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+                <Link
+                  href="/my-rewards"
+                  className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
                   data-testid="link-my-rewards-mobile"
                 >
                   <Gift className="h-3.5 w-3.5 text-primary" />
                   My Rewards
                 </Link>
-                <Link 
-                  href="/settings" 
-                  className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" 
+                <Link
+                  href="/settings"
+                  className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
                   data-testid="link-settings-mobile"
                 >
                   <SettingsIcon className="h-3.5 w-3.5 text-primary" />
