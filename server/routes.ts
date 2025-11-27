@@ -816,7 +816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gameName: riotAccount.gameName,
           tagLine: riotAccount.tagLine,
           region,
-          updatedAt: new Date(),
+          updatedAt: sql`NOW()`,
         },
       });
 
@@ -903,7 +903,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gameName: riotAccount.gameName,
           tagLine: riotAccount.tagLine,
           region,
-          updatedAt: new Date(),
+          updatedAt: sql`NOW()`,
         },
       });
 
@@ -998,7 +998,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gameName: riotAccount.gameName,
           tagLine: riotAccount.tagLine,
           region,
-          updatedAt: new Date(),
+          updatedAt: sql`NOW()`,
         },
       });
 
@@ -1579,7 +1579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userReward = await storage.updateUserRewardStatus(
         userRewardId,
         'fulfilled',
-        giftCardCode ? { giftCardCode, fulfilledAt: new Date() } : { fulfilledAt: new Date() }
+        giftCardCode ? { giftCardCode, fulfilledAt: sql`NOW()` } : { fulfilledAt: sql`NOW()` }
       );
 
       res.json(userReward);
@@ -1670,7 +1670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fulfillmentData: any = { giftCardCode };
       const updateData: any = {
         status: 'fulfilled',
-        fulfilledAt: new Date(),
+        fulfilledAt: sql`NOW()`,
         fulfillmentData: giftCardCode ? fulfillmentData : null,
       };
 
@@ -2089,7 +2089,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
             await storage.updateMatchSubmission(submission.id, {
               status: 'approved',
               pointsAwarded,
-              reviewedAt: new Date(),
+              reviewedAt: sql`NOW()`,
             });
 
             // Award points AND track challenge progress in single transaction
@@ -2144,7 +2144,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
                           THEN NOW() 
                         END
                       )`,
-                      updatedAt: new Date()
+                      updatedAt: sql`NOW()`
                     }
                   });
               }
@@ -2315,12 +2315,12 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           .update(challengeCompletions)
           .set({
             claimed: true,
-            claimedAt: new Date(),
+            claimedAt: sql`NOW()`,
             pointsAwarded: challenge.bonusPoints,
             transactionId: transaction.id,
             ipAddress: req.ip || req.headers['x-forwarded-for'] as string,
             userAgent: req.headers['user-agent'] as string,
-            updatedAt: new Date()
+            updatedAt: sql`NOW()`
           })
           .where(eq(challengeCompletions.id, completion.id));
 
@@ -2330,7 +2330,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           .set({
             pointsDistributed: challenge.pointsDistributed + challenge.bonusPoints,
             currentCompletions: challenge.currentCompletions + 1,
-            updatedAt: new Date()
+            updatedAt: sql`NOW()`
           })
           .where(eq(challenges.id, challenge.id));
 
@@ -2932,7 +2932,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           status: "processed",
           pointsAwarded: pointsToAward,
           transactionId: transaction.id,
-          processedAt: new Date(),
+          processedAt: sql`NOW()`,
         });
 
         res.json({
@@ -3016,7 +3016,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           status: "processed",
           pointsAwarded: pointsToAward,
           transactionId: transaction.id,
-          processedAt: new Date(),
+          processedAt: sql`NOW()`,
         });
 
         res.json({
@@ -3103,7 +3103,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           status: "processed",
           pointsAwarded: pointsToAward,
           transactionId: transaction.id,
-          processedAt: new Date(),
+          processedAt: sql`NOW()`,
         });
 
         res.json({
@@ -3155,7 +3155,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
             await storage.createReferral({
               referrerId: referrer.id,
               referredUserId: userId,
-              activatedAt: new Date(),
+              activatedAt: sql`NOW()`,
             });
           }
         }
@@ -3263,7 +3263,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         pointsAwarded: pointsForThisReferral,
         tier: tier?.minReferrals || 0,
         completionReason: 'subscription_started',
-        completedAt: new Date(),
+        completedAt: sql`NOW()`,
       });
 
       res.json({
@@ -3357,7 +3357,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       const updates = insertSponsorSchema.partial().parse(req.body);
 
       const [updatedSponsor] = await db.update(sponsors)
-        .set({ ...updates, updatedAt: new Date() })
+        .set({ ...updates, updatedAt: sql`NOW()` })
         .where(eq(sponsors.id, id))
         .returning();
 
@@ -3413,7 +3413,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       const [updated] = await db.update(sponsors)
         .set({
           totalBudget: sponsor.totalBudget + amount,
-          updatedAt: new Date()
+          updatedAt: sql`NOW()`
         })
         .where(eq(sponsors.id, id))
         .returning();
@@ -3902,7 +3902,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       });
 
       const validated = schema.parse(req.body);
-      const updateData: any = { ...validated, updatedAt: new Date() };
+      const updateData: any = { ...validated, updatedAt: sql`NOW()` };
 
       if (validated.status === 'approved') {
         updateData.approvedAt = new Date();
@@ -4045,7 +4045,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
       await db
         .update(charities)
-        .set({ ...validated, updatedAt: new Date() })
+        .set({ ...validated, updatedAt: sql`NOW()` })
         .where(eq(charities.id, id));
 
       res.json({ success: true });
@@ -4160,7 +4160,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           ...validated,
           startDate: validated.startDate ? new Date(validated.startDate) : undefined,
           endDate: validated.endDate ? new Date(validated.endDate) : undefined,
-          updatedAt: new Date()
+          updatedAt: sql`NOW()`
         })
         .where(eq(charityCampaigns.id, id));
 
@@ -4178,3 +4178,4 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
   return httpServer;
 }
+
