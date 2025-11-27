@@ -41,6 +41,7 @@ import DailyOps from "@/pages/DailyOps";
 import SponsorManagement from "@/pages/SponsorManagement";
 import AffiliateManagement from "@/pages/admin/AffiliateManagement";
 import CharityManagement from "@/pages/admin/CharityManagement";
+import UserManagement from "@/pages/admin/UserManagement";
 
 // 404
 import NotFound from "@/pages/not-found";
@@ -70,7 +71,7 @@ function Router() {
       <Route path="/subscription" component={Subscription} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
-      
+
       {/* User Routes */}
       <Route path="/login" component={Login} />
       <Route path="/quick-start" component={QuickStart} />
@@ -84,7 +85,7 @@ function Router() {
       <Route path="/launch-dashboard" component={LaunchDashboard} />
       <Route path="/subscription/success" component={SubscriptionSuccess} />
       <Route path="/subscription/cancel" component={SubscriptionCancel} />
-      
+
       {/* Admin Routes */}
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/founder-controls" component={FounderControls} />
@@ -94,8 +95,9 @@ function Router() {
       <Route path="/admin/charities" component={CharityManagement} />
       <Route path="/admin/daily-ops" component={DailyOps} />
       <Route path="/admin/fulfillment" component={AdminFulfillment} />
+      <Route path="/admin/users" component={UserManagement} />
       <Route path="/fulfillment" component={FulfillmentDashboard} />
-      
+
       {/* 404 */}
       <Route component={NotFound} />
     </Switch>
