@@ -153,10 +153,38 @@ export class RiotAPI {
           throw new Error('Player not found');
         }
 
-        // Handle 403 - API key issue
+        // Handle 403 - API key issue (expired or invalid)
         if (axiosError.response?.status === 403) {
-          console.error('🚨 RIOT API KEY ERROR: The key is invalid or expired. Please renew it at https://developer.riotgames.com/');
-          throw new Error('Invalid API key or unauthorized access');
+          const errorMessage = `
+🚨 RIOT API KEY ERROR 🚨
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The Riot API key has expired or is invalid.
+
+IMMEDIATE ACTION REQUIRED:
+1. Go to: https://developer.riotgames.com/
+2. Sign in with your Riot account
+3. Get a new Development API Key (or apply for Production)
+4. Update Railway environment variable: RIOT_API_KEY
+
+LONG-TERM SOLUTION:
+Apply for a Production API Key (never expires)
+See: RIOT_API_PRODUCTION_KEY_GUIDE.md in your repo
+
+Affected functionality:
+- Account verification
+- Match tracking
+- Leaderboard updates
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          `.trim();
+
+          console.error(errorMessage);
+          throw new Error('Riot API key expired. Admin action required - see server logs for details.');
+        }
+
+        // Handle 401 - Unauthorized
+        if (axiosError.response?.status === 401) {
+          console.error('🚨 RIOT API: Unauthorized - Check if API key is correctly configured');
+          throw new Error('Riot API authentication failed');
         }
       }
       throw error;
