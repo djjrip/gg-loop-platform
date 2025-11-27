@@ -1,264 +1,282 @@
-import AdminLayout from "@/components/AdminLayout";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import Header from "@/components/Header";
 import { Link } from "wouter";
-import { 
-  Package, 
-  DollarSign, 
-  Users, 
-  Trophy, 
-  Settings, 
-  Shield,
-  ArrowRight,
-  TrendingUp,
-  Gift,
-  Award
+import {
+  Users, Trophy, Gift, DollarSign, Activity, Package,
+  TrendingUp, Shield, BarChart3, Settings, Calendar, Megaphone
 } from "lucide-react";
 
-interface PendingReward {
-  id: string;
-  reward: {
-    realValue: number;
-  };
-}
-
-interface Sponsor {
-  id: string;
-  status: string;
+interface DashboardStats {
+  totalUsers: number;
+  totalPoints: number;
+  activeToday: number;
+  totalRewards: number;
+  founderCount: number;
+  revenueThisMonth: number;
 }
 
 export default function AdminDashboard() {
-  const { data: pendingRewards } = useQuery<PendingReward[]>({
-    queryKey: ["/api/admin/pending-rewards"],
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    totalPoints: 0,
+    activeToday: 0,
+    totalRewards: 0,
+    founderCount: 0,
+    revenueThisMonth: 0,
   });
+  const [loading, setLoading] = useState(true);
 
-  const { data: sponsors } = useQuery<Sponsor[]>({
-    queryKey: ["/api/admin/sponsors"],
-  });
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
 
-  const pendingCount = pendingRewards?.length || 0;
-  const pendingValue = pendingRewards?.reduce((sum, r) => sum + r.reward.realValue, 0) || 0;
-  const activeSponsors = sponsors?.filter(s => s.status === 'active').length || 0;
+  const fetchDashboardStats = async () => {
+    try {
+      const response = await fetch("/api/admin/dashboard-stats");
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const adminCapabilities = [
-    {
-      title: "Founder Controls",
-      description: "Manual point adjustments, spending limits, fraud detection, and system health",
-      icon: Shield,
-      href: "/admin/founder-controls",
-      badge: "New",
-      badgeVariant: "default",
-      stats: "Complete operational control",
-      testId: "link-founder-controls"
-    },
-    {
-      title: "Fulfillment Dashboard",
-      description: "Manage reward deliveries, add tracking numbers, and fulfill orders",
-      icon: Package,
-      href: "/fulfillment",
-      badge: pendingCount > 0 ? `${pendingCount} pending` : null,
-      badgeVariant: pendingCount > 0 ? "default" : "secondary",
-      stats: `${pendingCount} pending • $${pendingValue} value`,
-      testId: "link-fulfillment"
-    },
-    {
-      title: "Sponsor Management",
-      description: "View sponsor proposals, manage partnerships, and track challenge budgets",
-      icon: DollarSign,
-      href: "/admin/sponsors",
-      badge: activeSponsors > 0 ? `${activeSponsors} active` : null,
-      badgeVariant: "secondary",
-      stats: `${activeSponsors} active sponsors`,
-      testId: "link-sponsors"
-    },
+  const adminPages = [
     {
       title: "User Management",
-      description: "View user accounts, subscription tiers, and platform activity",
+      description: "View and manage all platform users",
       icon: Users,
-      href: "/leaderboard",
-      badge: "Coming Soon",
-      badgeVariant: "outline",
-      stats: "Monitor user engagement",
-      testId: "link-users"
-    },
-    {
-      title: "Rewards Catalog",
-      description: "Add, edit, or remove rewards from the catalog",
-      icon: Gift,
-      href: "/admin/rewards",
-      badge: null,
-      badgeVariant: "secondary",
-      stats: "Manage reward inventory",
-      testId: "link-rewards"
-    },
-  ];
-
-  const quickStats = [
-    {
-      label: "Pending Fulfillments",
-      value: pendingCount,
-      icon: Package,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-      borderColor: "border-primary/20"
-    },
-    {
-      label: "Pending Value",
-      value: `$${pendingValue}`,
-      icon: DollarSign,
-      color: "text-green-500",
-      bgColor: "bg-green-500/10",
-      borderColor: "border-green-500/20"
-    },
-    {
-      label: "Active Sponsors",
-      value: activeSponsors,
-      icon: Award,
+      href: "/admin/users",
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
-      borderColor: "border-blue-500/20"
+    },
+    {
+      title: "Daily Operations",
+      description: "Daily tasks and platform health",
+      icon: Activity,
+      href: "/admin/daily-ops",
+      color: "text-green-500",
+      bgColor: "bg-green-500/10",
+    },
+    {
+      title: "Rewards Management",
+      description: "Manage rewards catalog and inventory",
+      icon: Gift,
+      href: "/admin/rewards",
+      color: "text-purple-500",
+      bgColor: "bg-purple-500/10",
+    },
+    {
+      title: "Fulfillment",
+      description: "Process and track reward fulfillment",
+      icon: Package,
+      href: "/admin/fulfillment",
+      color: "text-orange-500",
+      bgColor: "bg-orange-500/10",
+    },
+    {
+      title: "Sponsors",
+      description: "Manage sponsor relationships",
+      icon: DollarSign,
+      href: "/admin/sponsors",
+      color: "text-yellow-500",
+      bgColor: "bg-yellow-500/10",
+    },
+    {
+      title: "Affiliates",
+      description: "Track affiliate performance",
+      icon: Megaphone,
+      href: "/admin/affiliates",
+      color: "text-pink-500",
+      bgColor: "bg-pink-500/10",
+    },
+    {
+      title: "Charities",
+      description: "Manage charity campaigns",
+      icon: Shield,
+      href: "/admin/charities",
+      color: "text-red-500",
+      bgColor: "bg-red-500/10",
+    },
+    {
+      title: "Launch KPIs",
+      description: "Track key performance indicators",
+      icon: TrendingUp,
+      href: "/launch-dashboard",
+      color: "text-cyan-500",
+      bgColor: "bg-cyan-500/10",
     },
   ];
 
   return (
-    <AdminLayout>
-      <div className="container mx-auto max-w-7xl px-4 py-16 space-y-8">
-        {/* Header */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-              <Shield className="h-8 w-8 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold font-heading tracking-tight">
-                Admin Control Center
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Manage all aspects of GG Loop
-              </p>
-            </div>
-          </div>
+    <>
+      <Header />
+      <div className="container mx-auto max-w-7xl px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+            <Shield className="h-10 w-10 text-primary" />
+            Admin Control Center
+          </h1>
+          <p className="text-muted-foreground">Comprehensive platform management and analytics</p>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {quickStats.map((stat, idx) => (
-            <Card key={idx} className={`p-6 ${stat.borderColor}`}>
-              <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-lg ${stat.bgColor} border ${stat.borderColor}`}>
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="text-3xl font-bold font-mono" data-testid={`stat-${idx}`}>
-                    {stat.value}
+        {/* Key Metrics */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-2xl font-bold">...</div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.founderCount} founders
                   </p>
-                </div>
-              </div>
-            </Card>
-          ))}
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Today</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-2xl font-bold">...</div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{stats.activeToday.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {stats.totalUsers > 0 ? ((stats.activeToday / stats.totalUsers) * 100).toFixed(1) : 0}% of users
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Points Issued</CardTitle>
+              <Trophy className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-2xl font-bold">...</div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{stats.totalPoints.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Across all users
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Rewards Claimed</CardTitle>
+              <Gift className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-2xl font-bold">...</div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{stats.totalRewards.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Lifetime
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Revenue This Month</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-2xl font-bold">...</div>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">${stats.revenueThisMonth.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Subscriptions + sponsors
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+              <Settings className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" size="sm" className="w-full" asChild>
+                <Link href="/admin/founder-controls">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Founder Controls
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Admin Capabilities */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold font-heading">Admin Capabilities</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {adminCapabilities.map((capability) => (
-              <Link key={capability.href} href={capability.href}>
-                <Card 
-                  className="p-6 border-primary/20 hover:border-primary/40 transition-all cursor-pointer hover-elevate active-elevate-2 h-full"
-                  data-testid={capability.testId}
-                >
-                  <CardHeader className="p-0 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                          <capability.icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <CardTitle className="text-xl font-heading">
-                          {capability.title}
-                        </CardTitle>
+        {/* Admin Pages Grid */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">Management Tools</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {adminPages.map((page) => {
+              const Icon = page.icon;
+              return (
+                <Link key={page.href} href={page.href}>
+                  <Card className="hover:shadow-lg transition-all hover:scale-105 cursor-pointer h-full">
+                    <CardHeader>
+                      <div className={`w-12 h-12 rounded-lg ${page.bgColor} flex items-center justify-center mb-3`}>
+                        <Icon className={`h-6 w-6 ${page.color}`} />
                       </div>
-                      {capability.badge && (
-                        <Badge 
-                          variant={capability.badgeVariant as any}
-                          className="font-mono text-xs"
-                        >
-                          {capability.badge}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardDescription className="text-sm">
-                      {capability.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-0 mt-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground font-mono">
-                        {capability.stats}
-                      </p>
-                      <ArrowRight className="h-4 w-4 text-primary" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                      <CardTitle className="text-lg">{page.title}</CardTitle>
+                      <CardDescription>{page.description}</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
-        {/* Admin Permissions Info */}
-        <Card className="p-6 border-primary/20 bg-primary/5">
-          <div className="flex items-start gap-4">
-            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-              <Shield className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold mb-2">Your Admin Permissions</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                You have full access to all admin functions because your email is in the ADMIN_EMAILS environment variable.
-              </p>
-              <div className="space-y-2">
-                <div className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5" />
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Fulfillment:</strong> Mark rewards as fulfilled, add tracking numbers, view customer shipping info
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5" />
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Sponsors:</strong> Review proposals, manage partnerships, create sponsored challenges
-                  </p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5" />
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Security:</strong> All admin endpoints protected - only emails in ADMIN_EMAILS can access
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Recent Activity (Placeholder) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Recent Platform Activity
+            </CardTitle>
+            <CardDescription>Latest user actions and system events</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Activity feed will be displayed here
+            </p>
+          </CardContent>
         </Card>
-
-        {/* Quick Actions */}
-        <div className="flex gap-4 flex-wrap">
-          <Link href="/fulfillment">
-            <Button size="lg" data-testid="button-quick-fulfillment">
-              <Package className="h-4 w-4 mr-2" />
-              View Pending Orders
-            </Button>
-          </Link>
-          <Link href="/admin/sponsors">
-            <Button size="lg" variant="outline" data-testid="button-quick-sponsors">
-              <DollarSign className="h-4 w-4 mr-2" />
-              Manage Sponsors
-            </Button>
-          </Link>
-        </div>
       </div>
-    </AdminLayout>
+    </>
   );
 }

@@ -182,6 +182,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Get dashboard stats
+  app.get('/api/admin/dashboard-stats', adminMiddleware, async (req: any, res) => {
+    try {
+      // Get total users
+      const totalUsersResult = await db.select({ count: sql<number>`COUNT(*)` }).from(users);
+      const totalUsers = Number(totalUsersResult[0]?.count || 0);
+
+      // Get founder count
+      const founderResult = await db.select({ count: sql<number>`COUNT(*)` }).from(users).where(eq(users.isFounder, true));
+      const founderCount = Number(founderResult[0]?.count || 0);
+
+      // Get users active today (logged in today)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const activeResult = await db.select({ count: sql<number>`COUNT(*)` }).from(users).where(gte(users.lastLoginAt, today));
+      const activeToday = Number(activeResult[0]?.count || 0);
+
+      // Get total points issued
+      const pointsResult = await db.select({ total: sql<number>`COALESCE(SUM(${users.totalPoints}), 0)` }).from(users);
+      const totalPoints = Number(pointsResult[0]?.total || 0);
+
+      // Get total rewards claimed
+      const rewardsResult = await db.select({ count: sql<number>`COUNT(*)` }).from(userRewards);
+      const totalRewards = Number(rewardsResult[0]?.count || 0);
+
+      // Revenue this month (placeholder  - would need subscription tracking)
+      const revenueThisMonth = 0;
+
+      res.json({
+        totalUsers,
+        founderCount,
+        activeToday,
+        totalPoints,
+        totalRewards,
+        revenueThisMonth,
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard stats" });
+    }
+  });
+
+
 
   // Guest account creation
   app.post('/api/auth/guest', async (req: any, res) => {
