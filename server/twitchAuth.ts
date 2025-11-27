@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { storage } from "./storage";
-import { isAuthenticated } from "./replitAuth";
+import { isAuthenticated } from "./auth";
 import { twitchAPI } from "./lib/twitch";
 import crypto from "crypto";
 
@@ -17,7 +17,7 @@ export function setupTwitchAuth(app: Express) {
     // Generate CSRF state token
     const state = crypto.randomBytes(32).toString('hex');
     req.session.twitchState = state;
-    
+
     const scopes = 'user:read:email';
     const redirectUri = getTwitchRedirectUri(req.hostname);
     const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}`;
@@ -43,7 +43,7 @@ export function setupTwitchAuth(app: Express) {
 
     try {
       const redirectUri = getTwitchRedirectUri(req.hostname);
-      
+
       // Exchange code for access token
       const tokenResponse = await fetch('https://id.twitch.tv/oauth2/token', {
         method: 'POST',
@@ -58,7 +58,7 @@ export function setupTwitchAuth(app: Express) {
       });
 
       const tokenData = await tokenResponse.json();
-      
+
       if (!tokenData.access_token) {
         throw new Error('No access token received from Twitch');
       }
@@ -82,7 +82,7 @@ export function setupTwitchAuth(app: Express) {
 
       // Encrypt tokens before storing
       const encryptedAccessToken = await twitchAPI.encryptToken(tokenData.access_token);
-      const encryptedRefreshToken = tokenData.refresh_token 
+      const encryptedRefreshToken = tokenData.refresh_token
         ? await twitchAPI.encryptToken(tokenData.refresh_token)
         : '';
 
@@ -107,7 +107,7 @@ export function setupTwitchAuth(app: Express) {
     try {
       const oidcSub = req.user.claims.sub;
       const user = await storage.getUserByOidcSub(oidcSub);
-      
+
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
