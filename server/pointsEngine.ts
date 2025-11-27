@@ -103,7 +103,7 @@ export class PointsEngine {
           eq(pointTransactions.isExpired, false),
           gte(pointTransactions.amount, 0),
           sql`${pointTransactions.expiresAt} IS NOT NULL`,
-          sql`${pointTransactions.expiresAt} < ${now}`
+          sql`${pointTransactions.expiresAt} < NOW()`
         )
       );
 
@@ -128,8 +128,8 @@ export class PointsEngine {
           eq(pointTransactions.isExpired, false),
           gte(pointTransactions.amount, 0),
           sql`${pointTransactions.expiresAt} IS NOT NULL`,
-          sql`${pointTransactions.expiresAt} > ${now}`,
-          sql`${pointTransactions.expiresAt} <= ${thresholdDate}`
+          sql`${pointTransactions.expiresAt} > NOW()`,
+          sql`${pointTransactions.expiresAt} <= NOW() + interval '${sql.raw(daysThreshold.toString())} days'`
         )
       );
 
@@ -458,7 +458,7 @@ export class PointsEngine {
           eq(pointTransactions.isExpired, false),
           gte(pointTransactions.amount, 0),
           sql`${pointTransactions.expiresAt} IS NOT NULL`,
-          sql`${pointTransactions.expiresAt} < ${now}`
+          sql`${pointTransactions.expiresAt} < NOW()`
         )
       );
   }
