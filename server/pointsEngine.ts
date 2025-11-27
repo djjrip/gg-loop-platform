@@ -197,8 +197,9 @@ export class PointsEngine {
       const effectiveBalance = user[0].totalPoints - expiredPoints;
       const newBalance = user[0].totalPoints + finalAmount;
 
-      const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 12);
+      const expiresAtDate = new Date();
+      expiresAtDate.setMonth(expiresAtDate.getMonth() + 12);
+      const expiresAt = expiresAtDate.toISOString();
 
       const [transaction] = await tx
         .insert(pointTransactions)
@@ -244,8 +245,9 @@ export class PointsEngine {
 
       const newBalance = user[0].totalPoints + amount;
 
-      const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 12);
+      const expiresAtDate = new Date();
+      expiresAtDate.setMonth(expiresAtDate.getMonth() + 12);
+      const expiresAt = expiresAtDate.toISOString();
 
       const [transaction] = await tx
         .insert(pointTransactions)
@@ -312,8 +314,9 @@ export class PointsEngine {
 
       const newBalance = user[0].totalPoints + amount;
 
-      const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 12);
+      const expiresAtDate = new Date();
+      expiresAtDate.setMonth(expiresAtDate.getMonth() + 12);
+      const expiresAt = expiresAtDate.toISOString();
 
       const [transaction] = await tx
         .insert(pointTransactions)
