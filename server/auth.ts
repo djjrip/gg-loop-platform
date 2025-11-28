@@ -6,6 +6,7 @@ import { Strategy as TwitchStrategy } from "passport-twitch-new";
 import session from "express-session";
 import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
+import { sendWelcomeEmail } from "./services/email";
 
 // ============================================================================
 // SESSION SETUP - PURE MEMORY STORE (NO POSTGRES)
@@ -84,6 +85,14 @@ export async function setupAuth(app: Express) {
                     lastName: profile.name?.familyName || '',
                     profileImageUrl: profile.photos?.[0]?.value,
                 });
+
+                // Check if this is a new user (created within last 10 seconds)
+                const isNewUser = user.createdAt && (new Date().getTime() - new Date(user.createdAt).getTime() < 10000);
+                if (isNewUser) {
+                    // Fire and forget welcome email
+                    sendWelcomeEmail(user.email!, user.firstName || user.username || 'Gamer').catch(console.error);
+                }
+
                 done(null, user);
             } catch (error) {
                 done(error as Error);
@@ -114,6 +123,13 @@ export async function setupAuth(app: Express) {
                     lastName: '',
                     profileImageUrl: profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : undefined,
                 });
+
+                // Check if this is a new user (created within last 10 seconds)
+                const isNewUser = user.createdAt && (new Date().getTime() - new Date(user.createdAt).getTime() < 10000);
+                if (isNewUser) {
+                    sendWelcomeEmail(user.email!, user.firstName || user.username || 'Gamer').catch(console.error);
+                }
+
                 done(null, user);
             } catch (error) {
                 done(error as Error);
@@ -145,6 +161,13 @@ export async function setupAuth(app: Express) {
                     lastName: '',
                     profileImageUrl: profile.profile_image_url,
                 });
+
+                // Check if this is a new user (created within last 10 seconds)
+                const isNewUser = user.createdAt && (new Date().getTime() - new Date(user.createdAt).getTime() < 10000);
+                if (isNewUser) {
+                    sendWelcomeEmail(user.email!, user.firstName || user.username || 'Gamer').catch(console.error);
+                }
+
                 done(null, user);
             } catch (error) {
                 done(error as Error);

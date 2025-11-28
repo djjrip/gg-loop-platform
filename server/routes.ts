@@ -3734,7 +3734,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
   // ==================== FOUNDER CONTROLS ====================
   // Import founder controls functionality
-  const founderControls = await import('./founderControls');
+  const { adjustUserPoints, getUserAuditLog, getAllAuditLogs, getSystemHealth, checkSpendingLimits } = await import('./founderControls');
 
   // Manual Point Adjustment
   app.post('/api/admin/points/adjust', adminMiddleware, async (req: any, res) => {
@@ -3757,7 +3757,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       const adminUser = req.dbUser;
       const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
 
-      const result = await founderControls.adjustUserPoints(
+      const result = await adjustUserPoints(
         adminUser.id,
         adminUser.email || 'unknown',
         targetUserId,
@@ -3785,8 +3785,8 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       const limit = parseInt(req.query.limit as string) || 100;
 
       const logs = userId
-        ? await founderControls.getUserAuditLog(userId, limit)
-        : await founderControls.getAllAuditLogs(limit);
+        ? await getUserAuditLog(userId, limit)
+        : await getAllAuditLogs(limit);
 
       res.json(logs);
     } catch (error: any) {
@@ -3798,7 +3798,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
   // System Health Dashboard
   app.get('/api/admin/system-health', adminMiddleware, async (req: any, res) => {
     try {
-      const health = await founderControls.getSystemHealth();
+      const health = await getSystemHealth();
       res.json(health);
     } catch (error: any) {
       console.error("Error fetching system health:", error);
@@ -3823,7 +3823,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       }
 
       const { userId, rewardValue } = parsed.data;
-      const result = await founderControls.checkSpendingLimits(userId, rewardValue);
+      const result = await checkSpendingLimits(userId, rewardValue);
 
       res.json(result);
     } catch (error: any) {
@@ -4323,11 +4323,76 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         return res.status(400).json({ message: "Invalid update data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update campaign" });
+      // ADMIN: PATCH /api/admin/charity-campaigns/:id - Update campaign
+      app.patch('/api/admin/charity-campaigns/:id', adminMiddleware, async (req: any, res) => {
+        try {
+          const { id } = req.params;
+          const schema = z.object({
+            charityId: z.string().uuid().optional(),
+            title: z.string().optional(),
+            description: z.string().optional(),
+            goalAmount: z.number().optional(),
+            currentAmount: z.number().optional(),
+            startDate: z.string().optional(),
+            endDate: z.string().optional(),
+            isActive: z.boolean().optional(),
+          });
+
+          const validated = schema.parse(req.body);
+
+          await db
+            .update(charityCampaigns)
+            .set({
+              ...validated,
+              startDate: validated.startDate ? new Date(validated.startDate) : undefined,
+              endDate: validated.endDate ? new Date(validated.endDate) : undefined,
+              updatedAt: sql`NOW()`
+            })
+            .where(eq(charityCampaigns.id, id));
+
+          res.json({ success: true });
+        } catch (error: any) {
+          console.error("Error updating campaign:", error);
+          if (error instanceof z.ZodError) {
+            return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+          }
+          res.status(500).json({ message: "Failed to update campaign" });
+        }
+      });
+
+      const httpServer = createServer(app);
+
+      // Get referral leaderboard
+      app.get("/api/referrals/leaderboard", async (req, res) => {
+        try {
+          const leaderboardData = await db
+            .select({
+              referrerId: referrals.referrerId,
+              count: sql<number>`count(*)`,
+              username: users.username,
+              totalPoints: users.totalPoints,
+              profileImageUrl: users.profileImageUrl,
+            })
+            .from(referrals)
+            .leftJoin(users, eq(referrals.referrerId, users.id))
+            .groupBy(referrals.referrerId, users.username, users.totalPoints, users.profileImageUrl)
+            .orderBy(desc(sql`count(*)`))
+            .limit(10);
+
+          const formattedLeaderboard = leaderboardData.map((entry, index) => ({
+            rank: index + 1,
+            username: entry.username || "Unknown",
+            referralCount: Number(entry.count),
+            totalPoints: entry.totalPoints || 0,
+            profileImageUrl: entry.profileImageUrl,
+          }));
+
+          res.json({ leaderboard: formattedLeaderboard });
+        } catch (error) {
+          console.error("Error fetching referral leaderboard:", error);
+          res.status(500).json({ message: "Failed to fetch leaderboard" });
+        }
+      });
+
+      return httpServer;
     }
-  });
-
-  const httpServer = createServer(app);
-
-  return httpServer;
-}
-
