@@ -12,7 +12,7 @@ import {
   insertReferralSchema, processedRiotMatches, referrals, affiliateApplications,
   charities, charityCampaigns, games, leaderboardEntries
 } from "@shared/schema";
-import { and, eq, sql, inArray, desc } from "drizzle-orm";
+import { and, eq, sql, inArray, desc, gte } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./auth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { z } from "zod";
@@ -78,6 +78,14 @@ const adminMiddleware = async (req: any, res: any, next: any) => {
     console.error("Error in admin middleware:", error);
     res.status(500).json({ message: "Failed to authenticate admin" });
   }
+};
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize authentication FIRST - this is critical for OAuth to work
+  console.log('🔐 Initializing authentication...');
+  await setupAuth(app);
+  await setupTwitchAuth(app);
+  console.log('✅ Authentication initialized');
 
   app.get('/tiktokPDhff2hq8ipXw4JhJXalxaRHIa5mV037.txt', (req, res) => {
     res.type('text/plain');
@@ -4323,76 +4331,42 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         return res.status(400).json({ message: "Invalid update data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update campaign" });
-      // ADMIN: PATCH /api/admin/charity-campaigns/:id - Update campaign
-      app.patch('/api/admin/charity-campaigns/:id', adminMiddleware, async (req: any, res) => {
-        try {
-          const { id } = req.params;
-          const schema = z.object({
-            charityId: z.string().uuid().optional(),
-            title: z.string().optional(),
-            description: z.string().optional(),
-            goalAmount: z.number().optional(),
-            currentAmount: z.number().optional(),
-            startDate: z.string().optional(),
-            endDate: z.string().optional(),
-            isActive: z.boolean().optional(),
-          });
-
-          const validated = schema.parse(req.body);
-
-          await db
-            .update(charityCampaigns)
-            .set({
-              ...validated,
-              startDate: validated.startDate ? new Date(validated.startDate) : undefined,
-              endDate: validated.endDate ? new Date(validated.endDate) : undefined,
-              updatedAt: sql`NOW()`
-            })
-            .where(eq(charityCampaigns.id, id));
-
-          res.json({ success: true });
-        } catch (error: any) {
-          console.error("Error updating campaign:", error);
-          if (error instanceof z.ZodError) {
-            return res.status(400).json({ message: "Invalid update data", errors: error.errors });
-          }
-          res.status(500).json({ message: "Failed to update campaign" });
-        }
-      });
-
-      const httpServer = createServer(app);
-
-      // Get referral leaderboard
-      app.get("/api/referrals/leaderboard", async (req, res) => {
-        try {
-          const leaderboardData = await db
-            .select({
-              referrerId: referrals.referrerId,
-              count: sql<number>`count(*)`,
-              username: users.username,
-              totalPoints: users.totalPoints,
-              profileImageUrl: users.profileImageUrl,
-            })
-            .from(referrals)
-            .leftJoin(users, eq(referrals.referrerId, users.id))
-            .groupBy(referrals.referrerId, users.username, users.totalPoints, users.profileImageUrl)
-            .orderBy(desc(sql`count(*)`))
-            .limit(10);
-
-          const formattedLeaderboard = leaderboardData.map((entry, index) => ({
-            rank: index + 1,
-            username: entry.username || "Unknown",
-            referralCount: Number(entry.count),
-            totalPoints: entry.totalPoints || 0,
-            profileImageUrl: entry.profileImageUrl,
-          }));
-
-          res.json({ leaderboard: formattedLeaderboard });
-        } catch (error) {
-          console.error("Error fetching referral leaderboard:", error);
-          res.status(500).json({ message: "Failed to fetch leaderboard" });
-        }
-      });
-
-      return httpServer;
     }
+  });
+
+  const httpServer = createServer(app);
+
+  // Get referral leaderboard
+  app.get("/api/referrals/leaderboard", async (req, res) => {
+    try {
+      const leaderboardData = await db
+        .select({
+          referrerId: referrals.referrerId,
+          count: sql<number>`count(*)`,
+          username: users.username,
+          totalPoints: users.totalPoints,
+          profileImageUrl: users.profileImageUrl,
+        })
+        .from(referrals)
+        .leftJoin(users, eq(referrals.referrerId, users.id))
+        .groupBy(referrals.referrerId, users.username, users.totalPoints, users.profileImageUrl)
+        .orderBy(desc(sql`count(*)`))
+        .limit(10);
+
+      const formattedLeaderboard = leaderboardData.map((entry, index) => ({
+        rank: index + 1,
+        username: entry.username || "Unknown",
+        referralCount: Number(entry.count),
+        totalPoints: entry.totalPoints || 0,
+        profileImageUrl: entry.profileImageUrl,
+      }))
+
+      res.json({ leaderboard: formattedLeaderboard });
+    } catch (error) {
+      console.error("Error fetching referral leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
+  return httpServer;
+}
