@@ -65,227 +65,295 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background/99 backdrop-blur supports-[backdrop-filter]:bg-background/95 shadow-[0_1px_0_0_rgba(255,140,66,0.1)]">
-      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2 hover-elevate px-2 py-1 rounded-md" data-testid="link-home">
-            <div className="flex items-center gap-3">
-              <img src={logoImage} alt="GG LOOP Logo" className="h-10 w-auto" />
-              <span className="font-bold text-3xl tracking-tight">GG LOOP</span>
-            </div>
-          </Link>
+    <header className="sticky top-0 z-50 w-full">
+      {/* Animated gradient background bar */}
+      <div className="absolute inset-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-60 animate-pulse" />
 
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              href="/"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-home-nav"
-            >
-              <Trophy className="h-3.5 w-3.5 text-primary" />
-              Home
-            </Link>
-            <a href="/#games" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-games">
-              <Gamepad2 className="h-3.5 w-3.5 text-primary" />
-              Games
-            </a>
-            <Link
-              href="/stats"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-stats"
-            >
-              <Activity className="h-3.5 w-3.5 text-primary" />
-              My Stats
-            </Link>
-            <Link
-              href="/referrals"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-referrals"
-            >
-              <Users className="h-3.5 w-3.5 text-primary" />
-              Referrals
-            </Link>
-            <Link
-              href="/affiliate-program"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-affiliate"
-            >
-              <DollarSign className="h-3.5 w-3.5 text-primary" />
-              Affiliate
-            </Link>
-            <a href="/#leaderboards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards">
-              <BarChart3 className="h-3.5 w-3.5 text-primary" />
-              Leaderboards
-            </a>
-            <Link
-              href="/shop"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-shop"
-            >
-              <Gift className="h-3.5 w-3.5 text-primary" />
-              Shop
-            </Link>
-            <Link
-              href="/creator-tools"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-creator-tools"
-            >
-              <Megaphone className="h-3.5 w-3.5 text-primary" />
-              Creator Tools
-            </Link>
-            <Link
-              href="/gg-loop-cares"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-gg-loop-cares"
-            >
-              <Heart className="h-3.5 w-3.5 text-primary" />
-              GG Loop Cares
-            </Link>
-            <Link
-              href="/about"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-about"
-            >
-              <Trophy className="h-3.5 w-3.5 text-primary" />
-              About
-            </Link>
-          </nav>
-        </div>
+      {/* Main header with glassmorphism */}
+      <div className="relative border-b border-primary/20 backdrop-blur-xl bg-gradient-to-b from-background/95 via-background/90 to-background/85 shadow-[0_8px_32px_0_rgba(255,140,66,0.12)]">
+        {/* Subtle glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
 
-        <div className="flex items-center gap-4">
-          {isAuthenticated && user && (
-            <div className="hidden md:flex items-center gap-3">
-              <div className="flex items-center gap-2 rounded-sm bg-primary/20 px-3 py-1.5 border-2 border-primary/60 shadow-[0_0_20px_rgba(255,140,66,0.5)]">
-                <Trophy className="h-4 w-4 text-primary" />
-                <span className="font-mono text-sm font-bold text-primary" data-testid="text-points">{user.totalPoints.toLocaleString()}</span>
-                <span className="text-xs text-muted-foreground">pts</span>
-              </div>
-              {freeTierData && freeTierData.ggCoins > 0 && (
-                <div className="flex items-center gap-2 rounded-sm bg-accent/20 px-3 py-1.5 border-2 border-accent/60">
-                  <Coins className="h-4 w-4 text-accent-foreground" />
-                  <span className="font-mono text-sm font-bold" data-testid="text-gg-coins">{freeTierData.ggCoins.toLocaleString()}</span>
-                  <span className="text-xs text-muted-foreground">GG</span>
+        <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 relative">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="group flex items-center gap-2 px-2 py-1 rounded-lg transition-all duration-300 hover:scale-105" data-testid="link-home">
+              <div className="flex items-center gap-3 relative">
+                {/* Logo glow effect */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-primary/20 to-accent/20 rounded-lg blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                <div className="relative">
+                  <img src={logoImage} alt="GG LOOP Logo" className="h-10 w-auto relative z-10 drop-shadow-[0_0_8px_rgba(255,140,66,0.4)]" />
                 </div>
-              )}
-            </div>
-          )}
 
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={toggleTheme}
-            data-testid="button-theme-toggle"
-          >
-            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </Button>
+                <span className="relative font-bold text-3xl tracking-tight bg-gradient-to-r from-foreground via-primary/90 to-foreground bg-clip-text">
+                  GG LOOP
+                  {/* Subtle shine effect on hover */}
+                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 bg-clip-text" />
+                </span>
+              </div>
+            </Link>
 
-          <Button size="icon" variant="ghost" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} data-testid="button-mobile-menu">
-            <Menu className="h-5 w-5" />
-          </Button>
 
-          {isAuthenticated && user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="hidden md:flex items-center gap-2" data-testid="button-profile">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.profileImageUrl || undefined} />
-                    <AvatarFallback>
-                      {user.firstName?.[0] || user.email?.[0] || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium">
-                    {user.firstName || user.email?.split("@")[0] || "User"}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{user.firstName || "User"}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <p className="text-xs text-primary font-semibold">{user.totalPoints} points</p>
-                    {freeTierData && freeTierData.ggCoins > 0 && (
-                      <p className="text-xs text-accent-foreground font-semibold">{freeTierData.ggCoins} GG Coins</p>
-                    )}
+            <nav className="hidden md:flex items-center gap-2">
+              <Link
+                href="/"
+                className="group relative text-sm font-medium px-3 py-2 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:shadow-[0_0_16px_rgba(255,140,66,0.3)] flex items-center gap-1.5"
+                data-testid="link-home-nav"
+              >
+                <Trophy className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <span className="relative">
+                  Home
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent group-hover:w-full transition-all duration-300" />
+                </span>
+              </Link>
+              <a href="/#games" className="group relative text-sm font-medium px-3 py-2 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:shadow-[0_0_16px_rgba(255,140,66,0.3)] flex items-center gap-1.5" data-testid="link-games">
+                <Gamepad2 className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <span className="relative">
+                  Games
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent group-hover:w-full transition-all duration-300" />
+                </span>
+              </a>
+              <Link
+                href="/stats"
+                className="group relative text-sm font-medium px-3 py-2 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:shadow-[0_0_16px_rgba(255,140,66,0.3)] flex items-center gap-1.5"
+                data-testid="link-stats"
+              >
+                <Activity className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <span className="relative">
+                  My Stats
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent group-hover:w-full transition-all duration-300" />
+                </span>
+              </Link>
+              <Link
+                href="/referrals"
+                className="group relative text-sm font-medium px-3 py-2 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:shadow-[0_0_16px_rgba(255,140,66,0.3)] flex items-center gap-1.5"
+                data-testid="link-referrals"
+              >
+                <Users className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <span className="relative">
+                  Referrals
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent group-hover:w-full transition-all duration-300" />
+                </span>
+              </Link>
+              <Link
+                href="/affiliate-program"
+                className="group relative text-sm font-medium px-3 py-2 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:shadow-[0_0_16px_rgba(255,140,66,0.3)] flex items-center gap-1.5"
+                data-testid="link-affiliate"
+              >
+                <DollarSign className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <span className="relative">
+                  Affiliate
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent group-hover:w-full transition-all duration-300" />
+                </span>
+              </Link>
+              <a href="/#leaderboards" className="group relative text-sm font-medium px-3 py-2 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:shadow-[0_0_16px_rgba(255,140,66,0.3)] flex items-center gap-1.5" data-testid="link-leaderboards">
+                <BarChart3 className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <span className="relative">
+                  Leaderboards
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent group-hover:w-full transition-all duration-300" />
+                </span>
+              </a>
+              <Link
+                href="/shop"
+                className="group relative text-sm font-medium px-3 py-2 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:shadow-[0_0_16px_rgba(255,140,66,0.3)] flex items-center gap-1.5"
+                data-testid="link-shop"
+              >
+                <Gift className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <span className="relative">
+                  Shop
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent group-hover:w-full transition-all duration-300" />
+                </span>
+              </Link>
+              <Link
+                href="/creator-tools"
+                className="group relative text-sm font-medium px-3 py-2 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:shadow-[0_0_16px_rgba(255,140,66,0.3)] flex items-center gap-1.5"
+                data-testid="link-creator-tools"
+              >
+                <Megaphone className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <span className="relative">
+                  Creator Tools
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent group-hover:w-full transition-all duration-300" />
+                </span>
+              </Link>
+              <Link
+                href="/gg-loop-cares"
+                className="group relative text-sm font-medium px-3 py-2 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:shadow-[0_0_16px_rgba(255,140,66,0.3)] flex items-center gap-1.5"
+                data-testid="link-gg-loop-cares"
+              >
+                <Heart className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <span className="relative">
+                  GG Loop Cares
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent group-hover:w-full transition-all duration-300" />
+                </span>
+              </Link>
+              <Link
+                href="/about"
+                className="group relative text-sm font-medium px-3 py-2 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:shadow-[0_0_16px_rgba(255,140,66,0.3)] flex items-center gap-1.5"
+                data-testid="link-about"
+              >
+                <Trophy className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <span className="relative">
+                  About
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent group-hover:w-full transition-all duration-300" />
+                </span>
+              </Link>
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {isAuthenticated && user && (
+              <div className="hidden md:flex items-center gap-3">
+                {/* Points display with enhanced glow */}
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/40 to-accent/40 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
+                  <div className="relative flex items-center gap-2 rounded-lg bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10 px-4 py-2 border-2 border-primary/40 backdrop-blur-sm">
+                    <Trophy className="h-4 w-4 text-primary drop-shadow-[0_0_6px_rgba(255,140,66,0.8)]" />
+                    <span className="font-mono text-sm font-bold text-primary drop-shadow-[0_0_4px_rgba(255,140,66,0.5)]" data-testid="text-points">{user.totalPoints.toLocaleString()}</span>
+                    <span className="text-xs text-muted-foreground font-semibold">pts</span>
                   </div>
                 </div>
-                <DropdownMenuSeparator />
-                <Link href={`/profile/${user.id}`}>
-                  <DropdownMenuItem data-testid="link-my-profile">
-                    <Trophy className="mr-2 h-4 w-4" />
-                    My Profile
-                  </DropdownMenuItem>
-                </Link>
-                <Link href="/my-rewards">
-                  <DropdownMenuItem data-testid="link-my-rewards">
-                    <Gift className="mr-2 h-4 w-4" />
-                    My Rewards
-                  </DropdownMenuItem>
-                </Link>
-                <Link href="/subscription">
-                  <DropdownMenuItem data-testid="link-subscription">
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Subscription
-                  </DropdownMenuItem>
-                </Link>
-                <Link href="/settings">
-                  <DropdownMenuItem data-testid="link-settings">
-                    <SettingsIcon className="mr-2 h-4 w-4" />
-                    Settings
-                  </DropdownMenuItem>
-                </Link>
-                {isAdmin && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <div className="px-2 py-1.5">
-                      <p className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
-                        <Shield className="h-3 w-3" />
-                        Admin Tools
-                      </p>
+
+                {/* GG Coins display with enhanced effects */}
+                {freeTierData && freeTierData.ggCoins > 0 && (
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-accent/30 to-primary/30 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="relative flex items-center gap-2 rounded-lg bg-gradient-to-br from-accent/15 via-accent/10 to-accent/5 px-4 py-2 border-2 border-accent/30 backdrop-blur-sm">
+                      <Coins className="h-4 w-4 text-accent-foreground drop-shadow-[0_0_6px_rgba(255,200,100,0.6)]" />
+                      <span className="font-mono text-sm font-bold drop-shadow-[0_0_4px_rgba(255,200,100,0.4)]" data-testid="text-gg-coins">{freeTierData.ggCoins.toLocaleString()}</span>
+                      <span className="text-xs text-muted-foreground font-semibold">GG</span>
                     </div>
-                    <Link href="/admin/daily-ops">
-                      <DropdownMenuItem data-testid="link-daily-ops">
-                        <Activity className="mr-2 h-4 w-4 text-primary" />
-                        Daily Operations
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href="/fulfillment">
-                      <DropdownMenuItem data-testid="link-fulfillment">
-                        <Package className="mr-2 h-4 w-4 text-primary" />
-                        Fulfillment
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href="/admin/rewards">
-                      <DropdownMenuItem data-testid="link-rewards-management">
-                        <Gift className="mr-2 h-4 w-4 text-primary" />
-                        Manage Rewards
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href="/launch-dashboard">
-                      <DropdownMenuItem data-testid="link-launch-dashboard">
-                        <TrendingUp className="mr-2 h-4 w-4 text-primary" />
-                        Launch KPIs
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href="/admin">
-                      <DropdownMenuItem data-testid="link-admin-dashboard">
-                        <Shield className="mr-2 h-4 w-4 text-primary" />
-                        Admin Dashboard
-                      </DropdownMenuItem>
-                    </Link>
-                  </>
+                  </div>
                 )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button variant="default" size="sm" className="hidden md:flex" onClick={handleLogin} data-testid="button-sign-in">
-              Sign In
+              </div>
+            )}
+
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={toggleTheme}
+              data-testid="button-theme-toggle"
+            >
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-          )}
+
+            <Button size="icon" variant="ghost" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} data-testid="button-mobile-menu">
+              <Menu className="h-5 w-5" />
+            </Button>
+
+            {isAuthenticated && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="hidden md:flex items-center gap-2" data-testid="button-profile">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.profileImageUrl || undefined} />
+                      <AvatarFallback>
+                        {user.firstName?.[0] || user.email?.[0] || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium">
+                      {user.firstName || user.email?.split("@")[0] || "User"}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{user.firstName || "User"}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <p className="text-xs text-primary font-semibold">{user.totalPoints} points</p>
+                      {freeTierData && freeTierData.ggCoins > 0 && (
+                        <p className="text-xs text-accent-foreground font-semibold">{freeTierData.ggCoins} GG Coins</p>
+                      )}
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <Link href={`/profile/${user.id}`}>
+                    <DropdownMenuItem data-testid="link-my-profile">
+                      <Trophy className="mr-2 h-4 w-4" />
+                      My Profile
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/my-rewards">
+                    <DropdownMenuItem data-testid="link-my-rewards">
+                      <Gift className="mr-2 h-4 w-4" />
+                      My Rewards
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/subscription">
+                    <DropdownMenuItem data-testid="link-subscription">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Subscription
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/settings">
+                    <DropdownMenuItem data-testid="link-settings">
+                      <SettingsIcon className="mr-2 h-4 w-4" />
+                      Settings
+                    </DropdownMenuItem>
+                  </Link>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-1.5">
+                        <p className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
+                          <Shield className="h-3 w-3" />
+                          Admin Tools
+                        </p>
+                      </div>
+                      <Link href="/admin/daily-ops">
+                        <DropdownMenuItem data-testid="link-daily-ops">
+                          <Activity className="mr-2 h-4 w-4 text-primary" />
+                          Daily Operations
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/fulfillment">
+                        <DropdownMenuItem data-testid="link-fulfillment">
+                          <Package className="mr-2 h-4 w-4 text-primary" />
+                          Fulfillment
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/admin/rewards">
+                        <DropdownMenuItem data-testid="link-rewards-management">
+                          <Gift className="mr-2 h-4 w-4 text-primary" />
+                          Manage Rewards
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/launch-dashboard">
+                        <DropdownMenuItem data-testid="link-launch-dashboard">
+                          <TrendingUp className="mr-2 h-4 w-4 text-primary" />
+                          Launch KPIs
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/admin">
+                        <DropdownMenuItem data-testid="link-admin-dashboard">
+                          <Shield className="mr-2 h-4 w-4 text-primary" />
+                          Admin Dashboard
+                        </DropdownMenuItem>
+                      </Link>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="relative group hidden md:flex">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-lg blur opacity-75 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="relative px-4 py-2 rounded-lg bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10 border-2 border-primary/40 backdrop-blur-sm text-primary-foreground font-semibold hover:bg-primary/30 transition-colors duration-300"
+                  onClick={handleLogin}
+                  data-testid="button-sign-in"
+                >
+                  Sign In
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
