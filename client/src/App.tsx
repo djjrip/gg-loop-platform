@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LoginNotification } from "@/components/LoginNotification";
 import Footer from "@/components/Footer";
 import { useAuth } from "./hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Public pages
 import Home from "@/pages/Home";
@@ -88,17 +89,18 @@ function Router() {
       <Route path="/subscription/cancel" component={SubscriptionCancel} />
 
       {/* Admin Routes */}
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/founder-controls" component={FounderControls} />
-      <Route path="/admin/rewards" component={RewardsManagement} />
-      <Route path="/admin/sponsors" component={SponsorManagement} />
-      <Route path="/admin/affiliates" component={AffiliateManagement} />
-      <Route path="/admin/charities" component={CharityManagement} />
-      <Route path="/admin/daily-ops" component={DailyOps} />
-      <Route path="/admin/fulfillment" component={AdminFulfillment} />
-      <Route path="/admin/users" component={UserManagement} />
-      <Route path="/admin/founder-hub" component={FounderHub} />
-      <Route path="/fulfillment" component={FulfillmentDashboard} />
+      {/* Admin Routes - PROTECTED */}
+      <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
+      <ProtectedRoute path="/admin/founder-controls" component={FounderControls} adminOnly />
+      <ProtectedRoute path="/admin/rewards" component={RewardsManagement} adminOnly />
+      <ProtectedRoute path="/admin/sponsors" component={SponsorManagement} adminOnly />
+      <ProtectedRoute path="/admin/affiliates" component={AffiliateManagement} adminOnly />
+      <ProtectedRoute path="/admin/charities" component={CharityManagement} adminOnly />
+      <ProtectedRoute path="/admin/daily-ops" component={DailyOps} adminOnly />
+      <ProtectedRoute path="/admin/fulfillment" component={AdminFulfillment} adminOnly />
+      <ProtectedRoute path="/admin/users" component={UserManagement} adminOnly />
+      <ProtectedRoute path="/admin/founder-hub" component={FounderHub} adminOnly />
+      <ProtectedRoute path="/fulfillment" component={FulfillmentDashboard} adminOnly />
 
       {/* 404 */}
       <Route component={NotFound} />

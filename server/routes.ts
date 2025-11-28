@@ -78,17 +78,6 @@ const adminMiddleware = async (req: any, res: any, next: any) => {
     console.error("Error in admin middleware:", error);
     res.status(500).json({ message: "Failed to authenticate admin" });
   }
-};
-
-export async function registerRoutes(app: Express): Promise<Server> {
-  await setupAuth(app);
-  setupTwitchAuth(app);
-
-  // TikTok Site Verification - Replit URL (3d3cea8a-85cf-4f88-8c67-be4be4d6239a-00-3jb9yp194k6jl.janeway.replit.dev)
-  app.get(['/verification.txt', '/verification.txt/'], (req, res) => {
-    res.type('text/plain');
-    res.send('tiktok-developers-site-verification=PDhff2hq8ipXw4JhJXalxaRHIa5mV037');
-  });
 
   app.get('/tiktokPDhff2hq8ipXw4JhJXalxaRHIa5mV037.txt', (req, res) => {
     res.type('text/plain');
