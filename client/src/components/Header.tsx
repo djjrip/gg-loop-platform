@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ export default function Header() {
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
 
   const { data: freeTierData } = useQuery<{ ggCoins: number; canRedeemTrial: boolean }>({
     queryKey: ["/api/free-tier/status"],
@@ -62,6 +63,10 @@ export default function Header() {
       console.error('Logout error:', error);
       window.location.href = '/';
     }
+  };
+
+  const navigate = (path: string) => {
+    setLocation(path);
   };
 
   return (
@@ -291,7 +296,7 @@ export default function Header() {
                       Settings
                     </DropdownMenuItem>
                   </Link>
-                  {isAdmin && (
+                      {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5">
@@ -300,36 +305,26 @@ export default function Header() {
                           Admin Tools
                         </p>
                       </div>
-                      <Link href="/admin/daily-ops">
-                        <DropdownMenuItem data-testid="link-daily-ops">
-                          <Activity className="mr-2 h-4 w-4 text-primary" />
-                          Daily Operations
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link href="/fulfillment">
-                        <DropdownMenuItem data-testid="link-fulfillment">
-                          <Package className="mr-2 h-4 w-4 text-primary" />
-                          Fulfillment
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link href="/admin/rewards">
-                        <DropdownMenuItem data-testid="link-rewards-management">
-                          <Gift className="mr-2 h-4 w-4 text-primary" />
-                          Manage Rewards
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link href="/launch-dashboard">
-                        <DropdownMenuItem data-testid="link-launch-dashboard">
-                          <TrendingUp className="mr-2 h-4 w-4 text-primary" />
-                          Launch KPIs
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link href="/admin">
-                        <DropdownMenuItem data-testid="link-admin-dashboard">
-                          <Shield className="mr-2 h-4 w-4 text-primary" />
-                          Admin Dashboard
-                        </DropdownMenuItem>
-                      </Link>
+                      <DropdownMenuItem onClick={() => navigate("/admin/daily-ops")} data-testid="link-daily-ops">
+                        <Activity className="mr-2 h-4 w-4 text-primary" />
+                        Daily Operations
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/admin/fulfillment")} data-testid="link-fulfillment">
+                        <Package className="mr-2 h-4 w-4 text-primary" />
+                        Fulfillment
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/admin/rewards")} data-testid="link-rewards-management">
+                        <Gift className="mr-2 h-4 w-4 text-primary" />
+                        Manage Rewards
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/launch-dashboard")} data-testid="link-launch-dashboard">
+                        <TrendingUp className="mr-2 h-4 w-4 text-primary" />
+                        Launch KPIs
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/admin")} data-testid="link-admin-dashboard">
+                        <Shield className="mr-2 h-4 w-4 text-primary" />
+                        Admin Dashboard
+                      </DropdownMenuItem>
                     </>
                   )}
                   <DropdownMenuSeparator />

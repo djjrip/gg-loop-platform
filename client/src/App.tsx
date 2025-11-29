@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LoginNotification } from "@/components/LoginNotification";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Footer from "@/components/Footer";
 import { useAuth } from "./hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -112,14 +113,16 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <LoginNotification />
-        <Toaster />
-        <div className="flex flex-col min-h-screen">
-          <div className="flex-1">
-            <Router />
+        <ErrorBoundary>
+          <LoginNotification />
+          <Toaster />
+          <div className="flex flex-col min-h-screen">
+            <div className="flex-1">
+              <Router />
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
+        </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   );

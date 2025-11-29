@@ -67,8 +67,8 @@ export default function Footer() {
             <h3 className="font-semibold mb-3">Support</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="mailto:jaysonquindao1@gmail.com" className="text-muted-foreground hover:text-foreground" data-testid="link-contact">
-                  jaysonquindao1@gmail.com
+                <a href="mailto:jaysonquindao@ggloop.io" className="text-muted-foreground hover:text-foreground" data-testid="link-contact">
+                  jaysonquindao@ggloop.io
                 </a>
               </li>
             </ul>

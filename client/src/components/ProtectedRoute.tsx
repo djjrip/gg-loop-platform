@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 import { Route, Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
 
@@ -10,12 +11,23 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ path, component: Component, adminOnly = false }: ProtectedRouteProps) {
     const { user, isLoading, isAuthenticated } = useAuth();
+    
+    // Check admin status via separate endpoint
+    const { data: adminCheck, isLoading: isCheckingAdmin } = useQuery<{ isAdmin: boolean }>({
+        queryKey: ["/api/auth/is-admin"],
+        enabled: isAuthenticated && !isLoading,
+        retry: false,
+    });
 
-    if (isLoading) {
+    const isAdmin = adminCheck?.isAdmin || false;
+
+    if (isLoading || isCheckingAdmin) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
+            <Route path={path} component={() => (
+                <div className="flex items-center justify-center min-h-screen">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            )} />
         );
     }
 
@@ -23,11 +35,8 @@ export function ProtectedRoute({ path, component: Component, adminOnly = false }
         return <Route path={path} component={() => <Redirect to="/login" />} />;
     }
 
-    if (adminOnly) {
-        // @ts-ignore - isAdmin is added by the backend endpoint we just created
-        if (!user.isAdmin) {
-            return <Route path={path} component={() => <Redirect to="/" />} />;
-        }
+    if (adminOnly && !isAdmin) {
+        return <Route path={path} component={() => <Redirect to="/" />} />;
     }
 
     return <Route path={path} component={Component} />;
