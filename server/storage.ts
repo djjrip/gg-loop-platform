@@ -34,6 +34,7 @@ export interface IStorage {
   connectTwitchAccount(oidcSub: string, twitchData: { twitchId: string; twitchUsername: string; accessToken: string; refreshToken: string }): Promise<User>;
   disconnectTwitchAccount(userId: string): Promise<User>;
   connectTiktokAccount(oidcSub: string, tiktokData: { openId: string; unionId?: string; username: string; accessToken: string; refreshToken: string }): Promise<User>;
+  updateUserPoints(userId: string, points: number): Promise<User>;
 
   getAllGames(): Promise<Game[]>;
   getGame(id: string): Promise<Game | undefined>;
@@ -99,6 +100,17 @@ export class DbStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
     return result[0];
+  }
+
+  async updateUserPoints(userId: string, points: number): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        totalPoints: sql`${users.totalPoints} + ${points}`,
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
   }
 
   async getUserByOidcSub(oidcSub: string): Promise<User | undefined> {

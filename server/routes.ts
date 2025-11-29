@@ -24,6 +24,7 @@ import { calculateReferralReward, FREE_TRIAL_DURATION_DAYS } from "./lib/referra
 import crypto from 'crypto';
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { tangoCardService } from "./tangoCardService";
+import adminRouter from "./routes/admin";
 
 // Middleware that accepts BOTH guest sessions AND OAuth sessions
 const requireAuth = async (req: any, res: any, next: any) => {
@@ -4367,6 +4368,9 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       res.status(500).json({ message: "Failed to fetch leaderboard" });
     }
   });
+
+  // Admin Routes (Founder Control Pack)
+  app.use("/api/admin", adminRouter);
 
   return httpServer;
 }

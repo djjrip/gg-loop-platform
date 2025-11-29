@@ -296,7 +296,7 @@ export default function Header() {
                       Settings
                     </DropdownMenuItem>
                   </Link>
-                      {isAdmin && (
+                  {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5">
@@ -305,8 +305,20 @@ export default function Header() {
                           Admin Tools
                         </p>
                       </div>
-                      <DropdownMenuItem onClick={() => navigate("/admin/daily-ops")} data-testid="link-daily-ops">
+                      <DropdownMenuItem onClick={() => navigate("/admin/system-status")} data-testid="link-system-status">
                         <Activity className="mr-2 h-4 w-4 text-primary" />
+                        System Status
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/admin/users")} data-testid="link-user-management">
+                        <Users className="mr-2 h-4 w-4 text-primary" />
+                        User Management
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/admin/audit-logs")} data-testid="link-audit-logs">
+                        <Shield className="mr-2 h-4 w-4 text-primary" />
+                        Audit Logs
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/admin/daily-ops")} data-testid="link-daily-ops">
+                        <BarChart3 className="mr-2 h-4 w-4 text-primary" />
                         Daily Operations
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/admin/fulfillment")} data-testid="link-fulfillment">

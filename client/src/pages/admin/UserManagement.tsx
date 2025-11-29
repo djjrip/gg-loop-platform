@@ -1,195 +1,190 @@
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Loader2, Search, Coins } from "lucide-react";
 import Header from "@/components/Header";
-import { Search, Mail, Calendar, Trophy, Shield, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface User {
-    id: string;
-    email: string;
-    firstName: string | null;
-    lastName: string | null;
-    totalPoints: number;
-    isFounder: boolean;
-    founderNumber: number | null;
-    createdAt: string;
-    lastLoginAt: string | null;
-}
+import { apiRequest } from "@/lib/queryClient";
 
 export default function UserManagement() {
-    const [users, setUsers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState("");
     const { toast } = useToast();
+    const queryClient = useQueryClient();
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [pointsAmount, setPointsAmount] = useState("");
+    const [pointsReason, setPointsReason] = useState("");
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
+    const { data: users, isLoading } = useQuery({
+        queryKey: ["/api/admin/users"],
+    });
 
-    const fetchUsers = async () => {
-        try {
-            const response = await fetch("/api/admin/users");
-            if (response.ok) {
-                const data = await response.json();
-                setUsers(data);
-            } else {
-                toast({
-                    variant: "destructive",
-                    title: "Error",
-                    description: "Failed to fetch users",
-                });
-            }
-        } catch (error) {
-            console.error("Error fetching users:", error);
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to fetch users",
+    const adjustPointsMutation = useMutation({
+        mutationFn: async (data: { userId: string; points: number; reason: string }) => {
+            await apiRequest("POST", `/api/admin/users/${data.userId}/points`, {
+                points: data.points,
+                reason: data.reason,
             });
-        } finally {
-            setLoading(false);
-        }
-    };
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+            toast({
+                title: "Success",
+                description: "Points adjusted successfully",
+            });
+            setSelectedUser(null);
+            setPointsAmount("");
+            setPointsReason("");
+        },
+        onError: () => {
+            toast({
+                title: "Error",
+                description: "Failed to adjust points",
+                variant: "destructive",
+            });
+        },
+    });
 
-    const filteredUsers = users.filter(user =>
-        user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.id.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredUsers = users?.filter((user: any) =>
+        user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const formatDate = (dateString: string | null) => {
-        if (!dateString) return "Never";
-        return new Date(dateString).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
+    const handleAdjustPoints = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedUser) return;
+        adjustPointsMutation.mutate({
+            userId: selectedUser.id,
+            points: parseInt(pointsAmount),
+            reason: pointsReason,
         });
     };
 
+    if (isLoading) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
     return (
-        <>
+        <div className="min-h-screen bg-background">
             <Header />
-            <div className="container mx-auto max-w-7xl px-4 py-8">
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold mb-2">User Management</h1>
-                    <p className="text-muted-foreground">View and manage all platform users</p>
+            <main className="container mx-auto p-8">
+                <div className="mb-8 flex items-center justify-between">
+                    <h1 className="text-3xl font-bold">User Management</h1>
+                    <div className="relative w-64">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search users..."
+                            className="pl-8"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                 </div>
 
-                <Card className="mb-6">
-                    <CardHeader>
-                        <CardTitle>Search Users</CardTitle>
-                        <CardDescription>Search by email, name, or ID</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search users..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10"
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {loading ? (
-                    <div className="text-center py-12">
-                        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-                        <p className="mt-4 text-muted-foreground">Loading users...</p>
-                    </div>
-                ) : (
-                    <>
-                        <div className="grid gap-4 mb-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Total Users: {filteredUsers.length}</CardTitle>
-                                    <CardDescription>
-                                        {users.filter(u => u.isFounder).length} Founders · {users.length - users.filter(u => u.isFounder).length} Regular Members
-                                    </CardDescription>
-                                </CardHeader>
-                            </Card>
-                        </div>
-
-                        <div className="grid gap-4">
-                            {filteredUsers.map((user) => (
-                                <Card key={user.id} className="hover:shadow-lg transition-shadow">
-                                    <CardContent className="p-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <div className="md:col-span-2">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <div className="flex-1">
-                                                        <h3 className="font-semibold text-lg flex items-center gap-2">
-                                                            {user.firstName || "Guest User"}
-                                                            {user.isFounder && (
-                                                                <Badge variant="default" className="ml-2">
-                                                                    <Shield className="h-3 w-3 mr-1" />
-                                                                    Founder #{user.founderNumber}
-                                                                </Badge>
-                                                            )}
-                                                        </h3>
-                                                        <p className="text-sm text-muted-foreground flex items-center gap-2">
-                                                            <Mail className="h-3 w-3" />
-                                                            {user.email}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <p className="text-xs text-muted-foreground font-mono">
-                                                    ID: {user.id}
-                                                </p>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2 text-sm">
-                                                    <Trophy className="h-4 w-4 text-primary" />
-                                                    <span className="font-semibold">{user.totalPoints.toLocaleString()}</span>
-                                                    <span className="text-muted-foreground">points</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <Calendar className="h-3 w-3" />
-                                                    Joined {formatDate(user.createdAt)}
-                                                </div>
-                                                {user.lastLoginAt ? (
-                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                        <CheckCircle className="h-3 w-3 text-green-500" />
-                                                        Last login {formatDate(user.lastLoginAt)}
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                        <XCircle className="h-3 w-3 text-yellow-500" />
-                                                        Never logged in
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
+                <div className="rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>User</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Points</TableHead>
+                                <TableHead>Joined</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredUsers?.map((user: any) => (
+                                <TableRow key={user.id}>
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-2">
+                                            {user.profileImageUrl && (
+                                                <img
+                                                    src={user.profileImageUrl}
+                                                    alt={user.username}
+                                                    className="h-8 w-8 rounded-full"
+                                                />
+                                            )}
+                                            {user.username || "No Username"}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{user.email}</TableCell>
+                                    <TableCell>{user.totalPoints}</TableCell>
+                                    <TableCell>
+                                        {new Date(user.createdAt).toLocaleDateString()}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Dialog open={selectedUser?.id === user.id} onOpenChange={(open) => !open && setSelectedUser(null)}>
+                                            <DialogTrigger asChild>
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => window.location.href = `/profile/${user.id}`}
+                                                    onClick={() => setSelectedUser(user)}
                                                 >
-                                                    View Profile
+                                                    <Coins className="mr-2 h-4 w-4" />
+                                                    Adjust Points
                                                 </Button>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Adjust Points for {user.username}</DialogTitle>
+                                                </DialogHeader>
+                                                <form onSubmit={handleAdjustPoints} className="space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label>Amount (positive to add, negative to remove)</Label>
+                                                        <Input
+                                                            type="number"
+                                                            value={pointsAmount}
+                                                            onChange={(e) => setPointsAmount(e.target.value)}
+                                                            placeholder="e.g. 500 or -100"
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>Reason (for audit log)</Label>
+                                                        <Input
+                                                            value={pointsReason}
+                                                            onChange={(e) => setPointsReason(e.target.value)}
+                                                            placeholder="e.g. Manual correction for..."
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <Button
+                                                        type="submit"
+                                                        className="w-full"
+                                                        disabled={adjustPointsMutation.isPending}
+                                                    >
+                                                        {adjustPointsMutation.isPending ? "Processing..." : "Confirm Adjustment"}
+                                                    </Button>
+                                                </form>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </div>
-
-                        {filteredUsers.length === 0 && (
-                            <Card>
-                                <CardContent className="py-12 text-center">
-                                    <p className="text-muted-foreground">No users found matching your search</p>
-                                </CardContent>
-                            </Card>
-                        )}
-                    </>
-                )}
-            </div>
-        </>
+                        </TableBody>
+                    </Table>
+                </div>
+            </main>
+        </div>
     );
 }

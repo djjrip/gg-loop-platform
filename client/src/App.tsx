@@ -36,6 +36,9 @@ import GGLoopCares from "@/pages/GGLoopCares";
 // Admin pages
 import AdminDashboard from "@/pages/AdminDashboardPage";
 // import AdminDashboardPlaceholder from "@/pages/AdminDashboardPlaceholder";
+import SystemStatus from "@/pages/admin/SystemStatus";
+import UserManagement from "@/pages/admin/UserManagement";
+import AuditLogs from "@/pages/admin/AuditLogs";
 import FounderControls from "@/pages/FounderControls";
 import FulfillmentDashboard from "@/pages/FulfillmentDashboard";
 import AdminFulfillment from "@/pages/AdminFulfillment";
@@ -94,6 +97,9 @@ function Router() {
       {/* Admin Routes */}
       {/* Admin Routes - PROTECTED */}
       <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
+      <ProtectedRoute path="/admin/system-status" component={SystemStatus} adminOnly />
+      <ProtectedRoute path="/admin/users" component={UserManagement} adminOnly />
+      <ProtectedRoute path="/admin/audit-logs" component={AuditLogs} adminOnly />
       <ProtectedRoute path="/admin/founder-controls" component={FounderControls} adminOnly />
       <ProtectedRoute path="/admin/rewards" component={RewardsManagement} adminOnly />
       <ProtectedRoute path="/admin/sponsors" component={SponsorManagement} adminOnly />
