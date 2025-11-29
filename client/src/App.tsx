@@ -34,7 +34,7 @@ import AffiliateProgram from "@/pages/AffiliateProgram";
 import GGLoopCares from "@/pages/GGLoopCares";
 
 // Admin pages
-import AdminDashboard from "@/pages/AdminDashboard";
+import AdminDashboard from "@/pages/AdminDashboardPage";
 // import AdminDashboardPlaceholder from "@/pages/AdminDashboardPlaceholder";
 import FounderControls from "@/pages/FounderControls";
 import FulfillmentDashboard from "@/pages/FulfillmentDashboard";

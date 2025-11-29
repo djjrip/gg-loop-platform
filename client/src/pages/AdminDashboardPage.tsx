@@ -17,7 +17,7 @@ interface DashboardStats {
   revenueThisMonth: number;
 }
 
-export default function AdminDashboard() {
+export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalPoints: 0,
