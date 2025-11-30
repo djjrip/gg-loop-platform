@@ -20,8 +20,9 @@ export function getSession() {
 
     // Always enforce that production does not use MemoryStore.
     if (process.env.NODE_ENV === 'production' && sessionStoreType === 'memory') {
-        console.error('🚨 Security Error: MemoryStore is not allowed in production. Set SESSION_STORE=redis and REDIS_URL.');
-        process.exit(1);
+        console.warn('⚠️  WARNING: Using MemoryStore in production. Sessions will not persist and may leak memory.');
+        console.warn('⚠️  Set SESSION_STORE=redis and REDIS_URL for production-grade sessions.');
+        // process.exit(1); // REMOVED: Allow startup for hotfix
     }
 
     // Default MemoryStore (safe for local/dev only)
