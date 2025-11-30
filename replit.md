@@ -57,7 +57,7 @@ The database schema includes core tables for users, games, subscriptions, point 
 *   **ORM**: Drizzle ORM
 *   **Authentication**: Passport.js (Discord, Twitch, Google, TikTok OAuth), Replit Auth (OIDC)
 *   **Payments**: Stripe
-*   **Reward Fulfillment**: Tango Card API (planned integration for gift card delivery)
+*   **Reward Fulfillment**: Example partners (Tremendous) — Tango Card previously considered; not active. Gift-card fulfillment is a future integration.
 *   **Gaming APIs**: Riot Games API (League of Legends, Valorant)
 *   **Frontend Libraries**: React, Vite, Tailwind CSS, shadcn/ui, TanStack Query v5
 *   **Backend Framework**: Express.js

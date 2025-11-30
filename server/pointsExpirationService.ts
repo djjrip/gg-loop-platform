@@ -102,7 +102,7 @@ export class PointsExpirationService {
       console.log(`[PointsExpiration] Found ${expiredTxs.length} expired transactions`);
 
       // Step 2: Mark all expired transactions
-      const expiredIds = expiredTxs.map(tx => tx.id);
+      const expiredIds = expiredTxs.map((tx: any) => tx.id);
       await db
         .update(pointTransactions)
         .set({ isExpired: true })
@@ -114,7 +114,7 @@ export class PointsExpirationService {
       // 
       // CONSERVATIVE RULE: Only expire if current balance equals or exceeds total expiring credits
       // This ensures we never touch fresh credits that came after the expiring ones
-      const affectedUsers = Array.from(new Set(expiredTxs.map(tx => tx.userId)));
+      const affectedUsers = Array.from(new Set(expiredTxs.map((tx: any) => tx.userId)));
       let totalPointsDeducted = 0;
       
       for (const userId of affectedUsers) {
@@ -126,8 +126,8 @@ export class PointsExpirationService {
         const currentBalance = currentUser?.totalPoints || 0;
         
         // Calculate total expiring for this user
-        const userExpiringTxs = expiredTxs.filter(tx => tx.userId === userId);
-        const totalExpiring = userExpiringTxs.reduce((sum, tx) => sum + tx.amount, 0);
+        const userExpiringTxs = expiredTxs.filter((tx: any) => tx.userId === userId);
+        const totalExpiring = userExpiringTxs.reduce((sum: number, tx: any) => sum + tx.amount, 0);
         
         // Conservative: only expire if balance >= total expiring
         // This ensures we don't accidentally remove fresh credits
@@ -160,7 +160,7 @@ export class PointsExpirationService {
           console.log(`[PointsExpiration] User ${userId}: Skipping expiration (balance ${currentBalance} < expiring ${totalExpiring}) - likely has fresh credits`);
           
           // Unmark these transactions as expired since we're not processing them yet
-          const userExpiringIds = userExpiringTxs.map(tx => tx.id);
+          const userExpiringIds = userExpiringTxs.map((tx: any) => tx.id);
           await db
             .update(pointTransactions)
             .set({ isExpired: false })

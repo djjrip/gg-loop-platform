@@ -1,3 +1,67 @@
+/* Lava Lamp background styles */
+.lava-lamp {
+  /* keep it subtle and low-contrast in dark theme */
+  background: transparent;
+}
+.lava-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.lava-blob {
+  position: absolute;
+  filter: blur(36px) saturate(120%);
+  opacity: 0.5;
+  mix-blend-mode: screen;
+  transform: translate3d(0,0,0);
+  will-change: transform, border-radius, opacity, filter;
+}
+.lava-blob-1 {
+  background: radial-gradient(circle at 30% 30%, rgba(211,138,108,0.85), rgba(211,138,108,0.3));
+  width: 520px; height: 520px; left: -8%; top: -10%;
+  animation: lavaFloat 14s ease-in-out infinite, lavaMorph 8s ease-in-out infinite;
+}
+.lava-blob-2 {
+  background: radial-gradient(circle at 60% 40%, rgba(180,100,70,0.9), rgba(180,100,70,0.25));
+  width: 420px; height: 420px; right: -4%; top: 20%;
+  animation: lavaFloat 18s ease-in-out infinite, lavaMorph 9s ease-in-out infinite;
+}
+.lava-blob-3 {
+  background: radial-gradient(circle at 40% 60%, rgba(120,74,57,0.9), rgba(120,74,57,0.2));
+  width: 650px; height: 650px; left: 10%; bottom: -25%;
+  animation: lavaFloat 20s ease-in-out infinite, lavaMorph 11s ease-in-out infinite;
+}
+.lava-blob-4 {
+  background: radial-gradient(circle at 60% 60%, rgba(90,60,50,0.7), rgba(90,60,50,0.12));
+  width: 360px; height: 360px; right: 18%; bottom: -10%;
+  animation: lavaFloat 16s ease-in-out infinite, lavaMorph 7s ease-in-out infinite;
+}
+.lava-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8,6,6,0.08) 0%, rgba(8,6,6,0.18) 100%);
+  pointer-events: none;
+}
+
+@keyframes lavaFloat {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(10px, -18px, 0) scale(1.02); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes lavaMorph {
+  0% { border-radius: 44% 56% 60% 40% / 48% 40% 60% 52%; }
+  25% { border-radius: 60% 40% 30% 70% / 36% 60% 40% 64%; }
+  50% { border-radius: 44% 56% 64% 36% / 62% 50% 44% 50%; }
+  75% { border-radius: 58% 42% 48% 52% / 46% 58% 32% 64%; }
+  100% { border-radius: 44% 56% 60% 40% / 48% 40% 60% 52%; }
+}
+
+/* Reduce motion for users preferring reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .lava-blob { animation: none !important; }
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

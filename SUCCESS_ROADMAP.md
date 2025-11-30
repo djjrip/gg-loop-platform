@@ -89,15 +89,15 @@ nslookup ggloop.io
 - Exclusive items
 - Early access to new features
 
-**Goal:** 10% of 1000 users = 100 paying × $10 = **$1,000/month**
+**Example (aspirational):** 10% of 1,000 users = 100 paying × $10 = **$1,000/month**
 
 ### MONTH 2 - Scale:
 
-**With $1-2k monthly revenue:**
+**With $1-2k monthly revenue (example):**
 1. Apply to YC Startup School → Get $10k in credits
 2. Run paid ads → $500/month = 500 more users
 3. Partner with 3-5 Twitch streamers (affiliate model)
-4. **Goal:** 5,000 users, $5,000/month revenue
+4. **Goal (aspirational):** 5,000 users, $5,000/month revenue
 
 ### MONTH 3-6 - Raise Money:
 
@@ -107,11 +107,11 @@ nslookup ggloop.io
 - Target: Raise $50k-$250k
 - Use for: Marketing, hiring, scaling
 
-### MONTH 12 - First Million:
+### MONTH 12 - First Million (aspirational model):
 
 **Path:**
-- 10,000 users × $10/month = $100k/month
-- $100k/month × 10 months = **$1,000,000 revenue**
+- Aspiration: 10,000 users × $10/month = $100k/month (projection)
+- Aspiration: $100k/month × 10 months = **$1,000,000 revenue** (projection)
 - Or: Get acquired for $1-5M by Riot/gaming company
 
 ---

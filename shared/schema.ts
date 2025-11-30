@@ -678,3 +678,120 @@ export const insertCharityCampaignSchema = createInsertSchema(charityCampaigns).
 
 export type InsertCharityCampaign = z.infer<typeof insertCharityCampaignSchema>;
 export type CharityCampaign = typeof charityCampaigns.$inferSelect;
+
+// ============================================================================
+// Manual Fulfillment System + Founder Mission Control
+// ============================================================================
+
+export const rewardTypes = pgTable("reward_types", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  type: varchar("type").notNull(), // GIFT_CARD_AMAZON, GIFT_CARD_STEAM, GIFT_CARD_RIOT, GROCERIES_DELIVERY, CASH_APP, PAYPAL
+  pointsCost: integer("points_cost").notNull(),
+  realValue: integer("real_value").notNull(), // USD equivalent in cents
+  category: varchar("category").notNull(), // "digital", "delivery", "cash"
+  imageUrl: text("image_url"),
+  isActive: boolean("is_active").notNull().default(true),
+  fulfillmentType: varchar("fulfillment_type").notNull().default("manual"), // "manual" or "api" (future)
+  externalProviderId: varchar("external_provider_id"), // Tremendous, etc (future)
+  externalSkuId: varchar("external_sku_id"), // (future)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_reward_types_active").on(table.isActive),
+  index("idx_reward_types_type").on(table.type),
+]);
+
+export const rewardClaims = pgTable("reward_claims", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  rewardTypeId: varchar("reward_type_id").notNull().references(() => rewardTypes.id),
+  status: varchar("status").notNull().default("pending"), // pending, in_progress, fulfilled, rejected
+  claimedAt: timestamp("claimed_at").notNull().defaultNow(),
+  fulfillmentMethod: varchar("fulfillment_method"), // "email", "manual_code", "shipped", etc
+  fulfillmentData: jsonb("fulfillment_data"), // Flexible storage: { "code": "...", "externalTransactionId": "...", etc }
+  fulfillmentNotes: text("fulfillment_notes"), // Founder notes during fulfillment
+  adminNotes: text("admin_notes"), // Internal notes about the claim
+  pointsSpent: integer("points_spent").notNull(),
+  userEmail: varchar("user_email"), // Denormalized for faster lookup
+  userDisplayName: varchar("user_display_name"), // Denormalized for reports
+  fulfilledBy: varchar("fulfilled_by").references(() => users.id), // Admin who fulfilled
+  fulfilledAt: timestamp("fulfilled_at"),
+  rejectedReason: text("rejected_reason"),
+  rejectedBy: varchar("rejected_by").references(() => users.id),
+  rejectedAt: timestamp("rejected_at"),
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_reward_claims_status").on(table.status),
+  index("idx_reward_claims_user").on(table.userId),
+  index("idx_reward_claims_claimed_at").on(table.claimedAt),
+  index("idx_reward_claims_fulfilled_at").on(table.fulfilledAt),
+]);
+
+export const fulfillmentMetrics = pgTable("fulfillment_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  period: varchar("period").notNull(), // "2025-01-20" or "2025-W03"
+  periodType: varchar("period_type").notNull(), // "daily", "weekly", "monthly"
+  totalClaimsCreated: integer("total_claims_created").notNull().default(0),
+  totalClaimsFulfilled: integer("total_claims_fulfilled").notNull().default(0),
+  totalClaimsRejected: integer("total_claims_rejected").notNull().default(0),
+  totalClaimsPending: integer("total_claims_pending").notNull().default(0),
+  totalPointsSpent: integer("total_points_spent").notNull().default(0),
+  totalUsdSpent: integer("total_usd_spent").notNull().default(0), // cents
+  claimsByType: jsonb("claims_by_type"), // { "GIFT_CARD_AMAZON": 12, "CASH_APP": 5, ... }
+  topStreamersByClaimsCount: jsonb("top_streamers_by_claims"), // [{ "streamerId": "...", "displayName": "...", "claimCount": 5 }, ...]
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  sql`UNIQUE(period, period_type)`,
+  index("idx_fulfillment_metrics_period").on(table.period),
+]);
+
+// ============================================================================
+// Zod Schemas for Validation
+// ============================================================================
+
+export const insertRewardTypeSchema = createInsertSchema(rewardTypes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRewardClaimSchema = createInsertSchema(rewardClaims).omit({
+  id: true,
+  claimedAt: true,
+  fulfilledAt: true,
+  rejectedAt: true,
+  updatedAt: true,
+  fulfilledBy: true,
+  rejectedBy: true,
+});
+
+export const updateRewardClaimSchema = z.object({
+  status: z.enum(["pending", "in_progress", "fulfilled", "rejected"]),
+  fulfillmentMethod: z.string().optional(),
+  fulfillmentData: z.record(z.any()).optional(),
+  fulfillmentNotes: z.string().optional(),
+  rejectedReason: z.string().optional(),
+});
+
+export const insertFulfillmentMetricsSchema = createInsertSchema(fulfillmentMetrics).omit({
+  id: true,
+  createdAt: true,
+});
+
+// ============================================================================
+// TypeScript Types
+// ============================================================================
+
+export type InsertRewardType = z.infer<typeof insertRewardTypeSchema>;
+export type RewardType = typeof rewardTypes.$inferSelect;
+
+export type InsertRewardClaim = z.infer<typeof insertRewardClaimSchema>;
+export type RewardClaim = typeof rewardClaims.$inferSelect;
+export type UpdateRewardClaim = z.infer<typeof updateRewardClaimSchema>;
+
+export type InsertFulfillmentMetrics = z.infer<typeof insertFulfillmentMetricsSchema>;
+export type FulfillmentMetrics = typeof fulfillmentMetrics.$inferSelect;

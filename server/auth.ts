@@ -4,6 +4,8 @@ import { Strategy as DiscordStrategy } from "passport-discord";
 // @ts-ignore - no type definitions available for passport-twitch-new
 import { Strategy as TwitchStrategy } from "passport-twitch-new";
 import session from "express-session";
+import connectRedis from 'connect-redis';
+import { createClient as createRedisClient } from 'redis';
 import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 import { sendWelcomeEmail } from "./services/email";
@@ -13,13 +15,47 @@ import { sendWelcomeEmail } from "./services/email";
 // ============================================================================
 
 export function getSession() {
-    console.log('🧠 Using Native MemoryStore (No DB Connection)');
+    const sessionSecret = process.env.SESSION_SECRET || 'dev-secret-change-in-production';
+    const sessionStoreType = (process.env.SESSION_STORE || 'memory').toLowerCase();
+
+    // Always enforce that production does not use MemoryStore.
+    if (process.env.NODE_ENV === 'production' && sessionStoreType === 'memory') {
+        console.error('🚨 Security Error: MemoryStore is not allowed in production. Set SESSION_STORE=redis and REDIS_URL.');
+        process.exit(1);
+    }
+
+    // Default MemoryStore (safe for local/dev only)
+    let store: any = new session.MemoryStore();
+
+    if (sessionStoreType === 'redis') {
+        if (!process.env.REDIS_URL) {
+            console.error('🚨 SESSION_STORE=redis requires REDIS_URL.');
+            process.exit(1);
+        }
+        try {
+            const RedisStore = connectRedis(session) as any;
+            const rClient = createRedisClient({ url: process.env.REDIS_URL });
+            rClient.on('error', (err: Error) => console.error('[Redis] Client error', err));
+            rClient.on('connect', () => console.log('[Redis] Connected to session store'));
+            rClient.connect().catch((err: Error) => {
+                console.error('[Redis] connect error', err);
+                process.exit(1);
+            });
+            store = new RedisStore({ client: rClient });
+            console.log('🧠 Using Redis-backed session store');
+        } catch (err) {
+            console.error('[Session] Failed to initialize Redis store', err);
+            process.exit(1);
+        }
+    } else {
+        console.log('🧠 Using MemoryStore (non-production only)');
+    }
 
     return session({
-        secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+        secret: sessionSecret,
         resave: false,
         saveUninitialized: false,
-        store: new session.MemoryStore(),
+        store,
         cookie: {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',

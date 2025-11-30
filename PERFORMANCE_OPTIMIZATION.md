@@ -2,7 +2,7 @@
 
 ## EXECUTIVE SUMMARY FOR AWS MEETING
 
-Your platform is optimized for **50,000+ concurrent users** with **sub-100ms response times** and **99.99% uptime SLA**. This document demonstrates enterprise-grade performance capabilities.
+The platform is currently in early-stage pilot and is designed to scale towards **tens of thousands of concurrent users** once product-market fit is validated. We are targeting **sub-100ms response times** and an uptime SLA near **99.99%** for mature production deployments; these are aspirational goals and not current runtime claims.
 
 ---
 
@@ -13,9 +13,9 @@ Your platform is optimized for **50,000+ concurrent users** with **sub-100ms res
 API Response Time:     p50: 45ms  | p95: 120ms | p99: 250ms
 Database Queries:      p50: 8ms   | p95: 25ms  | p99: 60ms
 Cache Hit Rate:        94%+ (with Redis)
-Throughput:            50,000 requests/sec (with auto-scaling)
-Concurrent Users:      10,000+ (with ECS/Lambda)
-Availability:          99.99% (with multi-region failover)
+Throughput:            design targets include 50,000 requests/sec when scaled (aspirational)
+Concurrent Users:      Pilot target: 1,000 (design target for early production)
+Availability:          Target: 99.99% (aspirational; multi-region failover planned for mature prod)
 ```
 
 ### Compared to Industry Standards
@@ -194,7 +194,7 @@ PHASE 1 (Now - 10K users):
 ├── ElastiCache Redis
 └── Load: 50K req/sec
 
-PHASE 2 (50K users):
+PHASE 2 (aspirational - 50K users):
 ├── Aurora Multi-Master
 ├── 2x Read Replicas (multi-region)
 ├── ElastiCache Cluster Mode
@@ -314,7 +314,7 @@ Duration: 30 minutes
 Results:
 ├── Response Time (p50): 120ms ✅
 ├── Response Time (p95): 400ms ✅
-├── Payment Success: 99.99% ✅
+├── Payment Success: target ~99.99% (aspirational/target for mature production) ✅
 ├── Duplicate Prevention: 100% ✅
 ├── Webhook Delivery: 99.98% ✅
 └── Database Transactions: 0 failures
@@ -465,14 +465,14 @@ const span = transaction.startChild({
 6. **Cost Projections** - $5K/month (dev) → $50K/month (prod)
 
 ### Key Talking Points
-- "Sub-100ms response times with 94% cache hit rate"
-- "Support 50,000+ concurrent users with auto-scaling"
-- "99.99% uptime SLA with multi-region failover"
+- "Target sub-100ms response times with 94% cache hit rate (prototype/aspirational)"
+- "Design for eventual scale to 50,000+ concurrent users with auto-scaling (aspirational)"
+- "Target: 99.99% uptime SLA with multi-region failover for mature production (aspirational)"
 - "Ready for multi-game scaling with service layer"
 - "Enterprise-grade monitoring and security"
 
 ### Asking AWS For
-1. **AWS Credits** - $100K+ for development
+1. **AWS Credits** - $10K–$25K for a pilot (3–6 months)
 2. **Technical Partner** - Assigned solutions architect
 3. **Migration Support** - Help moving from current hosting
 4. **Networking Optimization** - Direct Connect for low latency

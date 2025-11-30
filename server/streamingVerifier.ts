@@ -273,7 +273,7 @@ export class StreamingVerifier {
         userId,
         points,
         "STREAMING",
-        null,
+        undefined,
         "streaming",
         `Streamed ${gameName} on Twitch`
       );

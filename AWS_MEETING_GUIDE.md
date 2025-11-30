@@ -10,10 +10,10 @@
 ## 📋 MEETING AGENDA (45 minutes)
 
 ### 1. **Intro & Business Overview** (5 min)
-- Who is GG Loop? Gaming rewards platform
-- Current metrics: 1K users, $5K/month revenue
-- Target: 50K users by end of year
-- Ask: AWS credits + technical partnership
+- Who is GG Loop? A small, early-stage gaming rewards platform focused on building product-to-market fit with real players and publishers.
+- Current state: Pilot / MVP stage — founders + a couple of testers (no meaningful revenue yet). The priority is user retention, metrics, and repeatable onboarding.
+- Short-term goal: reach 1k engaged users for deeper validation; long-term goal remains platform scale (50k+) once product-market fit is proven.
+- Ask: realistic AWS credits to reduce deployment risk and a technical partnership to speed safe migration/scale.
 
 ### 2. **Live Demo** (10 min)
 **Show these working:**
@@ -22,7 +22,7 @@
 - ✅ Payment flow (PayPal integration)
 - ✅ User profile (smooth navigation)
 
-**Key talking point:** "All systems are responsive and production-ready"
+**Key talking point:** "Demo the working flows and be transparent about what's done vs. what's planned — we want partnership and guidance to scale." 
 
 ### 3. **Technical Architecture** (10 min)
 **Draw on whiteboard or show diagram:**
@@ -39,10 +39,9 @@ ECS Cluster (auto-scaling)
 ```
 
 **Talking points:**
-- "Using latest technologies: React 18, Node.js, PostgreSQL, Redis"
-- "Auto-scaling from 2K to 50K concurrent users"
-- "99.99% uptime SLA with multi-region failover"
-- "45ms average response time (sub-100ms guaranteed)"
+- Built on React, Node.js, and Postgres; currently shipping with local/staging services, ready to migrate to managed Postgres and Redis in AWS.
+- We’re focused on operational RL (deployment + observability) and secure secrets management before scaling.
+- We are early-stage so we need guidance on migration, cost optimization, and an AWS credit runway to test production assumptions.
 
 ### 4. **Game Platform Strategy** (8 min)
 **Show GameService.ts:**
@@ -53,33 +52,26 @@ ECS Cluster (auto-scaling)
 // Each game: +10-15% revenue
 ```
 
-**Talking points:**
-- "Platform, not app - scales to 5+ games"
-- "Valorant launch could add $50K-100K/month"
-- "Multi-game architecture attracts partners"
-- "First-mover advantage in gaming rewards space"
+**Talking points:** (validated + planned)
+- Platform concept: multi-game reward engine that supports different titles; currently the MVP includes League of Legends integration and basic rewards flow.
+- Payoff: With PMF validation (i.e., 1k engaged users), platform architecture is designed to onboard additional games and partners.
 
 ### 5. **Performance & Security** (5 min)
-**Key metrics to mention:**
-- "50,000 requests/second capacity"
-- "94% cache hit rate (Redis)"
-- "100x faster queries with indexing"
-- "Enterprise-grade security (7 headers, rate limiting, encryption)"
-- "GDPR, CCPA, PCI DSS compliant"
+**Key metrics & current status:**
+- Early-stage — limited users: we are focused on accurate analytics and user acquisition instead of theoretical peak capacity
+- On security: we use PayPal (so cardholder data not stored), env var secrets, intend to adopt Secrets Manager and KMS during migration
+- On reliability: the codebase has a CI build and a staging environment; we’ll implement RDS with Multi-AZ and backups for production
 
 ### 6. **Financial Projections** (3 min)
-**Show on screen:**
-- Year 1: $555K revenue (profitable month 3)
-- Year 2: $6.3M revenue (multi-game launch)
-- Series A valuation: $15M-$30M
-- Path to profitability: crystal clear
+**Show on screen (use 'aspirational / model' label):**
+- Long-term model (aspirational): multi-game roadmap and how we could scale revenue with successful launches. These numbers are projections contingent on user growth and product-market fit; they are not current.
 
 ### 7. **Ask & Close** (4 min)
-**Specific asks:**
-1. **AWS Credits:** $100K for 1 year
-2. **Technical Support:** Assigned solutions architect
-3. **Cost Optimization:** Reserved capacity discounts
-4. **Migration Support:** Help moving infrastructure
+**Specific ask for early-stage:**
+1. **AWS Credits (pilot):** $10–25K in credits to test production RDS + managed Redis + S3/CDN for a 3–6 month pilot. The goal is to validate running production traffic safely without incurring high immediate costs.
+2. **Technical Partnership:** A short technical review & guidance session (1–2 calls) to identify migration steps and critical security + cost controls.
+3. **Cost Optimization Guidance:** Help designing an environment that scales and balances cost vs. reliability for an early-stage startup (e.g. RDS sizing, intermittent compute strategies).
+4. **Optional:** Preferred partner introductions for DB (Neon/NeonDB) or managed Redis and CDN best practices.
 
 ---
 
@@ -114,18 +106,17 @@ ECS Cluster (auto-scaling)
 - White-label solution for publishers
 - Multi-game = multi-revenue stream
 
-### **"Enterprise-Grade Infrastructure"**
-- Designed for millions of users
-- Auto-scaling from 2K to 50K concurrent users
-- 99.99% uptime SLA
-- Sub-100ms response times
-- All monitoring and observability ready
+### **"Targeted Production Reliability"**
+- Designed for safe, manageable production (pilot stage — not yet enterprise scale)
+- Auto-scaling is in our architecture plan (scale targets are aspirational)
+- Target SLA for production deployments: 99.99% (aspirational)
+- Target response times: sub-100ms (prototype benchmarks exist)
+- Focus: observability, safe deployments, and operational runbooks for the pilot
 
-### **"Clear Path to Profitability"**
-- Profitable by month 3
-- $555K year 1, $6.3M year 2
-- Low burn rate ($170K/month operating)
-- Series A ready with $15M-$30M valuation
+### **"Clear Path to Profitability" (Aspirational / Model)
+- We expect to validate subscription and rewards economics after hitting engagement goals; current revenue is zero.
+- Revenue projections in other docs are aspirational modeling, not present results.
+- We’re focused on reducing churn and validating conversion to paid tiers before treating financial model as fact.
 
 ### **"AWS Partnership Opportunity"**
 - $50K/month AWS spend potential
@@ -139,22 +130,24 @@ ECS Cluster (auto-scaling)
 ## ❓ LIKELY AWS QUESTIONS & ANSWERS
 
 ### Q: "What's your current AWS spend?"
-**A:** "$2-3K/month on development environment. Ready to scale to $50K/month with proper setup."
+**A:** "We currently run primarily on a development/staging environment; our production deployment is not on AWS yet. Current spend is effectively zero on AWS (we use local VMs and a small number of third-party tools). We want a modest credit runway to test and migrate safely."
 
 ### Q: "How do you handle data sovereignty?"
-**A:** "Multi-region deployment with Route 53 health checks. Data residency in US/EU. RDS encryption at rest."
+**A:** "We’re designing the stack to support regional deployments; at present we keep dev/staging data in the US and use best practices for encryption. We will define formal data residency policies and implement multi-region RDS/replicas as we scale."
 
 ### Q: "What's your disaster recovery plan?"
-**A:** "4-hour RTO with read replicas in multiple AZs. Automated backups to S3 Glacier. DynamoDB for event store."
+**A:** "Current recovery is simple: regular DB backups and snapshots (dev only). For a production RDS deployment, our plan: Multi-AZ, automated snapshots, a daily export to S3, and a documented recovery runbook to meet an agreed RTO/RPO. We’ll work with AWS to define the practical RTO for production."
 
 ### Q: "How do you handle payment security?"
-**A:** "PCI DSS compliant, PayPal integration, Secrets Manager for credentials, KMS encryption."
+**A:** "We use PayPal as our payment provider so we do not store cardholder data. We store API keys in environment variables and will move them to Secrets Manager/KMS during migration. PCI scope is minimized thanks to PayPal’s model."
 
 ### Q: "What's your biggest technical challenge?"
-**A:** "Database performance at scale - we've optimized queries 100x with indexing and caching. Ready for multi-region."
+**A:** "We’re an early-stage app: the biggest technical tasks now are building robust observability, making deployments repeatable, and setting up a safe production DB (migrating from the current SQLite/dev setup to RDS or a Neon-managed Postgres). DB performance at scale will be addressed as part of the migration and operational monitoring plan."
 
 ### Q: "Why should AWS partner with you?"
-**A:** "Large TAM (gaming), fast growth, clear unit economics, ready to be AWS showcase."
+**A:** "We’re building a platform for a large and rapidly evolving gaming rewards market. We’re seeking a technical partnership now to establish a stable, secure, and cost-effective production deployment, and we’d love to work with AWS on a pilot/case study once we show a definite increase in traction.
+
+We’re not claiming scale today; we’re asking for help to get the product and operations to a safe, production-ready state so we can scale responsibly and demonstrate a strong use case for AWS."
 
 ---
 
@@ -230,29 +223,28 @@ ECS Cluster (auto-scaling)
 ║               GG LOOP - AWS MEETING SUMMARY                 ║
 ╠═════════════════════════════════════════════════════════════╣
 ║ CURRENT STATE                                               ║
-║ Users: 1K | Revenue: $5K/month | Team: 1 | Infrastructure: Basic
+║ Pilot (Founder + small testers) | No meaningful revenue yet   ║
 ║                                                             ║
 ║ VISION                                                      ║
-║ Multi-game platform | 50K users by EOY | $6.3M revenue Y2 ║
+║ Multi-game platform | Scale goal: tens of thousands (aspirational) ║
 ║                                                             ║
 ║ TECH STACK                                                  ║
-║ React 18 | Node.js | PostgreSQL | Redis | AWS (targeted)  ║
+║ React 18 | Node.js | PostgreSQL | Redis | AWS (targeted)    ║
 ║                                                             ║
-║ PERFORMANCE                                                 ║
-║ Response Time: 45ms (p50) | Throughput: 50K req/sec        ║
-║ Cache Hit: 94% | Uptime: 99.99% | Users: 50K concurrent   ║
+║ PERFORMANCE (Target)                                        ║
+║ Response Time: ~45ms (p50) | Design targets for scale      ║
+║ Cache Hit: 94% | Target: 99.99% uptime (aspirational)       ║
 ║                                                             ║
 ║ ROADMAP                                                     ║
-║ M1-3: Reach 10K users ($50K/month)                         ║
-║ M4-6: Launch Valorant (+$50K/month)                        ║
-║ M7-12: Launch CS2 + Overwatch2 (+$80K/month)               ║
-║ Y2: $6.3M revenue (multi-game established)                 ║
+║ M1-3: Validate 1K engaged users (pilot)                     ║
+║ M4-6: Add games / scale (aspirational)                      ║
+║ Y2: Aspirational revenue model (not current)                ║
 ║                                                             ║
 ║ AWS ASK                                                     ║
-║ $100K credits | Technical partner | Cost optimization      ║
+║ $10K–$25K credits | Technical partner | Cost optimization    ║
 ║                                                             ║
 ║ CALL TO ACTION                                              ║
-║ "Let's build the next big gaming platform. Together."      ║
+║ "Help validate a production pilot and prepare for scale"   ║
 ╚═════════════════════════════════════════════════════════════╝
 ```
 

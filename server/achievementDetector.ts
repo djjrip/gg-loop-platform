@@ -118,7 +118,7 @@ export class AchievementDetector {
       return false;
     }
 
-    return recentMatches.every(match => match.isWin);
+    return recentMatches.every((match: any) => match.isWin);
   }
 
   private async checkTotalMatches(accountId: string, threshold: number): Promise<boolean> {

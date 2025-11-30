@@ -148,7 +148,7 @@ export class DbStorage implements IStorage {
 
     // For new users only, use transaction to safely assign founder status
     if (!existingUser && !existingEmailUser) {
-      return db.transaction(async (tx) => {
+      return db.transaction(async (tx: any) => {
         // Advisory lock (id=1001) to serialize founder assignment even when table is empty
         // await tx.execute(sql`SELECT pg_advisory_xact_lock(1001)`);
 
@@ -238,6 +238,39 @@ export class DbStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    // If no ID provided (e.g., guest creation), provide a UUID to avoid DB default issues in SQLite dev
+    if (!insertUser.id) {
+      // eslint-disable-next-line no-param-reassign
+      (insertUser as any).id = crypto.randomUUID();
+    }
+    // Ensure createdAt and updatedAt are set when using SQLite (SQLite doesn't support NOW())
+    if (!insertUser.createdAt) {
+      // eslint-disable-next-line no-param-reassign
+      (insertUser as any).createdAt = new Date().toISOString();
+    }
+    if (!insertUser.updatedAt) {
+      // eslint-disable-next-line no-param-reassign
+      (insertUser as any).updatedAt = new Date().toISOString();
+    }
+    console.log('[Storage] createUser id:', insertUser.id);
+    // DEBUG: Log insertUser values to check types
+    try {
+      console.log('[Storage:DEBUG] insertUser', JSON.stringify(insertUser, (k, v) => {
+        if (v instanceof Date) return { __isDate: true, value: v.toISOString() };
+        return v;
+      }));
+    } catch (err) {
+      console.warn('[Storage:DEBUG] Failed to stringify insertUser', err);
+    }
+
+    // Ensure createdAt/updatedAt are explicitly set for SQLite (avoids "NOW()" SQL function errors)
+    if (!insertUser.createdAt) {
+      (insertUser as any).createdAt = new Date().toISOString();
+    }
+    if (!insertUser.updatedAt) {
+      (insertUser as any).updatedAt = new Date().toISOString();
+    }
+
     const result = await db.insert(users).values(insertUser).returning();
     return result[0];
   }
@@ -334,7 +367,7 @@ export class DbStorage implements IStorage {
       .innerJoin(games, eq(userGames.gameId, games.id))
       .where(eq(userGames.userId, userId));
 
-    return result.map(r => ({ ...r.user_games, game: r.games }));
+    return result.map((r: any) => ({ ...r.user_games, game: r.games }));
   }
 
   async connectUserGame(insertUserGame: InsertUserGame): Promise<UserGame> {
@@ -425,7 +458,7 @@ export class DbStorage implements IStorage {
       .orderBy(leaderboardEntries.rank)
       .limit(limit);
 
-    return result.map(r => ({ ...r.leaderboard_entries, user: r.users }));
+    return result.map((r: any) => ({ ...r.leaderboard_entries, user: r.users }));
   }
 
   async upsertLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
@@ -452,11 +485,11 @@ export class DbStorage implements IStorage {
       .orderBy(desc(achievements.achievedAt))
       .limit(limit);
 
-    return result.map(r => ({ ...r.achievements, game: r.games }));
+    return result.map((r: any) => ({ ...r.achievements, game: r.games }));
   }
 
   async createAchievement(insertAchievement: InsertAchievement): Promise<Achievement> {
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async (tx: any) => {
       const [achievement] = await tx.insert(achievements).values(insertAchievement).returning();
 
       await pointsEngine.awardPoints(
@@ -514,7 +547,7 @@ export class DbStorage implements IStorage {
       .where(eq(userRewards.userId, userId))
       .orderBy(desc(userRewards.redeemedAt));
 
-    return result.map(r => ({ ...r.user_rewards, reward: r.rewards }));
+    return result.map((r: any) => ({ ...r.user_rewards, reward: r.rewards }));
   }
 
   async getAllPendingRewards(): Promise<(UserReward & { reward: Reward; user: User })[]> {
@@ -529,7 +562,7 @@ export class DbStorage implements IStorage {
         desc(userRewards.redeemedAt) // Then by redemption date
       );
 
-    return result.map(r => ({ ...r.user_rewards, reward: r.rewards, user: r.users }));
+    return result.map((r: any) => ({ ...r.user_rewards, reward: r.rewards, user: r.users }));
   }
 
   async updateUserRewardStatus(userRewardId: string, status: string, fulfillmentData?: any): Promise<UserReward> {
@@ -545,7 +578,7 @@ export class DbStorage implements IStorage {
   }
 
   async redeemReward(insertUserReward: InsertUserReward): Promise<UserReward> {
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async (tx: any) => {
       const reward = await tx.select().from(rewards).where(eq(rewards.id, insertUserReward.rewardId)).limit(1).for("update");
       if (!reward[0]) {
         throw new Error("Reward not found");
@@ -685,7 +718,7 @@ export class DbStorage implements IStorage {
       .where(eq(matchSubmissions.userId, userId))
       .orderBy(desc(matchSubmissions.submittedAt));
 
-    return result.map(row => ({
+    return result.map((row: any) => ({
       ...row.matchSubmission,
       game: row.game,
       gameName: row.game.title,
@@ -749,7 +782,7 @@ export class DbStorage implements IStorage {
       .where(eq(referrals.referrerId, referrerId))
       .orderBy(desc(referrals.createdAt));
 
-    return result.map(row => ({
+    return result.map((row: any) => ({
       ...row.referral,
       referredUser: row.referredUser,
     })) as (Referral & { referredUser: User })[];

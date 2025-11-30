@@ -28,19 +28,31 @@ interface TangoCatalogResponse {
   brands: TangoCardItem[];
 }
 
+// NOTE: Tango Card application for our account was rejected. This file remains in the
+// codebase for reference and possible future integration, but the service is disabled
+// by default via the environment variable `ENABLE_TANGO_INTEGRATION=false`.
+//
+// To enable Tango Card integration (if approved), set `ENABLE_TANGO_INTEGRATION=true` and
+// provide the required credentials. Otherwise the service will no-op and log a warning.
 class TangoCardService {
   private platformName: string;
   private platformKey: string;
   private apiUrl: string;
-  private authHeader: string;
+  private authHeader: string = '';
+  private enabled: boolean;
 
   constructor() {
     this.platformName = process.env.TANGO_CARD_PLATFORM_NAME || '';
     this.platformKey = process.env.TANGO_CARD_PLATFORM_KEY || '';
     this.apiUrl = process.env.TANGO_CARD_API_URL || 'https://integration-api.tangocard.com/raas/v2';
-    
+    this.enabled = process.env.ENABLE_TANGO_INTEGRATION === 'true';
+    if (!this.enabled) {
+      console.warn('[TangoCard] Integration disabled via ENABLE_TANGO_INTEGRATION. This service will not perform live calls.');
+      return;
+    }
+
     if (!this.platformName || !this.platformKey) {
-      console.warn('[TangoCard] Missing credentials. Service will not work.');
+      console.warn('[TangoCard] Missing credentials. Service will not work even if enabled.');
     }
 
     // Create Basic Auth header
@@ -52,6 +64,10 @@ class TangoCardService {
   private fetchCatalogInternal = memoize(
     async (): Promise<TangoCatalogResponse> => {
       try {
+        if (!this.enabled) {
+          console.warn('[TangoCard] Disabled - fetchCatalogInternal returning empty list');
+          return { brands: [] } as TangoCatalogResponse;
+        }
         console.log('[TangoCard] Fetching catalog...');
         const response = await fetch(`${this.apiUrl}/catalogs`, {
           method: 'GET',
@@ -98,6 +114,10 @@ class TangoCardService {
 
   async placeOrder(utid: string, amount: number, recipientEmail: string): Promise<any> {
     try {
+      if (!this.enabled) {
+        console.warn('[TangoCard] Place order requested but Tango integration is disabled');
+        throw new Error('Tango integration disabled');
+      }
       console.log(`[TangoCard] Placing order for UTID: ${utid}, amount: ${amount}`);
       
       const orderPayload = {
@@ -138,6 +158,7 @@ class TangoCardService {
 
   // Helper to get item details
   async getItemByUtid(utid: string): Promise<TangoCardItem | null> {
+    if (!this.enabled) return null;
     const catalog = await this.getCatalog();
     return catalog.find(item => item.utid === utid) || null;
   }

@@ -32,7 +32,7 @@ Print this out or save it to check off as you complete each step.
 - [ ] Fill in all Stripe credentials
 - [ ] Fill in Riot API key
 - [ ] Fill in Discord/Twitch OAuth credentials
-- [ ] Fill in Tango Card credentials
+- [ ] Fill in gift-card provider credentials if using one (e.g., Tremendous) — Tango Card previously considered but not active
 - [ ] Fill in Session secret
 - [ ] Save to password manager (1Password, Bitwarden, etc.)
 - [ ] **DELETE file from Replit**

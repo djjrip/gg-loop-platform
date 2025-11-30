@@ -22,6 +22,8 @@ import Subscription from "@/pages/Subscription";
 // User pages
 import Login from "@/pages/Login";
 import QuickStart from "@/pages/archive/QuickStart";
+import TwitchOutreach from "@/pages/archive/TwitchOutreach";
+import SponsorOutreach from "@/pages/archive/SponsorOutreach";
 import Profile from "@/pages/Profile";
 import Stats from "@/pages/Stats";
 import Settings from "@/pages/Settings";
@@ -91,6 +93,8 @@ function Router() {
       <Route path="/affiliate-program" component={AffiliateProgram} />
       <Route path="/gg-loop-cares" component={GGLoopCares} />
       <Route path="/launch-dashboard" component={LaunchDashboard} />
+      <Route path="/twitch-outreach" component={TwitchOutreach} />
+      <Route path="/sponsor-outreach" component={SponsorOutreach} />
       <Route path="/subscription/success" component={SubscriptionSuccess} />
       <Route path="/subscription/cancel" component={SubscriptionCancel} />
 

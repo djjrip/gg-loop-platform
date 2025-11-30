@@ -4,6 +4,7 @@ export default function RewardsCardExample() {
   return (
     <div className="p-8 max-w-sm space-y-4">
       <RewardsCard
+        id="headset"
         title="Gaming Headset"
         description="Premium wireless gaming headset with 7.1 surround sound"
         points={15000}
@@ -11,6 +12,7 @@ export default function RewardsCardExample() {
         category="Gear"
       />
       <RewardsCard
+        id="elite-controller"
         title="Elite Controller"
         description="Pro-grade controller with customizable buttons"
         points={25000}

@@ -20,7 +20,7 @@ export async function awardGgCoins(
   sourceId?: string
 ): Promise<number> {
   // Use transaction with FOR UPDATE lock to prevent race conditions
-  return await db.transaction(async (tx) => {
+  return await db.transaction(async (tx: any) => {
     const [user] = await tx.select().from(users)
       .where(eq(users.id, userId))
       .limit(1)
@@ -174,7 +174,7 @@ export async function unlockBadgeByCondition(
  */
 export async function redeemBasicTrial(userId: string): Promise<boolean> {
   // Use transaction to prevent race conditions
-  return await db.transaction(async (tx) => {
+  return await db.transaction(async (tx: any) => {
     const [user] = await tx.select().from(users)
       .where(eq(users.id, userId))
       .limit(1)

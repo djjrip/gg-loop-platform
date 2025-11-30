@@ -225,21 +225,21 @@ const secret = await secretsManager.getSecretValue({
 
 ## 📈 SCALABILITY METRICS
 
-### Current Capacity
-- **Concurrent Users:** 10K+ (with auto-scaling)
-- **API Throughput:** 50K req/sec (with load balancing)
-- **Database:** 10M+ records (with read replicas)
-- **Storage:** 500GB+ (with S3 + archival)
+### Current Capacity (pilot)
+- **Concurrent Users:** Pilot scale; architecture designed to scale to 10K+ when validated
+- **API Throughput:** Design target: 50K req/sec when scaled (aspirational)
+- **Database:** Production planning: 10M+ records (with read replicas) as part of scaling roadmap
+- **Storage:** 500GB+ (with S3 + archival) planned for large deployments
 
 ### Scaling Path
 ```
-Phase 1 (Now): 10K concurrent users
+Phase 1 (Now): Pilot validation — aim to validate 1K engaged users before scale
 - Single RDS instance
 - Single API server cluster
 - Redis cache cluster
 - Route 53 health checks
 
-Phase 2 (100K users): 
+Phase 2 (targeted scaling; aspirational): 100K users
 - RDS read replicas (multi-region)
 - Lambda auto-scaling for API
 - DynamoDB for hot data
@@ -302,12 +302,12 @@ await gameService.recordMatch(matchData);
 - **Creator monetization** (50/50 split)
 - **Partner revenue share** (per game)
 
-### Financial Projections
+### Financial Projections (aspirational examples)
 ```
-Month 1-3: 1000 users → $5K/month
-Month 4-6: 10K users → $50K/month
-Month 7-12: 50K users → $250K/month
-Year 2: 200K users → $1M+/month
+Month 1-3: Example Projection: 1,000 users → $5K/month (aspirational example)
+Month 4-6: Example Projection: 10K users → $50K/month (aspirational)
+Month 7-12: Example Projection: 50K users → $250K/month (aspirational)
+Year 2: Example Projection: 200K users → $1M+/month (aspirational)
 ```
 
 ---

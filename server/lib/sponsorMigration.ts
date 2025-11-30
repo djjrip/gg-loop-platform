@@ -85,9 +85,9 @@ export async function backfillSponsors(): Promise<{ created: number; linked: num
       .where(eq(challenges.sponsorId, sponsorId));
 
     // During migration, set totalBudget to sum of challenge budgets + 20% buffer
-    const challengeBudgets = linkedChallenges.reduce((sum, c) => sum + c.totalBudget, 0);
+    const challengeBudgets = linkedChallenges.reduce((sum: number, c: any) => sum + c.totalBudget, 0);
     const totalBudget = Math.round(challengeBudgets * 1.2); // Add 20% buffer for future challenges
-    const spentBudget = linkedChallenges.reduce((sum, c) => sum + c.pointsDistributed, 0);
+    const spentBudget = linkedChallenges.reduce((sum: number, c: any) => sum + c.pointsDistributed, 0);
 
     await db.update(sponsors)
       .set({ totalBudget, spentBudget })
@@ -113,7 +113,7 @@ export async function syncSponsorBudgets(): Promise<number> {
       .where(eq(challenges.sponsorId, sponsor.id));
 
     // Only sync SPENT budget - totalBudget is maintained via add-budget API
-    const spentBudget = linkedChallenges.reduce((sum, c) => sum + c.pointsDistributed, 0);
+    const spentBudget = linkedChallenges.reduce((sum: number, c: any) => sum + c.pointsDistributed, 0);
 
     if (sponsor.spentBudget !== spentBudget) {
       await db.update(sponsors)

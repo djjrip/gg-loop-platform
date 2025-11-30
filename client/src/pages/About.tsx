@@ -62,7 +62,7 @@ export default function About() {
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
-                      <span><strong>Redeem:</strong> Trade points for gaming gear, gift cards, peripherals via Tango Card fulfillment</span>
+                      <span><strong>Redeem:</strong> Trade points for gaming gear, gift cards, and peripherals via managed fulfillment partners (future integration)</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
@@ -131,8 +131,8 @@ export default function About() {
                   </div>
                   <div className="border-l-2 border-primary pl-4">
                     <h4 className="font-semibold mb-1">3. Loyalty Program Technology Maturity</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Stripe/PayPal subscriptions are battle-tested. Riot API provides reliable match data. Tango Card offers instant digital gift card fulfillment. The infrastructure exists to execute this TODAY.
+                      <p className="text-sm text-muted-foreground">
+                      Stripe/PayPal subscriptions are battle-tested. Riot API provides reliable match data. Gift-card fulfilment partners are on our roadmap for future integration. The infrastructure exists to execute this in production when integrations are selected.
                     </p>
                   </div>
                 </div>

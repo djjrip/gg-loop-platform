@@ -163,7 +163,7 @@ Announce these as you hit milestones to maintain momentum:
 - **$40K:** Mobile app (iOS/Android)  
 - **$60K:** Crypto rewards option  
 - **$75K:** Tournaments feature with prize pools  
-- **$100K:** Expand to CS2, Dota 2, Fortnite  
+- **$100K (aspirational stretch goal):** Expand to CS2, Dota 2, Fortnite  
 
 ---
 

@@ -20,7 +20,7 @@ import {
   ClipboardList
 } from "lucide-react";
 import { Link } from "wouter";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 
 interface DailyMetrics {
   // Financial
@@ -67,9 +67,21 @@ interface ChecklistItem {
 export default function DailyOps() {
   const today = new Date().toISOString().split('T')[0];
 
-  const { data: metrics, isLoading } = useQuery<DailyMetrics>({
+  // Attempt admin metrics first (returns null only on 401), fallback to public metrics for non-admin users
+  const { data: adminMetrics, isLoading: isAdminLoading } = useQuery<DailyMetrics | null>({
     queryKey: ["/api/admin/daily-metrics"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    refetchInterval: 10000,
   });
+
+  const { data: publicMetrics, isLoading: isPublicLoading } = useQuery<Partial<DailyMetrics> | null>({
+    queryKey: ["/api/public/daily-metrics"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    refetchInterval: 10000,
+  });
+
+  const metrics = (adminMetrics as DailyMetrics | null) || (publicMetrics as DailyMetrics | null) || null;
+  const isLoading = isAdminLoading || isPublicLoading;
 
   const { data: checklistItems = [] } = useQuery<ChecklistItem[]>({
     queryKey: ["/api/admin/checklist", today],

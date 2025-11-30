@@ -130,7 +130,7 @@ export default function FounderRoadmap() {
                   <li data-testid="text-week3-action1">
                     <strong>Day 15-16:</strong> Research + contact gift card wholesalers:
                     <ul className="ml-4 mt-1 text-muted-foreground list-disc list-inside">
-                      <li>Tango Card API (recommended)</li>
+                      <li>Gift-card wholesalers (e.g., Tremendous) — Tango Card previously considered; mark as future integration</li>
                       <li>CardCash Business</li>
                       <li>GiftCardGranny Bulk</li>
                       <li>CashStar (Blackhawk Network)</li>

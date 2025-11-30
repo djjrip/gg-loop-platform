@@ -143,8 +143,8 @@ POST /api/admin/check-spending-limit   - Test spending limits
 - Reward retry system
 - Enhanced health dashboard
 
-**Phase 3: Tremendous Integration** (Day 3 - 3 hours)
-- FREE reward API (vs. Tango Card)
+- **Phase 3: Tremendous (gift-card) Integration** (Day 3 - 3 hours)
+- FREE reward API (example: Tremendous) — Tango Card previously considered but not active.
 - Instant approval
 - Provider abstraction layer
 - Feature flag switching

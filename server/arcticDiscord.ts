@@ -27,7 +27,7 @@ export function getDiscordAuthUrl(req: Request, res: Response) {
     const state = crypto.randomBytes(16).toString("hex");
     // Store state in session for verification later (optional but recommended)
     req.session.discordState = state;
-    const url = discordOAuth.createAuthorizationURL(state, ["identify", "email"]);
+    const url = discordOAuth.createAuthorizationURL(state, { scopes: ["identify", "email"] });
     res.redirect(url.toString());
 }
 
@@ -53,12 +53,13 @@ export async function handleDiscordCallback(req: Request, res: Response) {
     try {
         console.log("[Arctic] Validating authorization code...");
         const tokens = await discordOAuth.validateAuthorizationCode(code);
-        console.log("[Arctic] Tokens received. Access token length:", tokens.accessToken().length);
+        const accessToken = tokens.accessToken;
+        console.log("[Arctic] Tokens received. Access token length:", accessToken.length);
 
         // Fetch user profile from Discord API
         console.log("[Arctic] Fetching user profile...");
         const userRes = await fetch("https://discord.com/api/users/@me", {
-            headers: { Authorization: `Bearer ${tokens.accessToken()}` },
+            headers: { Authorization: `Bearer ${accessToken}` },
         });
 
         if (!userRes.ok) {

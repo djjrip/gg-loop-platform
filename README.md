@@ -122,9 +122,9 @@ Points can be redeemed for:
    **Riot API:**
    - `RIOT_API_KEY` - For match syncing (get from https://developer.riotgames.com/)
    
-   **Optional (Reward Fulfillment):**
-   - `TREMENDOUS_API_KEY` - For gift card fulfillment
-   - `TANGO_CARD_API_URL` / `TANGO_CARD_PLATFORM_KEY`
+   **Optional (Reward Fulfillment - future integrations):**
+   - `TREMENDOUS_API_KEY` - For gift card fulfillment (example)
+   - Note: Tango Card integration was previously considered but is not currently active. If a gift-card partner is selected in the future, relevant env vars would be documented here.
 
 4. **Initialize database**
    ```bash
@@ -393,10 +393,10 @@ Session management:
 
 ### Common Issues
 
-**"Tango Card API URL invalid"**
-- Expected behavior in MVP
+**"Gift-card provider API URL invalid"**
+- Expected behavior in MVP when no gift-card fulfillment provider is configured
 - Using mock data instead
-- Implement Tremendous in Phase 3
+- Implement Tremendous or another partner in Phase 3 (Tango Card previously considered but not active)
 
 **"Riot API key expired"**
 - Renew at https://developer.riotgames.com/
