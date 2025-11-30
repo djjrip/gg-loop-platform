@@ -186,7 +186,6 @@ export class GameService {
       entries,
       updatedAt: new Date(),
     };
-    }, period === 'daily' ? 60 * 60 * 1000 : this.cacheDuration); // Daily resets hourly, others cached 5 min
   }
 
   /**
@@ -252,13 +251,13 @@ export class GameService {
       const response = await fetch(`${this.gameConfig.apiEndpoint}/lol/summoner/v4/summoners/by-name/${playerId}`, {
         headers: { 'X-Riot-Token': this.gameConfig.apiKey || process.env.RIOT_API_KEY || '' },
       });
-      
+
       if (!response.ok) {
         throw new Error(`Riot API error: ${response.status}`);
       }
 
       const data = await response.json();
-      
+
       return {
         playerId,
         gameId: this.gameConfig.id,
@@ -283,13 +282,13 @@ export class GameService {
     // Valve Steam API implementation
     try {
       const response = await fetch(`${this.gameConfig.apiEndpoint}/ISteamUser/GetPlayerSummaries/v0002/?key=${this.gameConfig.apiKey || process.env.VALVE_API_KEY}&steamids=${playerId}`);
-      
+
       if (!response.ok) {
         throw new Error(`Valve API error: ${response.status}`);
       }
 
       const data = await response.json();
-      
+
       return {
         playerId,
         gameId: this.gameConfig.id,

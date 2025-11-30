@@ -67,6 +67,32 @@ router.get("/users", async (req, res) => {
     } catch (error) {
         console.error("Error fetching users:", error);
         res.status(500).json({ message: "Failed to fetch users" });
+    }
+});
+
+// User Management - Adjust Points
+router.post("/users/:id/points", async (req, res) => {
+    const { points, reason } = req.body;
+    const targetUserId = req.params.id;
+    const adminUser = req.dbUser as User;
+
+    if (!adminUser || !adminUser.id) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+        // Update points
+        await storage.updateUserPoints(targetUserId, points);
+
+        // Log to audit_logs
+        await db.insert(auditLogs).values({
+            adminId: adminUser.id,
+            action: "POINTS_ADJUSTMENT",
+            targetId: targetUserId,
+            details: { points, reason },
+        });
+
+        res.json({ success: true });
     } catch (error) {
         console.error("Error adjusting points:", error);
         res.status(500).json({ message: "Failed to adjust points" });
