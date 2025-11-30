@@ -2,17 +2,17 @@ console.log('🚀 Starting server initialization...');
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 
-// ----- Security Validation -----
-// Validate critical environment variables before starting server
-import { enforceSecureStartup } from './serverStartupValidator';
-enforceSecureStartup();
-
-// ----- Lowest‑hanging‑fruit fixes -----
+// ----- Set Environment Defaults FIRST -----
 // Provide safe defaults for essential env vars so the server can start even if .env is missing.
 process.env.NODE_ENV ??= 'development';
 process.env.PORT ??= '3000';
 process.env.SESSION_SECRET ??= 'dev-secret-change-in-production';
 process.env.BASE_URL ??= `http://localhost:${process.env.PORT}`;
+
+// ----- Security Validation -----
+// Validate critical environment variables after defaults are set
+import { enforceSecureStartup } from './serverStartupValidator';
+enforceSecureStartup();
 
 // Global error handling – any uncaught exception will be printed and exit the process.
 process.on('uncaughtException', (err) => {
