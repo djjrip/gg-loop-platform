@@ -23,7 +23,6 @@ import { twitchAPI } from "./lib/twitch";
 import { calculateReferralReward, FREE_TRIAL_DURATION_DAYS } from "./lib/referral";
 import crypto from 'crypto';
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { tangoCardService } from "./tangoCardService";
 import adminRouter from "./routes/admin";
 
 // Middleware that accepts BOTH guest sessions AND OAuth sessions
@@ -1329,268 +1328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Tango Card Catalog Endpoint
-  app.get('/api/tango/catalog', async (req, res) => {
-    try {
-      const catalog = await tangoCardService.getCatalog();
 
-      // Transform Tango items to match our shop format
-      const transformedCatalog = catalog.map(item => ({
-        id: item.utid,
-        utid: item.utid,
-        title: item.rewardName,
-        description: item.description || `${item.rewardType} - ${item.currencyCode}`,
-        pointsCost: item.faceValue * 100, // Convert dollars to points (e.g., $25 = 2,500 points)
-        category: item.rewardType,
-        imageUrl: null,
-        stock: null, // Tango has unlimited stock
-        minValue: item.minValue,
-        maxValue: item.maxValue,
-        valueType: item.valueType,
-        isExpirable: item.isExpirable,
-      }));
-
-      res.json(transformedCatalog);
-    } catch (error) {
-      console.error("Error fetching Tango catalog:", error);
-      res.status(500).json({ message: "Failed to fetch catalog" });
-    }
-  });
-
-  // Tango Card Redemption Endpoint
-  app.post('/api/tango/redeem', getUserMiddleware, async (req: any, res) => {
-    try {
-      const { utid } = z.object({
-        utid: z.string(),
-      }).parse(req.body);
-
-      const userId = req.dbUser.id;
-      const userEmail = req.dbUser.email;
-
-      if (!userEmail) {
-        return res.status(400).json({ message: "User email required for redemption" });
-      }
-
-      // SECURITY: Get item details from catalog (server-side, not client-provided)
-      const item = await tangoCardService.getItemByUtid(utid);
-      if (!item) {
-        return res.status(404).json({ message: "Item not found in catalog" });
-      }
-
-      // SECURITY: Use server-side item price (prevent tampering)
-      const amount = item.faceValue; // Use catalog price, not client input
-      const pointsCost = amount * 100; // $1 = 100 points
-
-      // Check if user has enough points
-      if (req.dbUser.totalPoints < pointsCost) {
-        return res.status(400).json({
-          message: "Insufficient points",
-          required: pointsCost,
-          available: req.dbUser.totalPoints
-        });
-      }
-
-      // STEP 1: Ensure virtual reward entry exists OUTSIDE transaction (to avoid conflicts)
-      let [tangoReward] = await db.select().from(rewards).where(eq(rewards.sku, utid)).limit(1);
-
-      if (!tangoReward) {
-        // Create virtual reward record for this Tango item (use SKU to track UTID)
-        try {
-          [tangoReward] = await db.insert(rewards).values({
-            title: item.rewardName,
-            description: `Tango Card - ${item.rewardType}`,
-            pointsCost: pointsCost,
-            realValue: amount, // Dollar value
-            category: 'tango_card',
-            tier: 1,
-            stock: null, // Unlimited stock
-            inStock: true,
-            imageUrl: null,
-            sku: utid, // Store UTID in SKU field
-            fulfillmentType: 'instant',
-          }).returning();
-        } catch (error: any) {
-          // Race condition: another request created it, fetch again
-          if (error.code === '23505') { // unique violation
-            [tangoReward] = await db.select().from(rewards).where(eq(rewards.sku, utid)).limit(1);
-          } else {
-            throw error;
-          }
-        }
-      }
-
-      // STEP 2: Create pending redemption record AND deduct points atomically (with idempotency)
-      let pendingRewardId: string = '';
-      let isRetry = false;
-
-      // Check for RECENT pending record (last 5 minutes) for idempotency
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-      const [existingPending] = await db.select()
-        .from(userRewards)
-        .where(
-          and(
-            eq(userRewards.userId, userId),
-            eq(userRewards.rewardId, tangoReward.id),
-            eq(userRewards.status, 'pending'),
-            sql`${userRewards.redeemedAt} > ${fiveMinutesAgo}`
-          )
-        )
-        .orderBy(desc(userRewards.redeemedAt))
-        .limit(1);
-
-      if (existingPending) {
-        // Recent retry detected - return existing pending record to avoid double-order
-        console.log('[TANGO] Found recent pending redemption (idempotent retry)', {
-          userId,
-          pendingRewardId: existingPending.id,
-          utid,
-          redeemedAt: existingPending.redeemedAt
-        });
-
-        // Return existing record status (don't re-execute order)
-        return res.status(409).json({
-          success: false,
-          error: 'Redemption already in progress. Please wait or contact support.',
-          existingRedemption: {
-            id: existingPending.id,
-            status: existingPending.status,
-            redeemedAt: existingPending.redeemedAt
-          }
-        });
-      } else {
-        // First attempt - create new pending record
-        await db.transaction(async (tx: any) => {
-          // Deduct points first (will throw if insufficient)
-          await pointsEngine.spendPoints(
-            userId,
-            pointsCost,
-            'TANGO_REDEMPTION',
-            utid,
-            'tango_card',
-            `Pending: ${item.rewardName} - $${amount}`,
-            tx
-          );
-
-          // Create pending user_rewards record with all correlation data
-          const [pendingReward] = await tx.insert(userRewards).values({
-            userId,
-            rewardId: tangoReward.id,
-            pointsSpent: pointsCost,
-            status: 'pending', // Critical: record intent before external API
-            fulfillmentData: { utid, amount, itemName: item.rewardName },
-            fulfillmentNotes: `Pending Tango order for ${item.rewardName}`,
-          }).returning();
-
-          pendingRewardId = pendingReward.id;
-        });
-      }
-
-      // STEP 3: Place Tango order (redemption intent already recorded)
-      let order: any = null;
-      let finalStatus: 'fulfilled' | 'failed';
-      let trackingNumber: string | null = null;
-      let fulfillmentData: any = null;
-      let fulfilledAt: Date | null = null;
-
-      try {
-        order = await tangoCardService.placeOrder(utid, amount, userEmail);
-        finalStatus = 'fulfilled';
-        trackingNumber = order.referenceOrderID;
-        fulfillmentData = order;
-        fulfilledAt = new Date();
-      } catch (error) {
-        // Order failed - mark as failed and refund points
-        finalStatus = 'failed';
-        fulfillmentData = { error: String(error), utid, amount };
-
-        console.error('[TANGO] Order placement failed', {
-          userId,
-          userEmail,
-          utid,
-          amount,
-          error,
-          action: 'REFUNDING_POINTS'
-        });
-      }
-
-      // STEP 4: Update pending record to final status atomically (with error handling)
-      let result;
-      try {
-        result = await db.transaction(async (tx: any) => {
-          // Update user_rewards status
-          const [userReward] = await tx.update(userRewards)
-            .set({
-              status: finalStatus,
-              trackingNumber,
-              fulfillmentData,
-              fulfilledAt,
-              fulfillmentNotes: finalStatus === 'fulfilled'
-                ? `Fulfilled via Tango Card`
-                : `Order failed - points refunded`
-            })
-            .where(eq(userRewards.id, pendingRewardId))
-            .returning();
-
-          // If failed, refund points
-          if (finalStatus === 'failed') {
-            await pointsEngine.awardPoints(
-              userId,
-              pointsCost,
-              'TANGO_REFUND',
-              utid,
-              'tango_card',
-              `Refund: Failed Tango order for ${item.rewardName}`,
-              tx
-            );
-          }
-
-          return { order, userReward };
-        });
-      } catch (updateError) {
-        // CRITICAL: Status update failed - log for reconciliation with full order data
-        const criticalLog = {
-          severity: 'CRITICAL',
-          event: 'TANGO_STATUS_UPDATE_FAILED',
-          userId,
-          userEmail,
-          pendingRewardId,
-          utid,
-          amount,
-          pointsCost,
-          tangoOrderStatus: finalStatus,
-          tangoReferenceOrderID: trackingNumber,
-          tangoOrderPayload: fulfillmentData,
-          updateError: String(updateError),
-          timestamp: new Date().toISOString(),
-          action: finalStatus === 'fulfilled'
-            ? 'MANUAL_UPDATE_TO_FULFILLED_REQUIRED'
-            : 'MANUAL_UPDATE_TO_FAILED_AND_REFUND_REQUIRED',
-          reconciliationInstructions: finalStatus === 'fulfilled'
-            ? 'User received gift card. Update pending record to fulfilled with above data.'
-            : 'Tango order failed. Update pending record to failed and refund points.'
-        };
-
-        console.error('[TANGO_CRITICAL]', JSON.stringify(criticalLog, null, 2));
-
-        // Re-throw to return error to client
-        throw new Error(
-          finalStatus === 'fulfilled'
-            ? 'Order placed successfully but system error occurred. Check your email for gift card. Support will update your account.'
-            : 'Redemption failed. Your points will be refunded shortly by support.'
-        );
-      }
-
-      res.json({
-        success: true,
-        order: result.order,
-        pointsDeducted: pointsCost,
-        remainingPoints: req.dbUser.totalPoints - pointsCost,
-      });
-    } catch (error: any) {
-      console.error("Error redeeming Tango item:", error);
-      res.status(500).json({ message: error.message || "Failed to redeem item" });
-    }
-  });
 
   app.get('/api/user/rewards', getUserMiddleware, async (req: any, res) => {
     try {
@@ -2714,7 +2452,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         await storage.updateSubscription(existingSubscription.id, {
           tier: tierLower,
           status: "active",
-          stripeSubscriptionId: subscriptionId,
+          paypalSubscriptionId: subscriptionId,
           currentPeriodEnd: nextBillingDate,
         });
         subscriptionDbId = existingSubscription.id;
@@ -2722,8 +2460,8 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         await storage.logSubscriptionEvent({
           subscriptionId: existingSubscription.id,
           eventType: "subscription.manual_sync",
-          stripeEventId: eventId,
           eventData: {
+            eventId,
             previousTier: existingSubscription.tier,
             newTier: tierLower,
             paypalSubscriptionId: subscriptionId,
@@ -2735,7 +2473,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           userId,
           tier: tierLower,
           status: "active",
-          stripeSubscriptionId: subscriptionId,
+          paypalSubscriptionId: subscriptionId,
           currentPeriodStart: currentDate,
           currentPeriodEnd: nextBillingDate,
         });
@@ -2744,8 +2482,8 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         await storage.logSubscriptionEvent({
           subscriptionId: newSub.id,
           eventType: "subscription.manual_sync_created",
-          stripeEventId: eventId,
           eventData: {
+            eventId,
             tier: tierLower,
             paypalSubscriptionId: subscriptionId,
             status: verification.status,
@@ -2803,8 +2541,8 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
             await storage.logSubscriptionEvent({
               subscriptionId: sub.id,
               eventType: "subscription.verification_failed",
-              stripeEventId: `${eventId}_failed`,
               eventData: {
+                eventId,
                 error: verification.error,
                 paypalSubscriptionId: subscriptionId,
                 status: verification.status,
@@ -2838,7 +2576,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         await storage.updateSubscription(existingSubscription.id, {
           tier: tierLower,
           status: "active",
-          stripeSubscriptionId: subscriptionId,
+          paypalSubscriptionId: subscriptionId,
           currentPeriodEnd: nextBillingDate,
         });
         subscriptionDbId = existingSubscription.id;
@@ -2847,8 +2585,8 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         await storage.logSubscriptionEvent({
           subscriptionId: existingSubscription.id,
           eventType: "subscription.updated",
-          stripeEventId: eventId,
           eventData: {
+            eventId,
             previousTier: existingSubscription.tier,
             newTier: tierLower,
             paypalSubscriptionId: subscriptionId,
@@ -2860,7 +2598,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           userId,
           tier: tierLower,
           status: "active",
-          stripeSubscriptionId: subscriptionId,
+          paypalSubscriptionId: subscriptionId,
           currentPeriodStart: currentDate,
           currentPeriodEnd: nextBillingDate,
         });
@@ -2870,8 +2608,8 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         await storage.logSubscriptionEvent({
           subscriptionId: newSub.id,
           eventType: "subscription.created",
-          stripeEventId: eventId,
           eventData: {
+            eventId,
             tier: tierLower,
             paypalSubscriptionId: subscriptionId,
             status: verification.status,
@@ -2895,7 +2633,6 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           await storage.logSubscriptionEvent({
             subscriptionId: sub.id,
             eventType: "subscription.processing_failed",
-            stripeEventId: `${eventId}_error`,
             eventData: {
               error: error.message,
               paypalSubscriptionId: subscriptionId,
@@ -2940,7 +2677,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         const subscription = await db
           .select()
           .from(subscriptions)
-          .where(eq(subscriptions.stripeSubscriptionId, subscriptionId))
+          .where(eq(subscriptions.paypalSubscriptionId, subscriptionId))
           .limit(1);
 
         if (!subscription[0]) {
@@ -2966,8 +2703,8 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         await storage.logSubscriptionEvent({
           subscriptionId: subscription[0].id,
           eventType: 'payment.sale.completed',
-          stripeEventId: eventId,
           eventData: {
+            eventId,
             saleId,
             paypalSubscriptionId: subscriptionId,
             tier,
@@ -2988,7 +2725,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         const subscription = await db
           .select()
           .from(subscriptions)
-          .where(eq(subscriptions.stripeSubscriptionId, subscriptionId))
+          .where(eq(subscriptions.paypalSubscriptionId, subscriptionId))
           .limit(1);
 
         if (subscription[0]) {
@@ -3015,18 +2752,18 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       }
 
       // Generate stable event ID for deduplication
-      const eventId = `cancel_${subscription.stripeSubscriptionId}_${userId}`;
+      const eventId = `cancel_${subscription.paypalSubscriptionId}_${userId}`;
 
       // Check if cancellation already processed
       const existingEvent = await storage.checkEventProcessed(eventId);
       if (existingEvent) {
-        console.log(`Subscription ${subscription.stripeSubscriptionId} already being canceled`);
+        console.log(`Subscription ${subscription.paypalSubscriptionId} already being canceled`);
         return res.json({ message: "Subscription cancellation already in progress" });
       }
 
-      if (subscription.stripeSubscriptionId) {
+      if (subscription.paypalSubscriptionId) {
         await cancelPayPalSubscription(
-          subscription.stripeSubscriptionId,
+          subscription.paypalSubscriptionId,
           "User requested cancellation"
         );
       }
@@ -3039,10 +2776,10 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       await storage.logSubscriptionEvent({
         subscriptionId: subscription.id,
         eventType: "subscription.canceled",
-        stripeEventId: eventId,
         eventData: {
+          eventId,
           tier: subscription.tier,
-          paypalSubscriptionId: subscription.stripeSubscriptionId,
+          paypalSubscriptionId: subscription.paypalSubscriptionId,
           reason: "user_requested",
         },
       });
@@ -3055,15 +2792,15 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       try {
         const subscription = await storage.getSubscription(userId);
         if (subscription) {
-          const eventId = `cancel_${subscription.stripeSubscriptionId}_${userId}`;
+          const eventId = `cancel_${subscription.paypalSubscriptionId}_${userId}`;
           await storage.logSubscriptionEvent({
             subscriptionId: subscription.id,
             eventType: "subscription.cancel_failed",
-            stripeEventId: `${eventId}_error`,
             eventData: {
+              eventId,
               error: error.message,
               tier: subscription.tier,
-              paypalSubscriptionId: subscription.stripeSubscriptionId,
+              paypalSubscriptionId: subscription.paypalSubscriptionId,
             },
           });
         }

@@ -73,22 +73,6 @@ export default function SystemStatus() {
                         </CardContent>
                     </Card>
 
-                    {/* Stripe Status */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Stripe Payments</CardTitle>
-                            {getStatusIcon(status.stripe.status)}
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold capitalize">
-                                {status.stripe.status.replace("_", " ")}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Payment processing integration
-                            </p>
-                        </CardContent>
-                    </Card>
-
                     {/* Tremendous Status */}
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

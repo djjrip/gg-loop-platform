@@ -26,8 +26,6 @@ export const users = pgTable("users", {
   ggCoins: integer("gg_coins").notNull().default(0), // Virtual currency for unlocking trials
   primaryGame: varchar("primary_game"), // User's favorite game (free-form text)
   gamesConnected: integer("games_connected").notNull().default(0),
-  stripeCustomerId: varchar("stripe_customer_id").unique(),
-  stripeSubscriptionId: varchar("stripe_subscription_id").unique(),
   twitchId: varchar("twitch_id").unique(),
   twitchUsername: varchar("twitch_username"),
   twitchAccessToken: text("twitch_access_token"),
@@ -163,7 +161,7 @@ export const userRewards = pgTable("user_rewards", {
 export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id).unique(),
-  stripeSubscriptionId: varchar("stripe_subscription_id").unique(),
+  paypalSubscriptionId: varchar("paypal_subscription_id").unique(),
   tier: varchar("tier").notNull().default("basic"),
   status: varchar("status").notNull().default("active"),
   currentPeriodStart: timestamp("current_period_start").notNull(),
@@ -196,7 +194,6 @@ export const subscriptionEvents = pgTable("subscription_events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   subscriptionId: varchar("subscription_id").notNull().references(() => subscriptions.id),
   eventType: varchar("event_type").notNull(),
-  stripeEventId: varchar("stripe_event_id").unique(),
   eventData: jsonb("event_data"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

@@ -45,12 +45,10 @@ router.get("/system-status", async (req, res) => {
         const dbLatency = Date.now() - dbStart;
 
         // Check External APIs (Mock for now, or simple ping)
-        const stripeConfigured = !!process.env.STRIPE_SECRET_KEY;
         const tremendousConfigured = !!process.env.TREMENDOUS_API_KEY;
 
         res.json({
             database: { status: "healthy", latency: dbLatency },
-            stripe: { status: stripeConfigured ? "configured" : "missing_config" },
             tremendous: { status: tremendousConfigured ? "configured" : "missing_config" },
             serverTime: new Date().toISOString(),
             uptime: process.uptime(),

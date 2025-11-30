@@ -29,7 +29,6 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: InsertUser): Promise<User>;
-  updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string): Promise<User>;
   updateUsername(userId: string, username: string): Promise<User>;
   connectTwitchAccount(oidcSub: string, twitchData: { twitchId: string; twitchUsername: string; accessToken: string; refreshToken: string }): Promise<User>;
   disconnectTwitchAccount(userId: string): Promise<User>;
@@ -273,19 +272,6 @@ export class DbStorage implements IStorage {
 
     const result = await db.insert(users).values(insertUser).returning();
     return result[0];
-  }
-
-  async updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subscriptionId || null,
-        updatedAt: sql`NOW()`
-      })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
   }
 
   async updateUsername(userId: string, username: string): Promise<User> {
@@ -646,11 +632,12 @@ export class DbStorage implements IStorage {
     return pointsEngine.getTransactionHistory(userId, limit);
   }
 
-  async checkEventProcessed(stripeEventId: string): Promise<boolean> {
+  async checkEventProcessed(eventId: string): Promise<boolean> {
+    // Check if an event with this ID has already been processed by looking in eventData
     const result = await db
       .select()
       .from(subscriptionEvents)
-      .where(eq(subscriptionEvents.stripeEventId, stripeEventId))
+      .where(sql`${subscriptionEvents.eventData}->>'eventId' = ${eventId}`)
       .limit(1);
     return result.length > 0;
   }
