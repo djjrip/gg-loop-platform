@@ -20,22 +20,22 @@
 }
 .lava-blob-1 {
   background: radial-gradient(circle at 30% 30%, rgba(211,138,108,0.85), rgba(211,138,108,0.3));
-  width: 520px; height: 520px; left: -8%; top: -10%;
+  width: 520px; height: 520px; left: -50px; top: -50px;
   animation: lavaFloat 14s ease-in-out infinite, lavaMorph 8s ease-in-out infinite;
 }
 .lava-blob-2 {
   background: radial-gradient(circle at 60% 40%, rgba(180,100,70,0.9), rgba(180,100,70,0.25));
-  width: 420px; height: 420px; right: -4%; top: 20%;
+  width: 420px; height: 420px; right: -30px; top: 80px;
   animation: lavaFloat 18s ease-in-out infinite, lavaMorph 9s ease-in-out infinite;
 }
 .lava-blob-3 {
   background: radial-gradient(circle at 40% 60%, rgba(120,74,57,0.9), rgba(120,74,57,0.2));
-  width: 650px; height: 650px; left: 10%; bottom: -25%;
+  width: 650px; height: 650px; left: 50px; bottom: 100px;
   animation: lavaFloat 20s ease-in-out infinite, lavaMorph 11s ease-in-out infinite;
 }
 .lava-blob-4 {
   background: radial-gradient(circle at 60% 60%, rgba(90,60,50,0.7), rgba(90,60,50,0.12));
-  width: 360px; height: 360px; right: 18%; bottom: -10%;
+  width: 360px; height: 360px; right: 60px; bottom: 80px;
   animation: lavaFloat 16s ease-in-out infinite, lavaMorph 7s ease-in-out infinite;
 }
 .lava-overlay {
