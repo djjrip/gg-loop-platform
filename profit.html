@@ -4,11 +4,86 @@
 <meta charset="UTF-8"/>
 <title>GG LOOP Profit Safety Calculator</title>
 <style>
-  body{background:#05060a;color:#f5f5f5;font-family:sans-serif;margin:0;padding:20px;}
-  .card{background:#111320;border-radius:16px;padding:16px;max-width:480px;box-shadow:0 12px 24px rgba(0,0,0,0.4);}
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+  }
+  @keyframes glow-pulse {
+    0%, 100% { opacity: 0.2; filter: blur(15px); }
+    50% { opacity: 0.5; filter: blur(20px); }
+  }
+  @keyframes loop-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  body {
+    background: #05060a;
+    color: #f5f5f5;
+    font-family: sans-serif;
+    margin: 0;
+    padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+  }
+  
+  /* Lava lamp background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+      radial-gradient(circle at 20% 30%, rgba(255, 122, 60, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(255, 122, 60, 0.06) 0%, transparent 40%);
+    animation: loop-rotate 25s linear infinite;
+    pointer-events: none;
+    z-index: -2;
+  }
+  
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 122, 60, 0.12), transparent 70%);
+    filter: blur(50px);
+    animation: float 8s ease-in-out infinite;
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  .card{
+    background:#111320;
+    border-radius:16px;
+    padding:16px;
+    max-width:480px;
+    box-shadow:0 12px 24px rgba(0,0,0,0.4), 0 0 30px rgba(255, 122, 60, 0.08);
+    border: 1px solid rgba(255, 122, 60, 0.08);
+  }
   label{display:block;font-size:13px;margin-top:8px;}
   input{width:100%;padding:6px;border-radius:8px;border:none;margin-top:2px;background:#181b2a;color:#f5f5f5;}
-  button{margin-top:12px;background:#ff7a3c;border:none;border-radius:999px;padding:8px 16px;color:white;font-weight:bold;cursor:pointer;font-size:13px;}
+  button{
+    margin-top:12px;
+    background: linear-gradient(135deg, #ff7a3c 0%, #ff5722 100%);
+    border:none;
+    border-radius:999px;
+    padding:8px 16px;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    font-size:13px;
+    box-shadow: 0 0 15px rgba(255, 122, 60, 0.3);
+    transition: all 0.3s ease;
+  }
+  button:hover {
+    box-shadow: 0 0 25px rgba(255, 122, 60, 0.6);
+    transform: translateY(-2px);
+  }
   .result{margin-top:12px;font-size:13px;}
 </style>
 </head>
