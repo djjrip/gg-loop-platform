@@ -341,8 +341,8 @@ export const ggCoinTransactions = pgTable("gg_coin_transactions", {
   index("idx_gg_coin_tx_user").on(table.userId),
 ]);
 
-export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, ggCoins: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, lastLoginAt: true, loginStreak: true, longestStreak: true, xpLevel: true, xpPoints: true, createdAt: true, updatedAt: true });
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, ggCoins: true, stripeCustomerId: true, stripeSubscriptionId: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, lastLoginAt: true, loginStreak: true, longestStreak: true, xpLevel: true, xpPoints: true, createdAt: true, updatedAt: true });
+export const upsertUserSchema = createInsertSchema(users).omit({ totalPoints: true, gamesConnected: true, ggCoins: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, lastLoginAt: true, loginStreak: true, longestStreak: true, xpLevel: true, xpPoints: true, createdAt: true, updatedAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, totalPoints: true, gamesConnected: true, ggCoins: true, twitchAccessToken: true, twitchRefreshToken: true, referralCode: true, freeTrialStartedAt: true, freeTrialEndsAt: true, lastLoginAt: true, loginStreak: true, longestStreak: true, xpLevel: true, xpPoints: true, createdAt: true, updatedAt: true });
 export const insertReferralSchema = createInsertSchema(referrals).omit({ id: true, createdAt: true, completedAt: true, pointsAwarded: true, tier: true, status: true });
 export const insertGameSchema = createInsertSchema(games).omit({ id: true, isActive: true });
 export const insertUserGameSchema = createInsertSchema(userGames).omit({ id: true, connectedAt: true });
