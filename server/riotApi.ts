@@ -68,7 +68,8 @@ export class RiotApiService {
 
   constructor() {
     if (!RIOT_API_KEY) {
-      throw new Error("RIOT_API_KEY not configured");
+      const err = new Error("RIOT_API_KEY not configured");
+      throw err;
     }
     this.apiKey = RIOT_API_KEY;
   }
@@ -88,16 +89,22 @@ export class RiotApiService {
     });
 
     if (response.status === 404) {
-      throw new Error('Riot account not found. Check your Riot ID format (GameName#Tag)');
+      const err = new Error('Riot account not found. Check your Riot ID format (GameName#Tag)');
+      (err as any).code = 404;
+      throw err;
     }
 
     if (response.status === 429) {
-      throw new Error('Rate limit exceeded. Please try again in a few minutes.');
+      const err = new Error('Rate limit exceeded. Please try again in a few minutes.');
+      (err as any).code = 429;
+      throw err;
     }
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Riot API error: ${response.status} - ${error}`);
+      const errorText = await response.text();
+      const err = new Error(`Riot API error: ${response.status} - ${errorText}`);
+      (err as any).code = response.status;
+      throw err;
     }
 
     const data = await response.json();

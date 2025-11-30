@@ -467,9 +467,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('Error requesting Riot verification:', error);
-      res.status(500).json({
+      const status = (error?.code === 404) ? 404 : (error?.code === 429) ? 429 : 500;
+      res.status(status).json({
         message: error.message || 'Failed to verify Riot account. Please check your Riot ID and try again.'
       });
+    }
+  });
+
+  // Health: Riot connectivity
+  app.get('/api/health/riot', async (_req, res) => {
+    try {
+      const hasKey = !!process.env.RIOT_API_KEY;
+      if (!hasKey) {
+        return res.status(500).json({ ok: false, message: 'RIOT_API_KEY missing' });
+      }
+      return res.json({ ok: true, message: 'Key present' });
+    } catch (err) {
+      console.error('Riot health error:', err);
+      res.status(500).json({ ok: false });
     }
   });
 

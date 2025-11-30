@@ -24,6 +24,7 @@ process.on('unhandledRejection', (reason) => {
   // process.exit(1);
 });
 import { registerRoutes } from "./routes";
+import { notify, type AlertPayload } from './alerts';
 import { twitchErrorLogger } from "./middleware/twitchErrorLogger";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -167,7 +168,11 @@ app.use((req, res, next) => {
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
-
+      const source = (err?.stack && err.stack.includes('riot')) ? 'riot' : 'server';
+      const severity: AlertPayload['severity'] = (status >= 500 || message.includes('RIOT_API_KEY')) ? 'critical' : 'warning';
+      if (severity === 'critical') {
+        notify({ severity, source: 'global-error', message, details: { status, stack: err?.stack } }).catch(() => {});
+      }
       res.status(status).json({ message });
       throw err;
     });
