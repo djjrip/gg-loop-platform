@@ -2,6 +2,11 @@ console.log('🚀 Starting server initialization...');
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 
+// ----- Security Validation -----
+// Validate critical environment variables before starting server
+import { enforceSecureStartup } from './serverStartupValidator';
+enforceSecureStartup();
+
 // ----- Lowest‑hanging‑fruit fixes -----
 // Provide safe defaults for essential env vars so the server can start even if .env is missing.
 process.env.NODE_ENV ??= 'development';
@@ -49,24 +54,24 @@ declare module 'http' {
 app.use((req, res, next) => {
   // Prevent clickjacking attacks
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  
+
   // Prevent MIME type sniffing
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  
+
   // Enable XSS protection in older browsers
   res.setHeader('X-XSS-Protection', '1; mode=block');
-  
+
   // Referrer policy for privacy
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
+
   // Content Security Policy - prevents inline scripts and restricts resource loading
   res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.paypal.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https:; connect-src 'self' https:");
-  
+
   // HSTS - enforce HTTPS in production
   if (process.env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
-  
+
   next();
 });
 

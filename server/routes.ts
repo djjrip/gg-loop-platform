@@ -67,9 +67,38 @@ const adminMiddleware = async (req: any, res: any, next: any) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // MVP: Owner email check (replace with proper admin flag later)
-    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
-    if (!ADMIN_EMAILS.includes(dbUser.email || '')) {
+    // SECURITY: Hardened admin check with fail-safes
+    const adminEmailsEnv = process.env.ADMIN_EMAILS;
+
+    // FAIL-SAFE #1: If ADMIN_EMAILS is not set, deny all access
+    if (!adminEmailsEnv || adminEmailsEnv.trim() === '') {
+      console.error('❌ SECURITY: ADMIN_EMAILS not configured - denying admin access');
+      return res.status(403).json({
+        message: "Forbidden: Admin system not configured"
+      });
+    }
+
+    const ADMIN_EMAILS = adminEmailsEnv.split(',').map(e => e.trim()).filter(e => e.length > 0);
+
+    // FAIL-SAFE #2: If no valid emails after parsing, deny all access
+    if (ADMIN_EMAILS.length === 0) {
+      console.error('❌ SECURITY: ADMIN_EMAILS contains no valid emails - denying admin access');
+      return res.status(403).json({
+        message: "Forbidden: Admin system not configured"
+      });
+    }
+
+    // FAIL-SAFE #3: User must have a valid email address
+    if (!dbUser.email || dbUser.email.trim() === '') {
+      console.warn(`⚠️ SECURITY: User ${dbUser.id} attempted admin access with no email`);
+      return res.status(403).json({
+        message: "Forbidden: Admin access requires verified email"
+      });
+    }
+
+    // FINAL CHECK: User email must be in admin list
+    if (!ADMIN_EMAILS.includes(dbUser.email)) {
+      console.warn(`⚠️ SECURITY: User ${dbUser.email} attempted unauthorized admin access`);
       return res.status(403).json({ message: "Forbidden: Admin access required" });
     }
 
