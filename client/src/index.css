@@ -4,9 +4,11 @@
   background: transparent;
 }
 .lava-layer {
-  position: absolute;
+  position: fixed;
   inset: 0;
   overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
 }
 .lava-blob {
   position: absolute;
