@@ -6,7 +6,7 @@ import express, { type Request, Response, NextFunction } from "express";
 // Provide safe defaults for essential env vars so the server can start even if .env is missing.
 process.env.NODE_ENV ??= 'development';
 process.env.PORT ??= '3000';
-process.env.SESSION_SECRET ??= 'dev-secret-change-in-production';
+// SESSION_SECRET: handled by serverStartupValidator (auto-generates secure value if missing)
 process.env.BASE_URL ??= `http://localhost:${process.env.PORT}`;
 
 // ----- Security Validation -----

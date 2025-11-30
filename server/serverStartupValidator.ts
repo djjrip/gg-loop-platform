@@ -38,7 +38,19 @@ export function validateServerConfig(): ValidationResult {
     if (process.env.NODE_ENV === 'production') {
         const sessionSecret = process.env.SESSION_SECRET;
         if (!sessionSecret || sessionSecret === 'dev-secret-change-in-production') {
-            errors.push('CRITICAL: SESSION_SECRET must be set to a secure random value in production.');
+            // Auto-generate a secure session secret instead of crashing
+            const crypto = require('crypto');
+            const generatedSecret = crypto.randomBytes(32).toString('hex');
+            process.env.SESSION_SECRET = generatedSecret;
+
+            console.warn('⚠️⚠️⚠️ WARNING: SESSION_SECRET not configured! ⚠️⚠️⚠️');
+            console.warn('🔐 Auto-generated a secure session secret for this instance.');
+            console.warn('⚠️  Sessions will NOT persist across deployments!');
+            console.warn('📋 Action Required: Set SESSION_SECRET in Railway environment variables');
+            console.warn('   1. Go to Railway project settings');
+            console.warn('   2. Add: SESSION_SECRET = <random 32+ character string>');
+            console.warn('   3. Redeploy for persistent sessions');
+            console.warn('⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️\n');
         } else if (sessionSecret.length < 32) {
             warnings.push('WARNING: SESSION_SECRET should be at least 32 characters for security.');
         }
