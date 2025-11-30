@@ -13,8 +13,8 @@
 .lava-blob {
   position: absolute;
   filter: blur(36px) saturate(120%);
-  opacity: 0.3;
-  mix-blend-mode: overlay;
+  opacity: 0.6;
+  mix-blend-mode: lighten;
   transform: translate3d(0,0,0);
   will-change: transform, border-radius, opacity, filter;
 }
