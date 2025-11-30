@@ -41,6 +41,7 @@ import AdminDashboard from "@/pages/AdminDashboardPage";
 import SystemStatus from "@/pages/admin/SystemStatus";
 import UserManagement from "@/pages/admin/UserManagement";
 import AuditLogs from "@/pages/admin/AuditLogs";
+import MissionControlDashboard from "@/pages/admin/MissionControlDashboard";
 import FounderControls from "@/pages/FounderControls";
 import FulfillmentDashboard from "@/pages/FulfillmentDashboard";
 import AdminFulfillment from "@/pages/AdminFulfillment";
@@ -104,6 +105,7 @@ function Router() {
       <ProtectedRoute path="/admin/system-status" component={SystemStatus} adminOnly />
       <ProtectedRoute path="/admin/users" component={UserManagement} adminOnly />
       <ProtectedRoute path="/admin/audit-logs" component={AuditLogs} adminOnly />
+      <ProtectedRoute path="/admin/mission-control" component={MissionControlDashboard} adminOnly />
       <ProtectedRoute path="/admin/founder-controls" component={FounderControls} adminOnly />
       <ProtectedRoute path="/admin/rewards" component={RewardsManagement} adminOnly />
       <ProtectedRoute path="/admin/sponsors" component={SponsorManagement} adminOnly />
