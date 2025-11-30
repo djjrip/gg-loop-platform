@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { storage } from "../storage";
 import { db } from "../db";
-import { users, auditLogs, type User } from "@shared/schema";
+import { users, auditLog, type User } from "@shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
 
 const router = Router();
@@ -84,8 +84,8 @@ router.post("/users/:id/points", async (req, res) => {
         // Update points
         await storage.updateUserPoints(targetUserId, points);
 
-        // Log to audit_logs
-        await db.insert(auditLogs).values({
+        // Log to audit_log
+        await db.insert(auditLog).values({
             adminId: adminUser.id,
             action: "POINTS_ADJUSTMENT",
             targetId: targetUserId,
@@ -102,7 +102,7 @@ router.post("/users/:id/points", async (req, res) => {
 // Audit Logs
 router.get("/audit-logs", async (req, res) => {
     try {
-        const logs = await db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt)).limit(50);
+        const logs = await db.select().from(auditLog).orderBy(desc(auditLog.createdAt)).limit(50);
         res.json(logs);
     } catch (error) {
         console.error("Error fetching audit logs:", error);
