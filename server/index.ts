@@ -13,6 +13,8 @@ process.env.BASE_URL ??= `http://localhost:${process.env.PORT}`;
 // Validate critical environment variables after defaults are set
 import { enforceSecureStartup } from './serverStartupValidator';
 enforceSecureStartup();
+import { validateRequiredEnv, logEnvChecks } from './envValidation';
+logEnvChecks(validateRequiredEnv());
 
 // Global error handling – any uncaught exception will be printed and exit the process.
 process.on('uncaughtException', (err) => {
