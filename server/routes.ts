@@ -115,6 +115,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
   await setupTwitchAuth(app);
   console.log('✅ Authentication initialized');
+  // TEMPORARY: Direct admin login for testing (REMOVE IN PRODUCTION)
+  app.get('/api/test/admin-login', async (req: any, res) => {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(404).send('Not found');
+    }
+
+    try {
+      // Create or get test admin user directly using db to avoid storage.upsertUser Postgres dependencies
+      const existing = await db.select().from(users).where(eq(users.oidcSub, 'test:admin')).limit(1);
+      let adminUser = existing[0];
+
+      if (!adminUser) {
+        const now = new Date();
+        const [newUser] = await db.insert(users).values({
+          id: crypto.randomUUID(),
+          oidcSub: 'test:admin',
+          email: 'admin@ggloop.io',
+          username: 'admin',
+          firstName: 'Admin',
+          lastName: 'Tester',
+          profileImageUrl: null,
+          totalPoints: 1000,
+          isFounder: true,
+          createdAt: now,
+          updatedAt: now,
+        } as any).returning();
+        adminUser = newUser;
+      }
+
+      // Log the user in via session
+      req.login(adminUser, (err: any) => {
+        if (err) {
+          console.error('Login error:', err);
+          return res.status(500).send('Login failed');
+        }
+        req.session.save((err: any) => {
+          if (err) {
+            console.error('Session save error:', err);
+            return res.status(500).send('Session save failed');
+          }
+          res.redirect('/');
+        });
+      });
+    } catch (error) {
+      console.error('Admin login error:', error);
+      res.status(500).send('Failed to create admin session: ' + (error as Error).message);
+    }
+  });
 
   app.get('/tiktokPDhff2hq8ipXw4JhJXalxaRHIa5mV037.txt', (req, res) => {
     res.type('text/plain');
