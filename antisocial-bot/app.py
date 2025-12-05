@@ -6,6 +6,7 @@ import requests
 from datetime import datetime
 from flask import Flask, jsonify, request
 from threading import Thread
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 # Configure logging - send to stdout for Docker/Loki collection
 logging.basicConfig(
@@ -34,6 +35,14 @@ MIN_POST_INTERVAL = int(os.getenv('MIN_POST_INTERVAL_SECONDS', 1800))  # 30 min 
 MAX_POST_INTERVAL = int(os.getenv('MAX_POST_INTERVAL_SECONDS', 7200))  # 2 hours default
 
 # ═══════════════════════════════════════════════════════════════
+# PROMETHEUS METRICS
+# ═══════════════════════════════════════════════════════════════
+
+posts_total = Counter('antisocial_bot_posts_total', 'Total posts made', ['platform'])
+link_checks_total = Counter('antisocial_bot_link_checks_total', 'Link health checks performed', ['status'])
+post_generation_duration = Histogram('antisocial_bot_post_generation_seconds', 'Time to generate post content')
+
+# ═══════════════════════════════════════════════════════════════
 # LINK HEALTH CHECK SYSTEM
 # ═══════════════════════════════════════════════════════════════
 
@@ -46,9 +55,14 @@ def check_link_health(url, timeout=5):
         response = requests.head(url, timeout=timeout, allow_redirects=True)
         is_healthy = 200 <= response.status_code < 400
         logger.info(f"Link check: {url} - Status {response.status_code} - {'✅ HEALTHY' if is_healthy else '❌ UNHEALTHY'}")
+        
+        # Increment metrics
+        link_checks_total.labels(status='healthy' if is_healthy else 'unhealthy').inc()
+        
         return is_healthy, response.status_code
     except requests.RequestException as e:
         logger.warning(f"Link check FAILED: {url} - Error: {e}")
+        link_checks_total.labels(status='failed').inc()
         return False, 0
 
 def get_safe_url():
@@ -330,6 +344,9 @@ class MarketingBot:
                 self.post_history.insert(0, post_record)
                 self.post_history = self.post_history[:100]  # Keep last 100
                 
+                # Increment Prometheus metrics
+                posts_total.labels(platform=post_data['platform']).inc()
+                
                 # Random interval to avoid spam detection
                 sleep_time = random.randint(MIN_POST_INTERVAL, MAX_POST_INTERVAL)
                 logger.info(f"⏸️  Next post in {sleep_time//60} minutes")
@@ -386,6 +403,11 @@ def test_post():
         'content': content,
         'url_verified': check_link_health(content['url'])[0]
     })
+
+@app.route('/metrics')
+def metrics():
+    """Prometheus metrics endpoint"""
+    return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}
 
 @app.route('/')
 def index():
