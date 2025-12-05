@@ -1,0 +1,44 @@
+name: Auto-Post to Reddit
+
+on:
+  schedule:
+    # Post 2x per week: Tuesday 11 AM, Friday 3 PM EST
+    - cron: '0 16 * * 2'  # Tuesday 11 AM EST (16:00 UTC)
+    - cron: '0 20 * * 5'  # Friday 3 PM EST (20:00 UTC)
+  
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  post-to-reddit:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install praw
+      
+      - name: Post to Reddit
+        env:
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_SECRET: ${{ secrets.REDDIT_SECRET }}
+          REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
+          REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
+        run: |
+          cd antisocial-bot
+          python3 reddit-auto-poster.py
+      
+      - name: Update post count
+        run: |
+          git config user.name "GG Loop Bot"
+          git config user.email "info@ggloop.io"
+          git add antisocial-bot/reddit-queue.json
+          git commit -m "👾 Auto-posted to Reddit" || echo "No changes"
+          git push || echo "Nothing to push"
