@@ -12,6 +12,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 // Public pages
 import Home from "@/pages/Home";
 import About from "@/pages/About";
+import Roadmap from "@/pages/Roadmap";
 import Partners from "@/pages/Partners";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
@@ -76,6 +77,7 @@ function Router() {
       {/* Public Routes */}
       <Route path="/" component={Home} />
       <Route path="/about" component={About} />
+      <Route path="/roadmap" component={Roadmap} />
       <Route path="/partners" component={Partners} />
       <Route path="/shop" component={Shop} />
       <Route path="/creator-tools" component={CreatorTools} />

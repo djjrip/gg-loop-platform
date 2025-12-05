@@ -1,69 +1,73 @@
-# 🎉 WELCOME BACK! Deployment Status Update
+# GG LOOP - HOMELAB DEPLOYMENT ONLY
 
-## 📋 Quick Summary
+**Deployment Status:** Homelab is the sole production environment.  
+**Railway:** Completely deprecated and removed from codebase.
 
-While you were away, I:
-1. ✅ **Fixed DNS**: `ggloop.io` is now live and secure on Railway.
-2. ✅ **Removed Banner**: The "Replit is Dead" banner is gone.
-3. ✅ **Fixed OAuth**: Login buttons now safely check for configuration instead of crashing.
-4. ✅ **Cleaned Code**: Removed old Replit dependencies.
+## LIVE SITE
 
-**Status: LIVE & STABLE 🚀**
+**Production URL:** https://ggloop.io  
+**Deployment:** Homelab (Docker Compose)  
+**Infrastructure:** Self-hosted, $0/month
 
----
+## KEY PAGES
 
-## 🚀 Immediate Action Required (Before You Sleep)
+- **Main Site:** https://ggloop.io
+- **Roadmap:** https://ggloop.io/roadmap
+- **Subscription:** https://ggloop.io/subscription
+- **Shop:** https://ggloop.io/shop
+- **Stats:** https://ggloop.io/stats
 
-You **MUST** add this URL to your Discord Developer Portal to make login work:
-👉 `https://ggloop.io/api/auth/discord/callback`
+## DEPLOYMENT COMMANDS
 
-*(I saw in your screenshot that you did this, so you should be good!)*
-
----
-
-## 🔍 How to Verify Everything
-
-### 1. Check the Site
-- Go to [https://ggloop.io](https://ggloop.io)
-- Verify the green banner is GONE.
-- Verify the "Not Secure" warning is GONE.
-
-### 2. Test Logins
-- **Discord**: Click "Continue with Discord". It should log you in.
-- **Google/Twitch**: Click them. They should show a "Configuration Missing" popup (this is GOOD behavior until you add keys).
-
-### 3. Run Health Check
-Open a terminal and run:
+**Start Production Stack:**
 ```bash
-node verify-production.js
+START-HOMELAB.bat
 ```
-This will ping your live site and tell you if all endpoints are reachable.
 
----
+**Stop Production Stack:**
+```bash
+STOP-HOMELAB.bat
+```
 
-## 💰 Cost Savings Confirmed
-- **Replit**: Cancel it. You are saving ~$40/month.
-- **Railway**: Running smoothly for ~$5/month.
+**View Status:**
+```bash
+docker-compose -f docker-compose.homelab.yml ps
+```
 
----
+**View Logs:**
+```bash
+docker-compose -f docker-compose.homelab.yml logs -f
+```
 
-## � Troubleshooting
+## SERVICES
 
-**"Configuration Missing" Popup?**
-- This means you haven't added the `GOOGLE_CLIENT_ID` or `TWITCH_CLIENT_ID` to Railway variables yet.
-- **Fix:** Go to Railway -> Variables and add them when you have time.
+All services run via `docker-compose.homelab.yml`:
 
-**"Invalid Redirect URI"?**
-- This means the URL in the Discord Portal doesn't match exactly.
-- **Fix:** Ensure it is exactly `https://ggloop.io/api/auth/discord/callback`.
+| Service | Port | Health Check | Auto-Restart |
+|---------|------|--------------|--------------|
+| Caddy (Reverse Proxy) | 80, 443 | ✅ | ✅ |
+| GG Loop App | 3000 | ✅ | ✅ |
+| PostgreSQL | 5432 | ✅ | ✅ |
+| Redis | 6379 | ✅ | ✅ |
+| Antisocial Bot | 3001 | ✅ | ✅ |
+| Empire Hub | 8080 | ✅ | ✅ |
+| Prometheus | 9090 | ✅ | ✅ |
+| Grafana | 3030 | ✅ | ✅ |
+| Loki | 3100 | ✅ | ✅ |
+| Promtail | - | - | ✅ |
+| AutoHeal | - | - | ✅ |
 
----
+## MONITORING
 
-## 🎊 Final Notes
+- **Empire Hub:** http://localhost:8080
+- **Grafana:** http://localhost:3030
+- **Prometheus:** http://localhost:9090
 
-**You are done.** The migration is complete.
-- The code is on GitHub.
-- The site is on Railway.
-- The domain is connected.
+## DOCUMENTATION
 
-**Sleep well! 🌙**
+- **Homelab Deployment Guide:** `HOMELAB_DEPLOYMENT.md`
+- **Infrastructure Report:** `DEPLOYMENT_ARCHITECTURE_COMPLETE.md`
+- **Railway Deprecation:** `RAILWAY_DEPRECATION_NOTICE.md`
+
+**Note:** Railway was completely removed from codebase as of 2025-12-05.  
+All production traffic is served from self-hosted homelab infrastructure.

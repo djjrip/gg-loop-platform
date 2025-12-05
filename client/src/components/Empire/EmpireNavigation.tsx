@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Trophy, Gamepad2, Activity, Users, DollarSign, BarChart3, Gift, Rocket } from "lucide-react";
+import { Trophy, Gamepad2, Activity, Users, DollarSign, BarChart3, Gift, Rocket, Map } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import logoImage from "@assets/ChatGPT Image Nov 11, 2025, 06_17_23 PM_1763403383212.png";
 
@@ -11,6 +11,7 @@ export function EmpireNavigation() {
 
     const navItems = [
         { href: "/", label: "CMD CENTER", icon: Trophy, id: "link-home" },
+        { href: "/roadmap", label: "ROADMAP", icon: Map, id: "link-roadmap" },
         { href: "/#games", label: "OPERATIONS", icon: Gamepad2, id: "link-games" },
         { href: "/stats", label: "MY STATS", icon: Activity, id: "link-stats" },
         { href: "/referrals", label: "RECRUIT", icon: Users, id: "link-referrals" },
