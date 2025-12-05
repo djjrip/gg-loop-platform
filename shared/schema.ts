@@ -691,8 +691,8 @@ export const rewardTypes = pgTable("reward_types", {
   imageUrl: text("image_url"),
   isActive: boolean("is_active").notNull().default(true),
   fulfillmentType: varchar("fulfillment_type").notNull().default("manual"), // "manual" or "api" (future)
-  externalProviderId: varchar("external_provider_id"), // Tremendous, etc (future)
-  externalSkuId: varchar("external_sku_id"), // (future)
+  externalProviderId: varchar("external_provider_id"), // Amazon, Blackhawk Network, etc (future APIs)
+  externalSkuId: varchar("external_sku_id"), // Product SKU for API fulfillment
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => [

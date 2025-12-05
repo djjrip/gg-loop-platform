@@ -44,12 +44,12 @@ router.get("/system-status", async (req, res) => {
         await db.execute(sql`SELECT 1`);
         const dbLatency = Date.now() - dbStart;
 
-        // Check External APIs (Mock for now, or simple ping)
-        const tremendousConfigured = !!process.env.TREMENDOUS_API_KEY;
+        // Check External APIs
+        const fulfillmentConfigured = !!process.env.AMAZON_INCENTIVES_API_KEY || !!process.env.BLACKHAWK_API_KEY;
 
         res.json({
             database: { status: "healthy", latency: dbLatency },
-            tremendous: { status: tremendousConfigured ? "configured" : "missing_config" },
+            fulfillment: { status: fulfillmentConfigured ? "configured" : "not_configured" },
             serverTime: new Date().toISOString(),
             uptime: process.uptime(),
         });
@@ -143,9 +143,9 @@ router.post("/fulfillment/reward-types", async (req, res) => {
     try {
         const adminUser = req.dbUser as User;
         const parsed = insertRewardTypeSchema.parse(req.body);
-        
+
         const result = await db.insert(rewardTypes).values(parsed).returning();
-        
+
         await fulfillmentService.logAction(
             adminUser.id,
             adminUser.email || "unknown",
@@ -153,7 +153,7 @@ router.post("/fulfillment/reward-types", async (req, res) => {
             adminUser.id,
             { rewardTypeId: result[0].id, name: parsed.name }
         );
-        
+
         res.json(result[0]);
     } catch (error) {
         console.error("Error creating reward type:", error);
@@ -168,13 +168,13 @@ router.get("/fulfillment/claims", async (req, res) => {
         const userId = req.query.userId as string | undefined;
         const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
         const offset = parseInt(req.query.offset as string) || 0;
-        
+
         const { claims, total } = await fulfillmentService.getClaimsFiltered(
             { status, userId },
             limit,
             offset
         );
-        
+
         res.json({ claims, total, limit, offset });
     } catch (error) {
         console.error("Error fetching claims:", error);
@@ -187,7 +187,7 @@ router.get("/fulfillment/claims/pending", async (req, res) => {
     try {
         const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
         const offset = parseInt(req.query.offset as string) || 0;
-        
+
         const { claims, total } = await fulfillmentService.getPendingClaims(limit, offset);
         res.json({ claims, total, limit, offset });
     } catch (error) {
@@ -200,11 +200,11 @@ router.get("/fulfillment/claims/pending", async (req, res) => {
 router.get("/fulfillment/claims/:id", async (req, res) => {
     try {
         const claim = await db.select().from(rewardClaims).where(eq(rewardClaims.id, req.params.id));
-        
+
         if (!claim || claim.length === 0) {
             return res.status(404).json({ message: "Claim not found" });
         }
-        
+
         res.json(claim[0]);
     } catch (error) {
         console.error("Error fetching claim:", error);
@@ -217,15 +217,15 @@ router.patch("/fulfillment/claims/:id", async (req, res) => {
     try {
         const adminUser = req.dbUser as User;
         const claimId = req.params.id;
-        
+
         const update = updateRewardClaimSchema.parse(req.body);
         const updatedClaim = await fulfillmentService.updateClaimStatus(claimId, adminUser.id, update);
-        
+
         // Log the action
-        const actionType = update.status === "fulfilled" ? "REWARD_CLAIM_FULFILLED" : 
-                          update.status === "rejected" ? "REWARD_CLAIM_REJECTED" : 
-                          "REWARD_CLAIM_UPDATED";
-        
+        const actionType = update.status === "fulfilled" ? "REWARD_CLAIM_FULFILLED" :
+            update.status === "rejected" ? "REWARD_CLAIM_REJECTED" :
+                "REWARD_CLAIM_UPDATED";
+
         await fulfillmentService.logAction(
             adminUser.id,
             adminUser.email || "unknown",
@@ -239,7 +239,7 @@ router.patch("/fulfillment/claims/:id", async (req, res) => {
                 rejectedReason: update.rejectedReason,
             }
         );
-        
+
         res.json(updatedClaim);
     } catch (error) {
         console.error("Error updating claim:", error);

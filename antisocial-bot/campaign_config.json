@@ -1,0 +1,11 @@
+{
+    "twitter_enabled": true,
+    "reddit_enabled": true,
+    "discord_enabled": true,
+    "simulation_mode": false,
+    "post_frequency_hours_min": 2,
+    "post_frequency_hours_max": 4,
+    "link_health_check": true,
+    "primary_url": "https://ggloop.io/subscription",
+    "fallback_url": "https://ggloop.io"
+}

@@ -73,18 +73,18 @@ export default function SystemStatus() {
                         </CardContent>
                     </Card>
 
-                    {/* Tremendous Status */}
+                    {/* Fulfillment Provider Status */}
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Tremendous Rewards</CardTitle>
-                            {getStatusIcon(status.tremendous.status)}
+                            <CardTitle className="text-sm font-medium">Fulfillment Providers</CardTitle>
+                            {getStatusIcon(status.fulfillment?.status || "not_configured")}
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold capitalize">
-                                {status.tremendous.status.replace("_", " ")}
+                                {(status.fulfillment?.status || "not_configured").replace("_", " ")}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Gift card fulfillment integration
+                                Amazon, Blackhawk Network, etc.
                             </p>
                         </CardContent>
                     </Card>

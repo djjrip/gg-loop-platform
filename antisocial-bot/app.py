@@ -7,6 +7,7 @@ from datetime import datetime
 from flask import Flask, jsonify, request
 from threading import Thread
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from campaign_engine import CampaignEngine
 
 # Configure logging - send to stdout for Docker/Loki collection
 logging.basicConfig(
