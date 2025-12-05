@@ -1,0 +1,138 @@
+# ═══════════════════════════════════════════════════════════════
+# GG LOOP EMPIRE - AWS/EC2 DOCKER COMPOSE
+# For deployment on AWS EC2 instance
+# ═══════════════════════════════════════════════════════════════
+
+version: '3.8'
+
+networks:
+  empire-aws:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+  loki-data:
+
+
+services:
+  # ══════════════════════════════════════════════════════════════
+  # AWS ALB handles SSL termination, so no Caddy needed
+  # ══════════════════════════════════════════════════════════════
+
+  postgres:
+    # In production AWS, use RDS instead
+    # This is for EC2-only deployment
+    image: postgres:16-alpine
+    container_name: aws-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - empire-aws
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    # In production AWS, use ElastiCache instead
+    image: redis:7-alpine
+    container_name: aws-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    networks:
+      - empire-aws
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ggloop-app:
+    image: ${ECR_REGISTRY}/ggloop-app:${IMAGE_TAG:-latest}
+    container_name: aws-ggloop
+    restart: always
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL} # Use RDS endpoint
+      REDIS_URL: ${REDIS_URL} # Use ElastiCache endpoint
+      SESSION_SECRET: ${SESSION_SECRET}
+      BASE_URL: ${BASE_URL}
+      # ... all other env vars from .env.homelab
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - empire-aws
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/ggloop-app
+        awslogs-region: ${AWS_REGION:-us-east-1}
+        awslogs-stream-prefix: ecs
+
+  antisocial-bot:
+    image: ${ECR_REGISTRY}/antisocial-bot:${IMAGE_TAG:-latest}
+    container_name: aws-antisocial-bot
+    restart: always
+    environment:
+      # ... from .env.homelab
+      GGLOOP_URL: http://ggloop-app:3000
+    networks:
+      - empire-aws
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3001/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/antisocial-bot
+        awslogs-region: ${AWS_REGION:-us-east-1}
+
+  # Monitoring stack (optional - can use CloudWatch instead)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: aws-prometheus
+    restart: always
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - empire-aws
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: aws-grafana
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - empire-aws
+    ports:
+      - "3030:3000"
+    depends_on:
+      - prometheus

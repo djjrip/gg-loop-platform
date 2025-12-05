@@ -1,0 +1,101 @@
+name: Deploy to AWS
+
+on:
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+  
+jobs:
+  build-and-push:
+    name: Build Docker Images & Push to ECR
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Build, tag, and push ggloop-app image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/ggloop-app:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/ggloop-app:latest .
+          docker push $ECR_REGISTRY/ggloop-app:$IMAGE_TAG
+          docker push $ECR_REGISTRY/ggloop-app:latest
+      
+      - name: Build, tag, and push antisocial-bot image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/antisocial-bot:$IMAGE_TAG ./antisocial-bot
+          docker build -t $ECR_REGISTRY/antisocial-bot:latest ./antisocial-bot
+          docker push $ECR_REGISTRY/antisocial-bot:$IMAGE_TAG
+          docker push $ECR_REGISTRY/antisocial-bot:latest
+  
+  deploy:
+    name: Deploy to EC2
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /opt/gg-loop-platform
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Update images
+            docker-compose -f infra/aws/docker-compose.aws.yml pull
+            
+            # Restart services (zero-downtime with health checks)
+            docker-compose -f infra/aws/docker-compose.aws.yml up -d --force-recreate
+            
+            # Cleanup old images
+            docker image prune -af
+            
+            # Health check
+            sleep 30
+            curl -f http://localhost:3000/health || exit 1
+            
+            echo "Deployment successful!"
+      
+      - name: Notify Slack (optional)
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          text: 'GG Loop deployment to AWS: ${{ job.status }}'
