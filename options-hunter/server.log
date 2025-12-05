@@ -1,0 +1,18 @@
+nohup: ignoring input
+
+============================================================
+🎯 OPTIONS HUNTER ULTIMATE
+============================================================
+✅ Scanning 114+ optionable stocks
+✅ Budget-based filtering (ANY amount)
+✅ Real Tradier Production API
+✅ Always returns value
+============================================================
+
+🌐 Running on http://0.0.0.0:8700
+============================================================
+
+ * Serving Flask app 'server-ultimate'
+ * Debug mode: off
+Address already in use
+Port 8700 is in use by another program. Either identify and stop that program, or start the server with a different port.

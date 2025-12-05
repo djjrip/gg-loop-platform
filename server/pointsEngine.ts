@@ -42,7 +42,7 @@ export const EARNING_RULES: Record<string, EarningRule> = {
   MATCH_WIN: {
     type: "match_win",
     basePoints: 5,
-    tierMultipliers: { basic: 1.0, pro: 2.0, elite: 3.0 },
+    tierMultipliers: { free: 1.0, basic: 1.5, pro: 3.3, elite: 8.3 },
     dailyCap: 50,
   },
   DAILY_CHALLENGE: {

@@ -1,0 +1,575 @@
+#!/usr/bin/env python3
+"""
+Options Hunter - Alpha Vantage Real Market Data Server
+Provides ACTUAL live stock prices from Alpha Vantage API (25 calls/day free)
+"""
+
+from flask import Flask, jsonify, request, send_file
+import os
+import requests
+from datetime import datetime, timedelta
+import time
+
+app = Flask(__name__)
+
+# Provider API Keys / URLs
+ALPHA_VANTAGE_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", "6O5P5QKHS0RTMGAR")
+ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
+FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
+IEX_API_KEY = os.getenv("IEX_API_KEY") or os.getenv("IEX_TOKEN")
+FINNHUB_BASE_URL = "https://finnhub.io/api/v1/quote"
+IEX_BASE_URL = "https://cloud.iexapis.com/stable/stock/{symbol}/quote"
+
+# Options providers (real-only)
+POLYGON_API_KEY = os.getenv("POLYGON_API_KEY")
+POLYGON_BASE = "https://api.polygon.io"
+TRADIER_TOKEN = os.getenv("TRADIER_TOKEN")
+TRADIER_BASE = "https://api.tradier.com"
+
+# Cache to minimize API calls (5 minute TTL)
+price_cache = {}
+provider_cache = {}
+CACHE_TTL = 300  # 5 minutes
+
+def fetch_price_alpha(ticker):
+    try:
+        params = {'function': 'GLOBAL_QUOTE', 'symbol': ticker, 'apikey': ALPHA_VANTAGE_API_KEY}
+        response = requests.get(ALPHA_VANTAGE_BASE_URL, params=params, timeout=7)
+        data = response.json()
+        if isinstance(data, dict) and 'Global Quote' in data and '05. price' in data['Global Quote']:
+            val = data['Global Quote']['05. price']
+            if val not in (None, ""):
+                return float(val)
+    except Exception as e:
+        print(f"Alpha Vantage error for {ticker}: {e}")
+    return None
+
+def fetch_price_finnhub(ticker):
+    if not FINNHUB_API_KEY:
+        return None
+    try:
+        params = {'symbol': ticker, 'token': FINNHUB_API_KEY}
+        r = requests.get(FINNHUB_BASE_URL, params=params, timeout=7)
+        data = r.json()
+        if isinstance(data, dict) and data.get('c'):
+            return float(data['c'])
+    except Exception as e:
+        print(f"Finnhub error for {ticker}: {e}")
+    return None
+
+def fetch_price_iex(ticker):
+    if not IEX_API_KEY:
+        return None
+    try:
+        url = IEX_BASE_URL.format(symbol=ticker)
+        params = {'token': IEX_API_KEY}
+        r = requests.get(url, params=params, timeout=7)
+        data = r.json()
+        if isinstance(data, dict) and data.get('latestPrice'):
+            return float(data['latestPrice'])
+    except Exception as e:
+        print(f"IEX error for {ticker}: {e}")
+    return None
+
+def fetch_price_yfinance(ticker):
+    try:
+        import yfinance as yf
+        stock = yf.Ticker(ticker)
+        data = stock.history(period='1d', interval='1m')
+        if not data.empty:
+            return float(data['Close'].iloc[-1])
+    except Exception as e:
+        print(f"yfinance error for {ticker}: {e}")
+    return None
+
+def get_real_price_with_source(ticker):
+    """Fetch real current price with provider fallback and cache.
+    Returns (price, source) or (None, None).
+    Order: Finnhub -> IEX -> Alpha Vantage -> yfinance.
+    """
+    now = time.time()
+    if ticker in price_cache:
+        cached_price, cached_time = price_cache[ticker]
+        src = provider_cache.get(ticker)
+        if now - cached_time < CACHE_TTL:
+            return cached_price, src or 'cache'
+
+    providers = []
+    if FINNHUB_API_KEY:
+        providers.append(('Finnhub', fetch_price_finnhub))
+    if IEX_API_KEY:
+        providers.append(('IEX', fetch_price_iex))
+    providers.append(('Alpha Vantage', fetch_price_alpha))
+    providers.append(('yfinance', fetch_price_yfinance))
+
+    for name, func in providers:
+        price = func(ticker)
+        if price is not None and price > 0:
+            price_cache[ticker] = (price, now)
+            provider_cache[ticker] = name
+            return price, name
+
+    return None, None
+
+def get_real_price(ticker):
+    price, _ = get_real_price_with_source(ticker)
+    return price
+
+def get_historical_data(ticker, days=30):
+    """Fetch REAL daily closes. No simulation. AV -> Finnhub fallback."""
+    # Alpha Vantage TIME_SERIES_DAILY
+    try:
+        params = {
+            'function': 'TIME_SERIES_DAILY',
+            'symbol': ticker,
+            'apikey': ALPHA_VANTAGE_API_KEY,
+            'outputsize': 'compact'
+        }
+        r = requests.get(ALPHA_VANTAGE_BASE_URL, params=params, timeout=10)
+        data = r.json()
+        series = data.get('Time Series (Daily)')
+        if isinstance(series, dict):
+            items = []
+            for day, row in series.items():
+                try:
+                    close = float(row.get('4. close'))
+                    items.append({'date': day, 'close': close})
+                except Exception:
+                    continue
+            items.sort(key=lambda x: x['date'])
+            return items[-days:]
+    except Exception as e:
+        print(f"History AV error {ticker}: {e}")
+    # Finnhub candles
+    try:
+        if FINNHUB_API_KEY:
+            now = int(time.time())
+            frm = now - 60*60*24*days*2
+            url = "https://finnhub.io/api/v1/stock/candle"
+            params = {'symbol': ticker, 'resolution': 'D', 'from': frm, 'to': now, 'token': FINNHUB_API_KEY}
+            r = requests.get(url, params=params, timeout=10)
+            jd = r.json()
+            if jd.get('s') == 'ok':
+                out = []
+                for t, c in zip(jd['t'], jd['c']):
+                    out.append({'date': datetime.utcfromtimestamp(t).strftime('%Y-%m-%d'), 'close': float(c)})
+                return out[-days:]
+    except Exception as e:
+        print(f"History Finnhub error {ticker}: {e}")
+    return []
+
+def normalize_option(symbol, strike, expiration, right, bid, ask, last=None, source=None, updated=None):
+    mid = None
+    try:
+        if bid is not None and ask is not None and bid >= 0 and ask >= 0:
+            mid = round((float(bid) + float(ask)) / 2, 4)
+    except Exception:
+        pass
+    return {
+        'symbol': symbol,
+        'strike': float(strike) if strike is not None else None,
+        'expiration': expiration,
+        'type': 'call' if str(right).upper().startswith('C') else 'put',
+        'bid': float(bid) if bid is not None else None,
+        'ask': float(ask) if ask is not None else None,
+        'mid': mid,
+        'last': float(last) if last is not None else None,
+        'data_source': source,
+        'updated': updated
+    }
+
+def fetch_options_tradier(ticker, expiration):
+    if not os.getenv('TRADIER_TOKEN'):
+        return []
+    try:
+        url = f"{TRADIER_BASE}/v1/markets/options/chains"
+        headers = {'Authorization': f"Bearer {os.getenv('TRADIER_TOKEN')}", 'Accept': 'application/json'}
+        params = {'symbol': ticker, 'expiration': expiration, 'greeks': 'false'}
+        r = requests.get(url, headers=headers, params=params, timeout=12)
+        jd = r.json()
+        options = jd.get('options', {}).get('option', [])
+        out = []
+        for o in options:
+            out.append(normalize_option(
+                o.get('symbol'), o.get('strike'), o.get('expiration_date') or expiration,
+                o.get('option_type'), o.get('bid'), o.get('ask'), o.get('last'),
+                source='Tradier', updated=o.get('updated_at')
+            ))
+        return out
+    except Exception as e:
+        print(f"Tradier options error {ticker} {expiration}: {e}")
+        return []
+
+def fetch_options_polygon(ticker, expiration):
+    if not os.getenv('POLYGON_API_KEY'):
+        return []
+    try:
+        url = f"{POLYGON_BASE}/v3/reference/options/contracts"
+        params = {
+            'underlying_ticker': ticker,
+            'expiration_date': expiration,
+            'limit': 500,
+            'sort': 'strike_price',
+            'order': 'asc',
+            'apiKey': os.getenv('POLYGON_API_KEY')
+        }
+        r = requests.get(url, params=params, timeout=15)
+        data = r.json()
+        results = data.get('results', [])
+        out = []
+        for c in results:
+            sym = c.get('ticker')
+            right = c.get('contract_type')
+            strike = c.get('strike_price')
+            bid = ask = last = None
+            updated = None
+            # Try latest quote for each option
+            try:
+                qurl = f"{POLYGON_BASE}/v3/quotes/{sym}"
+                qparams = {'limit': 1, 'sort': 'timestamp', 'order': 'desc', 'apiKey': os.getenv('POLYGON_API_KEY')}
+                qr = requests.get(qurl, params=qparams, timeout=10)
+                qd = qr.json()
+                if qd.get('results'):
+                    q = qd['results'][0]
+                    bid = q.get('bid_price')
+                    ask = q.get('ask_price')
+                    last = q.get('price') or q.get('last_price')
+                    ts = q.get('sip_timestamp') or q.get('participant_timestamp')
+                    if ts:
+                        updated = datetime.utcfromtimestamp(ts/1e9).isoformat()
+            except Exception:
+                pass
+            out.append(normalize_option(sym, strike, expiration, right, bid, ask, last, source='Polygon', updated=updated))
+        return out
+    except Exception as e:
+        print(f"Polygon options error {ticker} {expiration}: {e}")
+        return []
+
+def get_options_chain(ticker, expiration):
+    chain = fetch_options_tradier(ticker, expiration)
+    if chain:
+        return chain, 'Tradier'
+    chain = fetch_options_polygon(ticker, expiration)
+    if chain:
+        return chain, 'Polygon'
+    return [], None
+
+# ---------------- PROFIT-FIRST SELECTION ENGINE ----------------
+def compute_profit_metrics_from_contract(contract: dict, spot_price: float):
+    """Compute breakeven and profit scenarios using only real inputs.
+    expected_move = IV × 0.5 × spot (if IV available via provider; else None).
+    Profit at +10% and +5% moves are always computed deterministically from spot.
+    """
+    strike = contract.get('strike')
+    ctype = contract.get('type')
+    mid = contract.get('mid')
+    iv = contract.get('iv')  # may be None; do not fabricate
+    if strike is None or ctype not in ('call', 'put') or not mid:
+        return None
+    strike = float(strike)
+    mid = float(mid)
+    if mid <= 0:
+        return None
+    # Breakeven
+    breakeven = (strike + mid) if ctype == 'call' else (strike - mid)
+    # Expected move per spec
+    expected_move = iv * 0.5 * spot_price if isinstance(iv, (int, float)) and iv > 0 else None
+    expected_profit = None
+    if expected_move is not None:
+        if ctype == 'call':
+            new_price = spot_price + expected_move
+            intrinsic = max(0.0, new_price - strike) * 100
+        else:
+            new_price = spot_price - expected_move
+            intrinsic = max(0.0, strike - new_price) * 100
+        expected_profit = intrinsic - (mid * 100)
+    # Profit at +10% and +5%
+    def profit_at(pct: float):
+        if ctype == 'call':
+            new_price = spot_price * (1 + pct)
+            intrinsic = max(0.0, new_price - strike) * 100
+        else:
+            new_price = spot_price * (1 - pct)
+            intrinsic = max(0.0, strike - new_price) * 100
+        return intrinsic - (mid * 100)
+    p10 = profit_at(0.10)
+    p05 = profit_at(0.05)
+    return {
+        'breakeven': breakeven,
+        'expected_move': expected_move,
+        'expected_profit': expected_profit,
+        'profit_10': p10,
+        'profit_5': p05,
+        'theta_per_day': contract.get('theta')  # use provider theta only
+    }
+
+def liquidity_score(contract: dict) -> float:
+    bid = contract.get('bid') or 0.0
+    ask = contract.get('ask') or 0.0
+    mid = contract.get('mid') or 0.0
+    spread_pct = (ask - bid) / mid if mid else 1.0
+    oi = contract.get('open_interest') or 0.0
+    vol = contract.get('volume') or 0.0
+    tight = max(0.0, 1.0 - min(1.0, spread_pct))
+    oi_s = min(1.0, oi / 1000.0)
+    vol_s = min(1.0, vol / 1000.0)
+    # Weighted blend
+    return max(0.1, 0.2 * tight + 0.4 * oi_s + 0.4 * vol_s)
+
+def trend_alignment_multiplier(_ticker: str) -> float:
+    # Keep neutral unless live trend is added. Do not fabricate.
+    return 1.0
+
+def profit_score(contract: dict, metrics: dict) -> float:
+    mid = contract.get('mid') or 0.0
+    if mid <= 0:
+        return 0.0
+    cost = mid * 100.0
+    exp_profit = metrics.get('expected_profit')
+    if exp_profit is None:
+        # fallback to observed scenarios conservatively
+        exp_profit = max(metrics.get('profit_10') or 0.0, metrics.get('profit_5') or 0.0) * 0.3
+    liq = liquidity_score(contract)
+    trend = trend_alignment_multiplier(contract.get('symbol', ''))
+    bid = contract.get('bid') or 0.0
+    ask = contract.get('ask') or 0.0
+    midv = max(0.01, float(mid))
+    spread_penalty = max(1.0, (ask - bid) / midv + 0.01)
+    return max(0.0, (exp_profit / cost) * liq * trend * (1.0 / spread_penalty))
+
+@app.route('/api/scan')
+def api_scan():
+    """Return top 3 most profitable real contracts under budget.
+    Params:
+      - budget: float (required)
+      - expiry: YYYY-MM-DD (required)
+      - tickers: comma-separated list (optional; default SPY,AAPL,NVDA,TSLA)
+    """
+    try:
+        budget = float(request.args.get('budget', '0'))
+    except Exception:
+        return jsonify({'error': 'Invalid budget'}), 400
+    expiry = request.args.get('expiry', '')
+    if not expiry:
+        return jsonify({'error': 'Expiry required'}), 400
+    tickers = request.args.get('tickers', 'SPY,AAPL,NVDA,TSLA').upper().split(',')
+    candidates = []
+    for t in tickers:
+        spot, price_src = get_real_price_with_source(t)
+        if spot is None:
+            continue
+        chain, src = get_options_chain(t, expiry)
+        if not chain:
+            continue
+        for c in chain:
+            mid = c.get('mid') or 0.0
+            if mid <= 0:
+                continue
+            if mid * 100.0 > budget:
+                continue
+            metrics = compute_profit_metrics_from_contract(c, spot)
+            if not metrics:
+                continue
+            score = profit_score(c, metrics)
+            candidates.append({
+                'ticker': t,
+                'spot': spot,
+                'price_source': price_src,
+                'contract': c,
+                'metrics': metrics,
+                'profit_score': score,
+                'options_source': src
+            })
+    if not candidates:
+        return jsonify({
+            'live': True,
+            'message': 'We couldn\'t find a real option under your budget with live data. Try a slightly higher budget or a different expiration.',
+            'results': []
+        }), 200
+    # Sort by profit score
+    candidates.sort(key=lambda x: x['profit_score'], reverse=True)
+
+    # Best overall
+    best_overall = candidates[0] if candidates else None
+
+    # Cheapest with positive ProfitScore
+    positive = [c for c in candidates if c['profit_score'] and c['profit_score'] > 0]
+    cheapest_profit = min(positive, key=lambda x: x['contract']['mid'] * 100.0) if positive else None
+
+    # Highest probability: highest abs(delta) if present, else closest to ITM
+    with_delta = [c for c in candidates if c['contract'].get('delta') is not None]
+    if with_delta:
+        highest_prob = max(with_delta, key=lambda x: abs(x['contract']['delta']))
+    else:
+        def itm_key(c):
+            strike = c['contract'].get('strike') or 0.0
+            side = c['contract'].get('type')
+            spot = c['spot']
+            # Prefer ITM first (negative distance), then closest to ATM
+            if side == 'call':
+                # ITM if strike <= spot
+                is_itm = 1 if strike <= spot else 0
+                dist = abs(spot - strike)
+                return (-is_itm, dist)
+            else:
+                is_itm = 1 if strike >= spot else 0
+                dist = abs(spot - strike)
+                return (-is_itm, dist)
+        highest_prob = sorted(candidates, key=itm_key)[0]
+
+    # Build deterministic reasons
+    def reason(role):
+        if role == 'best_overall':
+            return 'We picked this because it has the best profit potential for your budget.'
+        if role == 'cheapest':
+            return 'We picked this because it’s the cheapest contract that could still make money.'
+        if role == 'highest_probability':
+            return 'We picked this because it has the highest chance to finish in the money.'
+        return ''
+
+    # Helper to label items; if item is None, mark unavailable
+    def labeled(role, item):
+        if not item:
+            return {
+                'role': role,
+                'available': False,
+                'simple_reason': 'No contract fits this category with live data.'
+            }
+        return {
+            'role': role,
+            'available': True,
+            'ticker': item['ticker'],
+            'spot': item['spot'],
+            'price_source': item['price_source'],
+            'contract': item['contract'],
+            'metrics': item['metrics'],
+            'profit_score': item['profit_score'],
+            'options_source': item['options_source'],
+            'simple_reason': reason(role)
+        }
+
+    out = [
+        labeled('best_overall', best_overall),
+        labeled('cheapest', cheapest_profit),
+        labeled('highest_probability', highest_prob)
+    ]
+    now_iso = datetime.now().isoformat()
+    for entry in out:
+        entry['timestamp'] = now_iso
+    return jsonify({'live': True, 'results': out})
+
+# API Routes
+@app.route('/')
+def index():
+    """Serve the main HTML page"""
+    return send_file('index.html')
+
+@app.route('/api/price')
+def api_price():
+    """Get REAL current stock price from providers"""
+    ticker = request.args.get('ticker', '').upper()
+    if not ticker:
+        return jsonify({'error': 'Ticker required'}), 400
+    
+    price, source = get_real_price_with_source(ticker)
+    
+    if price is None:
+        return jsonify({'error': f'LIVE PRICE UNAVAILABLE for {ticker}', 'unavailable': 'price'}), 503
+    
+    return jsonify({
+        'ticker': ticker,
+        'price': price,
+        'timestamp': datetime.now().isoformat(),
+        'source': source,
+        'data_source': source
+    })
+
+@app.route('/api/history')
+def api_history():
+    """Get REAL price history for a ticker (may be empty if unavailable)"""
+    ticker = request.args.get('ticker', '').upper()
+    if not ticker:
+        return jsonify({'error': 'Ticker required'}), 400
+    
+    days = int(request.args.get('days', 30))
+    history = get_historical_data(ticker, days=days)
+    return jsonify({'ticker': ticker, 'history': history, 'data_source': 'AlphaVantage/Finnhub'})
+
+@app.route('/api/options')
+def api_options():
+    """Get REAL options chain for a ticker"""
+    ticker = request.args.get('ticker', '').upper()
+    expiry = request.args.get('expiry', '')
+    
+    if not ticker or not expiry:
+        return jsonify({'error': 'Ticker and expiry required'}), 400
+    
+    chain, src = get_options_chain(ticker, expiry)
+    if not chain:
+        return jsonify({'error': 'Options Data Unavailable', 'unavailable': 'options', 'ticker': ticker, 'expiry': expiry}), 503
+    return jsonify({'ticker': ticker, 'expiry': expiry, 'contracts': chain, 'data_source': src})
+
+@app.route('/api/quote')
+def api_quote():
+    """Deprecated: use /api/options and select contract from 'contracts'."""
+    return jsonify({'error': 'Not supported. Use /api/options.'}), 410
+
+@app.route('/api/summary')
+def api_summary():
+    """Single-call summary: real price, history (if available), and options chain.
+    No simulated values. Params: ticker, expiry (YYYY-MM-DD)
+    """
+    ticker = request.args.get('ticker', '').upper()
+    expiry = request.args.get('expiry', '')
+    if not ticker or not expiry:
+        return jsonify({'error': 'Ticker and expiry required'}), 400
+
+    price, source = get_real_price_with_source(ticker)
+    history = get_historical_data(ticker, days=30) if price is not None else []
+    contracts, opt_src = get_options_chain(ticker, expiry)
+
+    payload = {
+        'ticker': ticker,
+        'currentPrice': price,
+        'price_source': source if price is not None else None,
+        'expiry': expiry,
+        'history': history,
+        'contracts': contracts,
+        'options_source': opt_src,
+        'data_source': {
+            'price': source if price is not None else 'UNAVAILABLE',
+            'options': opt_src if opt_src else 'UNAVAILABLE'
+        }
+    }
+    status = 200
+    if price is None and not contracts:
+        status = 503
+    return jsonify(payload), status
+
+if __name__ == '__main__':
+    print("=" * 60)
+    print("🚀 OPTIONS HUNTER - LIVE DATA EDITION")
+    print("=" * 60)
+    print("✅ Using REAL market data with provider fallback")
+    print(f"🔑 Alpha Vantage: {'set' if ALPHA_VANTAGE_API_KEY else 'missing'}")
+    print(f"🔑 Finnhub: {'set' if FINNHUB_API_KEY else 'missing'}")
+    print(f"🔑 IEX Cloud: {'set' if IEX_API_KEY else 'missing'}")
+    print(f"🔑 Tradier: {'set' if TRADIER_TOKEN else 'missing'}")
+    print(f"🔑 Polygon: {'set' if POLYGON_API_KEY else 'missing'}")
+    print("=" * 60)
+    print()
+    
+    # Test API connection
+    print("Testing providers with SPY...")
+    spy_price, src = get_real_price_with_source('SPY')
+    if spy_price:
+        print(f"✅ SPY Price: ${spy_price} (REAL via {src})")
+        print("🎯 Server ready with live market data!")
+    else:
+        print("❌ Failed to fetch SPY - check API key")
+    
+    print()
+    print("Starting server on http://localhost:8700")
+    print("=" * 60)
+    
+    app.run(host='0.0.0.0', port=8700, debug=True, use_reloader=False)

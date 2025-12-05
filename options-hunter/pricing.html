@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options Hunter - Pricing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes scanlines {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100%; }
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41; }
+            50% { text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41; }
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ff41;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 65, 0.03) 0px,
+                rgba(0, 255, 65, 0.03) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            animation: scanlines 8s linear infinite;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00ff41;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41;
+            animation: glow 2s ease-in-out infinite;
+            letter-spacing: 4px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #ff0080;
+            font-size: 16px;
+            margin-bottom: 60px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #ff0080;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .pricing-card {
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #ffffff #000000 #000000 #ffffff;
+            padding: 0;
+            box-shadow: 
+                inset 1px 1px 0 #dfdfdf,
+                inset -1px -1px 0 #808080,
+                0 0 30px rgba(0, 255, 65, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 50px rgba(255, 0, 128, 0.5);
+        }
+
+        .pricing-card.featured {
+            border: 3px solid #00ff41;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.6);
+        }
+
+        .card-title-bar {
+            background: linear-gradient(90deg, #000080, #1084d0);
+            padding: 5px 10px;
+            border-bottom: 2px solid #000;
+        }
+
+        .card-content {
+            background: #000;
+            padding: 30px;
+        }
+
+        .featured-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .tier-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .tier-description {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .price {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .price span {
+            font-size: 20px;
+            color: #999;
+        }
+
+        .billing {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .features {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .features li {
+            padding: 12px 0;
+            color: #666;
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+        }
+
+        .features li:before {
+            content: "✓";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .basic-btn {
+            background: #f3f4f6;
+            color: #667eea;
+        }
+
+        .basic-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .pro-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .pro-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .elite-btn {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+        }
+
+        .elite-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .back-link a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            padding: 12px 30px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .back-link a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Choose Your Plan</h1>
+        <p class="subtitle">Find the perfect tier for your trading style</p>
+
+        <div class="pricing-grid">
+            <!-- Basic Tier -->
+            <div class="pricing-card">
+                <div class="tier-name">Basic</div>
+                <div class="tier-description">Perfect for beginners getting started</div>
+                <div class="price">$29<span>/mo</span></div>
+                <div class="billing">Billed monthly via crypto</div>
+                <ul class="features">
+                    <li>10 market scans per day</li>
+                    <li>Real-time RSI analysis</li>
+                    <li>Options chain data</li>
+                    <li>Basic profit calculator</li>
+                    <li>Email support</li>
+                </ul>
+                <button class="cta-button basic-btn" onclick="openCryptoPayment('basic')">
+                    💎 Pay with Crypto
+                </button>
+                <button class="cta-button" style="background: linear-gradient(135deg, #0070ba, #003087); margin-top: 10px;" onclick="openPayPalPayment('basic')">
+                    💳 Pay with PayPal
+                </button>
+            </div>
+
+            <!-- Pro Tier (Featured) -->
+            <div class="pricing-card featured">
+                <div class="featured-badge">MOST POPULAR</div>
+                <div class="tier-name">Pro</div>
+                <div class="tier-description">For active traders who need more</div>
+                <div class="price">$79<span>/mo</span></div>
+                <div class="billing">Billed monthly via crypto</div>
+                <ul class="features">
+                    <li>Unlimited market scans</li>
+                    <li>Real-time RSI analysis</li>
+                    <li>Options chain data</li>
+                    <li>Advanced profit calculator</li>
+                    <li>SMS trade alerts</li>
+                    <li>Priority support</li>
+                    <li>Custom watchlists</li>
+                </ul>
+                <button class="cta-button pro-btn" onclick="openCryptoPayment('pro')">
+                    💎 Pay with Crypto
+                </button>
+                <button class="cta-button" style="background: linear-gradient(135deg, #0070ba, #003087); margin-top: 10px;" onclick="openPayPalPayment('pro')">
+                    💳 Pay with PayPal
+                </button>
+            </div>
+
+            <!-- Elite Tier -->
+            <div class="pricing-card">
+                <div class="tier-name">Elite</div>
+                <div class="tier-description">For pros who want full automation</div>
+                <div class="price">$149<span>/mo</span></div>
+                <div class="billing">Billed monthly via crypto</div>
+                <ul class="features">
+                    <li>Everything in Pro</li>
+                    <li>AI-powered trade execution</li>
+                    <li>Robinhood API integration</li>
+                    <li>Automated risk management</li>
+                    <li>Real-time phone alerts</li>
+                    <li>1-on-1 strategy sessions</li>
+                    <li>White-glove support</li>
+                </ul>
+                <button class="cta-button elite-btn" onclick="openCryptoPayment('elite')">
+                    💎 Pay with Crypto
+                </button>
+                <button class="cta-button" style="background: linear-gradient(135deg, #0070ba, #003087); margin-top: 10px;" onclick="openPayPalPayment('elite')">
+                    💳 Pay with PayPal
+                </button>
+            </div>
+        </div>
+
+        <div class="back-link">
+            <a href="/">← Back to Scanner</a>
+        </div>
+    </div>
+
+    <script>
+        // Coinbase Commerce checkout IDs
+        const checkoutIds = {
+            basic: '8afd03b3-eeb7-435c-a474-dbd8682621a3', // $29
+            pro: '661fba38-4b42-439e-82ea-2b5a89a90878',   // $79
+            elite: 'adfa3131-6a84-4a4e-94da-8ad20c39696d'  // $149
+        };
+
+        // PayPal subscription links (to be created)
+        const paypalLinks = {
+            basic: 'https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-OPTIONS_HUNTER_BASIC',
+            pro: 'https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-OPTIONS_HUNTER_PRO',
+            elite: 'https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-OPTIONS_HUNTER_ELITE'
+        };
+
+        function openCryptoPayment(tier) {
+            const checkoutId = checkoutIds[tier];
+            if (checkoutId.includes('_HERE')) {
+                alert(`Create ${tier.toUpperCase()} tier checkout at:\nhttps://commerce.coinbase.com/dashboard/checkouts\n\nAmount: ${tier === 'pro' ? '$79' : '$149'}\nDescription: Options Hunter ${tier.toUpperCase()} - Monthly Subscription`);
+                return;
+            }
+            window.open(`https://commerce.coinbase.com/checkout/${checkoutId}`, '_blank');
+        }
+
+        function openPayPalPayment(tier) {
+            const prices = { basic: '$29', pro: '$79', elite: '$149' };
+            alert(`PayPal Subscription Setup Required:\n\n1. Go to PayPal Dashboard → Products & Services\n2. Create subscription: ${prices[tier]}/month\n3. Name: Options Hunter ${tier.toUpperCase()}\n4. Update paypalLinks.${tier} with plan_id\n\nFor now, contact: payments@ggloop.io`);
+            // window.open(paypalLinks[tier], '_blank');
+        }
+    </script>
+</body>
+</html>

@@ -224,7 +224,7 @@ Track in spreadsheet:
 
 ## Part 6: When to Automate
 
-**Switch to Tremendous API when:**
+**Switch to Automated API when:**
 - Processing 50+ redemptions/week (too much manual work)
 - Margins become less important than time
 - Monthly revenue exceeds $5K

@@ -1,0 +1,77 @@
+@layer base {
+  :root {
+    --empire-green: #00ff41;
+    --empire-dark: #0a0a0a;
+    --empire-slate: #1a1a1a;
+    --empire-dim: rgba(0, 255, 65, 0.1);
+    
+    --hud-border: 1px solid var(--empire-green);
+    --hud-glow: 0 0 10px var(--empire-dim);
+    --text-glow: 0 0 5px var(--empire-dim);
+  }
+
+  .predator-text {
+    color: var(--empire-green);
+    text-shadow: var(--text-glow);
+    font-family: 'Courier New', monospace; /* Fallback until we load a better tactical font */
+    letter-spacing: 0.05em;
+  }
+}
+
+@layer components {
+  .hud-panel {
+    @apply bg-empire-dark/90 border border-empire-green/30 backdrop-blur-sm relative overflow-hidden;
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.05);
+  }
+
+  /* Corner accents for HUD panels */
+  .hud-panel::before {
+    content: '';
+    @apply absolute top-0 left-0 w-2 h-2 border-t border-l border-empire-green;
+  }
+  .hud-panel::after {
+    content: '';
+    @apply absolute top-0 right-0 w-2 h-2 border-t border-r border-empire-green;
+  }
+  
+  .hud-corners-bottom::before {
+    content: '';
+    @apply absolute bottom-0 left-0 w-2 h-2 border-b border-l border-empire-green;
+  }
+  .hud-corners-bottom::after {
+    content: '';
+    @apply absolute bottom-0 right-0 w-2 h-2 border-b border-r border-empire-green;
+  }
+
+  .tactical-btn {
+    @apply bg-empire-dim border border-empire-green/50 text-empire-green px-4 py-2 uppercase tracking-widest hover:bg-empire-green/20 transition-all duration-300;
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+  }
+
+  .tactical-btn:hover {
+    box-shadow: 0 0 15px var(--empire-dim);
+    border-color: var(--empire-green);
+  }
+
+  .scanline-overlay {
+    @apply fixed inset-0 pointer-events-none z-50;
+    background: linear-gradient(
+      to bottom,
+      rgba(255,255,255,0),
+      rgba(255,255,255,0) 50%,
+      rgba(0,0,0,0.1) 50%,
+      rgba(0,0,0,0.1)
+    );
+    background-size: 100% 4px;
+    animation: scanline 10s linear infinite;
+    opacity: 0.15;
+  }
+  
+  .tactical-grid {
+    background-image: 
+      linear-gradient(var(--empire-dim) 1px, transparent 1px),
+      linear-gradient(90deg, var(--empire-dim) 1px, transparent 1px);
+    background-size: 30px 30px;
+    background-position: center center;
+  }
+}

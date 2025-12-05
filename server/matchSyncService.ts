@@ -2,6 +2,7 @@ import { db } from './db';
 import { riotAccounts, processedRiotMatches } from '@shared/schema';
 import { getRiotAPI } from './lib/riot';
 import { eq, and } from 'drizzle-orm';
+import { pointsEngine } from './pointsEngine';
 import { AchievementDetector } from './achievementDetector';
 import type { IStorage } from './storage';
 
@@ -127,16 +128,28 @@ async function syncLeagueAccount(account: typeof riotAccounts.$inferSelect): Pro
     const didWin = participant.win;
     const gameEndedAt = new Date(matchData.info.gameEndTimestamp);
 
-    // Record match for stats tracking (no points awarded - handled by monthly subscription allocation)
-    console.log(`[MatchSync] - Recording match ${matchId} for stats (${didWin ? 'Win' : 'Loss'}). Points awarded via subscription tier, not match outcomes.`);
+    // Calculate points based on tier
+    // Hybrid Model: Base 5 points * Tier Multiplier
+    // Free: 5 pts, Basic: 7 pts, Pro: 16 pts, Elite: 41 pts
+    const pointsTransaction = await pointsEngine.awardPoints(
+      account.userId,
+      5, // Base points
+      'MATCH_WIN',
+      matchId,
+      'match',
+      `Match Win (${account.game})`
+    );
+
+    const pointsAwarded = pointsTransaction.amount;
+    console.log(`[MatchSync] - Recording match ${matchId} (Win). Awarded ${pointsAwarded} points.`);
 
     await db.insert(processedRiotMatches).values({
       riotAccountId: account.id,
       matchId,
       gameEndedAt: gameEndedAt,
       isWin: didWin,
-      pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
-      transactionId: null,
+      pointsAwarded: pointsAwarded,
+      transactionId: pointsTransaction.id,
     });
 
     newMatchesFound = true;
@@ -196,16 +209,26 @@ async function syncValorantAccount(account: typeof riotAccounts.$inferSelect): P
     const gameLengthMillis = matchData.matchInfo?.gameLengthMillis || 0;
     const gameEndedAt = new Date(gameStartMillis + gameLengthMillis);
 
-    // Record match for stats tracking (no points awarded - handled by monthly subscription allocation)
-    console.log(`[Match Sync] - Recording match ${matchId} for stats (${didWin ? 'Win' : 'Loss'}). Points awarded via subscription tier, not match outcomes.`);
+    // Calculate points based on tier
+    const pointsTransaction = await pointsEngine.awardPoints(
+      account.userId,
+      5, // Base points
+      'MATCH_WIN',
+      matchId,
+      'match',
+      `Match Win (${account.game})`
+    );
+
+    const pointsAwarded = pointsTransaction.amount;
+    console.log(`[MatchSync] - Recording match ${matchId} (Win). Awarded ${pointsAwarded} points.`);
 
     await db.insert(processedRiotMatches).values({
       riotAccountId: account.id,
       matchId,
       gameEndedAt: gameEndedAt,
       isWin: didWin,
-      pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
-      transactionId: null,
+      pointsAwarded: pointsAwarded,
+      transactionId: pointsTransaction.id,
     });
 
     newMatchesFound = true;
@@ -253,15 +276,26 @@ async function syncTFTAccount(account: typeof riotAccounts.$inferSelect): Promis
     const gameEndedAt = new Date(matchData.info.game_datetime);
 
     // Record match for stats tracking (no points awarded - handled by monthly subscription allocation)
-    console.log(`[MatchSync] - Recording TFT match ${matchId} for stats (Placement: ${placement}, ${isTopFour ? 'Top 4' : 'Bottom 4'}). Points awarded via subscription tier, not match outcomes.`);
+    // Calculate points based on tier
+    const pointsTransaction = await pointsEngine.awardPoints(
+      account.userId,
+      5, // Base points
+      'MATCH_WIN',
+      matchId,
+      'match',
+      `Match Win (${account.game})`
+    );
+
+    const pointsAwarded = pointsTransaction.amount;
+    console.log(`[MatchSync] - Recording TFT match ${matchId} (Top 4). Awarded ${pointsAwarded} points.`);
 
     await db.insert(processedRiotMatches).values({
       riotAccountId: account.id,
       matchId,
       gameEndedAt: gameEndedAt,
       isWin: isTopFour, // Top 4 placement counts as a win
-      pointsAwarded: 0, // Points now awarded monthly via subscription, not per match
-      transactionId: null,
+      pointsAwarded: pointsAwarded,
+      transactionId: pointsTransaction.id,
     });
 
     newMatchesFound = true;

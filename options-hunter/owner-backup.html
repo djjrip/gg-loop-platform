@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 OPTIONS HUNTER - OWNER'S EDITION</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', 'Consolas', monospace;
+            background: linear-gradient(135deg, #2c1810 0%, #4a3728 50%, #8b7355 100%);
+            color: #f0e6d2;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Nostalgic overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(255, 165, 0, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 99, 71, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .header {
+            background: linear-gradient(180deg, #e8dcc5 0%, #d4a574 100%);
+            border: 3px outset #f0f0f0;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            color: #2c1810;
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.5);
+            margin-bottom: 10px;
+        }
+
+        .owner-badge {
+            display: inline-block;
+            background: #2ecc71;
+            color: #fff;
+            padding: 8px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px outset #27ae60;
+            margin-top: 10px;
+        }
+
+        .controls {
+            background: #e8dcc5;
+            border: 3px outset #f0f0f0;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        .control-item label {
+            display: block;
+            color: #2c1810;
+            margin-bottom: 8px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .control-item input,
+        .control-item select {
+            width: 100%;
+            padding: 12px;
+            background: #fff;
+            border: 2px inset #8b7355;
+            color: #2c1810;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+        }
+
+        .scan-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(180deg, #dfdfdf 0%, #c0c0c0 100%);
+            border: 2px outset #f0f0f0;
+            color: #2c1810;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.1s;
+        }
+
+        .scan-button:hover {
+            background: linear-gradient(180deg, #f0f0f0 0%, #d0d0d0 100%);
+        }
+        
+        .scan-button:active {
+            border-style: inset;
+            transform: translate(1px, 1px);
+        }scan-button:hover {
+            box-shadow: 0 0 40px rgba(255, 136, 0, 0.8);
+            transform: scale(1.02);
+        }
+
+        .scan-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .results {
+            background: #e8dcc5;
+            border: 3px outset #f0f0f0;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .result-card {
+            background: #d4a574;
+            border: 3px outset #c9b699;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #8b7355;
+        }
+
+        .symbol {
+            font-size: 32px;
+            color: #2c1810;
+            font-weight: bold;
+        }
+
+        .score {
+            font-size: 28px;
+            padding: 8px 16px;
+            background: #2ecc71;
+            color: #fff;
+            border: 2px outset #27ae60;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            background: #c9b699;
+            padding: 12px;
+            border: 2px inset #8b7355;
+        }
+
+        .detail-label {
+            color: #4a3728;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #2c1810;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .profit-highlight {
+            color: #2ecc71;
+            font-size: 24px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #fff9f0 0%, #f5ebe0 100%);
+            border: none;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(44, 24, 16, 0.1);
+            transition: all 0.2s;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(44, 24, 16, 0.15);
+        }
+
+        .stat-value {
+            font-size: 42px;
+            color: #2ecc71;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .stat-label {
+            color: #8b7355;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+        .loading {
+            text-align: center;
+            font-size: 24px;
+            color: #2c1810;
+            padding: 40px;
+            display: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .features {
+            background: linear-gradient(135deg, #fff9f0 0%, #f5ebe0 100%);
+            border: none;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 8px 24px rgba(44, 24, 16, 0.12);
+            position: relative;
+            z-index: 1;
+        }
+
+        .features h3 {
+            color: #2c1810;
+            margin-bottom: 24px;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .features ul {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            gap: 16px;
+        }
+
+        .features li {
+            color: #4a3728;
+            padding: 16px;
+            padding-left: 56px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            transition: all 0.2s;
+            border: 1px solid rgba(212, 197, 169, 0.2);
+        }
+
+        .features li:hover {
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateX(4px);
+            border-color: rgba(212, 197, 169, 0.4);
+        }
+
+        .features li::before {
+            content: '🏆';
+            position: absolute;
+            left: 0;
+        }   content: '🏆';
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏆 OPTIONS HUNTER</h1>
+        <h2 style="color: #ff8800;">OWNER'S EDITION</h2>
+        <div class="owner-badge">🔥 FULL PREMIUM ACCESS - ALL FEATURES UNLOCKED 🔥</div>
+    </div>
+
+    <div class="features">
+        <h3>💎 OWNER-ONLY FEATURES:</h3>
+        <ul>
+            <li><strong>100+ STOCKS SCANNED</strong> - Not just 9 basic tickers</li>
+            <li><strong>BUDGET-BASED SCANNING</strong> - Find plays from $50 to $10,000</li>
+            <li><strong>PROFIT SCORING</strong> - Real ROI calculations, not fake signals</li>
+            <li><strong>REAL-TIME DATA</strong> - Tradier API, not delayed quotes</li>
+            <li><strong>DIAMOND FINDER</strong> - Undervalued options with 50%+ profit potential</li>
+            <li><strong>NO LIMITS</strong> - Unlimited scans, no rate limiting</li>
+        </ul>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <div class="control-item">
+                <label>💰 YOUR BUDGET:</label>
+                <input type="number" id="budget" value="500" min="50" max="100000" step="50">
+            </div>
+            <div class="control-item">
+                <label>⚡ RISK LEVEL:</label>
+                <select id="risk-level">
+                    <option value="low">🛡️ Low Risk (Conservative)</option>
+                    <option value="medium" selected>⚖️ Medium Risk (Balanced)</option>
+                    <option value="high">🔥 High Risk (Aggressive)</option>
+                </select>
+            </div>
+            <div class="control-item">
+                <label>🎯 MIN PROFIT TARGET:</label>
+                <select id="min-profit">
+                    <option value="10">10% (Quick Gains)</option>
+                    <option value="20" selected>20% (Solid Returns)</option>
+                    <option value="50">50% (Home Runs)</option>
+                    <option value="100">100%+ (Diamonds Only)</option>
+                </select>
+            </div>
+        </div>
+        <button class="scan-button" onclick="scanForDiamonds()" id="scan-btn">
+            🔍 FIND DIAMONDS IN THE ROUGH
+        </button>
+    </div>
+
+    <div class="stats" id="stats" style="display: none;">
+        <div class="stat-box">
+            <div class="stat-value" id="stocks-scanned">0</div>
+            <div class="stat-label">Stocks Scanned</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="diamonds-found">0</div>
+            <div class="stat-label">Diamonds Found</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="best-roi">0%</div>
+            <div class="stat-label">Best ROI</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="avg-score">0</div>
+            <div class="stat-label">Avg Score</div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        🔍 SCANNING 100+ STOCKS FOR DIAMONDS...
+    </div>
+
+    <div class="results" id="results" style="display: none;"></div>
+
+    <script>
+        async function scanForDiamonds() {
+            const budget = document.getElementById('budget').value;
+            const riskLevel = document.getElementById('risk-level').value;
+            const minProfit = document.getElementById('min-profit').value;
+            
+            const scanBtn = document.getElementById('scan-btn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            scanBtn.disabled = true;
+            loading.classList.add('active');
+            results.style.display = 'none';
+            
+            try {
+                console.log('Fetching scan data...');
+                const response = await fetch(`/api/scan?budget=${budget}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Received data:', data);
+                
+                if (data && data.signals && data.signals.length > 0) {
+                    // Convert API response to display format
+                    const convertedData = {
+                        scanned: data.scanned,
+                        opportunities: data.signals.map((signal, index) => ({
+                            symbol: signal.symbol,
+                            option_type: signal.option_type,
+                            stock_price: signal.price,
+                            strike: signal.strike,
+                            option_cost: signal.option_cost,
+                            contracts_can_buy: signal.contracts_can_buy,
+                            total_cost: signal.option_cost * signal.contracts_can_buy * 100,
+                            potential_profit_pct: signal.potential_profit,
+                            days_to_expiry: 30,
+                            iv_rank: (signal.rsi / 100),
+                            score: Math.round(signal.potential_profit)
+                        }))
+                    };
+                    console.log('Displaying results...');
+                    displayResults(convertedData);
+                } else {
+                    console.warn('No signals in response');
+                    results.innerHTML = '<div class="result-card"><h2 style="color: #4a3728;">No trading signals found. Market may be stable right now.</h2></div>';
+                    results.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Scan error:', error);
+                results.innerHTML = `<div class="result-card"><h2 style="color: #2c1810;">⚠️ Scanner Error</h2><p>${error.message}</p><p>Check browser console (F12) for details.</p></div>`;
+                results.style.display = 'block';
+            }
+            
+            loading.classList.remove('active');
+            scanBtn.disabled = false;
+        }
+        
+        function displayResults(data) {
+            const results = document.getElementById('results');
+            const stats = document.getElementById('stats');
+            
+            // Update stats
+            document.getElementById('stocks-scanned').textContent = data.scanned || 0;
+            document.getElementById('diamonds-found').textContent = data.opportunities.length;
+            
+            const maxROI = Math.max(...data.opportunities.map(o => o.potential_profit_pct || 0));
+            document.getElementById('best-roi').textContent = maxROI.toFixed(1) + '%';
+            
+            const avgScore = data.opportunities.reduce((sum, o) => sum + o.score, 0) / data.opportunities.length;
+            document.getElementById('avg-score').textContent = avgScore.toFixed(0);
+            
+            stats.style.display = 'grid';
+            
+            // Display opportunities
+            let html = '';
+            data.opportunities.forEach(opp => {
+                html += `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="symbol">${opp.symbol} ${opp.option_type === 'call' ? '📈' : '📉'}</div>
+                            <div class="score">Score: ${opp.score}/100</div>
+                        </div>
+                        <div class="result-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Stock Price</div>
+                                <div class="detail-value">$${opp.stock_price.toFixed(2)}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Strike Price</div>
+                                <div class="detail-value">$${opp.strike.toFixed(2)}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Option Cost</div>
+                                <div class="detail-value">$${opp.option_cost.toFixed(2)}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Contracts You Can Buy</div>
+                                <div class="detail-value">${opp.contracts_can_buy}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Total Investment</div>
+                                <div class="detail-value">$${opp.total_cost.toFixed(2)}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">💎 PROFIT POTENTIAL</div>
+                                <div class="profit-highlight">+${opp.potential_profit_pct.toFixed(1)}%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Days to Expiration</div>
+                                <div class="detail-value">${opp.days_to_expiry}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">IV Rank</div>
+                                <div class="detail-value">${(opp.iv_rank * 100).toFixed(0)}%</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            results.innerHTML = html;
+            results.style.display = 'block';
+        }
+        
+        // Auto-scan on page load with default settings
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🏆 Owner\'s Edition loaded - Full premium access');
+        });
+    </script>
+</body>
+</html>

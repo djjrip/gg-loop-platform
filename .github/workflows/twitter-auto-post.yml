@@ -1,13 +1,13 @@
 name: Auto-Post to Twitter
 
 on:
-  schedule:
-    # Post 3x per day: 10 AM, 2 PM, 7 PM EST
-    - cron: '0 15 * * *'  # 10 AM EST (15:00 UTC)
-    - cron: '0 19 * * *'  # 2 PM EST (19:00 UTC)
-    - cron: '0 0 * * *'   # 7 PM EST (00:00 UTC next day)
+  # DISABLED - Docker antisocial-bot is primary Twitter integration
+  # schedule:
+  #   - cron: '0 15 * * *'  # 10 AM EST
+  #   - cron: '0 19 * * *'  # 2 PM EST
+  #   - cron: '0 0 * * *'   # 7 PM EST
   
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:  # Manual trigger still available
 
 jobs:
   post-to-twitter:

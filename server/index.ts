@@ -29,6 +29,8 @@ import { registerRoutes } from "./routes";
 import { notify, type AlertPayload } from './alerts';
 import { twitchErrorLogger } from "./middleware/twitchErrorLogger";
 import { setupVite, serveStatic, log } from "./vite";
+import { getMetrics, setHealthStatus } from './monitoring';
+import { storage } from './storage';
 
 console.log("Starting server... (DEPLOY: 2025-11-26 02:50 CST - AUTH REFACTOR + LOGGING)");
 
@@ -165,7 +167,91 @@ app.use((req, res, next) => {
     console.log('🔧 Registering routes...');
     const server = await registerRoutes(app);
     console.log('✅ Routes registered successfully');
-    app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+    // ═══════════════════════════════════════════════════════════════
+    // EMPIRE CONTROL CENTER - ENHANCED HEALTH & METRICS
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Enhanced health check with component validation
+     * Docker HEALTHCHECK uses this endpoint
+     */
+    app.get('/health', async (req, res) => {
+      const checks: Record<string, { status: 'ok' | 'error', message?: string, latency?: number }> = {
+        overall: { status: 'ok' },
+      };
+
+      // Check database connectivity
+      try {
+        const dbStart = Date.now();
+        const user = await storage.getUser('health-check-dummy');
+        checks.database = { status: 'ok', latency: Date.now() - dbStart };
+        setHealthStatus('database', true);
+      } catch (err: any) {
+        checks.database = { status: 'error', message: err.message };
+        checks.overall.status = 'error';
+        setHealthStatus('database', false);
+      }
+
+      // Check Riot API (if configured)
+      if (process.env.RIOT_API_KEY) {
+        try {
+          const riotStart = Date.now();
+          const response = await fetch('https://na1.api.riotgames.com/lol/status/v4/platform-data', {
+            headers: { 'X-Riot-Token': process.env.RIOT_API_KEY },
+          });
+
+          if (response.ok) {
+            checks.riot_api = { status: 'ok', latency: Date.now() - riotStart };
+            setHealthStatus('riot_api', true);
+          } else {
+            checks.riot_api = { status: 'error', message: `HTTP ${response.status}` };
+            setHealthStatus('riot_api', false);
+          }
+        } catch (err: any) {
+          checks.riot_api = { status: 'error', message: err.message };
+          setHealthStatus('riot_api', false);
+        }
+      }
+
+      // Set overall health
+      setHealthStatus('overall', checks.overall.status === 'ok');
+
+      const statusCode = checks.overall.status === 'ok' ? 200 : 503;
+      res.status(statusCode).json({
+        status: checks.overall.status,
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        checks,
+      });
+    });
+
+    /**
+     * Kubernetes readiness probe
+     * Returns 200 only when fully ready to serve traffic
+     */
+    app.get('/ready', async (req, res) => {
+      try {
+        await storage.getUser('readiness-check-dummy');
+        res.status(200).json({ ready: true, timestamp: new Date().toISOString() });
+      } catch (err) {
+        res.status(503).json({ ready: false, error: 'Database not ready' });
+      }
+    });
+
+    /**
+     * Prometheus metrics endpoint
+     * Scraped by Prometheus for monitoring
+     */
+    app.get('/metrics', async (req, res) => {
+      try {
+        const metrics = await getMetrics();
+        res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+        res.send(metrics);
+      } catch (err: any) {
+        res.status(500).json({ error: 'Failed to generate metrics', message: err.message });
+      }
+    });
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
@@ -173,7 +259,7 @@ app.use((req, res, next) => {
       const source = (err?.stack && err.stack.includes('riot')) ? 'riot' : 'server';
       const severity: AlertPayload['severity'] = (status >= 500 || message.includes('RIOT_API_KEY')) ? 'critical' : 'warning';
       if (severity === 'critical') {
-        notify({ severity, source: 'global-error', message, details: { status, stack: err?.stack } }).catch(() => {});
+        notify({ severity, source: 'global-error', message, details: { status, stack: err?.stack } }).catch(() => { });
       }
       res.status(status).json({ message });
       throw err;

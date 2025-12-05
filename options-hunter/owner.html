@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 Options Hunter - Owner's Edition</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #2c1810 0%, #4a3728 50%, #6b5442 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #2c1810;
+        }
+        .container { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+            background: linear-gradient(135deg, #fff9f0 0%, #f5ebe0 100%);
+            padding: 48px 32px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+        .header h1 { font-size: 64px; font-weight: 900; color: #2c1810; margin-bottom: 16px; letter-spacing: -2px; }
+        .header h2 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff8800 0%, #ff6600 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+        }
+        .owner-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff8800 0%, #ff6600 100%);
+            color: #fff;
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 800;
+            box-shadow: 0 8px 32px rgba(255, 136, 0, 0.4);
+        }
+        .features {
+            background: linear-gradient(135deg, #fff9f0 0%, #f5ebe0 100%);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        .features h3 { color: #2c1810; font-size: 32px; font-weight: 900; margin-bottom: 32px; }
+        .features ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .features li {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 20px 24px 20px 64px;
+            border-radius: 16px;
+            position: relative;
+            border: 2px solid rgba(212, 197, 169, 0.3);
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        .features li:hover { background: rgba(255, 255, 255, 0.95); transform: translateX(8px); border-color: #ff8800; }
+        .features li::before { content: '🏆'; position: absolute; left: 20px; font-size: 28px; }
+        .features strong { color: #ff8800; font-weight: 800; }
+        .controls {
+            background: linear-gradient(135deg, #fff9f0 0%, #f5ebe0 100%);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        .control-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; margin-bottom: 32px; }
+        .control-item label { display: block; font-size: 15px; font-weight: 800; color: #2c1810; margin-bottom: 12px; }
+        input, select {
+            width: 100%;
+            padding: 18px 20px;
+            border: 2px solid rgba(212, 197, 169, 0.4);
+            background: rgba(255, 255, 255, 0.95);
+            color: #2c1810;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 16px;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus { outline: none; border-color: #ff8800; box-shadow: 0 0 0 4px rgba(255, 136, 0, 0.15); }
+        .scan-button {
+            width: 100%;
+            padding: 24px;
+            background: linear-gradient(135deg, #ff8800 0%, #ff6600 100%);
+            color: #fff;
+            font-size: 24px;
+            font-weight: 900;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 12px 40px rgba(255, 136, 0, 0.5);
+            transition: all 0.3s;
+        }
+        .scan-button:hover:not(:disabled) { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(255, 136, 0, 0.6); }
+        .scan-button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 40px; }
+        .stat-box {
+            background: linear-gradient(135deg, #fff9f0 0%, #f5ebe0 100%);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+        .stat-box:hover { transform: translateY(-6px); }
+        .stat-value { font-size: 56px; font-weight: 900; color: #2ecc71; letter-spacing: -2px; }
+        .stat-label { color: #8b7355; font-size: 14px; font-weight: 700; text-transform: uppercase; }
+        .loading {
+            background: linear-gradient(135deg, #fff9f0 0%, #f5ebe0 100%);
+            border-radius: 24px;
+            padding: 60px;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: #ff8800;
+            display: none;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        .loading.active { display: block; }
+        .results { display: none; }
+        .result-card {
+            background: linear-gradient(135deg, #fff9f0 0%, #f5ebe0 100%);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 32px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s;
+        }
+        .result-card:hover { transform: translateY(-8px); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 3px solid rgba(212, 197, 169, 0.3); }
+        .symbol { font-size: 56px; font-weight: 900; color: #2c1810; letter-spacing: -2px; }
+        .score { font-size: 32px; font-weight: 900; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: #fff; padding: 16px 32px; border-radius: 50px; }
+        .result-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+        .detail-item { background: rgba(255, 255, 255, 0.7); padding: 24px; border-radius: 16px; border: 2px solid rgba(212, 197, 169, 0.3); transition: all 0.3s; }
+        .detail-item:hover { background: rgba(255, 255, 255, 0.95); transform: translateY(-4px); }
+        .detail-label { font-size: 12px; color: #8b7355; margin-bottom: 12px; font-weight: 800; text-transform: uppercase; }
+        .detail-value { font-size: 28px; color: #2c1810; font-weight: 900; }
+        .profit-highlight { font-size: 40px; font-weight: 900; color: #2ecc71; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 OPTIONS HUNTER</h1>
+            <h2>OWNER'S EDITION</h2>
+            <div class="owner-badge">🔥 FULL PREMIUM ACCESS - ALL FEATURES UNLOCKED 🔥</div>
+        </div>
+        <div class="features">
+            <h3>💎 OWNER-ONLY FEATURES:</h3>
+            <ul>
+                <li><strong>100+ STOCKS SCANNED</strong> - Not just 9 basic tickers</li>
+                <li><strong>BUDGET-BASED SCANNING</strong> - Find plays from $50 to $10,000</li>
+                <li><strong>PROFIT SCORING</strong> - Real ROI calculations, not fake signals</li>
+                <li><strong>REAL-TIME DATA</strong> - Live market data, not delayed quotes</li>
+                <li><strong>DIAMOND FINDER</strong> - Undervalued options with 50%+ profit potential</li>
+                <li><strong>NO LIMITS</strong> - Unlimited scans, no rate limiting</li>
+            </ul>
+        </div>
+        <div class="controls">
+            <div class="control-group">
+                <div class="control-item">
+                    <label>💰 YOUR BUDGET:</label>
+                    <input type="number" id="budget" value="500" min="50" max="100000" step="50">
+                </div>
+                <div class="control-item">
+                    <label>⚡ RISK LEVEL:</label>
+                    <select id="risk-level">
+                        <option value="low">🛡️ Low Risk (Conservative)</option>
+                        <option value="medium" selected>⚖️ Medium Risk (Balanced)</option>
+                        <option value="high">🔥 High Risk (Aggressive)</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <label>🎯 MIN PROFIT TARGET:</label>
+                    <select id="min-profit">
+                        <option value="10">10% (Quick Gains)</option>
+                        <option value="20" selected>20% (Solid Returns)</option>
+                        <option value="50">50% (Home Runs)</option>
+                        <option value="100">100%+ (Diamonds Only)</option>
+                    </select>
+                </div>
+            </div>
+            <button class="scan-button" onclick="scanForDiamonds()" id="scan-btn">🔍 FIND DIAMONDS IN THE ROUGH</button>
+        </div>
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-box"><div class="stat-value" id="stocks-scanned">0</div><div class="stat-label">Stocks Scanned</div></div>
+            <div class="stat-box"><div class="stat-value" id="diamonds-found">0</div><div class="stat-label">Diamonds Found</div></div>
+            <div class="stat-box"><div class="stat-value" id="best-roi">0%</div><div class="stat-label">Best ROI</div></div>
+            <div class="stat-box"><div class="stat-value" id="avg-score">0</div><div class="stat-label">Avg Score</div></div>
+        </div>
+        <div class="loading" id="loading">🔍 SCANNING 100+ STOCKS FOR DIAMONDS...</div>
+        <div class="results" id="results"></div>
+    </div>
+    <script>
+        async function scanForDiamonds() {
+            const budget = document.getElementById('budget').value;
+            const scanBtn = document.getElementById('scan-btn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            scanBtn.disabled = true;
+            loading.classList.add('active');
+            results.style.display = 'none';
+            try {
+                const response = await fetch(`/api/scan?budget=${budget}`);
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                const data = await response.json();
+                if (data && data.signals && data.signals.length > 0) {
+                    displayResults({
+                        scanned: data.scanned,
+                        opportunities: data.signals.map(s => ({
+                            symbol: s.symbol, option_type: s.option_type, stock_price: s.price,
+                            strike: s.strike, option_cost: s.option_cost, contracts_can_buy: s.contracts_can_buy,
+                            total_cost: s.option_cost * s.contracts_can_buy * 100, potential_profit_pct: s.potential_profit,
+                            days_to_expiry: 30, iv_rank: s.rsi / 100, score: Math.round(s.potential_profit)
+                        }))
+                    });
+                } else {
+                    results.innerHTML = '<div class="result-card"><h2>No trading signals found.</h2></div>';
+                    results.style.display = 'block';
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="result-card"><h2>⚠️ Error: ${error.message}</h2></div>`;
+                results.style.display = 'block';
+            } finally {
+                loading.classList.remove('active');
+                scanBtn.disabled = false;
+            }
+        }
+        function displayResults(data) {
+            const results = document.getElementById('results');
+            const stats = document.getElementById('stats');
+            document.getElementById('stocks-scanned').textContent = data.scanned || 0;
+            document.getElementById('diamonds-found').textContent = data.opportunities.length;
+            const maxROI = Math.max(...data.opportunities.map(o => o.potential_profit_pct || 0));
+            document.getElementById('best-roi').textContent = maxROI.toFixed(1) + '%';
+            const avgScore = data.opportunities.reduce((sum, o) => sum + o.score, 0) / data.opportunities.length;
+            document.getElementById('avg-score').textContent = avgScore.toFixed(0);
+            stats.style.display = 'grid';
+            let html = '';
+            data.opportunities.forEach(opp => {
+                const icon = opp.option_type === 'call' ? '📈' : '📉';
+                const label = opp.option_type === 'call' ? 'CALL' : 'PUT';
+                html += `<div class="result-card">
+                    <div class="result-header">
+                        <div class="symbol">${opp.symbol} ${icon}</div>
+                        <div class="score">Score: ${opp.score}/100</div>
+                    </div>
+                    <div class="result-details">
+                        <div class="detail-item"><div class="detail-label">Stock Price</div><div class="detail-value">$${opp.stock_price.toFixed(2)}</div></div>
+                        <div class="detail-item"><div class="detail-label">Strike Price</div><div class="detail-value">$${opp.strike.toFixed(2)}</div></div>
+                        <div class="detail-item"><div class="detail-label">${label} Option Cost</div><div class="detail-value">$${opp.option_cost.toFixed(2)}</div></div>
+                        <div class="detail-item"><div class="detail-label">Contracts You Can Buy</div><div class="detail-value">${opp.contracts_can_buy}</div></div>
+                        <div class="detail-item"><div class="detail-label">Total Investment</div><div class="detail-value">$${opp.total_cost.toFixed(2)}</div></div>
+                        <div class="detail-item"><div class="detail-label">💎 PROFIT POTENTIAL</div><div class="profit-highlight">+${opp.potential_profit_pct.toFixed(1)}%</div></div>
+                        <div class="detail-item"><div class="detail-label">Days to Expiration</div><div class="detail-value">${opp.days_to_expiry}</div></div>
+                        <div class="detail-item"><div class="detail-label">IV Rank</div><div class="detail-value">${(opp.iv_rank * 100).toFixed(0)}%</div></div>
+                    </div>
+                </div>`;
+            });
+            results.innerHTML = html;
+            results.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

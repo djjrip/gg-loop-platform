@@ -1,0 +1,85 @@
+{
+  "paypal_business_email": "payments@ggloop.io",
+  "paypal_mode": "live",
+  "products": {
+    "options_hunter_basic": {
+      "name": "Options Hunter - Basic Plan",
+      "price": 29,
+      "interval": "monthly",
+      "features": [
+        "10 RSI scans per day",
+        "Real-time options data",
+        "Paper trading access",
+        "Email alerts"
+      ],
+      "button_id": "paypal_oh_basic"
+    },
+    "options_hunter_pro": {
+      "name": "Options Hunter - Pro Plan",
+      "price": 79,
+      "interval": "monthly",
+      "features": [
+        "Unlimited RSI scans",
+        "Real-time options data",
+        "Paper trading access",
+        "SMS alerts (5/day)",
+        "Priority support"
+      ],
+      "button_id": "paypal_oh_pro"
+    },
+    "options_hunter_elite": {
+      "name": "Options Hunter - Elite Plan",
+      "price": 149,
+      "interval": "monthly",
+      "features": [
+        "Unlimited RSI scans",
+        "Real-time options data",
+        "Paper trading access",
+        "Unlimited SMS alerts",
+        "AI auto-execution",
+        "24/7 priority support",
+        "Custom strategies"
+      ],
+      "button_id": "paypal_oh_elite"
+    },
+    "gg_loop_basic": {
+      "name": "GG Loop - Basic Plan",
+      "price": 5,
+      "interval": "monthly",
+      "features": [
+        "Match tracking",
+        "Points system",
+        "Basic rewards"
+      ],
+      "button_id": "paypal_gg_basic"
+    },
+    "gg_loop_pro": {
+      "name": "GG Loop - Pro Plan",
+      "price": 12,
+      "interval": "monthly",
+      "features": [
+        "Match tracking",
+        "Points system",
+        "Premium rewards",
+        "Priority support"
+      ],
+      "button_id": "paypal_gg_pro"
+    },
+    "gg_loop_elite": {
+      "name": "GG Loop - Elite Plan",
+      "price": 25,
+      "interval": "monthly",
+      "features": [
+        "Match tracking",
+        "Points system",
+        "Elite rewards",
+        "Custom tournaments",
+        "24/7 support"
+      ],
+      "button_id": "paypal_gg_elite"
+    }
+  },
+  "success_url": "https://optionshunter.onrender.com/payment-success",
+  "cancel_url": "https://optionshunter.onrender.com/pricing",
+  "notify_url": "https://optionshunter.onrender.com/api/paypal-webhook"
+}
