@@ -1,0 +1,106 @@
+# ═══════════════════════════════════════════════════════════════
+# PROMETHEUS CONFIGURATION
+# Metrics collection for Empire Control Center
+# ═══════════════════════════════════════════════════════════════
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'empire-control-center'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  
+  # ══════════════════════════════════════════════════════════════
+  # GG LOOP PLATFORM
+  # ══════════════════════════════════════════════════════════════
+  - job_name: 'ggloop-app'
+    static_configs:
+      - targets: ['ggloop-app:3000']
+        labels:
+          service: 'ggloop'
+          tier: 'application'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # ══════════════════════════════════════════════════════════════
+  # OPTIONS HUNTER
+  # ══════════════════════════════════════════════════════════════
+  - job_name: 'options-hunter'
+    static_configs:
+      - targets: ['options-hunter:8501']
+        labels:
+          service: 'options-hunter'
+          tier: 'analytics'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # ══════════════════════════════════════════════════════════════
+  # ANTISOCIAL BOT
+  # ══════════════════════════════════════════════════════════════
+  - job_name: 'antisocial-bot'
+    static_configs:
+      - targets: ['antisocial-bot:3001']
+        labels:
+          service: 'antisocial-bot'
+          tier: 'automation'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # ══════════════════════════════════════════════════════════════
+  # EMPIRE HUB DASHBOARD
+  # ══════════════════════════════════════════════════════════════
+  - job_name: 'empire-hub'
+    static_configs:
+      - targets: ['empire-hub:8080']
+        labels:
+          service: 'empire-hub'
+          tier: 'dashboard'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # ══════════════════════════════════════════════════════════════
+  # INFRASTRUCTURE - PostgreSQL
+  # ══════════════════════════════════════════════════════════════
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+        labels:
+          service: 'postgres'
+          tier: 'database'
+    scrape_interval: 30s
+
+  # ══════════════════════════════════════════════════════════════
+  # INFRASTRUCTURE - Redis
+  # ══════════════════════════════════════════════════════════════
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+        labels:
+          service: 'redis'
+          tier: 'cache'
+    scrape_interval: 30s
+
+  # ══════════════════════════════════════════════════════════════
+  # PROMETHEUS SELF-MONITORING
+  # ══════════════════════════════════════════════════════════════
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+          tier: 'monitoring'
