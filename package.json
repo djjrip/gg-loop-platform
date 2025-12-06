@@ -16,7 +16,13 @@
     "validate:env": "node ./scripts/validate-env.cjs",
     "check": "tsc",
     "check-rewards": "node scripts/check-rewards.js",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "seed:rewards": "npx tsx server/seed-rewards.ts",
+    "seed:production": "node scripts/seed-production.mjs",
+    "marketing:start": "npx tsx marketing/automation.ts",
+    "marketing:report": "npx tsx marketing/ai-marketing-agent.ts",
+    "marketing:twitter": "npx tsx marketing/twitter-bot.ts",
+    "marketing:reddit": "npx tsx marketing/reddit-bot.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.17.3",
@@ -56,6 +62,7 @@
     "@tanstack/react-query": "^5.60.5",
     "@types/bcrypt": "^6.0.0",
     "@types/memoizee": "^0.4.12",
+    "@types/node-schedule": "^2.1.8",
     "@types/passport-discord": "^0.1.15",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/passport-oauth2": "^1.8.0",
@@ -84,6 +91,7 @@
     "memorystore": "^1.6.7",
     "next-themes": "^0.4.6",
     "node-fetch": "^2.7.0",
+    "node-schedule": "^2.1.1",
     "openid-client": "^6.8.1",
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",
