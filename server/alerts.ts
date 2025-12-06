@@ -1,4 +1,4 @@
-import Resend from 'resend';
+import { Resend } from 'resend';
 import twilio from 'twilio';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
@@ -10,7 +10,7 @@ const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || '';
 const TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER || '';
 const ALERT_SMS_TO = (process.env.ALERT_SMS_TO || '').split(',').map(e => e.trim()).filter(Boolean);
 
-const resend = RESEND_API_KEY ? new Resend.Resend(RESEND_API_KEY) : null;
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 const smsClient = (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) ? twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) : null;
 
 export type AlertSeverity = 'info' | 'warning' | 'critical';
