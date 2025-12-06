@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "set NODE_ENV=development&& npx tsx server/index.ts",
-    "build": "rimraf dist && vite build && esbuild server/index.ts --platform=node --bundle --format=esm --outdir=dist",
+    "build": "rimraf dist && vite build && esbuild server/index.ts --platform=node --bundle --format=esm --outdir=dist --packages=external",
     "start": "set NODE_ENV=production&& node dist/index.js",
     "verify:dist": "node ./scripts/check-dist.cjs",
     "deploy:check": "npm run build && npm run verify:dist",
@@ -18,11 +18,7 @@
     "check-rewards": "node scripts/check-rewards.js",
     "db:push": "drizzle-kit push",
     "seed:rewards": "npx tsx server/seed-rewards.ts",
-    "seed:production": "node scripts/seed-production.mjs",
-    "marketing:start": "npx tsx marketing/automation.ts",
-    "marketing:report": "npx tsx marketing/ai-marketing-agent.ts",
-    "marketing:twitter": "npx tsx marketing/twitter-bot.ts",
-    "marketing:reddit": "npx tsx marketing/reddit-bot.ts"
+    "seed:production": "node scripts/seed-production.mjs"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.17.3",
