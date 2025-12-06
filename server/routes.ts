@@ -298,6 +298,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Revenue metrics
+  app.get('/api/admin/revenue-metrics', adminMiddleware, async (req: any, res) => {
+    try {
+      // Get total users
+      const totalUsersResult = await db.select({ count: sql<number>`COUNT(*)` }).from(users);
+      const totalUsers = Number(totalUsersResult[0]?.count || 0);
+
+      // Get active subscriptions
+      const activeSubscriptionsResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(users)
+        .where(eq(users.subscriptionStatus, 'active'));
+      const activeSubscriptions = Number(activeSubscriptionsResult[0]?.count || 0);
+
+      // Get total rewards redeemed
+      const rewardsRedeemedResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(userRewards)
+        .where(eq(userRewards.status, 'fulfilled'));
+      const rewardsRedeemed = Number(rewardsRedeemedResult[0]?.count || 0);
+
+      // Calculate revenue metrics
+      const monthlyRevenue = activeSubscriptions * 10; // $10/month average
+      const totalRevenue = monthlyRevenue;
+      const conversionRate = totalUsers > 0 ? (activeSubscriptions / totalUsers) * 100 : 0;
+      const averageOrderValue = 25;
+      const projectedMonthly = monthlyRevenue * 1.5;
+
+      res.json({
+        totalRevenue,
+        monthlyRevenue,
+        activeSubscriptions,
+        totalUsers,
+        rewardsRedeemed,
+        conversionRate,
+        averageOrderValue,
+        projectedMonthly,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching revenue metrics:', error);
+      res.status(500).json({ error: 'Failed to fetch revenue metrics' });
+    }
+  });
+
+  // Health check endpoint
+  app.get('/api/health', async (req, res) => {
+    try {
+      // Test database connection
+      await db.select({ count: sql<number>`COUNT(*)` }).from(users);
+
+      res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        database: 'connected',
+        uptime: process.uptime()
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 'unhealthy',
+        error: (error as Error).message
+      });
+    }
+  });
+
 
 
   // Guest account creation
