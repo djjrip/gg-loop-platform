@@ -81,6 +81,17 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        // GG LOOP OFFICIAL BRAND COLORS (PRIMARY THEME)
+        ggloop: {
+          orange: "#ff7a28",         // Primary brand orange
+          "rose-gold": "#d77a47",    // Rose-gold highlights
+          black: "#000000",          // Pure black
+          "dark-shadow": "#0d0d0d",  // Dark shadow background
+          "orange-light": "#ff9445", // Lighter orange for hovers
+          "orange-dark": "#e6691a",  // Darker orange for pressed
+          "neon-glow": "rgba(255, 122, 40, 0.3)", // Orange glow
+        },
+        // Empire theme (ADMIN ONLY - scoped to .empire-layout)
         empire: {
           green: "#00ff41",
           dark: "#0a0a0a",
