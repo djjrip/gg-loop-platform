@@ -26,7 +26,7 @@ RUN npm run build
 
 # Verify build artifacts exist
 RUN test -f dist/index.js || (echo "ERROR: Backend build failed - dist/index.js missing" && exit 1)
-RUN test -d dist/assets || (echo "ERROR: Frontend build failed - dist/assets missing" && exit 1)
+RUN test -d dist/public || (echo "ERROR: Frontend build failed - dist/public missing" && exit 1)
 
 # ────────────────────────────────────────────────────────────────
 # STAGE 2: Production - Minimal runtime image
@@ -38,7 +38,7 @@ RUN apk add --no-cache curl dumb-init python3 make g++
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+  adduser -S nodejs -u 1001
 
 WORKDIR /app
 
@@ -47,7 +47,7 @@ COPY package*.json ./
 
 # Install ONLY production dependencies
 RUN npm ci --production --legacy-peer-deps && \
-    npm cache clean --force
+  npm cache clean --force
 
 # Copy built artifacts from builder
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
@@ -65,9 +65,9 @@ EXPOSE 3000
 
 # Add metadata labels
 LABEL org.opencontainers.image.title="GG Loop Platform" \
-      org.opencontainers.image.description="Gaming rewards and community engagement platform" \
-      org.opencontainers.image.vendor="GG Loop" \
-      org.opencontainers.image.source="https://github.com/djjrip/gg-loop-platform"
+  org.opencontainers.image.description="Gaming rewards and community engagement platform" \
+  org.opencontainers.image.vendor="GG Loop" \
+  org.opencontainers.image.source="https://github.com/djjrip/gg-loop-platform"
 
 # Health check endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
