@@ -88,15 +88,6 @@ export default {
           alert: "#ff0000",
           dim: "rgba(0, 255, 65, 0.1)",
         },
-        // Marketing theme colors (brown/copper/rose-gold)
-        brand: {
-          copper: "#C08261", // Main brand copper color for "Earn" and accents
-          brown: "#8B6F47", // Supporting brown
-          gold: "#D4AF37", // Rose-gold highlights
-          dark: "#0D0D0D", // Dark background
-          "copper-light": "#D9A88A", // Lighter copper for hovers
-          "copper-dark": "#A06B4D", // Darker copper for pressed states
-        },
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
