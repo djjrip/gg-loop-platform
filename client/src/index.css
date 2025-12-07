@@ -4,11 +4,11 @@
 
 /* LIGHT MODE */
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(0, 0, 0, .10);
+  --badge-outline: rgba(0, 0, 0, .05);
   --opaque-button-border-intensity: -8;
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(0, 0, 0, .03);
+  --elevate-2: rgba(0, 0, 0, .08);
   --background: 0 0% 98%;
   --foreground: 0 0% 10%;
   --border: 0 0% 88%;
@@ -18,15 +18,15 @@
   --sidebar: 0 0% 94%;
   --sidebar-foreground: 0 0% 12%;
   --sidebar-border: 0 0% 88%;
-  --sidebar-primary: 20 30% 58%;
+  --sidebar-primary: 15 35% 52%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 0 0% 85%;
   --sidebar-accent-foreground: 0 0% 12%;
-  --sidebar-ring: 20 30% 58%;
+  --sidebar-ring: 15 35% 52%;
   --popover: 0 0% 96%;
   --popover-foreground: 0 0% 10%;
   --popover-border: 0 0% 90%;
-  --primary: 20 30% 58%;
+  --primary: 15 35% 52%;
   --primary-foreground: 0 0% 100%;
   --secondary: 0 0% 80%;
   --secondary-foreground: 0 0% 12%;
@@ -58,7 +58,7 @@
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
-/* Fallback for older browsers */
+  /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 
@@ -88,11 +88,11 @@
 }
 
 .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(255, 255, 255, .10);
+  --badge-outline: rgba(255, 255, 255, .05);
   --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255, 255, 255, .04);
+  --elevate-2: rgba(255, 255, 255, .09);
   --background: 15 15% 6%;
   --foreground: 0 0% 95%;
   --border: 20 20% 25%;
@@ -136,7 +136,7 @@
   --shadow-xl: 0px 2px 0px 0px hsl(240 10% 0% / 0.30), 0px 8px 10px -1px hsl(240 10% 0% / 0.80);
   --shadow-2xl: 0px 2px 0px 0px hsl(240 10% 0% / 0.50);
 
-/* Fallback for older browsers */
+  /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 
@@ -290,6 +290,7 @@
     0% {
       transform: scale(1);
     }
+
     100% {
       transform: scale(1.1);
     }
@@ -299,6 +300,7 @@
     0% {
       transform: scale(1.05) translateX(0);
     }
+
     100% {
       transform: scale(1.05) translateX(-2%);
     }
@@ -309,6 +311,7 @@
       opacity: 0.3;
       transform: translateX(0) rotate(0deg);
     }
+
     100% {
       opacity: 0.5;
       transform: translateX(5%) rotate(2deg);
@@ -316,18 +319,24 @@
   }
 
   @keyframes pulse-slow {
-    0%, 100% {
+
+    0%,
+    100% {
       opacity: 0.5;
     }
+
     50% {
       opacity: 0.8;
     }
   }
 
   @keyframes pulse-slower {
-    0%, 100% {
+
+    0%,
+    100% {
       opacity: 0.3;
     }
+
     50% {
       opacity: 0.6;
     }
@@ -337,6 +346,7 @@
     from {
       transform: translate(-50%, -50%) rotate(0deg);
     }
+
     to {
       transform: translate(-50%, -50%) rotate(360deg);
     }
@@ -359,18 +369,23 @@
     0% {
       transform: translate(0);
     }
+
     20% {
       transform: translate(-2px, 2px);
     }
+
     40% {
       transform: translate(-2px, -2px);
     }
+
     60% {
       transform: translate(2px, 2px);
     }
+
     80% {
       transform: translate(2px, -2px);
     }
+
     100% {
       transform: translate(0);
     }
@@ -388,24 +403,22 @@
   /* Neon glow utility */
   .neon-glow {
     box-shadow: 0 0 5px rgba(255, 140, 66, 0.5),
-                0 0 10px rgba(255, 140, 66, 0.3),
-                0 0 15px rgba(255, 140, 66, 0.2);
+      0 0 10px rgba(255, 140, 66, 0.3),
+      0 0 15px rgba(255, 140, 66, 0.2);
   }
 
   .neon-glow-strong {
     box-shadow: 0 0 10px rgba(255, 140, 66, 0.8),
-                0 0 20px rgba(255, 140, 66, 0.6),
-                0 0 30px rgba(255, 140, 66, 0.4);
+      0 0 20px rgba(255, 140, 66, 0.6),
+      0 0 30px rgba(255, 140, 66, 0.4);
   }
 
   /* Holographic gradient */
   .holographic {
-    background: linear-gradient(
-      135deg,
-      rgba(255, 140, 66, 0.1) 0%,
-      rgba(255, 140, 66, 0.3) 50%,
-      rgba(255, 140, 66, 0.1) 100%
-    );
+    background: linear-gradient(135deg,
+        rgba(255, 140, 66, 0.1) 0%,
+        rgba(255, 140, 66, 0.3) 50%,
+        rgba(255, 140, 66, 0.1) 100%);
     background-size: 200% 200%;
     animation: holographic-shift 3s ease infinite;
   }
@@ -414,104 +427,119 @@
     0% {
       background-position: 0% 50%;
     }
+
     50% {
       background-position: 100% 50%;
     }
+
     100% {
       background-position: 0% 50%;
     }
   }
-  
+
   @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: translateY(0px) rotate(0deg);
     }
+
     50% {
       transform: translateY(-20px) rotate(1deg);
     }
   }
-  
+
   @keyframes float-delayed {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: translateY(0px) rotate(0deg);
     }
+
     50% {
       transform: translateY(-15px) rotate(-1deg);
     }
   }
-  
+
   @keyframes fade-in {
     from {
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  
+
   @keyframes slide-up {
     from {
       opacity: 0;
       transform: translateY(30px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  
+
   @keyframes shimmer {
     0% {
       background-position: -1000px 0;
     }
+
     100% {
       background-position: 1000px 0;
     }
   }
-  
+
   @keyframes card-glow {
-    0%, 100% {
+
+    0%,
+    100% {
       box-shadow: 0 0 20px rgba(255, 140, 66, 0.1),
-                  0 0 40px rgba(255, 140, 66, 0.05);
+        0 0 40px rgba(255, 140, 66, 0.05);
     }
+
     50% {
       box-shadow: 0 0 30px rgba(255, 140, 66, 0.2),
-                  0 0 60px rgba(255, 140, 66, 0.1);
+        0 0 60px rgba(255, 140, 66, 0.1);
     }
   }
-  
+
   .animate-float {
     animation: float 8s ease-in-out infinite;
   }
-  
+
   .animate-float-delayed {
     animation: float-delayed 10s ease-in-out infinite;
   }
-  
+
   .animate-fade-in {
     animation: fade-in 0.8s ease-out forwards;
   }
-  
+
   .animate-slide-up {
     animation: slide-up 0.6s ease-out forwards;
   }
-  
+
   .animate-shimmer {
-    background: linear-gradient(90deg, 
-      transparent 0%, 
-      rgba(255, 140, 66, 0.1) 50%, 
-      transparent 100%);
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 140, 66, 0.1) 50%,
+        transparent 100%);
     background-size: 1000px 100%;
     animation: shimmer 3s infinite;
   }
-  
+
   .animate-card-glow {
     animation: card-glow 4s ease-in-out infinite;
   }
-  
+
   @media (prefers-reduced-motion: reduce) {
+
     .animate-float,
     .animate-float-delayed,
     .animate-orbit,
@@ -522,29 +550,31 @@
       animation: none;
     }
   }
-  
+
   @keyframes orbit {
     0% {
       transform: rotate(0deg) translateX(100px) rotate(0deg);
     }
+
     100% {
       transform: rotate(360deg) translateX(100px) rotate(-360deg);
     }
   }
-  
+
   @keyframes reverse-orbit {
     0% {
       transform: rotate(0deg) translateX(120px) rotate(0deg);
     }
+
     100% {
       transform: rotate(-360deg) translateX(120px) rotate(360deg);
     }
   }
-  
+
   .animate-orbit {
     animation: orbit 20s linear infinite;
   }
-  
+
   .animate-reverse-orbit {
     animation: reverse-orbit 25s linear infinite;
   }
@@ -554,6 +584,7 @@
   0% {
     background-position: -200% center;
   }
+
   100% {
     background-position: 200% center;
   }
