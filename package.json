@@ -8,8 +8,8 @@
   },
   "scripts": {
     "dev": "set NODE_ENV=development&& npx tsx server/index.ts",
-    "build": "rimraf dist && vite build && esbuild server/index.ts --platform=node --bundle --format=esm --outdir=dist --packages=external",
-    "start": "set NODE_ENV=production&& node dist/index.js",
+    "build": "vite build",
+    "start": "npx tsx server/index.ts",
     "verify:dist": "node ./scripts/check-dist.cjs",
     "deploy:check": "npm run build && npm run verify:dist",
     "smoke": "node ./scripts/smoke-test.cjs",
