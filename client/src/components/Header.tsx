@@ -78,7 +78,7 @@ export default function Header() {
               <Trophy className="h-3.5 w-3.5 text-primary" />
               Home
             </Link>
-            <a href="/#games" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-games">
+            <a href="#games" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('games')?.scrollIntoView({ behavior: 'smooth' }); } else { window.location.href = '/#games'; } }} className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-games">
               <Gamepad2 className="h-3.5 w-3.5 text-primary" />
               Games
             </a>
@@ -106,7 +106,7 @@ export default function Header() {
               <DollarSign className="h-3.5 w-3.5 text-primary" />
               Affiliate
             </Link>
-            <a href="/#leaderboards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards">
+            <a href="#leaderboards" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('leaderboards')?.scrollIntoView({ behavior: 'smooth' }); } else { window.location.href = '/#leaderboards'; } }} className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards">
               <BarChart3 className="h-3.5 w-3.5 text-primary" />
               Leaderboards
             </a>
@@ -294,7 +294,7 @@ export default function Header() {
               <Trophy className="h-3.5 w-3.5 text-primary" />
               Home
             </Link>
-            <a href="/#games" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-games-mobile">
+            <a href="#games" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('games')?.scrollIntoView({ behavior: 'smooth' }); } else { window.location.href = '/#games'; } }} className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-games-mobile">
               <Gamepad2 className="h-3.5 w-3.5 text-primary" />
               Games
             </a>
@@ -322,7 +322,7 @@ export default function Header() {
               <DollarSign className="h-3.5 w-3.5 text-primary" />
               Affiliate
             </Link>
-            <a href="/#leaderboards" className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards-mobile">
+            <a href="#leaderboards" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('leaderboards')?.scrollIntoView({ behavior: 'smooth' }); } else { window.location.href = '/#leaderboards'; } }} className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards-mobile">
               <BarChart3 className="h-3.5 w-3.5 text-primary" />
               Leaderboards
             </a>
