@@ -3315,6 +3315,20 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     try {
       const userId = req.dbUser.id;
 
+      // Ensure user has a referral code - generate if missing
+      let referralCode = req.dbUser.referralCode;
+      if (!referralCode) {
+        const { generateReferralCode } = await import('./lib/referral');
+        referralCode = generateReferralCode();
+
+        // Update user with new code
+        await db.update(users)
+          .set({ referralCode })
+          .where(eq(users.id, userId));
+
+        console.log(`Generated referral code ${referralCode} for user ${userId}`);
+      }
+
       const referrals = await storage.getReferralsByReferrer(userId);
       const completedCount = referrals.filter(r => r.status === 'completed').length;
       const pendingCount = referrals.filter(r => r.status === 'pending').length;
@@ -3322,7 +3336,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       const { tier, totalPoints } = calculateReferralReward(completedCount);
 
       res.json({
-        referralCode: req.dbUser.referralCode,
+        referralCode,
         totalReferrals: referrals.length,
         completedReferrals: completedCount,
         pendingReferrals: pendingCount,
