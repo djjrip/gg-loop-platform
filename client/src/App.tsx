@@ -85,7 +85,7 @@ function Router() {
       <Route path="/subscription" component={Subscription} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
-      <Route path="/aws-roadmap" component={AWSRoadmap} />
+      <Route path="/aws-roadmap" component={AWSRoadmap} /> {/* AWS Roadmap Route */}
 
       {/* User Routes */}
       <Route path="/login" component={Login} />

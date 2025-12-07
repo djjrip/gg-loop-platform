@@ -8,6 +8,9 @@ export default defineConfig({
     react(),
     runtimeErrorOverlay(),
   ],
+  define: {
+    "process.env.BUILD_TIMESTAMP": JSON.stringify(new Date().toISOString()),
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
