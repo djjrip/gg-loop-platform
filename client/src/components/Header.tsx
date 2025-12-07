@@ -1,4 +1,4 @@
-import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, Package, TrendingUp, DollarSign, Megaphone, Heart } from "lucide-react";
+import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, Package, TrendingUp, DollarSign, Megaphone, Heart, ChevronDown, MoreHorizontal } from "lucide-react";
 import logoImage from "@assets/ChatGPT Image Nov 11, 2025, 06_17_23 PM_1763403383212.png";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -69,7 +69,7 @@ export default function Header() {
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-4">
             <Link
               href="/"
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
@@ -107,26 +107,6 @@ export default function Header() {
               Referrals
             </Link>
             <Link
-              href="/affiliate-program"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-affiliate"
-            >
-              <DollarSign className="h-3.5 w-3.5 text-primary" />
-              Affiliate
-            </Link>
-            <a href="#leaderboards" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('leaderboards')?.scrollIntoView({ behavior: 'smooth' }); } else { window.location.href = '/#leaderboards'; } }} className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards">
-              <BarChart3 className="h-3.5 w-3.5 text-primary" />
-              Leaderboards
-            </a>
-            <Link
-              href="/shop"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-shop"
-            >
-              <Gift className="h-3.5 w-3.5 text-primary" />
-              Shop
-            </Link>
-            <Link
               href="/creator-tools"
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
               data-testid="link-creator-tools"
@@ -134,22 +114,49 @@ export default function Header() {
               <Megaphone className="h-3.5 w-3.5 text-primary" />
               Creator Tools
             </Link>
-            <Link
-              href="/gg-loop-cares"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-gg-loop-cares"
-            >
-              <Heart className="h-3.5 w-3.5 text-primary" />
-              GG Loop Cares
-            </Link>
-            <Link
-              href="/about"
-              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
-              data-testid="link-about"
-            >
-              <Trophy className="h-3.5 w-3.5 text-primary" />
-              About
-            </Link>
+
+            {/* More Dropdown for overflow links */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="text-sm font-medium px-3 py-2 flex items-center gap-1.5" data-testid="button-more-nav">
+                  <MoreHorizontal className="h-3.5 w-3.5 text-primary" />
+                  More
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <Link href="/affiliate-program">
+                  <DropdownMenuItem data-testid="link-affiliate-more">
+                    <DollarSign className="mr-2 h-4 w-4" />
+                    Affiliate Program
+                  </DropdownMenuItem>
+                </Link>
+                <a href="#leaderboards" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('leaderboards')?.scrollIntoView({ behavior: 'smooth' }); setMobileMenuOpen(false); } else { window.location.href = '/#leaderboards'; } }}>
+                  <DropdownMenuItem data-testid="link-leaderboards-more">
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Leaderboards
+                  </DropdownMenuItem>
+                </a>
+                <Link href="/shop">
+                  <DropdownMenuItem data-testid="link-shop-more">
+                    <Gift className="mr-2 h-4 w-4" />
+                    Shop
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/gg-loop-cares">
+                  <DropdownMenuItem data-testid="link-gg-loop-cares-more">
+                    <Heart className="mr-2 h-4 w-4" />
+                    GG Loop Cares
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/about">
+                  <DropdownMenuItem data-testid="link-about-more">
+                    <Trophy className="mr-2 h-4 w-4" />
+                    About
+                  </DropdownMenuItem>
+                </Link>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
         </div>
 
