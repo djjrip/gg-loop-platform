@@ -363,7 +363,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public platform stats for AWS demo (no auth required, real data only)
+  app.get('/api/public/platform-stats', async (req, res) => {
+    try {
+      // Get REAL counts from database - no fake numbers
+      const totalUsersResult = await db.select({ count: sql<number>`COUNT(*)` }).from(users);
+      const totalUsers = Number(totalUsersResult[0]?.count || 0);
 
+      const activeSubscriptionsResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(subscriptions)
+        .where(eq(subscriptions.status, 'active'));
+      const activeSubscriptions = Number(activeSubscriptionsResult[0]?.count || 0);
+
+      const totalRewardsResult = await db.select({ count: sql<number>`COUNT(*)` }).from(rewards);
+      const totalRewards = Number(totalRewardsResult[0]?.count || 0);
+
+      const rewardsRedeemedResult = await db.select({ count: sql<number>`COUNT(*)` }).from(userRewards);
+      const rewardsRedeemed = Number(rewardsRedeemedResult[0]?.count || 0);
+
+      const totalReferralsResult = await db.select({ count: sql<number>`COUNT(*)` }).from(referrals);
+      const totalReferrals = Number(totalReferralsResult[0]?.count || 0);
+
+      const gamesResult = await db.select({ count: sql<number>`COUNT(*)` }).from(games);
+      const totalGames = Number(gamesResult[0]?.count || 0);
+
+      res.json({
+        // Platform health
+        platformStatus: 'operational',
+        databaseStatus: 'connected',
+        uptimeSeconds: Math.floor(process.uptime()),
+        lastUpdated: new Date().toISOString(),
+
+        // REAL metrics from database
+        actualMetrics: {
+          totalUsers,
+          activeSubscriptions,
+          totalRewards,
+          rewardsRedeemed,
+          totalReferrals,
+          totalGames,
+        },
+
+        // Platform capabilities (static, true facts)
+        capabilities: {
+          authProviders: ['Google', 'Discord', 'Twitch'],
+          paymentProvider: 'PayPal',
+          gamesSupported: ['League of Legends'],
+          featuresReady: [
+            'User Authentication (OAuth)',
+            'Subscription Payments',
+            'Rewards Catalog',
+            'Referral System',
+            'Admin Dashboard',
+            'Fulfillment Tracking'
+          ]
+        },
+
+        // Clearly labeled as current stage
+        stage: totalUsers > 100 ? 'growth' : totalUsers > 10 ? 'early_adopters' : 'pilot'
+      });
+    } catch (error) {
+      console.error('Error fetching public platform stats:', error);
+      res.status(500).json({
+        platformStatus: 'error',
+        error: 'Failed to fetch platform stats'
+      });
+    }
+  });
 
   // Guest account creation
   app.post('/api/auth/guest', async (req: any, res) => {
