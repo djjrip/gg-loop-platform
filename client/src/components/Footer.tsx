@@ -12,17 +12,22 @@ export default function Footer() {
               <img src={logoImage} alt="GG LOOP Logo" className="h-8 w-auto" />
               <h3 className="font-semibold">GG Loop</h3>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Play. Unlock. LOOP. A membership rewards program for dedicated gamers.
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              <span className="text-primary font-semibold">Play. Earn. Loop.</span>
+              <br />
+              A gaming rewards platform built for the players who never felt seen.
+            </p>
+            <p className="text-xs text-muted-foreground mt-3 italic">
+              Healing the inner gamer — one match at a time.
             </p>
           </div>
-          
+
           <div>
             <h3 className="font-semibold mb-3">Community</h3>
             <ul className="space-y-2">
               <li>
-                <a 
-                  href="https://discord.gg/X6GXg2At2D" 
+                <a
+                  href="https://discord.gg/X6GXg2At2D"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 hover-elevate px-2 py-1 rounded-md"
@@ -33,8 +38,8 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://tiktok.me/jaysonbq" 
+                <a
+                  href="https://tiktok.me/jaysonbq"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 hover-elevate px-2 py-1 rounded-md"
@@ -46,7 +51,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-semibold mb-3">Legal</h3>
             <ul className="space-y-2 text-sm">
@@ -62,7 +67,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-semibold mb-3">Support</h3>
             <ul className="space-y-2 text-sm">
@@ -77,8 +82,8 @@ export default function Footer() {
 
         <div className="border-t border-border pt-6">
           <p className="text-xs text-muted-foreground leading-relaxed">
-            GG Loop isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games 
-            or anyone officially involved in producing or managing Riot Games properties. Riot Games, and 
+            GG Loop isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games
+            or anyone officially involved in producing or managing Riot Games properties. Riot Games, and
             all associated properties are trademarks or registered trademarks of Riot Games, Inc.
           </p>
           <p className="text-xs text-muted-foreground mt-4">

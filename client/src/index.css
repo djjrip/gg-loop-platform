@@ -2,191 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    /* GG LOOP OFFICIAL BRAND VARIABLES (DEFAULT) */
-    --ggloop-orange: #ff7a28;
-    --ggloop-rose-gold: #d77a47;
-    --ggloop-black: #000000;
-    --ggloop-dark-shadow: #0d0d0d;
-    --ggloop-neon-glow: rgba(255, 122, 40, 0.3);
-
-    --brand-glow: 0 0 10px var(--ggloop-neon-glow);
-    --text-glow-orange: 0 0 5px var(--ggloop-neon-glow);
-  }
-
-  /* Empire variables - SCOPED to .empire-layout ONLY */
-  .empire-layout {
-    --empire-green: #00ff41;
-    --empire-dark: #0a0a0a;
-    --empire-slate: #1a1a1a;
-    --empire-dim: rgba(0, 255, 65, 0.1);
-    --hud-border: 1px solid var(--empire-green);
-    --hud-glow: 0 0 10px var(--empire-dim);
-    --text-glow: 0 0 5px var(--empire-dim);
-  }
-
-  .empire-layout .predator-text {
-    color: var(--empire-green);
-    text-shadow: var(--text-glow);
-    font-family: 'Courier New', monospace;
-    letter-spacing: 0.05em;
-  }
-
-  /* GG LOOP brand text glow */
-  .ggloop-glow-text {
-    text-shadow: var(--text-glow-orange);
-  }
-
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply font-sans antialiased text-foreground;
-    background: transparent;
-  }
-
-  #root {
-    background: hsl(var(--background));
-    position: relative;
-    z-index: 2;
-  }
-}
-
-@layer components {
-
-  /* Empire HUD Components - SCOPED to .empire-layout ONLY */
-  .empire-layout .hud-panel {
-    @apply bg-empire-dark/90 border border-empire-green/30 backdrop-blur-sm relative overflow-hidden;
-    box-shadow: 0 0 15px rgba(0, 255, 65, 0.05);
-  }
-
-  .empire-layout .hud-panel::before {
-    content: '';
-    @apply absolute top-0 left-0 w-2 h-2 border-t border-l border-empire-green;
-  }
-
-  .empire-layout .hud-panel::after {
-    content: '';
-    @apply absolute top-0 right-0 w-2 h-2 border-t border-r border-empire-green;
-  }
-
-  .empire-layout .hud-corners-bottom::before {
-    content: '';
-    @apply absolute bottom-0 left-0 w-2 h-2 border-b border-l border-empire-green;
-  }
-
-  .empire-layout .hud-corners-bottom::after {
-    content: '';
-    @apply absolute bottom-0 right-0 w-2 h-2 border-b border-r border-empire-green;
-  }
-
-  .empire-layout .tactical-btn {
-    @apply bg-empire-dim border border-empire-green/50 text-empire-green px-4 py-2 uppercase tracking-widest hover:bg-empire-green/20 transition-all duration-300;
-    text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
-  }
-
-  .empire-layout .tactical-btn:hover {
-    box-shadow: 0 0 15px var(--empire-dim);
-    border-color: var(--empire-green);
-  }
-
-  .empire-layout .scanline-overlay {
-    @apply fixed inset-0 pointer-events-none z-50;
-    background: linear-gradient(to bottom,
-        rgba(255, 255, 255, 0),
-        rgba(255, 255, 255, 0) 50%,
-        rgba(0, 0, 0, 0.1) 50%,
-        rgba(0, 0, 0, 0.1));
-    background-size: 100% 4px;
-    animation: scanline 10s linear infinite;
-    opacity: 0.15;
-  }
-
-  .empire-layout .tactical-grid {
-    background-image:
-      linear-gradient(var(--empire-dim) 1px, transparent 1px),
-      linear-gradient(90deg, var(--empire-dim) 1px, transparent 1px);
-    background-size: 30px 30px;
-    background-position: center center;
-  }
-}
-
-/* Original Lava Lamp background styles - Kept for reference but likely unused in Empire theme */
-.lava-lamp {
-  /* keep it subtle and low-contrast in dark theme */
-  background: transparent;
-}
-
-.lava-layer {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.lava-blob {
-  position: fixed;
-  filter: blur(80px) saturate(180%);
-  opacity: 0.65;
-  mix-blend-mode: normal;
-  transform: translate3d(0, 0, 0);
-  will-change: transform, border-radius, opacity, filter;
-}
-
-.lava-blob-1 {
-  background: radial-gradient(circle at 30% 30%, #ff5722 0%, rgba(255, 87, 34, 0.6) 25%, rgba(255, 87, 34, 0.2) 50%, transparent 75%);
-  width: 750px;
-  height: 750px;
-  animation: lavaLoop1 35s ease-in-out infinite, lavaMorph 12s ease-in-out infinite;
-}
-
-.lava-blob-2 {
-  background: radial-gradient(circle at 60% 40%, #ff6f00 0%, rgba(255, 111, 0, 0.6) 25%, rgba(255, 111, 0, 0.2) 50%, transparent 75%);
-  width: 700px;
-  height: 700px;
-  animation: lavaLoop2 38s ease-in-out infinite, lavaMorph 14s ease-in-out infinite;
-}
-
-.lava-blob-3 {
-  background: radial-gradient(circle at 40% 60%, #ff7043 0%, rgba(255, 112, 67, 0.6) 25%, rgba(255, 112, 67, 0.2) 50%, transparent 75%);
-  width: 800px;
-  height: 800px;
-  animation: lavaLoop3 40s ease-in-out infinite, lavaMorph 15s ease-in-out infinite;
-}
-
-.lava-blob-4 {
-  background: radial-gradient(circle at 60% 60%, #ff9100 0%, rgba(255, 145, 0, 0.6) 25%, rgba(255, 145, 0, 0.2) 50%, transparent 75%);
-  width: 650px;
-  height: 650px;
-  animation: lavaLoop4 36s ease-in-out infinite, lavaMorph 13s ease-in-out infinite;
-}
-
-.lava-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(8, 6, 6, 0.08) 0%, rgba(8, 6, 6, 0.18) 100%);
-  pointer-events: none;
-}
-
-@keyframes lavaFloat {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  50% {
-    transform: translate3d(10px, -18px, 0) scale(1.02);
-  }
-
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@keyframes lavaTravel1 {
-  /* Lava lamp disabled - focusing on core functionality */
+/* LIGHT MODE */
+:root {
+  --button-outline: rgba(0, 0, 0, .10);
+  --badge-outline: rgba(0, 0, 0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0, 0, 0, .03);
+  --elevate-2: rgba(0, 0, 0, .08);
   --background: 0 0% 98%;
   --foreground: 0 0% 10%;
   --border: 0 0% 88%;
@@ -343,6 +165,70 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    position: relative;
+  }
+
+  /* Subtle Infinity Loop Background - GG LOOP Signature */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image:
+      radial-gradient(circle at 20% 50%, rgba(255, 140, 66, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 50%, rgba(255, 140, 66, 0.15) 0%, transparent 50%);
+    animation: infinity-pulse 12s ease-in-out infinite;
+  }
+
+  @keyframes infinity-pulse {
+
+    0%,
+    100% {
+      opacity: 0.02;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.04;
+      transform: scale(1.02);
+    }
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/**
+ * Using the elevate system.
+ * Automatic contrast adjustment.
+ *
+ * <element className="hover-elevate" />
+ * <element className="active-elevate-2" />
+ *
+ * // Using the tailwind utility when a data attribute is "on"
+ * <element className="toggle-elevate data-[state=on]:toggle-elevated" />
+ * // Or manually controlling the toggle state
+ * <element className="toggle-elevate toggle-elevated" />
+ *
+ * Elevation systems have to handle many states.
+ * - not-hovered, vs. hovered vs. active  (three mutually exclusive states)
+ * - toggled or not
+ * - focused or not (this is not handled with these utilities)
+ *
+ * Even without handling focused or not, this is six possible combinations that
+ * need to be distinguished from eachother visually.
+ */
 @layer utilities {
 
   /* Hide ugly search cancel button in Chrome until we can style it properly */

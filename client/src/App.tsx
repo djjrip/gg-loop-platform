@@ -4,15 +4,12 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LoginNotification } from "@/components/LoginNotification";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Footer from "@/components/Footer";
 import { useAuth } from "./hooks/useAuth";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Public pages
 import Home from "@/pages/Home";
 import About from "@/pages/About";
-import Roadmap from "@/pages/Roadmap";
 import Partners from "@/pages/Partners";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
@@ -23,8 +20,6 @@ import Subscription from "@/pages/Subscription";
 // User pages
 import Login from "@/pages/Login";
 import QuickStart from "@/pages/archive/QuickStart";
-import TwitchOutreach from "@/pages/archive/TwitchOutreach";
-import SponsorOutreach from "@/pages/archive/SponsorOutreach";
 import Profile from "@/pages/Profile";
 import Stats from "@/pages/Stats";
 import Settings from "@/pages/Settings";
@@ -35,26 +30,17 @@ import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import SubscriptionCancel from "@/pages/SubscriptionCancel";
 import AffiliateProgram from "@/pages/AffiliateProgram";
 import GGLoopCares from "@/pages/GGLoopCares";
-import AWSRoadmap from "@/pages/AWSRoadmap";
 
 // Admin pages
 import AdminDashboard from "@/pages/AdminDashboardPage";
-// import AdminDashboardPlaceholder from "@/pages/AdminDashboardPlaceholder";
-import SystemStatus from "@/pages/admin/SystemStatus";
-import UserManagement from "@/pages/admin/UserManagement";
-import AuditLogs from "@/pages/admin/AuditLogs";
-import MissionControlDashboard from "@/pages/admin/MissionControlDashboard";
 import FounderControls from "@/pages/FounderControls";
 import FulfillmentDashboard from "@/pages/FulfillmentDashboard";
 import AdminFulfillment from "@/pages/AdminFulfillment";
 import RewardsManagement from "@/pages/RewardsManagement";
 import DailyOps from "@/pages/DailyOps";
 import SponsorManagement from "@/pages/SponsorManagement";
-// NOTE: These admin pages don't exist yet - commenting out to prevent runtime errors
-// import AffiliateManagement from "@/pages/admin/AffiliateManagement";
-// import CharityManagement from "@/pages/admin/CharityManagement";
-// import UserManagement from "@/pages/admin/UserManagement";
-// import FounderHub from "@/pages/admin/FounderHub";
+import AffiliateManagement from "@/pages/admin/AffiliateManagement";
+import CharityManagement from "@/pages/admin/CharityManagement";
 
 // 404
 import NotFound from "@/pages/not-found";
@@ -78,14 +64,12 @@ function Router() {
       {/* Public Routes */}
       <Route path="/" component={Home} />
       <Route path="/about" component={About} />
-      <Route path="/roadmap" component={Roadmap} />
       <Route path="/partners" component={Partners} />
       <Route path="/shop" component={Shop} />
       <Route path="/creator-tools" component={CreatorTools} />
       <Route path="/subscription" component={Subscription} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
-      <Route path="/aws-roadmap" component={AWSRoadmap} /> {/* AWS Roadmap Route */}
 
       {/* User Routes */}
       <Route path="/login" component={Login} />
@@ -98,28 +82,19 @@ function Router() {
       <Route path="/affiliate-program" component={AffiliateProgram} />
       <Route path="/gg-loop-cares" component={GGLoopCares} />
       <Route path="/launch-dashboard" component={LaunchDashboard} />
-      <Route path="/twitch-outreach" component={TwitchOutreach} />
-      <Route path="/sponsor-outreach" component={SponsorOutreach} />
       <Route path="/subscription/success" component={SubscriptionSuccess} />
       <Route path="/subscription/cancel" component={SubscriptionCancel} />
 
       {/* Admin Routes */}
-      {/* Admin Routes - PROTECTED */}
-      <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
-      <ProtectedRoute path="/admin/system-status" component={SystemStatus} adminOnly />
-      <ProtectedRoute path="/admin/users" component={UserManagement} adminOnly />
-      <ProtectedRoute path="/admin/audit-logs" component={AuditLogs} adminOnly />
-      <ProtectedRoute path="/admin/mission-control" component={MissionControlDashboard} adminOnly />
-      <ProtectedRoute path="/admin/founder-controls" component={FounderControls} adminOnly />
-      <ProtectedRoute path="/admin/rewards" component={RewardsManagement} adminOnly />
-      <ProtectedRoute path="/admin/sponsors" component={SponsorManagement} adminOnly />
-      {/* <ProtectedRoute path="/admin/affiliates" component={AffiliateManagement} adminOnly /> */}
-      {/* <ProtectedRoute path="/admin/charities" component={CharityManagement} adminOnly /> */}
-      <ProtectedRoute path="/admin/daily-ops" component={DailyOps} adminOnly />
-      <ProtectedRoute path="/admin/fulfillment" component={AdminFulfillment} adminOnly />
-      {/* <ProtectedRoute path="/admin/users" component={UserManagement} adminOnly /> */}
-      {/* <ProtectedRoute path="/admin/founder-hub" component={FounderHub} adminOnly /> */}
-      <ProtectedRoute path="/fulfillment" component={FulfillmentDashboard} adminOnly />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/founder-controls" component={FounderControls} />
+      <Route path="/admin/rewards" component={RewardsManagement} />
+      <Route path="/admin/sponsors" component={SponsorManagement} />
+      <Route path="/admin/affiliates" component={AffiliateManagement} />
+      <Route path="/admin/charities" component={CharityManagement} />
+      <Route path="/admin/daily-ops" component={DailyOps} />
+      <Route path="/admin/fulfillment" component={AdminFulfillment} />
+      <Route path="/fulfillment" component={FulfillmentDashboard} />
 
       {/* 404 */}
       <Route component={NotFound} />
@@ -131,16 +106,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <ErrorBoundary>
-          <LoginNotification />
-          <Toaster />
-          <div className="flex flex-col min-h-screen">
-            <div className="flex-1">
-              <Router />
-            </div>
-            <Footer />
+        <LoginNotification />
+        <Toaster />
+        <div className="flex flex-col min-h-screen">
+          <div className="flex-1">
+            <Router />
           </div>
-        </ErrorBoundary>
+          <Footer />
+        </div>
       </TooltipProvider>
     </QueryClientProvider>
   );
