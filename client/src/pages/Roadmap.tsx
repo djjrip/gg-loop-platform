@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 
 export default function Roadmap() {
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-background text-foreground">
             <Header />
 
             {/* Hero/Title Section */}
@@ -56,7 +56,7 @@ export default function Roadmap() {
             </section>
 
             {/* SECTION 2 - THE EMPIRE TIERS */}
-            <section className="py-24 px-4 bg-black">
+            <section className="py-24 px-4 bg-background">
                 <div className="container mx-auto max-w-7xl">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
@@ -201,8 +201,8 @@ export default function Roadmap() {
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.1 }}
                                 className={`p-6 rounded-lg border ${item.color === "orange"
-                                        ? "bg-orange-950/20 border-orange-500/30 hover:border-orange-500/60"
-                                        : "bg-red-950/20 border-red-500/30 hover:border-red-500/60"
+                                    ? "bg-orange-950/20 border-orange-500/30 hover:border-orange-500/60"
+                                    : "bg-red-950/20 border-red-500/30 hover:border-red-500/60"
                                     } transition-all duration-300`}
                             >
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -213,8 +213,8 @@ export default function Roadmap() {
                                         <p className="text-gray-300 text-lg">{item.games}</p>
                                     </div>
                                     <div className={`px-4 py-2 rounded-full ${item.status === "LIVE"
-                                            ? "bg-green-500/20 border border-green-500/50 text-green-400"
-                                            : `bg-${item.color}-500/20 border border-${item.color}-500/50 text-${item.color}-400`
+                                        ? "bg-green-500/20 border border-green-500/50 text-green-400"
+                                        : `bg-${item.color}-500/20 border border-${item.color}-500/50 text-${item.color}-400`
                                         } font-bold`}>
                                         {item.status}
                                     </div>
@@ -226,7 +226,7 @@ export default function Roadmap() {
             </section>
 
             {/* SECTION 4 - NBA x CULTURE CROSSOVER */}
-            <section className="py-24 px-4 bg-black relative overflow-hidden">
+            <section className="py-24 px-4 bg-background relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-950/10 via-red-950/10 to-orange-950/10"></div>
                 <div className="container mx-auto max-w-6xl relative z-10">
                     <motion.div
@@ -340,7 +340,7 @@ export default function Roadmap() {
             </section>
 
             {/* SECTION 6 - GLOBAL IMPACT */}
-            <section className="py-24 px-4 bg-black">
+            <section className="py-24 px-4 bg-background">
                 <div className="container mx-auto max-w-5xl">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
@@ -421,8 +421,8 @@ export default function Roadmap() {
                                 viewport={{ once: true }}
                                 transition={{ delay: index * 0.1 }}
                                 className={`flex items-center justify-between p-6 rounded-lg border ${item.color === "orange"
-                                        ? "bg-orange-950/20 border-orange-500/30 hover:border-orange-500/60"
-                                        : "bg-red-950/20 border-red-500/30 hover:border-red-500/60"
+                                    ? "bg-orange-950/20 border-orange-500/30 hover:border-orange-500/60"
+                                    : "bg-red-950/20 border-red-500/30 hover:border-red-500/60"
                                     } transition-all duration-300`}
                             >
                                 <div className={`text-2xl md:text-3xl font-black ${item.color === "orange" ? "text-orange-400" : "text-red-400"}`}>

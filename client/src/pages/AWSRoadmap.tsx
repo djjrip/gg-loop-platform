@@ -49,9 +49,9 @@ export default function AWSRoadmap() {
     const isOperational = stats?.platformStatus === 'operational';
 
     return (
-        <div className="min-h-screen bg-black">
+        <div className="min-h-screen bg-background">
             {/* Header */}
-            <div className="border-b border-brand-copper/20 bg-black">
+            <div className="border-b border-primary/20 bg-background">
                 <div className="container mx-auto py-8 px-4 max-w-6xl">
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div>
@@ -102,29 +102,29 @@ export default function AWSRoadmap() {
                     </CardHeader>
                     <CardContent className="pt-6">
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                            <div className="bg-black/50 border border-brand-copper/20 rounded-lg p-4">
+                            <div className="bg-card/50 border border-brand-copper/20 rounded-lg p-4">
                                 <div className="text-gray-400 text-sm mb-1">Platform Status</div>
                                 <div className="text-2xl font-bold text-brand-copper">
                                     {stats?.stage === 'pilot' ? 'Pilot' : 'Active'}
                                 </div>
                             </div>
-                            <div className="bg-black/50 border border-brand-copper/20 rounded-lg p-4">
+                            <div className="bg-card/50 border border-brand-copper/20 rounded-lg p-4">
                                 <div className="text-gray-400 text-sm mb-1">Users</div>
                                 <div className="text-2xl font-bold text-white">{stats?.actualMetrics.totalUsers || 0}</div>
                             </div>
-                            <div className="bg-black/50 border border-brand-copper/20 rounded-lg p-4">
+                            <div className="bg-card/50 border border-brand-copper/20 rounded-lg p-4">
                                 <div className="text-gray-400 text-sm mb-1">Paying Customers</div>
                                 <div className="text-2xl font-bold text-white">{stats?.actualMetrics.activeSubscriptions || 0}</div>
                             </div>
-                            <div className="bg-black/50 border border-brand-copper/20 rounded-lg p-4">
+                            <div className="bg-card/50 border border-brand-copper/20 rounded-lg p-4">
                                 <div className="text-gray-400 text-sm mb-1">Rewards Catalog</div>
                                 <div className="text-2xl font-bold text-white">{stats?.actualMetrics.totalRewards || 0}</div>
                             </div>
-                            <div className="bg-black/50 border border-brand-copper/20 rounded-lg p-4">
+                            <div className="bg-card/50 border border-brand-copper/20 rounded-lg p-4">
                                 <div className="text-gray-400 text-sm mb-1">Rewards Claimed</div>
                                 <div className="text-2xl font-bold text-white">{stats?.actualMetrics.rewardsRedeemed || 0}</div>
                             </div>
-                            <div className="bg-black/50 border border-brand-copper/20 rounded-lg p-4">
+                            <div className="bg-card/50 border border-brand-copper/20 rounded-lg p-4">
                                 <div className="text-gray-400 text-sm mb-1">Uptime</div>
                                 <div className="text-2xl font-bold text-brand-copper">
                                     {stats ? formatUptime(stats.uptimeSeconds) : '...'}
@@ -202,15 +202,15 @@ export default function AWSRoadmap() {
                     </CardHeader>
                     <CardContent className="pt-6">
                         <div className="grid md:grid-cols-3 gap-4">
-                            <div className="bg-black/50 border border-amber-500/20 rounded-lg p-4">
+                            <div className="bg-card/50 border border-amber-500/20 rounded-lg p-4">
                                 <div className="text-gray-400 text-sm mb-1">6-Month Goal</div>
                                 <div className="text-2xl font-bold text-white">1,000 users</div>
                             </div>
-                            <div className="bg-black/50 border border-amber-500/20 rounded-lg p-4">
+                            <div className="bg-card/50 border border-amber-500/20 rounded-lg p-4">
                                 <div className="text-gray-400 text-sm mb-1">1-Year Target</div>
                                 <div className="text-2xl font-bold text-white">10,000 users</div>
                             </div>
-                            <div className="bg-black/50 border border-amber-500/20 rounded-lg p-4">
+                            <div className="bg-card/50 border border-amber-500/20 rounded-lg p-4">
                                 <div className="text-gray-400 text-sm mb-1">Revenue Goal (Year 1)</div>
                                 <div className="text-2xl font-bold text-white">$100K ARR</div>
                             </div>
@@ -231,13 +231,13 @@ export default function AWSRoadmap() {
                     </CardHeader>
                     <CardContent className="pt-6">
                         <div className="space-y-4">
-                            <div className="bg-black/50 border border-blue-500/20 rounded-lg p-4">
+                            <div className="bg-card/50 border border-blue-500/20 rounded-lg p-4">
                                 <h4 className="text-blue-400 font-semibold mb-2">Current Setup (Railway)</h4>
                                 <p className="text-gray-300 text-sm">
                                     Hosted on Railway with Neon PostgreSQL. Great for pilot, but limited scalability.
                                 </p>
                             </div>
-                            <div className="bg-black/50 border border-blue-500/20 rounded-lg p-4">
+                            <div className="bg-card/50 border border-blue-500/20 rounded-lg p-4">
                                 <h4 className="text-blue-400 font-semibold mb-2">AWS Migration Benefits</h4>
                                 <ul className="space-y-2 text-gray-300 text-sm">
                                     <li className="flex items-center gap-2">

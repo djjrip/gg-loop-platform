@@ -45,7 +45,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-ggloop-black text-white font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground font-sans relative overflow-hidden">
       {/* Background Effects */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,122,40,0.05),transparent_70%)]" />
@@ -211,7 +211,7 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-ggloop-black/80 border-ggloop-orange/30 p-6 hover:border-ggloop-orange transition-colors">
+              <Card className="bg-card border-primary/30 p-6 hover:border-primary transition-colors">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-white">League of Legends</h3>
                   <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
@@ -219,7 +219,7 @@ export default function Home() {
                 <p className="text-gray-400 text-sm">Ranked Summoner's Rift • 5v5</p>
               </Card>
 
-              <Card className="bg-ggloop-black/80 border-ggloop-orange/30 p-6 hover:border-ggloop-orange transition-colors">
+              <Card className="bg-card border-primary/30 p-6 hover:border-primary transition-colors">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-white">VALORANT</h3>
                   <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
@@ -227,7 +227,7 @@ export default function Home() {
                 <p className="text-gray-400 text-sm">Competitive Queue • 5v5</p>
               </Card>
 
-              <Card className="bg-ggloop-black/80 border-ggloop-orange/30 p-6 hover:border-ggloop-orange transition-colors">
+              <Card className="bg-card border-primary/30 p-6 hover:border-primary transition-colors">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-white">Teamfight Tactics</h3>
                   <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
