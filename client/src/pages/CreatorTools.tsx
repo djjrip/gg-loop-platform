@@ -33,94 +33,115 @@ const CREATOR_TOOLS: CreatorTool[] = [
   // Build Your Brand
   {
     name: "Shopify",
-    description: "Create your own online store and sell products directly to your community",
+    description: "Start your online store and sell gaming merch",
     icon: Store,
-    url: import.meta.env.VITE_SHOPIFY_AFFILIATE_URL || "https://www.shopify.com",
+    url: "https://shopify.pxf.io/gOjOZr",
     category: "brand"
   },
   {
     name: "jAlbum",
-    description: "Professional photo gallery and portfolio builder for content creators",
+    description: "Create stunning photo galleries for your content",
     icon: Camera,
-    url: import.meta.env.VITE_JALBUM_URL || "https://jalbum.net",
+    url: "https://jalbum-affiliate-program.sjv.io/4GbGZn",
     category: "brand"
   },
-  
+
   // Grow as a Creator
   {
-    name: "Clip Editing Apps",
-    description: "Professional video editing tools to create engaging content for your audience",
-    icon: Scissors,
-    url: import.meta.env.VITE_CLIP_EDITING_URL || "#",
+    name: "IPRoyal",
+    description: "Proxy services for content research and growth",
+    icon: Globe,
+    url: "https://iproyal.sjv.io/YR6RrP",
     category: "grow"
   },
   {
-    name: "Stream Tools",
-    description: "Essential streaming software and overlays to enhance your live broadcasts",
-    icon: Video,
-    url: import.meta.env.VITE_STREAM_TOOLS_URL || "#",
+    name: "MarketXLS",
+    description: "Market data and analytics for creators",
+    icon: TrendingUp,
+    url: "https://marketxls.pxf.io/yq0qn3",
     category: "grow"
   },
-  
+
   // Sell Your Merch
   {
-    name: "Shopify",
-    description: "Complete e-commerce platform for selling branded merchandise and products",
+    name: "DHGate",
+    description: "Wholesale marketplace for gaming merchandise",
+    icon: Package,
+    url: "https://dhgate.sjv.io/9LRLb5",
+    category: "merch"
+  },
+  {
+    name: "Modlily",
+    description: "Fashion and apparel for your brand",
     icon: ShoppingBag,
-    url: import.meta.env.VITE_SHOPIFY_AFFILIATE_URL || "https://www.shopify.com",
+    url: "https://modlily.sjv.io/LKVKzM",
     category: "merch"
   },
   {
     name: "EasyShip",
-    description: "Simplified shipping solutions with discounted rates and automated fulfillment",
-    icon: Package,
-    url: import.meta.env.VITE_EASYSHIP_URL || "https://www.easyship.com",
+    description: "Shipping solutions for your merchandise",
+    icon: Plane,
+    url: "https://easyship.ilbqy6.net/e191dO",
     category: "merch"
   },
-  
+
   // Monetize Your Audience
   {
     name: "Gemini Exchange",
-    description: "Cryptocurrency trading platform for diversifying your income streams",
+    description: "Crypto platform for community monetization",
     icon: Coins,
-    url: import.meta.env.VITE_GEMINI_URL || "https://www.gemini.com",
+    url: "https://gemini.sjv.io/raZaAv",
     category: "monetize"
   },
-  {
-    name: "MarketXLS",
-    description: "Advanced market data and analytics tools for informed decision making",
-    icon: TrendingUp,
-    url: import.meta.env.VITE_MARKETXLS_URL || "https://www.marketxls.com",
-    category: "monetize"
-  },
-  {
-    name: "IPRoyal",
-    description: "Residential proxy and data collection services for market research",
-    icon: Globe,
-    url: import.meta.env.VITE_IPROYAL_URL || "https://iproyal.com",
-    category: "monetize"
-  },
-  
+
   // Level Up IRL
   {
-    name: "Travel Brands",
-    description: "Exclusive deals on travel bookings for content creators on the move",
-    icon: Plane,
-    url: import.meta.env.VITE_TRAVEL_BRANDS_URL || "#",
+    name: "CBD For Life",
+    description: "Wellness products for gamers",
+    icon: Sparkles,
+    url: "https://imp.i295461.net/N9Z9nV",
     category: "lifestyle"
   },
   {
     name: "Coffee Bros",
-    description: "Premium coffee subscriptions to fuel your creative sessions",
+    description: "Premium coffee for late-night gaming",
     icon: Coffee,
-    url: import.meta.env.VITE_COFFEE_BROS_URL || "#",
+    url: "https://coffeebros.sjv.io/mOAODM",
     category: "lifestyle"
   },
   {
-    name: "CBD For Life",
-    description: "Natural wellness products to help you stay balanced and focused",
+    name: "WhereLight",
+    description: "Lighting solutions for streaming setups",
     icon: Sparkles,
-    url: import.meta.env.VITE_CBD_FOR_LIFE_URL || "#",
+    url: "https://wherelight.pxf.io/MAJA0q",
+    category: "lifestyle"
+  },
+  {
+    name: "PuzzleReady",
+    description: "Mental wellness through puzzles",
+    icon: Sparkles,
+    url: "https://puzzlereadyaffiliateprogram.pxf.io/7a2aWg",
+    category: "lifestyle"
+  },
+  {
+    name: "Funwhole",
+    description: "Creative building sets for relaxation",
+    icon: Sparkles,
+    url: "https://funwhole.sjv.io/qzJzeY",
+    category: "lifestyle"
+  },
+  {
+    name: "Alaska Airlines",
+    description: "Travel rewards for IRL adventures",
+    icon: Plane,
+    url: "https://alaska.gqco.net/xLWL01",
+    category: "lifestyle"
+  },
+  {
+    name: "GearUP",
+    description: "Gaming gear and equipment",
+    icon: ShoppingBag,
+    url: "https://gearup.sjv.io/09rPQM",
     category: "lifestyle"
   }
 ];
@@ -134,7 +155,7 @@ interface SectionProps {
 
 function ToolCard({ tool }: { tool: CreatorTool }) {
   const Icon = tool.icon;
-  
+
   return (
     <Card className="hover-elevate h-full" data-testid={`card-tool-${tool.name.toLowerCase().replace(/\s+/g, '-')}`}>
       <CardHeader>
@@ -148,15 +169,15 @@ function ToolCard({ tool }: { tool: CreatorTool }) {
         <CardDescription className="text-sm">{tool.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <a 
-          href={tool.url} 
-          target="_blank" 
+        <a
+          href={tool.url}
+          target="_blank"
           rel="noopener noreferrer"
           className="block"
         >
-          <Button 
-            variant="outline" 
-            className="w-full" 
+          <Button
+            variant="outline"
+            className="w-full"
             data-testid={`button-learn-more-${tool.name.toLowerCase().replace(/\s+/g, '-')}`}
           >
             Learn More
@@ -182,7 +203,7 @@ function ToolSection({ title, description, tools, icon: Icon }: SectionProps) {
         </div>
         <p className="text-muted-foreground text-lg ml-14">{description}</p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tools.map((tool) => (
           <ToolCard key={tool.name} tool={tool} />
@@ -202,7 +223,7 @@ export default function CreatorTools() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto text-center space-y-6">
@@ -210,13 +231,13 @@ export default function CreatorTools() {
             <Megaphone className="mr-2 h-3 w-3 inline" />
             Creator Resources
           </Badge>
-          
+
           <h1 className="text-5xl md:text-6xl font-bold font-heading tracking-tight" data-testid="text-hero-title">
             Creator Tools
           </h1>
-          
+
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto" data-testid="text-hero-subtitle">
-            Everything you need to build, grow, and monetize your gaming content creation journey. 
+            Everything you need to build, grow, and monetize your gaming content creation journey.
             Curated tools and services trusted by creators worldwide.
           </p>
         </div>

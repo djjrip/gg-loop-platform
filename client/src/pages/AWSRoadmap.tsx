@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import {
-    CheckCircle2, Rocket, Target, BarChart3, DollarSign, RefreshCw, Wifi, WifiOff
+    CheckCircle2, Rocket, Target, BarChart3, DollarSign, RefreshCw, Wifi, WifiOff, Home, Heart, Users
 } from "lucide-react";
 
 // Types for API responses
@@ -55,10 +57,16 @@ export default function AWSRoadmap() {
                 <div className="container mx-auto py-8 px-4 max-w-6xl">
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div>
-                            <h1 className="text-4xl font-bold mb-2 text-white">
+                            <Link href="/">
+                                <Button variant="ghost" size="sm" className="mb-4">
+                                    <Home className="h-4 w-4 mr-2" />
+                                    Back to Home
+                                </Button>
+                            </Link>
+                            <h1 className="text-4xl font-bold mb-2 text-foreground">
                                 GG Loop × AWS Partnership Roadmap
                             </h1>
-                            <p className="text-gray-400 text-lg">
+                            <p className="text-muted-foreground text-lg">
                                 Gaming rewards platform seeking infrastructure partnership
                             </p>
                         </div>
@@ -80,6 +88,35 @@ export default function AWSRoadmap() {
             </div>
 
             <div className="container mx-auto py-8 px-4 max-w-6xl">
+                {/* ABOUT GG LOOP & MISSION */}
+                <Card className="mb-8 border-primary/30 bg-card backdrop-blur">
+                    <CardContent className="p-8">
+                        <div className="grid md:grid-cols-2 gap-8">
+                            {/* About GG Loop */}
+                            <div>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <Heart className="h-6 w-6 text-primary" />
+                                    <h2 className="text-2xl font-bold text-foreground">About GG Loop</h2>
+                                </div>
+                                <p className="text-muted-foreground leading-relaxed">
+                                    GG LOOP is an all-in-one gaming rewards ecosystem for every kind of gamer. Whether you're grinding competitive matches or relaxing on a casual night in, you earn points for playing the games you already love — redeemable for real-life value. GG LOOP blends gaming culture with sneaker-inspired aesthetics, subtle basketball energy, modern fashion influence, and real-world identity.
+                                </p>
+                            </div>
+
+                            {/* Mission */}
+                            <div>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <Users className="h-6 w-6 text-primary" />
+                                    <h2 className="text-2xl font-bold text-foreground">Mission</h2>
+                                </div>
+                                <p className="text-muted-foreground leading-relaxed">
+                                    To build the most inclusive and culturally-rooted rewards platform that empowers gamers with real value, real community, and real-life support — from shoes to groceries to wellness resources — while celebrating gaming, culture, and individuality.
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* WHERE WE ARE TODAY */}
                 <Card className="mb-8 border-brand-copper/30 bg-brand-dark/50 backdrop-blur">
                     <CardHeader className="border-b border-brand-copper/20">
