@@ -63,9 +63,9 @@ export default function Header() {
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 hover-elevate px-2 py-1 rounded-md" data-testid="link-home">
-            <div className="flex items-center gap-3">
-              <img src={logoImage} alt="GG LOOP Logo" className="h-10 w-auto" />
-              <span className="font-bold text-3xl tracking-tight">GG LOOP</span>
+            <div className="flex items-center gap-2">
+              <img src={logoImage} alt="GG LOOP Logo" className="h-8 w-8" />
+              <span className="font-bold text-2xl tracking-tight">GG LOOP</span>
             </div>
           </Link>
 
@@ -77,6 +77,14 @@ export default function Header() {
             >
               <Trophy className="h-3.5 w-3.5 text-primary" />
               Home
+            </Link>
+            <Link
+              href="/aws-roadmap"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
+              data-testid="link-aws-roadmap"
+            >
+              <Rocket className="h-3.5 w-3.5 text-primary" />
+              AWS Roadmap
             </Link>
             <a href="#games" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('games')?.scrollIntoView({ behavior: 'smooth' }); } else { window.location.href = '/#games'; } }} className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-games">
               <Gamepad2 className="h-3.5 w-3.5 text-primary" />
@@ -293,6 +301,14 @@ export default function Header() {
             >
               <Trophy className="h-3.5 w-3.5 text-primary" />
               Home
+            </Link>
+            <Link
+              href="/aws-roadmap"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
+              data-testid="link-aws-roadmap-mobile"
+            >
+              <Rocket className="h-3.5 w-3.5 text-primary" />
+              AWS Roadmap
             </Link>
             <a href="#games" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('games')?.scrollIntoView({ behavior: 'smooth' }); } else { window.location.href = '/#games'; } }} className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-games-mobile">
               <Gamepad2 className="h-3.5 w-3.5 text-primary" />

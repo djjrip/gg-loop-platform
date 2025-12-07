@@ -66,9 +66,9 @@ export default function Home() {
 
               {/* Main Hero Text */}
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 leading-tight">
-                <span className="text-white">PLAY. </span>
-                <span className="text-ggloop-orange ggloop-glow-text">EARN. </span>
-                <span className="text-white">LOOP.</span>
+                <span className="text-foreground">PLAY. </span>
+                <span className="text-primary font-bold">EARN. </span>
+                <span className="text-foreground">LOOP.</span>
               </h1>
 
               <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto mb-8 font-medium">

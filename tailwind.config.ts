@@ -83,13 +83,13 @@ export default {
         },
         // GG LOOP OFFICIAL BRAND COLORS (PRIMARY THEME)
         ggloop: {
-          orange: "#ff7a28",         // Primary brand orange
-          "rose-gold": "#d77a47",    // Rose-gold highlights
+          orange: "#b8845f",         // Primary brand bronze/copper (matches hsl(20, 30%, 58%))
+          "rose-gold": "#b8845f",    // Use same brand primary
           black: "#000000",          // Pure black
           "dark-shadow": "#0d0d0d",  // Dark shadow background
-          "orange-light": "#ff9445", // Lighter orange for hovers
-          "orange-dark": "#e6691a",  // Darker orange for pressed
-          "neon-glow": "rgba(255, 122, 40, 0.3)", // Orange glow
+          "orange-light": "#c9956f", // Lighter bronze for hovers
+          "orange-dark": "#a6734f",  // Darker bronze for pressed
+          "neon-glow": "rgba(184, 132, 95, 0.3)", // Bronze glow
         },
         // Empire theme (ADMIN ONLY - scoped to .empire-layout)
         empire: {

@@ -30,6 +30,7 @@ import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import SubscriptionCancel from "@/pages/SubscriptionCancel";
 import AffiliateProgram from "@/pages/AffiliateProgram";
 import GGLoopCares from "@/pages/GGLoopCares";
+import AWSRoadmap from "@/pages/AWSRoadmap";
 
 // Admin pages
 import AdminDashboard from "@/pages/AdminDashboardPage";
@@ -70,6 +71,7 @@ function Router() {
       <Route path="/subscription" component={Subscription} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
+      <Route path="/aws-roadmap" component={AWSRoadmap} />
 
       {/* User Routes */}
       <Route path="/login" component={Login} />
