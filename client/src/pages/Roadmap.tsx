@@ -392,9 +392,9 @@ export default function Roadmap() {
                 </div>
             </section>
 
-            {/* SECTION 7 - PUBLIC TIMELINE */}
+            {/* SECTION 7 - DEVELOPMENT PHASES */}
             <section className="py-24 px-4 bg-gradient-to-b from-black to-charcoal-950">
-                <div className="container mx-auto max-w-4xl">
+                <div className="container mx-auto max-w-6xl">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -402,38 +402,229 @@ export default function Roadmap() {
                         className="text-center mb-16"
                     >
                         <h2 className="text-5xl md:text-6xl font-black mb-4 tracking-tight">
-                            THE <span className="text-orange-500">TIMELINE</span>
+                            DEVELOPMENT <span className="text-orange-500">PHASES</span>
                         </h2>
-                        <p className="text-xl text-gray-400">Clean. No fluff.</p>
+                        <p className="text-xl text-gray-400">From stabilization to global scale</p>
                     </motion.div>
 
-                    <div className="space-y-6">
-                        {[
-                            { period: "Q1 2025", title: "Foundation", color: "orange" },
-                            { period: "Q2-Q4 2025", title: "Digital Athlete Era", color: "orange" },
-                            { period: "2026", title: "Financial Engine + Global Rollouts", color: "red" },
-                            { period: "2027+", title: "Homeownership + NBA Partnerships", color: "red" },
-                        ].map((item, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, x: -30 }}
-                                whileInView={{ opacity: 1, x: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: index * 0.1 }}
-                                className={`flex items-center justify-between p-6 rounded-lg border ${item.color === "orange"
-                                    ? "bg-orange-950/20 border-orange-500/30 hover:border-orange-500/60"
-                                    : "bg-red-950/20 border-red-500/30 hover:border-red-500/60"
-                                    } transition-all duration-300`}
-                            >
-                                <div className={`text-2xl md:text-3xl font-black ${item.color === "orange" ? "text-orange-400" : "text-red-400"}`}>
-                                    {item.period}
+                    <div className="space-y-12">
+                        {/* Phase 1: Stabilization */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="relative"
+                        >
+                            <div className="bg-gradient-to-br from-orange-950/30 to-black border border-orange-500/30 rounded-lg p-8 hover:border-orange-500/60 transition-all duration-300">
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                                    <div>
+                                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/20 border border-orange-500/50 mb-4">
+                                            <Zap className="h-5 w-5 text-orange-500" />
+                                            <span className="text-sm font-bold text-orange-500 uppercase">Now → 12 Weeks</span>
+                                        </div>
+                                        <h3 className="text-4xl font-black text-orange-400 mb-2">PHASE 1</h3>
+                                        <p className="text-2xl font-bold text-white">Stabilization</p>
+                                    </div>
                                 </div>
-                                <div className="text-xl md:text-2xl font-bold text-white">
-                                    {item.title}
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h4 className="text-lg font-bold text-white mb-3">Infrastructure</h4>
+                                        <ul className="space-y-2 text-gray-300">
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Winston logging + Sentry errors
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Prometheus + Grafana activation
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Redis session store
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                BullMQ job queue
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="text-lg font-bold text-white mb-3">Code Quality</h4>
+                                        <ul className="space-y-2 text-gray-300">
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Modularize routes (159KB → modules)
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                API versioning + validation
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Rate limiting + caching
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Admin dashboard enhancements
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
-                            </motion.div>
-                        ))}
+
+                                <div className="mt-6 p-4 bg-orange-950/20 rounded border border-orange-500/20">
+                                    <p className="text-sm font-bold text-orange-400">
+                                        ✅ Deliverable: Production-ready codebase with enterprise reliability
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Phase 2: AWS-Ready Architecture */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.2 }}
+                            className="relative"
+                        >
+                            <div className="bg-gradient-to-br from-red-950/30 to-black border border-red-500/30 rounded-lg p-8 hover:border-red-500/60 transition-all duration-300">
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                                    <div>
+                                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/20 border border-red-500/50 mb-4">
+                                            <Shield className="h-5 w-5 text-red-500" />
+                                            <span className="text-sm font-bold text-red-500 uppercase">Weeks 13-16</span>
+                                        </div>
+                                        <h3 className="text-4xl font-black text-red-400 mb-2">PHASE 2</h3>
+                                        <p className="text-2xl font-bold text-white">AWS-Ready Architecture</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-3 gap-4">
+                                    <div className="p-4 bg-red-950/20 rounded border border-red-500/20">
+                                        <h4 className="text-sm font-bold text-red-400 mb-2">COMPUTE</h4>
+                                        <p className="text-xs text-gray-300">ECS Fargate + ALB</p>
+                                    </div>
+                                    <div className="p-4 bg-red-950/20 rounded border border-red-500/20">
+                                        <h4 className="text-sm font-bold text-red-400 mb-2">DATA</h4>
+                                        <p className="text-xs text-gray-300">RDS + ElastiCache</p>
+                                    </div>
+                                    <div className="p-4 bg-red-950/20 rounded border border-red-500/20">
+                                        <h4 className="text-sm font-bold text-red-400 mb-2">STORAGE</h4>
+                                        <p className="text-xs text-gray-300">S3 + CloudFront</p>
+                                    </div>
+                                    <div className="p-4 bg-red-950/20 rounded border border-red-500/20">
+                                        <h4 className="text-sm font-bold text-red-400 mb-2">MONITORING</h4>
+                                        <p className="text-xs text-gray-300">CloudWatch + X-Ray</p>
+                                    </div>
+                                    <div className="p-4 bg-red-950/20 rounded border border-red-500/20">
+                                        <h4 className="text-sm font-bold text-red-400 mb-2">JOBS</h4>
+                                        <p className="text-xs text-gray-300">SQS + EventBridge</p>
+                                    </div>
+                                    <div className="p-4 bg-red-950/20 rounded border border-red-500/20">
+                                        <h4 className="text-sm font-bold text-red-400 mb-2">SECURITY</h4>
+                                        <p className="text-xs text-gray-300">WAF + Secrets Manager</p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 p-4 bg-red-950/20 rounded border border-red-500/20">
+                                    <p className="text-sm font-bold text-red-400">
+                                        ✅ Deliverable: 99.9% uptime SLA • $60-150/month • Auto-scaling
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Phase 3: Long-Term Vision */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.4 }}
+                            className="relative"
+                        >
+                            <div className="bg-gradient-to-br from-orange-950/30 to-black border border-orange-500/30 rounded-lg p-8 hover:border-orange-500/60 transition-all duration-300">
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                                    <div>
+                                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/20 border border-orange-500/50 mb-4">
+                                            <Sparkles className="h-5 w-5 text-orange-500" />
+                                            <span className="text-sm font-bold text-orange-500 uppercase">6+ Months</span>
+                                        </div>
+                                        <h3 className="text-4xl font-black text-orange-400 mb-2">PHASE 3</h3>
+                                        <p className="text-2xl font-bold text-white">Long-Term Vision</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h4 className="text-lg font-bold text-white mb-3">Expansion</h4>
+                                        <ul className="space-y-2 text-gray-300">
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                5+ game modules (Fortnite, Steam, Xbox, PS)
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Cross-game achievements
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Universal leaderboards
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Community governance
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="text-lg font-bold text-white mb-3">Features (Pending Approval)</h4>
+                                        <ul className="space-y-2 text-gray-300">
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Rewards marketplace
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Token architecture (concept only)
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                NFT badge system
+                                            </li>
+                                            <li className="flex items-start gap-2">
+                                                <span className="text-orange-500 mt-1">•</span>
+                                                Vendor API integration
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 p-4 bg-orange-950/20 rounded border border-orange-500/20">
+                                    <p className="text-sm font-bold text-orange-400">
+                                        ✅ Deliverable: 10,000+ active users • Multi-game ecosystem • Thriving marketplace
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
                     </div>
+
+                    {/* Timeline Summary */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        className="mt-16 text-center p-8 bg-gradient-to-r from-black via-orange-950/20 to-black border-y border-orange-500/30"
+                    >
+                        <p className="text-2xl font-bold text-white mb-2">
+                            Total Timeline: <span className="text-orange-500">18+ weeks to global scale</span>
+                        </p>
+                        <p className="text-gray-400">
+                            Activity-based rewards • Publisher-compliant • Future-proof architecture
+                        </p>
+                    </motion.div>
                 </div>
             </section>
 
