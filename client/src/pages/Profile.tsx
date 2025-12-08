@@ -4,10 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Trophy, 
-  Target, 
-  Gamepad2, 
+import {
+  Trophy,
+  Target,
+  Gamepad2,
   TrendingUp,
   Share2
 } from "lucide-react";
@@ -36,6 +36,7 @@ interface PublicProfile {
     isFounder: boolean;
     founderNumber: number | null;
     twitchUsername: string | null;
+    subscriptionTier: string | null;
     createdAt: string;
   };
   achievements: Array<{
@@ -102,14 +103,14 @@ export default function Profile() {
     );
   }
 
-  const displayName = profile.user.firstName 
+  const displayName = profile.user.firstName
     ? `${profile.user.firstName} ${profile.user.lastName || ''}`.trim()
     : profile.user.email?.split('@')[0] || 'Gamer';
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Profile Header */}
         <Card className="p-8 mb-6">
@@ -120,23 +121,44 @@ export default function Profile() {
                 {displayName[0]?.toUpperCase() || 'G'}
               </AvatarFallback>
             </Avatar>
-            
+
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2 flex-wrap">
                 <h1 className="text-3xl font-bold" data-testid="text-profile-name">{displayName}</h1>
                 {profile.user.isFounder && profile.user.founderNumber && (
-                  <Badge 
-                    variant="default" 
+                  <Badge
+                    variant="default"
                     className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 px-3 py-1 text-sm font-bold shadow-lg"
                     data-testid="badge-founder"
                   >
-                    FOUNDER #{profile.user.founderNumber}
+                    OG MEMBER #{profile.user.founderNumber}
+                  </Badge>
+                )}
+                {profile.user.isFounder && !profile.user.founderNumber && (
+                  <Badge
+                    variant="default"
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 px-3 py-1 text-sm font-bold shadow-lg"
+                    data-testid="badge-og-member"
+                  >
+                    OG MEMBER
+                  </Badge>
+                )}
+                {profile.user.subscriptionTier && (
+                  <Badge
+                    variant="default"
+                    className={`${profile.user.subscriptionTier.toLowerCase() === 'elite'
+                        ? 'bg-gradient-to-r from-rose-500 to-pink-600'
+                        : 'bg-gradient-to-r from-purple-500 to-indigo-600'
+                      } text-white border-0 px-3 py-1 text-sm font-bold shadow-lg uppercase`}
+                    data-testid={`badge-subscription-${profile.user.subscriptionTier.toLowerCase()}`}
+                  >
+                    {profile.user.subscriptionTier}
                   </Badge>
                 )}
                 {profile.claimedBadges && profile.claimedBadges.length > 0 && profile.claimedBadges.map((claimedBadge) => (
-                  <Badge 
+                  <Badge
                     key={claimedBadge.id}
-                    variant="default" 
+                    variant="default"
                     className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 px-3 py-1 text-sm font-bold shadow-lg"
                     data-testid={`badge-claimed-${claimedBadge.title.toLowerCase().replace(/\s/g, '-')}`}
                   >
@@ -144,8 +166,8 @@ export default function Profile() {
                   </Badge>
                 ))}
                 {profile.user.twitchUsername && (
-                  <Badge 
-                    variant="default" 
+                  <Badge
+                    variant="default"
                     className="bg-gradient-to-r from-purple-500 to-purple-700 text-white border-0 px-3 py-1 text-sm font-bold shadow-lg"
                     data-testid="badge-twitch"
                   >
@@ -168,7 +190,7 @@ export default function Profile() {
                   </span>
                 </div>
               </div>
-              <ShareButtons 
+              <ShareButtons
                 title={`${displayName}'s GG Loop Profile`}
                 description={`Check out my GG Loop gaming profile! ${profile.user.totalPoints.toLocaleString()} points earned`}
                 hashtags={["GGLoop", "Gaming", "Gamer"]}
@@ -189,7 +211,7 @@ export default function Profile() {
             </p>
             <p className="text-xs text-muted-foreground mt-1">Unlocked</p>
           </Card>
-          
+
           <Card className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="h-5 w-5 text-primary" />
@@ -200,7 +222,7 @@ export default function Profile() {
             </p>
             <p className="text-xs text-muted-foreground mt-1">Across all games</p>
           </Card>
-          
+
           <Card className="p-6">
             <div className="flex items-center gap-3 mb-2">
               <Trophy className="h-5 w-5 text-primary" />
@@ -231,8 +253,8 @@ export default function Profile() {
                     achievedAt={achievement.achievedAt}
                     rarity={
                       achievement.pointsAwarded >= 100 ? "legendary" :
-                      achievement.pointsAwarded >= 50 ? "epic" :
-                      achievement.pointsAwarded >= 25 ? "rare" : "common"
+                        achievement.pointsAwarded >= 50 ? "epic" :
+                          achievement.pointsAwarded >= 25 ? "rare" : "common"
                     }
                     serialNumber={`#${idx + 1}/${profile.achievements.length}`}
                   />
@@ -263,7 +285,7 @@ export default function Profile() {
             </h2>
             <div className="space-y-3">
               {profile.leaderboardRankings.map((ranking, idx) => (
-                <div 
+                <div
                   key={`${ranking.gameId}-${ranking.period}`}
                   className="flex items-center justify-between p-4 rounded-lg bg-muted/30"
                   data-testid={`ranking-${idx}`}
@@ -315,8 +337,8 @@ export default function Profile() {
               stat1Value={selectedAchievement.gameName}
               rarity={
                 selectedAchievement.pointsAwarded >= 100 ? "legendary" :
-                selectedAchievement.pointsAwarded >= 50 ? "epic" :
-                selectedAchievement.pointsAwarded >= 25 ? "rare" : "common"
+                  selectedAchievement.pointsAwarded >= 50 ? "epic" :
+                    selectedAchievement.pointsAwarded >= 25 ? "rare" : "common"
               }
               username={displayName}
               onShare={() => setShareDialogOpen(false)}
@@ -324,7 +346,7 @@ export default function Profile() {
           )}
         </DialogContent>
       </Dialog>
-      
+
     </div>
   );
 }
