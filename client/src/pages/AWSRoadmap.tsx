@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
-    CheckCircle2, Rocket, Target, BarChart3, DollarSign, RefreshCw, Wifi, WifiOff, Home, Heart, Users
+    CheckCircle2, Rocket, Target, BarChart3, DollarSign, RefreshCw, WifiOff, Home, Heart, Users
 } from "lucide-react";
 
 // Types for API responses
@@ -43,7 +43,7 @@ function formatUptime(seconds: number): string {
 
 export default function AWSRoadmap() {
     // Fetch REAL platform stats
-    const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery<PlatformStats>({
+    const { data: stats, refetch: refetchStats } = useQuery<PlatformStats>({
         queryKey: ['/api/public/platform-stats'],
         refetchInterval: 30000, // Refresh every 30 seconds
     });
@@ -225,6 +225,117 @@ export default function AWSRoadmap() {
                     </CardContent>
                 </Card>
 
+                {/* 3-PHASE ROADMAP - PLAIN ENGLISH */}
+                <Card className="mb-8 border-primary/30 bg-card/50 backdrop-blur">
+                    <CardHeader className="border-b border-primary/20">
+                        <CardTitle className="flex items-center gap-3 text-xl text-foreground">
+                            <Target className="h-6 w-6 text-primary" />
+                            3-Phase Roadmap
+                            <Badge className="bg-primary/20 text-primary text-xs">PLAIN ENGLISH</Badge>
+                        </CardTitle>
+                        <p className="text-muted-foreground mt-2 text-sm">
+                            Our clear path from pilot to global platform
+                        </p>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        <div className="space-y-6">
+                            {/* Phase 1 */}
+                            <div className="bg-card border border-primary/20 rounded-lg p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-bold text-primary">Phase 1 — Strengthen the Foundation</h3>
+                                    <Badge className="bg-primary/20 text-primary text-xs">Next 8–12 Weeks</Badge>
+                                </div>
+                                <ul className="space-y-2 text-muted-foreground text-sm">
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
+                                        Make the platform more stable
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
+                                        Add better tracking so we know when something breaks
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
+                                        Add better tools so the system doesn't slow down or crash
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
+                                        Organize the backend code so it's easier to build on
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
+                                        Improve load times and reliability for users
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
+                                        Make sure everything scales safely before moving to AWS
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* Phase 2 */}
+                            <div className="bg-card border border-blue-500/30 rounded-lg p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-bold text-blue-400">Phase 2 — Move to AWS</h3>
+                                    <Badge className="bg-blue-500/20 text-blue-400 text-xs">4 Weeks</Badge>
+                                </div>
+                                <ul className="space-y-2 text-muted-foreground text-sm">
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-blue-400 mt-0.5" />
+                                        Move our servers from our current host to AWS
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-blue-400 mt-0.5" />
+                                        Store our data in Amazon's database system
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-blue-400 mt-0.5" />
+                                        Use AWS to make the site faster worldwide
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-blue-400 mt-0.5" />
+                                        Use AWS tools so the app automatically grows with more players
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-blue-400 mt-0.5" />
+                                        Use AWS to make our system more secure, reliable, and professional
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* Phase 3 */}
+                            <div className="bg-card border border-amber-500/30 rounded-lg p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-bold text-amber-400">Phase 3 — Growth & Expansion</h3>
+                                    <Badge className="bg-amber-500/20 text-amber-400 text-xs">Long-Term</Badge>
+                                </div>
+                                <ul className="space-y-2 text-muted-foreground text-sm">
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-amber-400 mt-0.5" />
+                                        Add more games
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-amber-400 mt-0.5" />
+                                        Build better rewards
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-amber-400 mt-0.5" />
+                                        Build the marketplace later
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-amber-400 mt-0.5" />
+                                        Add more community and culture features
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-amber-400 mt-0.5" />
+                                        Scale responsibly as users grow
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* WHERE WE WANT TO GO */}
                 <Card className="mb-8 border-amber-500/30 bg-brand-dark/50 backdrop-blur">
                     <CardHeader className="border-b border-amber-500/20">
@@ -269,29 +380,45 @@ export default function AWSRoadmap() {
                     <CardContent className="pt-6">
                         <div className="space-y-4">
                             <div className="bg-card/50 border border-blue-500/20 rounded-lg p-4">
+                                <h4 className="text-blue-400 font-semibold mb-2">Why We Need AWS First</h4>
+                                <p className="text-gray-300 text-sm leading-relaxed">
+                                    Before we scale, we need a stronger foundation. AWS helps us handle more players, stay online,
+                                    grow globally, and operate like a professional large-scale platform. This roadmap shows the steps
+                                    we take to get ready for that growth.
+                                </p>
+                            </div>
+                            <div className="bg-card/50 border border-blue-500/20 rounded-lg p-4">
                                 <h4 className="text-blue-400 font-semibold mb-2">Current Setup (Railway)</h4>
                                 <p className="text-gray-300 text-sm">
                                     Hosted on Railway with Neon PostgreSQL. Great for pilot, but limited scalability.
                                 </p>
                             </div>
                             <div className="bg-card/50 border border-blue-500/20 rounded-lg p-4">
-                                <h4 className="text-blue-400 font-semibold mb-2">AWS Migration Benefits</h4>
+                                <h4 className="text-blue-400 font-semibold mb-2">What AWS Unlocks</h4>
                                 <ul className="space-y-2 text-gray-300 text-sm">
                                     <li className="flex items-center gap-2">
                                         <CheckCircle2 className="h-4 w-4 text-blue-400" />
-                                        EC2 + RDS for better performance
+                                        Faster website load times
                                     </li>
                                     <li className="flex items-center gap-2">
                                         <CheckCircle2 className="h-4 w-4 text-blue-400" />
-                                        CloudFront CDN for global reach
+                                        Handles thousands more players without breaking
                                     </li>
                                     <li className="flex items-center gap-2">
                                         <CheckCircle2 className="h-4 w-4 text-blue-400" />
-                                        Auto-scaling for growth
+                                        Better security
                                     </li>
                                     <li className="flex items-center gap-2">
                                         <CheckCircle2 className="h-4 w-4 text-blue-400" />
-                                        Enterprise security & compliance
+                                        Better monitoring so we catch issues early
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-blue-400" />
+                                        Global performance boost
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-blue-400" />
+                                        Lower long-term infrastructure costs as we scale
                                     </li>
                                 </ul>
                             </div>
@@ -341,10 +468,14 @@ export default function AWSRoadmap() {
                 </Card>
 
                 {/* Footer */}
-                <div className="mt-8 text-center text-gray-500 text-sm border-t border-brand-copper/20 pt-6">
+                <div className="mt-8 text-center text-gray-500 text-sm border-t border-brand-copper/20 pt-6 space-y-2">
                     <p>
                         <strong className="text-brand-copper">Transparency:</strong> "Where We Are Today" = real-time production data •
                         "Goals" = aspirational targets
+                    </p>
+                    <p className="text-gray-400 italic max-w-3xl mx-auto">
+                        This roadmap shows our honest, clear path from a small pilot to a stable, scalable,
+                        global platform built on AWS — with transparency at every step.
                     </p>
                 </div>
             </div>
