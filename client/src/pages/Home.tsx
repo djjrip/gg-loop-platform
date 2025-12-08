@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
-import AnimatedControllerHero from "@/components/AnimatedControllerHero";
 import { Card } from "@/components/ui/card";
 import {
   Gamepad2,
@@ -19,6 +18,7 @@ import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import OnboardingModal from "@/components/OnboardingModal";
+import logo from "@assets/ChatGPT Image Nov 11, 2025, 06_17_23 PM_1763403383212.png";
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
@@ -59,8 +59,10 @@ export default function Home() {
           {/* HERO SECTION - SIGNATURE "PLAY. EARN. LOOP." */}
           <section className="container mx-auto px-4 py-20 md:py-32 max-w-7xl">
             <div className="text-center mb-12">
-              {/* Animated Controller Hero */}
-              <AnimatedControllerHero />
+              {/* Controller Logo */}
+              <div className="flex justify-center mb-8">
+                <img src={logo} alt="GG LOOP" className="h-24 w-auto" />
+              </div>
 
               {/* Main Hero Text */}
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 leading-tight">
