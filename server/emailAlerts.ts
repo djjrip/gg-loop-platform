@@ -4,7 +4,7 @@
 
 import fetch from 'node-fetch';
 
-const SENDGRID_KEY = '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';
+const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
 
 export async function sendApiKeyEmailAlert() {
     const emailPayload = {
