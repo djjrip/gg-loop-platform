@@ -905,6 +905,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get claimed badges (only completed automatic badges that show on profile)
 
+      // TODO: Implement badge retrieval and complete profile response
+      res.json({
+        user: {
+          id: user.id,
+          username: user.username,
+          totalPoints: user.totalPoints,
+          profileImageUrl: user.profileImageUrl
+        },
+        achievements: achievements.slice(0, 10),
+        leaderboardRankings,
+        stats: {
+          avgRank,
+          joinedDaysAgo,
+          totalAchievements: allAchievements.length
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
+
       app.get('/api/games', async (req, res) => {
         try {
           const games = await storage.getAllGames();
