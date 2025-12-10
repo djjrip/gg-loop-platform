@@ -2289,2110 +2289,2109 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         message: 'No new wins found in your recent matches. All recent wins have already been redeemed!'
       });
 
-    }
-  } catch (error: any) {
-    console.error("Error creating match submission:", error);
+    } catch (error: any) {
+      console.error("Error creating match submission:", error);
 
-    // Check for duplicate match ID error
-    if (error.message?.includes('unique') || error.code === '23505') {
-      return res.status(400).json({
-        message: 'This match has already been redeemed!'
-      });
-    }
-
-    res.status(500).json({ message: error.message || "Failed to submit match" });
-  }
-});
-
-// ============================================
-// SPONSORED CHALLENGES API
-// ============================================
-
-// GET /api/challenges - List active challenges with user progress
-app.get('/api/challenges', async (req: any, res) => {
-  try {
-    const userId = req.isAuthenticated() && req.user?.oidcSub
-      ? (await storage.getUserByOidcSub(req.user.oidcSub))?.id
-      : null;
-
-    const now = new Date();
-    const activeChallenges = await db
-      .select()
-      .from(challenges)
-      .where(
-        and(
-          eq(challenges.isActive, true),
-          sql`${challenges.startDate} <= ${now}`,
-          sql`${challenges.endDate} >= ${now}`
-        )
-      );
-
-    // Enrich with user progress if authenticated
-    const enriched = await Promise.all(activeChallenges.map(async (challenge: any) => {
-      if (!userId) {
-        return { ...challenge, userProgress: null, canClaim: false };
-      }
-
-      const [completion] = await db
-        .select()
-        .from(challengeCompletions)
-        .where(
-          and(
-            eq(challengeCompletions.userId, userId),
-            eq(challengeCompletions.challengeId, challenge.id)
-          )
-        )
-        .limit(1);
-
-      return {
-        ...challenge,
-        userProgress: completion?.progress || 0,
-        canClaim: completion ?
-          (completion.progress >= challenge.requirementCount && !completion.claimed) :
-          false,
-        claimed: completion?.claimed || false
-      };
-    }));
-
-    res.json(enriched);
-  } catch (error) {
-    console.error("Error fetching challenges:", error);
-    res.status(500).json({ message: "Failed to fetch challenges" });
-  }
-});
-
-// POST /api/challenges/:id/claim - Claim reward (TRANSACTIONAL)
-app.post('/api/challenges/:id/claim', getUserMiddleware, async (req: any, res) => {
-  try {
-    const userId = req.dbUser.id;
-    const challengeId = req.params.id;
-
-    // Execute claim in transaction
-    const result = await db.transaction(async (tx: any) => {
-      // SELECT FOR UPDATE - lock the completion row
-      const [completion] = await tx
-        .select()
-        .from(challengeCompletions)
-        .where(
-          and(
-            eq(challengeCompletions.userId, userId),
-            eq(challengeCompletions.challengeId, challengeId)
-          )
-        )
-        .for("update")
-        .limit(1);
-
-      if (!completion) {
-        throw new Error("Challenge not started");
-      }
-
-      if (completion.claimed) {
-        throw new Error("Challenge already claimed");
-      }
-
-      // SELECT FOR UPDATE - lock the challenge
-      const [challenge] = await tx
-        .select()
-        .from(challenges)
-        .where(eq(challenges.id, challengeId))
-        .for("update")
-        .limit(1);
-
-      if (!challenge) {
-        throw new Error("Challenge not found");
-      }
-
-      // Verify completion
-      if (completion.progress < challenge.requirementCount) {
-        throw new Error(`Progress incomplete: ${completion.progress}/${challenge.requirementCount}`);
-      }
-
-      // Check budget (even though DB has CHECK constraint)
-      const budgetRemaining = challenge.totalBudget - challenge.pointsDistributed;
-      if (budgetRemaining < challenge.bonusPoints) {
-        throw new Error("Challenge budget exhausted");
-      }
-
-      // Check completion limit
-      if (challenge.maxCompletions && challenge.currentCompletions >= challenge.maxCompletions) {
-        throw new Error("Challenge completion limit reached");
-      }
-
-      // Award sponsored points (bypasses monthly cap!)
-      const transaction = await pointsEngine.awardSponsoredPoints(
-        userId,
-        challenge.bonusPoints,
-        challenge.id,
-        challenge.title,
-        tx
-      );
-
-      // Update completion record
-      await tx
-        .update(challengeCompletions)
-        .set({
-          claimed: true,
-          claimedAt: new Date(),
-          pointsAwarded: challenge.bonusPoints,
-          transactionId: transaction.id,
-          ipAddress: req.ip || req.headers['x-forwarded-for'] as string,
-          userAgent: req.headers['user-agent'] as string,
-          updatedAt: new Date()
-        })
-        .where(eq(challengeCompletions.id, completion.id));
-
-      // Update challenge aggregates
-      await tx
-        .update(challenges)
-        .set({
-          pointsDistributed: challenge.pointsDistributed + challenge.bonusPoints,
-          currentCompletions: challenge.currentCompletions + 1,
-          updatedAt: new Date()
-        })
-        .where(eq(challenges.id, challenge.id));
-
-      return {
-        pointsAwarded: challenge.bonusPoints,
-        newBalance: transaction.balanceAfter,
-        challengeTitle: challenge.title
-      };
-    });
-
-    res.json(result);
-  } catch (error: any) {
-    console.error("Error claiming challenge:", error);
-
-    if (error.message?.includes("already claimed")) {
-      return res.status(409).json({ message: error.message });
-    }
-    if (error.message?.includes("budget exhausted") || error.message?.includes("limit reached")) {
-      return res.status(422).json({ message: error.message });
-    }
-    if (error.message?.includes("not started") || error.message?.includes("incomplete")) {
-      return res.status(400).json({ message: error.message });
-    }
-
-    res.status(500).json({ message: "Failed to claim challenge" });
-  }
-});
-
-// POST /api/admin/challenges - Create new challenge (ADMIN ONLY)
-app.post('/api/admin/challenges', adminMiddleware, async (req: any, res) => {
-  try {
-    const challengeData = insertChallengeSchema.parse(req.body);
-
-    // DUAL-WRITE: If sponsorId provided, populate legacy sponsorName/Logo from sponsor
-    let finalChallengeData = { ...challengeData };
-
-    if (challengeData.sponsorId) {
-      const [sponsor] = await db.select()
-        .from(sponsors)
-        .where(eq(sponsors.id, challengeData.sponsorId))
-        .limit(1);
-
-      if (!sponsor) {
-        return res.status(400).json({ message: "Sponsor not found" });
-      }
-
-      // Populate legacy fields for backward compatibility
-      finalChallengeData.sponsorName = sponsor.name;
-      finalChallengeData.sponsorLogo = sponsor.logo;
-
-      // Validate sponsor has enough budget (including reserved funds from active challenges)
-      const activeChallenges = await db.select()
-        .from(challenges)
-        .where(and(
-          eq(challenges.sponsorId, challengeData.sponsorId),
-          eq(challenges.isActive, true)
-        ));
-
-      // Reserved budget = sum of (totalBudget - pointsDistributed) for active challenges
-      const reservedBudget = activeChallenges.reduce((sum: number, c: any) =>
-        sum + (c.totalBudget - c.pointsDistributed), 0
-      );
-
-      const availableBudget = sponsor.totalBudget - sponsor.spentBudget - reservedBudget;
-
-      if (challengeData.totalBudget > availableBudget) {
+      // Check for duplicate match ID error
+      if (error.message?.includes('unique') || error.code === '23505') {
         return res.status(400).json({
-          message: `Insufficient sponsor budget. Available: ${availableBudget} pts (Total: ${sponsor.totalBudget}, Spent: ${sponsor.spentBudget}, Reserved: ${reservedBudget}), Required: ${challengeData.totalBudget} pts`
+          message: 'This match has already been redeemed!'
         });
       }
+
+      res.status(500).json({ message: error.message || "Failed to submit match" });
     }
+  });
 
-    const [challenge] = await db
-      .insert(challenges)
-      .values(finalChallengeData)
-      .returning();
+  // ============================================
+  // SPONSORED CHALLENGES API
+  // ============================================
 
-    res.json(challenge);
-  } catch (error: any) {
-    console.error("Error creating challenge:", error);
+  // GET /api/challenges - List active challenges with user progress
+  app.get('/api/challenges', async (req: any, res) => {
+    try {
+      const userId = req.isAuthenticated() && req.user?.oidcSub
+        ? (await storage.getUserByOidcSub(req.user.oidcSub))?.id
+        : null;
 
-    if (error.name === 'ZodError') {
-      return res.status(400).json({ message: "Invalid challenge data", errors: error.errors });
+      const now = new Date();
+      const activeChallenges = await db
+        .select()
+        .from(challenges)
+        .where(
+          and(
+            eq(challenges.isActive, true),
+            sql`${challenges.startDate} <= ${now}`,
+            sql`${challenges.endDate} >= ${now}`
+          )
+        );
+
+      // Enrich with user progress if authenticated
+      const enriched = await Promise.all(activeChallenges.map(async (challenge: any) => {
+        if (!userId) {
+          return { ...challenge, userProgress: null, canClaim: false };
+        }
+
+        const [completion] = await db
+          .select()
+          .from(challengeCompletions)
+          .where(
+            and(
+              eq(challengeCompletions.userId, userId),
+              eq(challengeCompletions.challengeId, challenge.id)
+            )
+          )
+          .limit(1);
+
+        return {
+          ...challenge,
+          userProgress: completion?.progress || 0,
+          canClaim: completion ?
+            (completion.progress >= challenge.requirementCount && !completion.claimed) :
+            false,
+          claimed: completion?.claimed || false
+        };
+      }));
+
+      res.json(enriched);
+    } catch (error) {
+      console.error("Error fetching challenges:", error);
+      res.status(500).json({ message: "Failed to fetch challenges" });
     }
+  });
 
-    res.status(500).json({ message: error.message || "Failed to create challenge" });
-  }
-});
+  // POST /api/challenges/:id/claim - Claim reward (TRANSACTIONAL)
+  app.post('/api/challenges/:id/claim', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const challengeId = req.params.id;
 
-app.get('/api/subscription/status', getUserMiddleware, async (req: any, res) => {
-  try {
+      // Execute claim in transaction
+      const result = await db.transaction(async (tx: any) => {
+        // SELECT FOR UPDATE - lock the completion row
+        const [completion] = await tx
+          .select()
+          .from(challengeCompletions)
+          .where(
+            and(
+              eq(challengeCompletions.userId, userId),
+              eq(challengeCompletions.challengeId, challengeId)
+            )
+          )
+          .for("update")
+          .limit(1);
+
+        if (!completion) {
+          throw new Error("Challenge not started");
+        }
+
+        if (completion.claimed) {
+          throw new Error("Challenge already claimed");
+        }
+
+        // SELECT FOR UPDATE - lock the challenge
+        const [challenge] = await tx
+          .select()
+          .from(challenges)
+          .where(eq(challenges.id, challengeId))
+          .for("update")
+          .limit(1);
+
+        if (!challenge) {
+          throw new Error("Challenge not found");
+        }
+
+        // Verify completion
+        if (completion.progress < challenge.requirementCount) {
+          throw new Error(`Progress incomplete: ${completion.progress}/${challenge.requirementCount}`);
+        }
+
+        // Check budget (even though DB has CHECK constraint)
+        const budgetRemaining = challenge.totalBudget - challenge.pointsDistributed;
+        if (budgetRemaining < challenge.bonusPoints) {
+          throw new Error("Challenge budget exhausted");
+        }
+
+        // Check completion limit
+        if (challenge.maxCompletions && challenge.currentCompletions >= challenge.maxCompletions) {
+          throw new Error("Challenge completion limit reached");
+        }
+
+        // Award sponsored points (bypasses monthly cap!)
+        const transaction = await pointsEngine.awardSponsoredPoints(
+          userId,
+          challenge.bonusPoints,
+          challenge.id,
+          challenge.title,
+          tx
+        );
+
+        // Update completion record
+        await tx
+          .update(challengeCompletions)
+          .set({
+            claimed: true,
+            claimedAt: new Date(),
+            pointsAwarded: challenge.bonusPoints,
+            transactionId: transaction.id,
+            ipAddress: req.ip || req.headers['x-forwarded-for'] as string,
+            userAgent: req.headers['user-agent'] as string,
+            updatedAt: new Date()
+          })
+          .where(eq(challengeCompletions.id, completion.id));
+
+        // Update challenge aggregates
+        await tx
+          .update(challenges)
+          .set({
+            pointsDistributed: challenge.pointsDistributed + challenge.bonusPoints,
+            currentCompletions: challenge.currentCompletions + 1,
+            updatedAt: new Date()
+          })
+          .where(eq(challenges.id, challenge.id));
+
+        return {
+          pointsAwarded: challenge.bonusPoints,
+          newBalance: transaction.balanceAfter,
+          challengeTitle: challenge.title
+        };
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error claiming challenge:", error);
+
+      if (error.message?.includes("already claimed")) {
+        return res.status(409).json({ message: error.message });
+      }
+      if (error.message?.includes("budget exhausted") || error.message?.includes("limit reached")) {
+        return res.status(422).json({ message: error.message });
+      }
+      if (error.message?.includes("not started") || error.message?.includes("incomplete")) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      res.status(500).json({ message: "Failed to claim challenge" });
+    }
+  });
+
+  // POST /api/admin/challenges - Create new challenge (ADMIN ONLY)
+  app.post('/api/admin/challenges', adminMiddleware, async (req: any, res) => {
+    try {
+      const challengeData = insertChallengeSchema.parse(req.body);
+
+      // DUAL-WRITE: If sponsorId provided, populate legacy sponsorName/Logo from sponsor
+      let finalChallengeData = { ...challengeData };
+
+      if (challengeData.sponsorId) {
+        const [sponsor] = await db.select()
+          .from(sponsors)
+          .where(eq(sponsors.id, challengeData.sponsorId))
+          .limit(1);
+
+        if (!sponsor) {
+          return res.status(400).json({ message: "Sponsor not found" });
+        }
+
+        // Populate legacy fields for backward compatibility
+        finalChallengeData.sponsorName = sponsor.name;
+        finalChallengeData.sponsorLogo = sponsor.logo;
+
+        // Validate sponsor has enough budget (including reserved funds from active challenges)
+        const activeChallenges = await db.select()
+          .from(challenges)
+          .where(and(
+            eq(challenges.sponsorId, challengeData.sponsorId),
+            eq(challenges.isActive, true)
+          ));
+
+        // Reserved budget = sum of (totalBudget - pointsDistributed) for active challenges
+        const reservedBudget = activeChallenges.reduce((sum: number, c: any) =>
+          sum + (c.totalBudget - c.pointsDistributed), 0
+        );
+
+        const availableBudget = sponsor.totalBudget - sponsor.spentBudget - reservedBudget;
+
+        if (challengeData.totalBudget > availableBudget) {
+          return res.status(400).json({
+            message: `Insufficient sponsor budget. Available: ${availableBudget} pts (Total: ${sponsor.totalBudget}, Spent: ${sponsor.spentBudget}, Reserved: ${reservedBudget}), Required: ${challengeData.totalBudget} pts`
+          });
+        }
+      }
+
+      const [challenge] = await db
+        .insert(challenges)
+        .values(finalChallengeData)
+        .returning();
+
+      res.json(challenge);
+    } catch (error: any) {
+      console.error("Error creating challenge:", error);
+
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid challenge data", errors: error.errors });
+      }
+
+      res.status(500).json({ message: error.message || "Failed to create challenge" });
+    }
+  });
+
+  app.get('/api/subscription/status', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const subscription = await storage.getSubscription(userId);
+      res.json(subscription || null);
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+      res.status(500).json({ message: "Failed to fetch subscription" });
+    }
+  });
+
+  // Manual PayPal subscription sync - for users who had issues during checkout
+  app.post('/api/paypal/manual-sync', getUserMiddleware, async (req: any, res) => {
+    const { subscriptionId } = req.body;
     const userId = req.dbUser.id;
-    const subscription = await storage.getSubscription(userId);
-    res.json(subscription || null);
-  } catch (error) {
-    console.error("Error fetching subscription:", error);
-    res.status(500).json({ message: "Failed to fetch subscription" });
-  }
-});
 
-// Manual PayPal subscription sync - for users who had issues during checkout
-app.post('/api/paypal/manual-sync', getUserMiddleware, async (req: any, res) => {
-  const { subscriptionId } = req.body;
-  const userId = req.dbUser.id;
-
-  if (!subscriptionId) {
-    return res.status(400).json({ message: "PayPal Subscription ID is required" });
-  }
-
-  // Generate stable event ID for deduplication
-  const eventId = `paypal_approved_${subscriptionId}_${userId}`;
-
-  try {
-    // Check if already processed
-    const existingEvent = await storage.checkEventProcessed(eventId);
-    if (existingEvent) {
-      console.log(`PayPal subscription ${subscriptionId} already synced for user ${userId}`);
-      const subscription = await storage.getSubscription(userId);
-      return res.json({
-        success: true,
-        message: "Subscription already synced",
-        tier: subscription?.tier || "unknown"
-      });
+    if (!subscriptionId) {
+      return res.status(400).json({ message: "PayPal Subscription ID is required" });
     }
 
-    const verification = await verifyPayPalSubscription(subscriptionId);
+    // Generate stable event ID for deduplication
+    const eventId = `paypal_approved_${subscriptionId}_${userId}`;
 
-    if (!verification.valid) {
-      console.error("PayPal subscription verification failed:", verification.error);
-      return res.status(400).json({
-        message: verification.error || "Invalid PayPal subscription"
-      });
-    }
+    try {
+      // Check if already processed
+      const existingEvent = await storage.checkEventProcessed(eventId);
+      if (existingEvent) {
+        console.log(`PayPal subscription ${subscriptionId} already synced for user ${userId}`);
+        const subscription = await storage.getSubscription(userId);
+        return res.json({
+          success: true,
+          message: "Subscription already synced",
+          tier: subscription?.tier || "unknown"
+        });
+      }
 
-    if (!verification.tier) {
-      return res.status(400).json({
-        message: "Could not determine subscription tier"
-      });
-    }
+      const verification = await verifyPayPalSubscription(subscriptionId);
 
-    // Security: Block guest users (must be authenticated with verified email)
-    const userEmail = req.dbUser.email;
-    if (!userEmail) {
-      console.error("Manual sync blocked: Guest user attempted sync (no verified email)");
-      return res.status(401).json({
-        message: "You must be logged in with a verified account to sync subscriptions."
-      });
-    }
+      if (!verification.valid) {
+        console.error("PayPal subscription verification failed:", verification.error);
+        return res.status(400).json({
+          message: verification.error || "Invalid PayPal subscription"
+        });
+      }
 
-    // Security: Verify subscription ownership - subscriber email must match authenticated user's email
-    if (!verification.subscriberEmail) {
-      console.error("Manual sync blocked: PayPal subscription has no subscriber email");
-      return res.status(400).json({
-        message: "Unable to verify subscription ownership. Contact support."
-      });
-    }
+      if (!verification.tier) {
+        return res.status(400).json({
+          message: "Could not determine subscription tier"
+        });
+      }
 
-    if (verification.subscriberEmail.toLowerCase() !== userEmail.toLowerCase()) {
-      console.error(`Manual sync blocked: Email mismatch. Subscriber: ${verification.subscriberEmail}, User: ${userEmail}`);
-      return res.status(403).json({
-        message: "This subscription belongs to a different account. Please use the correct PayPal account."
-      });
-    }
+      // Security: Block guest users (must be authenticated with verified email)
+      const userEmail = req.dbUser.email;
+      if (!userEmail) {
+        console.error("Manual sync blocked: Guest user attempted sync (no verified email)");
+        return res.status(401).json({
+          message: "You must be logged in with a verified account to sync subscriptions."
+        });
+      }
 
-    const tierLower = verification.tier;
-    const currentDate = new Date();
-    const nextBillingDate = new Date(currentDate);
-    nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+      // Security: Verify subscription ownership - subscriber email must match authenticated user's email
+      if (!verification.subscriberEmail) {
+        console.error("Manual sync blocked: PayPal subscription has no subscriber email");
+        return res.status(400).json({
+          message: "Unable to verify subscription ownership. Contact support."
+        });
+      }
 
-    const existingSubscription = await storage.getSubscription(userId);
-    let subscriptionDbId: string;
+      if (verification.subscriberEmail.toLowerCase() !== userEmail.toLowerCase()) {
+        console.error(`Manual sync blocked: Email mismatch. Subscriber: ${verification.subscriberEmail}, User: ${userEmail}`);
+        return res.status(403).json({
+          message: "This subscription belongs to a different account. Please use the correct PayPal account."
+        });
+      }
 
-    if (existingSubscription) {
-      await storage.updateSubscription(existingSubscription.id, {
-        tier: tierLower,
-        status: "active",
-        paypalSubscriptionId: subscriptionId,
-        currentPeriodEnd: nextBillingDate,
-      });
-      subscriptionDbId = existingSubscription.id;
+      const tierLower = verification.tier;
+      const currentDate = new Date();
+      const nextBillingDate = new Date(currentDate);
+      nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
 
-      await storage.logSubscriptionEvent({
-        subscriptionId: existingSubscription.id,
-        eventType: "subscription.manual_sync",
-        eventData: {
-          eventId,
-          previousTier: existingSubscription.tier,
-          newTier: tierLower,
-          paypalSubscriptionId: subscriptionId,
-          status: verification.status,
-        },
-      });
-    } else {
-      const newSub = await storage.createSubscription({
-        userId,
-        tier: tierLower,
-        status: "active",
-        paypalSubscriptionId: subscriptionId,
-        currentPeriodStart: currentDate,
-        currentPeriodEnd: nextBillingDate,
-      });
-      subscriptionDbId = newSub.id;
+      const existingSubscription = await storage.getSubscription(userId);
+      let subscriptionDbId: string;
 
-      await storage.logSubscriptionEvent({
-        subscriptionId: newSub.id,
-        eventType: "subscription.manual_sync_created",
-        eventData: {
-          eventId,
+      if (existingSubscription) {
+        await storage.updateSubscription(existingSubscription.id, {
           tier: tierLower,
+          status: "active",
           paypalSubscriptionId: subscriptionId,
-          status: verification.status,
-        },
+          currentPeriodEnd: nextBillingDate,
+        });
+        subscriptionDbId = existingSubscription.id;
+
+        await storage.logSubscriptionEvent({
+          subscriptionId: existingSubscription.id,
+          eventType: "subscription.manual_sync",
+          eventData: {
+            eventId,
+            previousTier: existingSubscription.tier,
+            newTier: tierLower,
+            paypalSubscriptionId: subscriptionId,
+            status: verification.status,
+          },
+        });
+      } else {
+        const newSub = await storage.createSubscription({
+          userId,
+          tier: tierLower,
+          status: "active",
+          paypalSubscriptionId: subscriptionId,
+          currentPeriodStart: currentDate,
+          currentPeriodEnd: nextBillingDate,
+        });
+        subscriptionDbId = newSub.id;
+
+        await storage.logSubscriptionEvent({
+          subscriptionId: newSub.id,
+          eventType: "subscription.manual_sync_created",
+          eventData: {
+            eventId,
+            tier: tierLower,
+            paypalSubscriptionId: subscriptionId,
+            status: verification.status,
+          },
+        });
+      }
+
+      await pointsEngine.awardMonthlySubscriptionPoints(userId, tierLower, subscriptionId);
+
+      res.json({
+        success: true,
+        message: "Subscription synced successfully!",
+        tier: tierLower
+      });
+    } catch (error: any) {
+      console.error("Error syncing PayPal subscription:", error);
+      res.status(500).json({
+        message: error.message || "Failed to sync subscription"
       });
     }
+  });
 
-    await pointsEngine.awardMonthlySubscriptionPoints(userId, tierLower, subscriptionId);
+  app.post('/api/paypal/subscription-approved', getUserMiddleware, async (req: any, res) => {
+    const { subscriptionId } = req.body;
+    const userId = req.dbUser.id;
 
-    res.json({
-      success: true,
-      message: "Subscription synced successfully!",
-      tier: tierLower
-    });
-  } catch (error: any) {
-    console.error("Error syncing PayPal subscription:", error);
-    res.status(500).json({
-      message: error.message || "Failed to sync subscription"
-    });
-  }
-});
-
-app.post('/api/paypal/subscription-approved', getUserMiddleware, async (req: any, res) => {
-  const { subscriptionId } = req.body;
-  const userId = req.dbUser.id;
-
-  if (!subscriptionId) {
-    return res.status(400).json({ message: "Missing subscription ID" });
-  }
-
-  // Generate stable event ID for deduplication (based on subscription ID, not timestamp)
-  const eventId = `paypal_approved_${subscriptionId}_${userId}`;
-
-  try {
-    // Check if this approval has already been processed (deduplication)
-    const existingEvent = await storage.checkEventProcessed(eventId);
-    if (existingEvent) {
-      console.log(`PayPal subscription ${subscriptionId} already processed, skipping`);
-      const subscription = await storage.getSubscription(userId);
-      return res.json({
-        message: "Subscription already activated",
-        tier: subscription?.tier || "unknown"
-      });
+    if (!subscriptionId) {
+      return res.status(400).json({ message: "Missing subscription ID" });
     }
 
-    const verification = await verifyPayPalSubscription(subscriptionId);
+    // Generate stable event ID for deduplication (based on subscription ID, not timestamp)
+    const eventId = `paypal_approved_${subscriptionId}_${userId}`;
 
-    if (!verification.valid) {
-      console.error("PayPal subscription verification failed:", verification.error);
+    try {
+      // Check if this approval has already been processed (deduplication)
+      const existingEvent = await storage.checkEventProcessed(eventId);
+      if (existingEvent) {
+        console.log(`PayPal subscription ${subscriptionId} already processed, skipping`);
+        const subscription = await storage.getSubscription(userId);
+        return res.json({
+          message: "Subscription already activated",
+          tier: subscription?.tier || "unknown"
+        });
+      }
 
-      // Log verification failure event
+      const verification = await verifyPayPalSubscription(subscriptionId);
+
+      if (!verification.valid) {
+        console.error("PayPal subscription verification failed:", verification.error);
+
+        // Log verification failure event
+        try {
+          const sub = await storage.getSubscription(userId);
+          if (sub) {
+            await storage.logSubscriptionEvent({
+              subscriptionId: sub.id,
+              eventType: "subscription.verification_failed",
+              eventData: {
+                eventId,
+                error: verification.error,
+                paypalSubscriptionId: subscriptionId,
+                status: verification.status,
+              },
+            });
+          }
+        } catch (logError) {
+          console.error("Failed to log verification failure:", logError);
+        }
+
+        return res.status(400).json({
+          message: verification.error || "Invalid subscription"
+        });
+      }
+
+      if (!verification.tier) {
+        return res.status(400).json({
+          message: "Could not determine tier from PayPal subscription"
+        });
+      }
+
+      const tierLower = verification.tier;
+      const currentDate = new Date();
+      const nextBillingDate = new Date(currentDate);
+      nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+
+      const existingSubscription = await storage.getSubscription(userId);
+      let subscriptionDbId: string;
+
+      if (existingSubscription) {
+        await storage.updateSubscription(existingSubscription.id, {
+          tier: tierLower,
+          status: "active",
+          paypalSubscriptionId: subscriptionId,
+          currentPeriodEnd: nextBillingDate,
+        });
+        subscriptionDbId = existingSubscription.id;
+
+        // Log subscription update event with stable ID
+        await storage.logSubscriptionEvent({
+          subscriptionId: existingSubscription.id,
+          eventType: "subscription.updated",
+          eventData: {
+            eventId,
+            previousTier: existingSubscription.tier,
+            newTier: tierLower,
+            paypalSubscriptionId: subscriptionId,
+            status: verification.status,
+          },
+        });
+      } else {
+        const newSub = await storage.createSubscription({
+          userId,
+          tier: tierLower,
+          status: "active",
+          paypalSubscriptionId: subscriptionId,
+          currentPeriodStart: currentDate,
+          currentPeriodEnd: nextBillingDate,
+        });
+        subscriptionDbId = newSub.id;
+
+        // Log subscription created event with stable ID
+        await storage.logSubscriptionEvent({
+          subscriptionId: newSub.id,
+          eventType: "subscription.created",
+          eventData: {
+            eventId,
+            tier: tierLower,
+            paypalSubscriptionId: subscriptionId,
+            status: verification.status,
+          },
+        });
+      }
+
+      await pointsEngine.awardMonthlySubscriptionPoints(userId, tierLower, subscriptionId);
+
+      res.json({
+        message: "Subscription activated successfully",
+        tier: tierLower
+      });
+    } catch (error: any) {
+      console.error("Error processing PayPal subscription:", error);
+
+      // Log failure event with error details
       try {
         const sub = await storage.getSubscription(userId);
         if (sub) {
           await storage.logSubscriptionEvent({
             subscriptionId: sub.id,
-            eventType: "subscription.verification_failed",
+            eventType: "subscription.processing_failed",
             eventData: {
-              eventId,
-              error: verification.error,
+              error: error.message,
               paypalSubscriptionId: subscriptionId,
-              status: verification.status,
+              stack: error.stack,
             },
           });
         }
       } catch (logError) {
-        console.error("Failed to log verification failure:", logError);
+        console.error("Failed to log processing error:", logError);
       }
 
-      return res.status(400).json({
-        message: verification.error || "Invalid subscription"
-      });
+      res.status(500).json({ message: error.message || "Failed to process subscription" });
     }
+  });
 
-    if (!verification.tier) {
-      return res.status(400).json({
-        message: "Could not determine tier from PayPal subscription"
-      });
-    }
-
-    const tierLower = verification.tier;
-    const currentDate = new Date();
-    const nextBillingDate = new Date(currentDate);
-    nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
-
-    const existingSubscription = await storage.getSubscription(userId);
-    let subscriptionDbId: string;
-
-    if (existingSubscription) {
-      await storage.updateSubscription(existingSubscription.id, {
-        tier: tierLower,
-        status: "active",
-        paypalSubscriptionId: subscriptionId,
-        currentPeriodEnd: nextBillingDate,
-      });
-      subscriptionDbId = existingSubscription.id;
-
-      // Log subscription update event with stable ID
-      await storage.logSubscriptionEvent({
-        subscriptionId: existingSubscription.id,
-        eventType: "subscription.updated",
-        eventData: {
-          eventId,
-          previousTier: existingSubscription.tier,
-          newTier: tierLower,
-          paypalSubscriptionId: subscriptionId,
-          status: verification.status,
-        },
-      });
-    } else {
-      const newSub = await storage.createSubscription({
-        userId,
-        tier: tierLower,
-        status: "active",
-        paypalSubscriptionId: subscriptionId,
-        currentPeriodStart: currentDate,
-        currentPeriodEnd: nextBillingDate,
-      });
-      subscriptionDbId = newSub.id;
-
-      // Log subscription created event with stable ID
-      await storage.logSubscriptionEvent({
-        subscriptionId: newSub.id,
-        eventType: "subscription.created",
-        eventData: {
-          eventId,
-          tier: tierLower,
-          paypalSubscriptionId: subscriptionId,
-          status: verification.status,
-        },
-      });
-    }
-
-    await pointsEngine.awardMonthlySubscriptionPoints(userId, tierLower, subscriptionId);
-
-    res.json({
-      message: "Subscription activated successfully",
-      tier: tierLower
-    });
-  } catch (error: any) {
-    console.error("Error processing PayPal subscription:", error);
-
-    // Log failure event with error details
+  // PayPal Webhook Handler - Recurring Payments
+  app.post('/api/webhooks/paypal', async (req, res) => {
     try {
-      const sub = await storage.getSubscription(userId);
-      if (sub) {
+      // Verify webhook signature for security
+      const verification = await verifyPayPalWebhook(req.headers as Record<string, string>, req.body);
+      if (!verification.valid) {
+        console.error(`[PayPal Webhook] Signature verification failed: ${verification.error}`);
+        return res.status(401).json({ message: 'Webhook signature verification failed' });
+      }
+
+      const event = req.body;
+      const eventType = event.event_type;
+
+      console.log(`[PayPal Webhook] Verified event: ${eventType}`);
+
+      // Handle PAYMENT.SALE.COMPLETED (monthly recurring payment)
+      if (eventType === 'PAYMENT.SALE.COMPLETED') {
+        const subscriptionId = event.resource?.billing_agreement_id;
+        const saleId = event.resource?.id;
+
+        if (!subscriptionId || !saleId) {
+          console.error('[PayPal Webhook] Missing subscription or sale ID');
+          return res.status(400).json({ message: 'Missing required data' });
+        }
+
+        // Find user by PayPal subscription ID
+        const subscription = await db
+          .select()
+          .from(subscriptions)
+          .where(eq(subscriptions.paypalSubscriptionId, subscriptionId))
+          .limit(1);
+
+        if (!subscription[0]) {
+          console.error(`[PayPal Webhook] Subscription not found: ${subscriptionId}`);
+          return res.status(404).json({ message: 'Subscription not found' });
+        }
+
+        const userId = subscription[0].userId;
+        const tier = subscription[0].tier;
+
+        // Check idempotency
+        const eventId = `paypal_sale_${saleId}`;
+        const existingEvent = await storage.checkEventProcessed(eventId);
+        if (existingEvent) {
+          console.log(`[PayPal Webhook] Sale ${saleId} already processed`);
+          return res.json({ received: true, message: 'Already processed' });
+        }
+
+        // Award monthly points
+        await pointsEngine.awardMonthlySubscriptionPoints(userId, tier, saleId);
+
+        // Log event
         await storage.logSubscriptionEvent({
-          subscriptionId: sub.id,
-          eventType: "subscription.processing_failed",
-          eventData: {
-            error: error.message,
-            paypalSubscriptionId: subscriptionId,
-            stack: error.stack,
-          },
-        });
-      }
-    } catch (logError) {
-      console.error("Failed to log processing error:", logError);
-    }
-
-    res.status(500).json({ message: error.message || "Failed to process subscription" });
-  }
-});
-
-// PayPal Webhook Handler - Recurring Payments
-app.post('/api/webhooks/paypal', async (req, res) => {
-  try {
-    // Verify webhook signature for security
-    const verification = await verifyPayPalWebhook(req.headers as Record<string, string>, req.body);
-    if (!verification.valid) {
-      console.error(`[PayPal Webhook] Signature verification failed: ${verification.error}`);
-      return res.status(401).json({ message: 'Webhook signature verification failed' });
-    }
-
-    const event = req.body;
-    const eventType = event.event_type;
-
-    console.log(`[PayPal Webhook] Verified event: ${eventType}`);
-
-    // Handle PAYMENT.SALE.COMPLETED (monthly recurring payment)
-    if (eventType === 'PAYMENT.SALE.COMPLETED') {
-      const subscriptionId = event.resource?.billing_agreement_id;
-      const saleId = event.resource?.id;
-
-      if (!subscriptionId || !saleId) {
-        console.error('[PayPal Webhook] Missing subscription or sale ID');
-        return res.status(400).json({ message: 'Missing required data' });
-      }
-
-      // Find user by PayPal subscription ID
-      const subscription = await db
-        .select()
-        .from(subscriptions)
-        .where(eq(subscriptions.paypalSubscriptionId, subscriptionId))
-        .limit(1);
-
-      if (!subscription[0]) {
-        console.error(`[PayPal Webhook] Subscription not found: ${subscriptionId}`);
-        return res.status(404).json({ message: 'Subscription not found' });
-      }
-
-      const userId = subscription[0].userId;
-      const tier = subscription[0].tier;
-
-      // Check idempotency
-      const eventId = `paypal_sale_${saleId}`;
-      const existingEvent = await storage.checkEventProcessed(eventId);
-      if (existingEvent) {
-        console.log(`[PayPal Webhook] Sale ${saleId} already processed`);
-        return res.json({ received: true, message: 'Already processed' });
-      }
-
-      // Award monthly points
-      await pointsEngine.awardMonthlySubscriptionPoints(userId, tier, saleId);
-
-      // Log event
-      await storage.logSubscriptionEvent({
-        subscriptionId: subscription[0].id,
-        eventType: 'payment.sale.completed',
-        eventData: {
-          eventId,
-          saleId,
-          paypalSubscriptionId: subscriptionId,
-          tier,
-        },
-      });
-
-      console.log(`[PayPal Webhook] Awarded monthly points for ${tier} tier to user ${userId}`);
-    }
-
-    // Handle BILLING.SUBSCRIPTION.CANCELLED
-    if (eventType === 'BILLING.SUBSCRIPTION.CANCELLED') {
-      const subscriptionId = event.resource?.id;
-
-      if (!subscriptionId) {
-        return res.status(400).json({ message: 'Missing subscription ID' });
-      }
-
-      const subscription = await db
-        .select()
-        .from(subscriptions)
-        .where(eq(subscriptions.paypalSubscriptionId, subscriptionId))
-        .limit(1);
-
-      if (subscription[0]) {
-        await storage.updateSubscription(subscription[0].id, { status: 'canceled' });
-        console.log(`[PayPal Webhook] Subscription ${subscriptionId} cancelled`);
-      }
-    }
-
-    res.json({ received: true });
-  } catch (error: any) {
-    console.error('[PayPal Webhook] Error:', error);
-    res.status(500).json({ message: error.message || 'Webhook processing failed' });
-  }
-});
-
-app.post('/api/subscription/cancel', getUserMiddleware, async (req: any, res) => {
-  const userId = req.dbUser.id;
-
-  try {
-    const subscription = await storage.getSubscription(userId);
-
-    if (!subscription) {
-      return res.status(404).json({ message: "No active subscription found" });
-    }
-
-    // Generate stable event ID for deduplication
-    const eventId = `cancel_${subscription.paypalSubscriptionId}_${userId}`;
-
-    // Check if cancellation already processed
-    const existingEvent = await storage.checkEventProcessed(eventId);
-    if (existingEvent) {
-      console.log(`Subscription ${subscription.paypalSubscriptionId} already being canceled`);
-      return res.json({ message: "Subscription cancellation already in progress" });
-    }
-
-    if (subscription.paypalSubscriptionId) {
-      await cancelPayPalSubscription(
-        subscription.paypalSubscriptionId,
-        "User requested cancellation"
-      );
-    }
-
-    await storage.updateSubscription(subscription.id, {
-      status: "canceling"
-    });
-
-    // Log subscription cancellation event with stable ID
-    await storage.logSubscriptionEvent({
-      subscriptionId: subscription.id,
-      eventType: "subscription.canceled",
-      eventData: {
-        eventId,
-        tier: subscription.tier,
-        paypalSubscriptionId: subscription.paypalSubscriptionId,
-        reason: "user_requested",
-      },
-    });
-
-    res.json({ message: "Subscription will be canceled at period end" });
-  } catch (error: any) {
-    console.error("Error canceling subscription:", error);
-
-    // Log cancellation failure
-    try {
-      const subscription = await storage.getSubscription(userId);
-      if (subscription) {
-        const eventId = `cancel_${subscription.paypalSubscriptionId}_${userId}`;
-        await storage.logSubscriptionEvent({
-          subscriptionId: subscription.id,
-          eventType: "subscription.cancel_failed",
+          subscriptionId: subscription[0].id,
+          eventType: 'payment.sale.completed',
           eventData: {
             eventId,
-            error: error.message,
-            tier: subscription.tier,
-            paypalSubscriptionId: subscription.paypalSubscriptionId,
+            saleId,
+            paypalSubscriptionId: subscriptionId,
+            tier,
           },
         });
+
+        console.log(`[PayPal Webhook] Awarded monthly points for ${tier} tier to user ${userId}`);
       }
-    } catch (logError) {
-      console.error("Failed to log cancellation error:", logError);
-    }
 
-    res.status(500).json({ message: error.message || "Failed to cancel subscription" });
-  }
-});
+      // Handle BILLING.SUBSCRIPTION.CANCELLED
+      if (eventType === 'BILLING.SUBSCRIPTION.CANCELLED') {
+        const subscriptionId = event.resource?.id;
 
-app.post('/api/webhooks/gaming/match-win', webhookAuth, async (req, res) => {
-  try {
-    const result = matchWinWebhookSchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({
-        message: "Validation failed",
-        issues: result.error.errors
-      });
-    }
-    const { apiKey, userId, gameId, externalEventId, timestamp, matchData } = result.data;
+        if (!subscriptionId) {
+          return res.status(400).json({ message: 'Missing subscription ID' });
+        }
 
-    // Partner already authenticated by webhookAuth middleware (adds partnerId to req)
-    const partnerId = req.partnerId!;
-    const partner = await storage.getApiPartner(apiKey);
-    if (!partner || partner.id !== partnerId) {
-      return res.status(401).json({ message: "Partner ID mismatch" });
-    }
+        const subscription = await db
+          .select()
+          .from(subscriptions)
+          .where(eq(subscriptions.paypalSubscriptionId, subscriptionId))
+          .limit(1);
 
-    const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
-    if (existingEvent) {
-      return res.json({ message: "Event already processed", eventId: existingEvent.id });
-    }
-
-    const user = await storage.getUser(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const subscription = await storage.getSubscription(userId);
-    if (!subscription || subscription.status !== "active") {
-      return res.status(403).json({ message: "User must have active subscription" });
-    }
-
-    const basePoints = 10;
-    // Tier multipliers for match win webhooks (legacy - match-based points deprecated)
-    const tierMultiplier = subscription.tier === "elite" ? 1.5 : subscription.tier === "pro" ? 1.2 : 1.0;
-    const pointsToAward = Math.floor(basePoints * tierMultiplier);
-
-    const event = await storage.logGamingEvent({
-      partnerId: partner.id,
-      userId,
-      gameId: gameId || null,
-      eventType: "MATCH_WIN",
-      eventData: matchData || {},
-      externalEventId,
-      pointsAwarded: null,
-      transactionId: null,
-      errorMessage: null,
-    });
-
-    try {
-      const transaction = await pointsEngine.awardPoints(
-        userId,
-        pointsToAward,
-        "MATCH_WIN",
-        event.id,
-        "gaming_event",
-        `Match win - ${partner.name}`
-      );
-
-      await storage.updateGamingEvent(event.id, {
-        status: "processed",
-        pointsAwarded: pointsToAward,
-        transactionId: transaction.id,
-        processedAt: new Date(),
-      });
-
-      res.json({
-        success: true,
-        eventId: event.id,
-        pointsAwarded: pointsToAward,
-        newBalance: transaction.balanceAfter
-      });
-    } catch (error: any) {
-      await storage.updateGamingEvent(event.id, {
-        status: "failed",
-        errorMessage: error.message,
-        retryCount: 1,
-      });
-      throw error;
-    }
-  } catch (error: any) {
-    console.error("Error processing match win:", error);
-    res.status(500).json({ message: error.message || "Failed to process match win" });
-  }
-});
-
-app.post('/api/webhooks/gaming/achievement', webhookAuth, async (req, res) => {
-  try {
-    const result = achievementWebhookSchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({
-        message: "Validation failed",
-        issues: result.error.errors
-      });
-    }
-    const { apiKey, userId, gameId, externalEventId, timestamp, achievementData } = result.data;
-
-    // Partner already authenticated by webhookAuth middleware (adds partnerId to req)
-    const partnerId = req.partnerId!;
-    const partner = await storage.getApiPartner(apiKey);
-    if (!partner || partner.id !== partnerId) {
-      return res.status(401).json({ message: "Partner ID mismatch" });
-    }
-
-    const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
-    if (existingEvent) {
-      return res.json({ message: "Event already processed", eventId: existingEvent.id });
-    }
-
-    const user = await storage.getUser(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const subscription = await storage.getSubscription(userId);
-    if (!subscription || subscription.status !== "active") {
-      return res.status(403).json({ message: "User must have active subscription" });
-    }
-
-    const pointsToAward = Math.min(achievementData.pointsAwarded, 100);
-
-    const event = await storage.logGamingEvent({
-      partnerId: partner.id,
-      userId,
-      gameId: gameId || null,
-      eventType: "ACHIEVEMENT",
-      eventData: achievementData,
-      externalEventId,
-      pointsAwarded: null,
-      transactionId: null,
-      errorMessage: null,
-    });
-
-    try {
-      const transaction = await pointsEngine.awardPoints(
-        userId,
-        pointsToAward,
-        "ACHIEVEMENT",
-        event.id,
-        "gaming_event",
-        achievementData.title || `Achievement - ${partner.name}`
-      );
-
-      await storage.updateGamingEvent(event.id, {
-        status: "processed",
-        pointsAwarded: pointsToAward,
-        transactionId: transaction.id,
-        processedAt: new Date(),
-      });
-
-      res.json({
-        success: true,
-        eventId: event.id,
-        pointsAwarded: pointsToAward,
-        newBalance: transaction.balanceAfter
-      });
-    } catch (error: any) {
-      await storage.updateGamingEvent(event.id, {
-        status: "failed",
-        errorMessage: error.message,
-        retryCount: 1,
-      });
-      throw error;
-    }
-  } catch (error: any) {
-    console.error("Error processing achievement:", error);
-    res.status(500).json({ message: error.message || "Failed to process achievement" });
-  }
-});
-
-app.post('/api/webhooks/gaming/tournament', webhookAuth, async (req, res) => {
-  try {
-    const result = tournamentWebhookSchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({
-        message: "Validation failed",
-        issues: result.error.errors
-      });
-    }
-    const { apiKey, userId, gameId, externalEventId, timestamp, tournamentData } = result.data;
-
-    // Partner already authenticated by webhookAuth middleware (adds partnerId to req)
-    const partnerId = req.partnerId!;
-    const partner = await storage.getApiPartner(apiKey);
-    if (!partner || partner.id !== partnerId) {
-      return res.status(401).json({ message: "Partner ID mismatch" });
-    }
-
-    const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
-    if (existingEvent) {
-      return res.json({ message: "Event already processed", eventId: existingEvent.id });
-    }
-
-    const user = await storage.getUser(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const subscription = await storage.getSubscription(userId);
-    if (!subscription || subscription.status !== "active") {
-      return res.status(403).json({ message: "User must have active subscription" });
-    }
-
-    let pointsToAward = 25;
-    if (tournamentData.placement === 1) pointsToAward = 100;
-    else if (tournamentData.placement === 2) pointsToAward = 75;
-    else if (tournamentData.placement === 3) pointsToAward = 50;
-
-    const event = await storage.logGamingEvent({
-      partnerId: partner.id,
-      userId,
-      gameId: gameId || null,
-      eventType: "TOURNAMENT_PLACEMENT",
-      eventData: tournamentData,
-      externalEventId,
-      pointsAwarded: null,
-      transactionId: null,
-      errorMessage: null,
-    });
-
-    try {
-      const transaction = await pointsEngine.awardPoints(
-        userId,
-        pointsToAward,
-        "TOURNAMENT_PLACEMENT",
-        event.id,
-        "gaming_event",
-        `Tournament placement #${tournamentData.placement} - ${partner.name}`
-      );
-
-      await storage.updateGamingEvent(event.id, {
-        status: "processed",
-        pointsAwarded: pointsToAward,
-        transactionId: transaction.id,
-        processedAt: new Date(),
-      });
-
-      res.json({
-        success: true,
-        eventId: event.id,
-        pointsAwarded: pointsToAward,
-        newBalance: transaction.balanceAfter
-      });
-    } catch (error: any) {
-      await storage.updateGamingEvent(event.id, {
-        status: "failed",
-        errorMessage: error.message,
-        retryCount: 1,
-      });
-      throw error;
-    }
-  } catch (error: any) {
-    console.error("Error processing tournament placement:", error);
-    res.status(500).json({ message: error.message || "Failed to process tournament placement" });
-  }
-});
-
-// Referral System Routes
-app.post('/api/referrals/start-trial', isAuthenticated, getUserMiddleware, async (req: any, res) => {
-  try {
-    const userId = req.dbUser.id;
-    const { referralCode } = req.body;
-
-    // Check if user already has trial or subscription
-    if (req.dbUser.freeTrialStartedAt) {
-      return res.status(400).json({ message: "You've already started a free trial" });
-    }
-
-    const subscription = await storage.getSubscription(userId);
-    if (subscription && subscription.status === "active") {
-      return res.status(400).json({ message: "You already have an active subscription" });
-    }
-
-    // Start free trial
-    const updatedUser = await storage.startFreeTrial(userId);
-
-    // If user was referred, create referral record
-    if (referralCode && referralCode.trim()) {
-      const referrer = await storage.getUserByReferralCode(referralCode);
-      if (referrer && referrer.id !== userId) {
-        // Check if referral already exists
-        const existingReferral = await storage.getReferralByUsers(referrer.id, userId);
-        if (!existingReferral) {
-          await storage.createReferral({
-            referrerId: referrer.id,
-            referredUserId: userId,
-            activatedAt: new Date(),
-          });
+        if (subscription[0]) {
+          await storage.updateSubscription(subscription[0].id, { status: 'canceled' });
+          console.log(`[PayPal Webhook] Subscription ${subscriptionId} cancelled`);
         }
       }
+
+      res.json({ received: true });
+    } catch (error: any) {
+      console.error('[PayPal Webhook] Error:', error);
+      res.status(500).json({ message: error.message || 'Webhook processing failed' });
     }
+  });
 
-    res.json({
-      success: true,
-      trialEndsAt: updatedUser.freeTrialEndsAt,
-      message: `Welcome! Your ${FREE_TRIAL_DURATION_DAYS}-day trial has started.`
-    });
-  } catch (error: any) {
-    console.error("Error starting trial:", error);
-    res.status(500).json({ message: error.message || "Failed to start trial" });
-  }
-});
-
-app.get('/api/referrals/my-stats', isAuthenticated, getUserMiddleware, async (req: any, res) => {
-  try {
+  app.post('/api/subscription/cancel', getUserMiddleware, async (req: any, res) => {
     const userId = req.dbUser.id;
 
-    // Ensure user has a referral code - generate if missing
-    let referralCode = req.dbUser.referralCode;
-    if (!referralCode) {
-      const { generateReferralCode } = await import('./lib/referral');
-      referralCode = generateReferralCode();
+    try {
+      const subscription = await storage.getSubscription(userId);
 
-      // Update user with new code
-      await db.update(users)
-        .set({ referralCode })
-        .where(eq(users.id, userId));
-
-      console.log(`Generated referral code ${referralCode} for user ${userId}`);
-    }
-
-    const referrals = await storage.getReferralsByReferrer(userId);
-    const completedCount = referrals.filter(r => r.status === 'completed').length;
-    const pendingCount = referrals.filter(r => r.status === 'pending').length;
-
-    const { tier, totalPoints } = calculateReferralReward(completedCount);
-
-    res.json({
-      referralCode,
-      totalReferrals: referrals.length,
-      completedReferrals: completedCount,
-      pendingReferrals: pendingCount,
-      currentTier: tier,
-      totalPointsEarned: totalPoints,
-      referrals: referrals.map(r => ({
-        id: r.id,
-        status: r.status,
-        username: r.referredUser.username || 'Anonymous',
-        createdAt: r.createdAt,
-        completedAt: r.completedAt,
-        pointsAwarded: r.pointsAwarded,
-      })),
-    });
-  } catch (error: any) {
-    console.error("Error fetching referral stats:", error);
-    res.status(500).json({ message: error.message || "Failed to fetch referral stats" });
-  }
-});
-
-// Check and award squad milestone bonuses
-app.post('/api/referrals/check-squad-milestones', isAuthenticated, getUserMiddleware, async (req: any, res) => {
-  try {
-    const userId = req.dbUser.id;
-    const { checkSquadMilestones, SQUAD_MILESTONES } = await import('./lib/referral');
-
-    // Get all user's referrals with dates
-    const referrals = await storage.getReferralsByReferrer(userId);
-    const completedReferrals = referrals.filter(r => r.status === 'completed');
-
-    // Check which milestones have been earned
-    const previouslyAwarded = req.dbUser.squadMilestonesAwarded || [];
-    const milestoneResults = checkSquadMilestones(completedReferrals, previouslyAwarded);
-
-    let totalBonusAwarded = 0;
-    const newlyEarned = [];
-
-    // Award points for newly earned milestones
-    for (const { milestone, earned } of milestoneResults) {
-      if (earned) {
-        await pointsEngine.awardPoints(
-          userId,
-          milestone.bonusPoints,
-          'squad_milestone',
-          userId,
-          `Squad Milestone: ${milestone.name}`
-        );
-        totalBonusAwarded += milestone.bonusPoints;
-        newlyEarned.push(milestone.name);
+      if (!subscription) {
+        return res.status(404).json({ message: "No active subscription found" });
       }
-    }
 
-    // Save awarded milestones to prevent duplicate awards (would need schema update for persistence)
-    // For MVP, this runs per request - future: store in users.squadMilestonesAwarded
+      // Generate stable event ID for deduplication
+      const eventId = `cancel_${subscription.paypalSubscriptionId}_${userId}`;
 
-    res.json({
-      milestones: SQUAD_MILESTONES,
-      userProgress: milestoneResults.map(({ milestone, earned }) => ({
-        name: milestone.name,
-        description: milestone.description,
-        bonusPoints: milestone.bonusPoints,
-        earned,
-      })),
-      newlyEarnedCount: newlyEarned.length,
-      totalBonusAwarded,
-    });
-  } catch (error: any) {
-    console.error("Error checking squad milestones:", error);
-    res.status(500).json({ message: error.message || "Failed to check squad milestones" });
-  }
-});
+      // Check if cancellation already processed
+      const existingEvent = await storage.checkEventProcessed(eventId);
+      if (existingEvent) {
+        console.log(`Subscription ${subscription.paypalSubscriptionId} already being canceled`);
+        return res.json({ message: "Subscription cancellation already in progress" });
+      }
 
+      if (subscription.paypalSubscriptionId) {
+        await cancelPayPalSubscription(
+          subscription.paypalSubscriptionId,
+          "User requested cancellation"
+        );
+      }
 
-app.get('/api/referrals/leaderboard', async (req, res) => {
-  try {
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-    const leaderboard = await storage.getReferralLeaderboard(limit);
-
-    res.json({
-      leaderboard: leaderboard.map((entry, index) => ({
-        rank: index + 1,
-        username: entry.user.username || 'Anonymous',
-        referralCount: entry.referralCount,
-        totalPoints: entry.totalPoints,
-      })),
-    });
-  } catch (error: any) {
-    console.error("Error fetching leaderboard:", error);
-    res.status(500).json({ message: error.message || "Failed to fetch leaderboard" });
-  }
-});
-
-// Webhook to complete referrals when user subscribes
-app.post('/api/referrals/complete/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    // Find all pending referrals for this user
-    const user = await storage.getUser(userId);
-    if (!user || !user.referredBy) {
-      return res.json({ message: "No referrals to complete" });
-    }
-
-    const referral = await storage.getReferralByUsers(user.referredBy, userId);
-    if (!referral || referral.status !== 'pending') {
-      return res.json({ message: "Referral already completed or not found" });
-    }
-
-    // Get referrer's total completed referrals
-    const allReferrals = await storage.getReferralsByReferrer(user.referredBy);
-    const completedCount = allReferrals.filter(r => r.status === 'completed').length + 1; // +1 for this new completion
-
-    const { tier, totalPoints } = calculateReferralReward(completedCount);
-    const previousReward = calculateReferralReward(completedCount - 1);
-    const pointsForThisReferral = totalPoints - previousReward.totalPoints;
-
-    // Award points to referrer
-    const transaction = await pointsEngine.awardPoints(
-      user.referredBy,
-      pointsForThisReferral,
-      "REFERRAL",
-      referral.id,
-      "referral",
-      `Referral bonus - ${user.username || 'user'} subscribed`
-    );
-
-    // Update referral status
-    await storage.updateReferral(referral.id, {
-      status: 'completed',
-      pointsAwarded: pointsForThisReferral,
-      tier: tier?.minReferrals || 0,
-      completionReason: 'subscription_started',
-      completedAt: new Date(),
-    });
-
-    res.json({
-      success: true,
-      pointsAwarded: pointsForThisReferral,
-      message: "Referral completed successfully"
-    });
-  } catch (error: any) {
-    console.error("Error completing referral:", error);
-    res.status(500).json({ message: error.message || "Failed to complete referral" });
-  }
-});
-
-// Admin endpoint to manually trigger stream verification (for testing)
-app.post('/api/admin/verify-streams', adminMiddleware, async (req: any, res) => {
-  try {
-    const { streamingVerifier } = await import("./streamingVerifier");
-    await streamingVerifier.checkActiveStreams();
-    res.json({ success: true, message: "Stream verification triggered" });
-  } catch (error: any) {
-    console.error("Error verifying streams:", error);
-    res.status(500).json({ message: error.message || "Failed to verify streams" });
-  }
-});
-
-// Admin endpoint to check specific user's stream
-app.post('/api/admin/verify-user-stream/:userId', adminMiddleware, async (req: any, res) => {
-  try {
-    const { streamingVerifier } = await import("./streamingVerifier");
-    await streamingVerifier.checkUserStream(req.params.userId);
-    res.json({ success: true, message: "User stream verified" });
-  } catch (error: any) {
-    console.error("Error verifying user stream:", error);
-    res.status(500).json({ message: error.message || "Failed to verify user stream" });
-  }
-});
-
-// Free Tier Routes
-app.get('/api/free-tier/status', getUserMiddleware, async (req: any, res) => {
-  try {
-    const { getFreeTierStatus } = await import('./lib/freeTier');
-    const status = await getFreeTierStatus(req.dbUser.id);
-    res.json(status);
-  } catch (error: any) {
-    console.error("Error getting free tier status:", error);
-    res.status(500).json({ message: error.message || "Failed to get free tier status" });
-  }
-});
-
-app.post('/api/free-tier/redeem-trial', getUserMiddleware, async (req: any, res) => {
-  try {
-    const { redeemBasicTrial } = await import('./lib/freeTier');
-    await redeemBasicTrial(req.dbUser.id);
-    res.json({
-      success: true,
-      message: "Basic trial activated! Enjoy 7 days of premium features."
-    });
-  } catch (error: any) {
-    console.error("Error redeeming trial:", error);
-    res.status(400).json({ message: error.message || "Failed to redeem trial" });
-  }
-});
-
-// Sponsor Management Routes (Admin Only)
-app.get('/api/admin/sponsors', adminMiddleware, async (req: any, res) => {
-  try {
-    const allSponsors = await db.select().from(sponsors);
-    res.json(allSponsors);
-  } catch (error: any) {
-    console.error("Error fetching sponsors:", error);
-    res.status(500).json({ message: error.message || "Failed to fetch sponsors" });
-  }
-});
-
-app.post('/api/admin/sponsors', adminMiddleware, async (req: any, res) => {
-  try {
-    const validatedData = insertSponsorSchema.parse(req.body);
-    const [newSponsor] = await db.insert(sponsors)
-      .values(validatedData)
-      .returning();
-    res.json(newSponsor);
-  } catch (error: any) {
-    console.error("Error creating sponsor:", error);
-    res.status(400).json({ message: error.message || "Failed to create sponsor" });
-  }
-});
-
-app.patch('/api/admin/sponsors/:id', adminMiddleware, async (req: any, res) => {
-  try {
-    const { id } = req.params;
-    const updates = insertSponsorSchema.partial().parse(req.body);
-
-    const [updatedSponsor] = await db.update(sponsors)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(sponsors.id, id))
-      .returning();
-
-    if (!updatedSponsor) {
-      return res.status(404).json({ message: "Sponsor not found" });
-    }
-
-    res.json(updatedSponsor);
-  } catch (error: any) {
-    console.error("Error updating sponsor:", error);
-    res.status(400).json({ message: error.message || "Failed to update sponsor" });
-  }
-});
-
-app.delete('/api/admin/sponsors/:id', adminMiddleware, async (req: any, res) => {
-  try {
-    const { id } = req.params;
-
-    // Check if sponsor has ANY challenges (active or historical)
-    const allChallenges = await db.select()
-      .from(challenges)
-      .where(eq(challenges.sponsorId, id));
-
-    if (allChallenges.length > 0) {
-      return res.status(400).json({
-        message: `Cannot delete sponsor with ${allChallenges.length} linked challenges. Set sponsor to 'inactive' instead.`
+      await storage.updateSubscription(subscription.id, {
+        status: "canceling"
       });
+
+      // Log subscription cancellation event with stable ID
+      await storage.logSubscriptionEvent({
+        subscriptionId: subscription.id,
+        eventType: "subscription.canceled",
+        eventData: {
+          eventId,
+          tier: subscription.tier,
+          paypalSubscriptionId: subscription.paypalSubscriptionId,
+          reason: "user_requested",
+        },
+      });
+
+      res.json({ message: "Subscription will be canceled at period end" });
+    } catch (error: any) {
+      console.error("Error canceling subscription:", error);
+
+      // Log cancellation failure
+      try {
+        const subscription = await storage.getSubscription(userId);
+        if (subscription) {
+          const eventId = `cancel_${subscription.paypalSubscriptionId}_${userId}`;
+          await storage.logSubscriptionEvent({
+            subscriptionId: subscription.id,
+            eventType: "subscription.cancel_failed",
+            eventData: {
+              eventId,
+              error: error.message,
+              tier: subscription.tier,
+              paypalSubscriptionId: subscription.paypalSubscriptionId,
+            },
+          });
+        }
+      } catch (logError) {
+        console.error("Failed to log cancellation error:", logError);
+      }
+
+      res.status(500).json({ message: error.message || "Failed to cancel subscription" });
     }
+  });
 
-    await db.delete(sponsors).where(eq(sponsors.id, id));
-    res.json({ success: true });
-  } catch (error: any) {
-    console.error("Error deleting sponsor:", error);
-    res.status(500).json({ message: error.message || "Failed to delete sponsor" });
-  }
-});
+  app.post('/api/webhooks/gaming/match-win', webhookAuth, async (req, res) => {
+    try {
+      const result = matchWinWebhookSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Validation failed",
+          issues: result.error.errors
+        });
+      }
+      const { apiKey, userId, gameId, externalEventId, timestamp, matchData } = result.data;
 
-// Sponsor budget management
-app.post('/api/admin/sponsors/:id/add-budget', adminMiddleware, async (req: any, res) => {
-  try {
-    const { id } = req.params;
-    const { amount } = req.body;
+      // Partner already authenticated by webhookAuth middleware (adds partnerId to req)
+      const partnerId = req.partnerId!;
+      const partner = await storage.getApiPartner(apiKey);
+      if (!partner || partner.id !== partnerId) {
+        return res.status(401).json({ message: "Partner ID mismatch" });
+      }
 
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ message: "Amount must be positive" });
+      const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
+      if (existingEvent) {
+        return res.json({ message: "Event already processed", eventId: existingEvent.id });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const subscription = await storage.getSubscription(userId);
+      if (!subscription || subscription.status !== "active") {
+        return res.status(403).json({ message: "User must have active subscription" });
+      }
+
+      const basePoints = 10;
+      // Tier multipliers for match win webhooks (legacy - match-based points deprecated)
+      const tierMultiplier = subscription.tier === "elite" ? 1.5 : subscription.tier === "pro" ? 1.2 : 1.0;
+      const pointsToAward = Math.floor(basePoints * tierMultiplier);
+
+      const event = await storage.logGamingEvent({
+        partnerId: partner.id,
+        userId,
+        gameId: gameId || null,
+        eventType: "MATCH_WIN",
+        eventData: matchData || {},
+        externalEventId,
+        pointsAwarded: null,
+        transactionId: null,
+        errorMessage: null,
+      });
+
+      try {
+        const transaction = await pointsEngine.awardPoints(
+          userId,
+          pointsToAward,
+          "MATCH_WIN",
+          event.id,
+          "gaming_event",
+          `Match win - ${partner.name}`
+        );
+
+        await storage.updateGamingEvent(event.id, {
+          status: "processed",
+          pointsAwarded: pointsToAward,
+          transactionId: transaction.id,
+          processedAt: new Date(),
+        });
+
+        res.json({
+          success: true,
+          eventId: event.id,
+          pointsAwarded: pointsToAward,
+          newBalance: transaction.balanceAfter
+        });
+      } catch (error: any) {
+        await storage.updateGamingEvent(event.id, {
+          status: "failed",
+          errorMessage: error.message,
+          retryCount: 1,
+        });
+        throw error;
+      }
+    } catch (error: any) {
+      console.error("Error processing match win:", error);
+      res.status(500).json({ message: error.message || "Failed to process match win" });
     }
+  });
 
-    const [sponsor] = await db.select().from(sponsors).where(eq(sponsors.id, id));
-    if (!sponsor) {
-      return res.status(404).json({ message: "Sponsor not found" });
+  app.post('/api/webhooks/gaming/achievement', webhookAuth, async (req, res) => {
+    try {
+      const result = achievementWebhookSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Validation failed",
+          issues: result.error.errors
+        });
+      }
+      const { apiKey, userId, gameId, externalEventId, timestamp, achievementData } = result.data;
+
+      // Partner already authenticated by webhookAuth middleware (adds partnerId to req)
+      const partnerId = req.partnerId!;
+      const partner = await storage.getApiPartner(apiKey);
+      if (!partner || partner.id !== partnerId) {
+        return res.status(401).json({ message: "Partner ID mismatch" });
+      }
+
+      const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
+      if (existingEvent) {
+        return res.json({ message: "Event already processed", eventId: existingEvent.id });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const subscription = await storage.getSubscription(userId);
+      if (!subscription || subscription.status !== "active") {
+        return res.status(403).json({ message: "User must have active subscription" });
+      }
+
+      const pointsToAward = Math.min(achievementData.pointsAwarded, 100);
+
+      const event = await storage.logGamingEvent({
+        partnerId: partner.id,
+        userId,
+        gameId: gameId || null,
+        eventType: "ACHIEVEMENT",
+        eventData: achievementData,
+        externalEventId,
+        pointsAwarded: null,
+        transactionId: null,
+        errorMessage: null,
+      });
+
+      try {
+        const transaction = await pointsEngine.awardPoints(
+          userId,
+          pointsToAward,
+          "ACHIEVEMENT",
+          event.id,
+          "gaming_event",
+          achievementData.title || `Achievement - ${partner.name}`
+        );
+
+        await storage.updateGamingEvent(event.id, {
+          status: "processed",
+          pointsAwarded: pointsToAward,
+          transactionId: transaction.id,
+          processedAt: new Date(),
+        });
+
+        res.json({
+          success: true,
+          eventId: event.id,
+          pointsAwarded: pointsToAward,
+          newBalance: transaction.balanceAfter
+        });
+      } catch (error: any) {
+        await storage.updateGamingEvent(event.id, {
+          status: "failed",
+          errorMessage: error.message,
+          retryCount: 1,
+        });
+        throw error;
+      }
+    } catch (error: any) {
+      console.error("Error processing achievement:", error);
+      res.status(500).json({ message: error.message || "Failed to process achievement" });
     }
+  });
 
-    const [updated] = await db.update(sponsors)
-      .set({
-        totalBudget: sponsor.totalBudget + amount,
-        updatedAt: new Date()
-      })
-      .where(eq(sponsors.id, id))
-      .returning();
+  app.post('/api/webhooks/gaming/tournament', webhookAuth, async (req, res) => {
+    try {
+      const result = tournamentWebhookSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Validation failed",
+          issues: result.error.errors
+        });
+      }
+      const { apiKey, userId, gameId, externalEventId, timestamp, tournamentData } = result.data;
 
-    res.json(updated);
-  } catch (error: any) {
-    console.error("Error adding sponsor budget:", error);
-    res.status(500).json({ message: error.message || "Failed to add budget" });
-  }
-});
+      // Partner already authenticated by webhookAuth middleware (adds partnerId to req)
+      const partnerId = req.partnerId!;
+      const partner = await storage.getApiPartner(apiKey);
+      if (!partner || partner.id !== partnerId) {
+        return res.status(401).json({ message: "Partner ID mismatch" });
+      }
 
-// Migration utility endpoints
-app.post('/api/admin/sponsors/migrate', adminMiddleware, async (req: any, res) => {
-  try {
-    const { backfillSponsors } = await import('./lib/sponsorMigration');
-    const result = await backfillSponsors();
-    res.json({
-      success: true,
-      message: `Created ${result.created} sponsors and linked ${result.linked} challenges`
-    });
-  } catch (error: any) {
-    console.error("Error migrating sponsors:", error);
-    res.status(500).json({ message: error.message || "Migration failed" });
-  }
-});
+      const existingEvent = await storage.getEventByExternalId(partner.id, externalEventId);
+      if (existingEvent) {
+        return res.json({ message: "Event already processed", eventId: existingEvent.id });
+      }
 
-app.post('/api/admin/sponsors/sync-budgets', adminMiddleware, async (req: any, res) => {
-  try {
-    const { syncSponsorBudgets } = await import('./lib/sponsorMigration');
-    const updated = await syncSponsorBudgets();
-    res.json({
-      success: true,
-      message: `Synced budgets for ${updated} sponsors`
-    });
-  } catch (error: any) {
-    console.error("Error syncing sponsor budgets:", error);
-    res.status(500).json({ message: error.message || "Sync failed" });
-  }
-});
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
-// Sponsor Analytics
-app.get('/api/admin/sponsors/:id/analytics', adminMiddleware, async (req: any, res) => {
-  try {
-    const { id } = req.params;
+      const subscription = await storage.getSubscription(userId);
+      if (!subscription || subscription.status !== "active") {
+        return res.status(403).json({ message: "User must have active subscription" });
+      }
 
-    // Get sponsor
-    const [sponsor] = await db.select()
-      .from(sponsors)
-      .where(eq(sponsors.id, id))
-      .limit(1);
+      let pointsToAward = 25;
+      if (tournamentData.placement === 1) pointsToAward = 100;
+      else if (tournamentData.placement === 2) pointsToAward = 75;
+      else if (tournamentData.placement === 3) pointsToAward = 50;
 
-    if (!sponsor) {
-      return res.status(404).json({ message: "Sponsor not found" });
+      const event = await storage.logGamingEvent({
+        partnerId: partner.id,
+        userId,
+        gameId: gameId || null,
+        eventType: "TOURNAMENT_PLACEMENT",
+        eventData: tournamentData,
+        externalEventId,
+        pointsAwarded: null,
+        transactionId: null,
+        errorMessage: null,
+      });
+
+      try {
+        const transaction = await pointsEngine.awardPoints(
+          userId,
+          pointsToAward,
+          "TOURNAMENT_PLACEMENT",
+          event.id,
+          "gaming_event",
+          `Tournament placement #${tournamentData.placement} - ${partner.name}`
+        );
+
+        await storage.updateGamingEvent(event.id, {
+          status: "processed",
+          pointsAwarded: pointsToAward,
+          transactionId: transaction.id,
+          processedAt: new Date(),
+        });
+
+        res.json({
+          success: true,
+          eventId: event.id,
+          pointsAwarded: pointsToAward,
+          newBalance: transaction.balanceAfter
+        });
+      } catch (error: any) {
+        await storage.updateGamingEvent(event.id, {
+          status: "failed",
+          errorMessage: error.message,
+          retryCount: 1,
+        });
+        throw error;
+      }
+    } catch (error: any) {
+      console.error("Error processing tournament placement:", error);
+      res.status(500).json({ message: error.message || "Failed to process tournament placement" });
     }
+  });
 
-    // Get all challenges for this sponsor
-    const sponsorChallenges = await db.select()
-      .from(challenges)
-      .where(eq(challenges.sponsorId, id));
+  // Referral System Routes
+  app.post('/api/referrals/start-trial', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { referralCode } = req.body;
 
-    // Calculate aggregate metrics
-    const totalChallenges = sponsorChallenges.length;
-    const activeChallenges = sponsorChallenges.filter((c: any) => c.isActive).length;
-    const totalBudgetAllocated = sponsorChallenges.reduce((sum: number, c: any) => sum + c.totalBudget, 0);
-    const totalPointsDistributed = sponsorChallenges.reduce((sum: number, c: any) => sum + c.pointsDistributed, 0);
+      // Check if user already has trial or subscription
+      if (req.dbUser.freeTrialStartedAt) {
+        return res.status(400).json({ message: "You've already started a free trial" });
+      }
 
-    // Get completion stats for all sponsor challenges
-    const challengeIds = sponsorChallenges.map((c: any) => c.id);
-    const completions = challengeIds.length > 0
-      ? await db.select()
-        .from(challengeCompletions)
-        .where(inArray(challengeCompletions.challengeId, challengeIds))
-      : [];
+      const subscription = await storage.getSubscription(userId);
+      if (subscription && subscription.status === "active") {
+        return res.status(400).json({ message: "You already have an active subscription" });
+      }
 
-    const totalParticipants = new Set(completions.map(c => c.userId)).size;
+      // Start free trial
+      const updatedUser = await storage.startFreeTrial(userId);
 
-    // Count unique users who completed (met requirement)
-    const completedUsers = new Set(
-      completions
-        .filter(c => {
-          const challenge = sponsorChallenges.find(ch => ch.id === c.challengeId);
-          return challenge && c.progress >= challenge.requirementCount;
+      // If user was referred, create referral record
+      if (referralCode && referralCode.trim()) {
+        const referrer = await storage.getUserByReferralCode(referralCode);
+        if (referrer && referrer.id !== userId) {
+          // Check if referral already exists
+          const existingReferral = await storage.getReferralByUsers(referrer.id, userId);
+          if (!existingReferral) {
+            await storage.createReferral({
+              referrerId: referrer.id,
+              referredUserId: userId,
+              activatedAt: new Date(),
+            });
+          }
+        }
+      }
+
+      res.json({
+        success: true,
+        trialEndsAt: updatedUser.freeTrialEndsAt,
+        message: `Welcome! Your ${FREE_TRIAL_DURATION_DAYS}-day trial has started.`
+      });
+    } catch (error: any) {
+      console.error("Error starting trial:", error);
+      res.status(500).json({ message: error.message || "Failed to start trial" });
+    }
+  });
+
+  app.get('/api/referrals/my-stats', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+
+      // Ensure user has a referral code - generate if missing
+      let referralCode = req.dbUser.referralCode;
+      if (!referralCode) {
+        const { generateReferralCode } = await import('./lib/referral');
+        referralCode = generateReferralCode();
+
+        // Update user with new code
+        await db.update(users)
+          .set({ referralCode })
+          .where(eq(users.id, userId));
+
+        console.log(`Generated referral code ${referralCode} for user ${userId}`);
+      }
+
+      const referrals = await storage.getReferralsByReferrer(userId);
+      const completedCount = referrals.filter(r => r.status === 'completed').length;
+      const pendingCount = referrals.filter(r => r.status === 'pending').length;
+
+      const { tier, totalPoints } = calculateReferralReward(completedCount);
+
+      res.json({
+        referralCode,
+        totalReferrals: referrals.length,
+        completedReferrals: completedCount,
+        pendingReferrals: pendingCount,
+        currentTier: tier,
+        totalPointsEarned: totalPoints,
+        referrals: referrals.map(r => ({
+          id: r.id,
+          status: r.status,
+          username: r.referredUser.username || 'Anonymous',
+          createdAt: r.createdAt,
+          completedAt: r.completedAt,
+          pointsAwarded: r.pointsAwarded,
+        })),
+      });
+    } catch (error: any) {
+      console.error("Error fetching referral stats:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch referral stats" });
+    }
+  });
+
+  // Check and award squad milestone bonuses
+  app.post('/api/referrals/check-squad-milestones', isAuthenticated, getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { checkSquadMilestones, SQUAD_MILESTONES } = await import('./lib/referral');
+
+      // Get all user's referrals with dates
+      const referrals = await storage.getReferralsByReferrer(userId);
+      const completedReferrals = referrals.filter(r => r.status === 'completed');
+
+      // Check which milestones have been earned
+      const previouslyAwarded = req.dbUser.squadMilestonesAwarded || [];
+      const milestoneResults = checkSquadMilestones(completedReferrals, previouslyAwarded);
+
+      let totalBonusAwarded = 0;
+      const newlyEarned = [];
+
+      // Award points for newly earned milestones
+      for (const { milestone, earned } of milestoneResults) {
+        if (earned) {
+          await pointsEngine.awardPoints(
+            userId,
+            milestone.bonusPoints,
+            'squad_milestone',
+            userId,
+            `Squad Milestone: ${milestone.name}`
+          );
+          totalBonusAwarded += milestone.bonusPoints;
+          newlyEarned.push(milestone.name);
+        }
+      }
+
+      // Save awarded milestones to prevent duplicate awards (would need schema update for persistence)
+      // For MVP, this runs per request - future: store in users.squadMilestonesAwarded
+
+      res.json({
+        milestones: SQUAD_MILESTONES,
+        userProgress: milestoneResults.map(({ milestone, earned }) => ({
+          name: milestone.name,
+          description: milestone.description,
+          bonusPoints: milestone.bonusPoints,
+          earned,
+        })),
+        newlyEarnedCount: newlyEarned.length,
+        totalBonusAwarded,
+      });
+    } catch (error: any) {
+      console.error("Error checking squad milestones:", error);
+      res.status(500).json({ message: error.message || "Failed to check squad milestones" });
+    }
+  });
+
+
+  app.get('/api/referrals/leaderboard', async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const leaderboard = await storage.getReferralLeaderboard(limit);
+
+      res.json({
+        leaderboard: leaderboard.map((entry, index) => ({
+          rank: index + 1,
+          username: entry.user.username || 'Anonymous',
+          referralCount: entry.referralCount,
+          totalPoints: entry.totalPoints,
+        })),
+      });
+    } catch (error: any) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch leaderboard" });
+    }
+  });
+
+  // Webhook to complete referrals when user subscribes
+  app.post('/api/referrals/complete/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+
+      // Find all pending referrals for this user
+      const user = await storage.getUser(userId);
+      if (!user || !user.referredBy) {
+        return res.json({ message: "No referrals to complete" });
+      }
+
+      const referral = await storage.getReferralByUsers(user.referredBy, userId);
+      if (!referral || referral.status !== 'pending') {
+        return res.json({ message: "Referral already completed or not found" });
+      }
+
+      // Get referrer's total completed referrals
+      const allReferrals = await storage.getReferralsByReferrer(user.referredBy);
+      const completedCount = allReferrals.filter(r => r.status === 'completed').length + 1; // +1 for this new completion
+
+      const { tier, totalPoints } = calculateReferralReward(completedCount);
+      const previousReward = calculateReferralReward(completedCount - 1);
+      const pointsForThisReferral = totalPoints - previousReward.totalPoints;
+
+      // Award points to referrer
+      const transaction = await pointsEngine.awardPoints(
+        user.referredBy,
+        pointsForThisReferral,
+        "REFERRAL",
+        referral.id,
+        "referral",
+        `Referral bonus - ${user.username || 'user'} subscribed`
+      );
+
+      // Update referral status
+      await storage.updateReferral(referral.id, {
+        status: 'completed',
+        pointsAwarded: pointsForThisReferral,
+        tier: tier?.minReferrals || 0,
+        completionReason: 'subscription_started',
+        completedAt: new Date(),
+      });
+
+      res.json({
+        success: true,
+        pointsAwarded: pointsForThisReferral,
+        message: "Referral completed successfully"
+      });
+    } catch (error: any) {
+      console.error("Error completing referral:", error);
+      res.status(500).json({ message: error.message || "Failed to complete referral" });
+    }
+  });
+
+  // Admin endpoint to manually trigger stream verification (for testing)
+  app.post('/api/admin/verify-streams', adminMiddleware, async (req: any, res) => {
+    try {
+      const { streamingVerifier } = await import("./streamingVerifier");
+      await streamingVerifier.checkActiveStreams();
+      res.json({ success: true, message: "Stream verification triggered" });
+    } catch (error: any) {
+      console.error("Error verifying streams:", error);
+      res.status(500).json({ message: error.message || "Failed to verify streams" });
+    }
+  });
+
+  // Admin endpoint to check specific user's stream
+  app.post('/api/admin/verify-user-stream/:userId', adminMiddleware, async (req: any, res) => {
+    try {
+      const { streamingVerifier } = await import("./streamingVerifier");
+      await streamingVerifier.checkUserStream(req.params.userId);
+      res.json({ success: true, message: "User stream verified" });
+    } catch (error: any) {
+      console.error("Error verifying user stream:", error);
+      res.status(500).json({ message: error.message || "Failed to verify user stream" });
+    }
+  });
+
+  // Free Tier Routes
+  app.get('/api/free-tier/status', getUserMiddleware, async (req: any, res) => {
+    try {
+      const { getFreeTierStatus } = await import('./lib/freeTier');
+      const status = await getFreeTierStatus(req.dbUser.id);
+      res.json(status);
+    } catch (error: any) {
+      console.error("Error getting free tier status:", error);
+      res.status(500).json({ message: error.message || "Failed to get free tier status" });
+    }
+  });
+
+  app.post('/api/free-tier/redeem-trial', getUserMiddleware, async (req: any, res) => {
+    try {
+      const { redeemBasicTrial } = await import('./lib/freeTier');
+      await redeemBasicTrial(req.dbUser.id);
+      res.json({
+        success: true,
+        message: "Basic trial activated! Enjoy 7 days of premium features."
+      });
+    } catch (error: any) {
+      console.error("Error redeeming trial:", error);
+      res.status(400).json({ message: error.message || "Failed to redeem trial" });
+    }
+  });
+
+  // Sponsor Management Routes (Admin Only)
+  app.get('/api/admin/sponsors', adminMiddleware, async (req: any, res) => {
+    try {
+      const allSponsors = await db.select().from(sponsors);
+      res.json(allSponsors);
+    } catch (error: any) {
+      console.error("Error fetching sponsors:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch sponsors" });
+    }
+  });
+
+  app.post('/api/admin/sponsors', adminMiddleware, async (req: any, res) => {
+    try {
+      const validatedData = insertSponsorSchema.parse(req.body);
+      const [newSponsor] = await db.insert(sponsors)
+        .values(validatedData)
+        .returning();
+      res.json(newSponsor);
+    } catch (error: any) {
+      console.error("Error creating sponsor:", error);
+      res.status(400).json({ message: error.message || "Failed to create sponsor" });
+    }
+  });
+
+  app.patch('/api/admin/sponsors/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const updates = insertSponsorSchema.partial().parse(req.body);
+
+      const [updatedSponsor] = await db.update(sponsors)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(sponsors.id, id))
+        .returning();
+
+      if (!updatedSponsor) {
+        return res.status(404).json({ message: "Sponsor not found" });
+      }
+
+      res.json(updatedSponsor);
+    } catch (error: any) {
+      console.error("Error updating sponsor:", error);
+      res.status(400).json({ message: error.message || "Failed to update sponsor" });
+    }
+  });
+
+  app.delete('/api/admin/sponsors/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      // Check if sponsor has ANY challenges (active or historical)
+      const allChallenges = await db.select()
+        .from(challenges)
+        .where(eq(challenges.sponsorId, id));
+
+      if (allChallenges.length > 0) {
+        return res.status(400).json({
+          message: `Cannot delete sponsor with ${allChallenges.length} linked challenges. Set sponsor to 'inactive' instead.`
+        });
+      }
+
+      await db.delete(sponsors).where(eq(sponsors.id, id));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting sponsor:", error);
+      res.status(500).json({ message: error.message || "Failed to delete sponsor" });
+    }
+  });
+
+  // Sponsor budget management
+  app.post('/api/admin/sponsors/:id/add-budget', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { amount } = req.body;
+
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Amount must be positive" });
+      }
+
+      const [sponsor] = await db.select().from(sponsors).where(eq(sponsors.id, id));
+      if (!sponsor) {
+        return res.status(404).json({ message: "Sponsor not found" });
+      }
+
+      const [updated] = await db.update(sponsors)
+        .set({
+          totalBudget: sponsor.totalBudget + amount,
+          updatedAt: new Date()
         })
-        .map(c => c.userId)
-    );
-    const totalCompletions = completedUsers.size;
+        .where(eq(sponsors.id, id))
+        .returning();
 
-    // Count unique users who claimed
-    const claimedUsers = new Set(
-      completions
-        .filter(c => c.claimed)
-        .map(c => c.userId)
-    );
-    const totalClaims = claimedUsers.size;
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error adding sponsor budget:", error);
+      res.status(500).json({ message: error.message || "Failed to add budget" });
+    }
+  });
 
-    // Build per-challenge analytics from completions data (no N+1 queries)
-    const challengeAnalytics = sponsorChallenges.map((challenge) => {
-      const challengeCompletionData = completions.filter(c => c.challengeId === challenge.id);
+  // Migration utility endpoints
+  app.post('/api/admin/sponsors/migrate', adminMiddleware, async (req: any, res) => {
+    try {
+      const { backfillSponsors } = await import('./lib/sponsorMigration');
+      const result = await backfillSponsors();
+      res.json({
+        success: true,
+        message: `Created ${result.created} sponsors and linked ${result.linked} challenges`
+      });
+    } catch (error: any) {
+      console.error("Error migrating sponsors:", error);
+      res.status(500).json({ message: error.message || "Migration failed" });
+    }
+  });
 
-      // Unique participants for this challenge
-      const participants = new Set(challengeCompletionData.map(c => c.userId)).size;
+  app.post('/api/admin/sponsors/sync-budgets', adminMiddleware, async (req: any, res) => {
+    try {
+      const { syncSponsorBudgets } = await import('./lib/sponsorMigration');
+      const updated = await syncSponsorBudgets();
+      res.json({
+        success: true,
+        message: `Synced budgets for ${updated} sponsors`
+      });
+    } catch (error: any) {
+      console.error("Error syncing sponsor budgets:", error);
+      res.status(500).json({ message: error.message || "Sync failed" });
+    }
+  });
 
-      // Unique users who completed (met requirement)
-      const completed = new Set(
-        challengeCompletionData
-          .filter(c => c.progress >= challenge.requirementCount)
+  // Sponsor Analytics
+  app.get('/api/admin/sponsors/:id/analytics', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      // Get sponsor
+      const [sponsor] = await db.select()
+        .from(sponsors)
+        .where(eq(sponsors.id, id))
+        .limit(1);
+
+      if (!sponsor) {
+        return res.status(404).json({ message: "Sponsor not found" });
+      }
+
+      // Get all challenges for this sponsor
+      const sponsorChallenges = await db.select()
+        .from(challenges)
+        .where(eq(challenges.sponsorId, id));
+
+      // Calculate aggregate metrics
+      const totalChallenges = sponsorChallenges.length;
+      const activeChallenges = sponsorChallenges.filter((c: any) => c.isActive).length;
+      const totalBudgetAllocated = sponsorChallenges.reduce((sum: number, c: any) => sum + c.totalBudget, 0);
+      const totalPointsDistributed = sponsorChallenges.reduce((sum: number, c: any) => sum + c.pointsDistributed, 0);
+
+      // Get completion stats for all sponsor challenges
+      const challengeIds = sponsorChallenges.map((c: any) => c.id);
+      const completions = challengeIds.length > 0
+        ? await db.select()
+          .from(challengeCompletions)
+          .where(inArray(challengeCompletions.challengeId, challengeIds))
+        : [];
+
+      const totalParticipants = new Set(completions.map(c => c.userId)).size;
+
+      // Count unique users who completed (met requirement)
+      const completedUsers = new Set(
+        completions
+          .filter(c => {
+            const challenge = sponsorChallenges.find(ch => ch.id === c.challengeId);
+            return challenge && c.progress >= challenge.requirementCount;
+          })
           .map(c => c.userId)
-      ).size;
+      );
+      const totalCompletions = completedUsers.size;
 
-      // Unique users who claimed
-      const claimed = new Set(
-        challengeCompletionData
+      // Count unique users who claimed
+      const claimedUsers = new Set(
+        completions
           .filter(c => c.claimed)
           .map(c => c.userId)
-      ).size;
+      );
+      const totalClaims = claimedUsers.size;
 
-      const completionRate = participants > 0 ? (completed / participants) * 100 : 0;
-      const claimRate = completed > 0 ? (claimed / completed) * 100 : 0;
+      // Build per-challenge analytics from completions data (no N+1 queries)
+      const challengeAnalytics = sponsorChallenges.map((challenge) => {
+        const challengeCompletionData = completions.filter(c => c.challengeId === challenge.id);
 
-      return {
-        challengeId: challenge.id,
-        title: challenge.title,
-        isActive: challenge.isActive,
-        budget: challenge.totalBudget,
-        distributed: challenge.pointsDistributed,
-        participants,
-        completed,
-        claimed,
-        completionRate: Math.round(completionRate),
-        claimRate: Math.round(claimRate),
-        costPerClaim: claimed > 0 ? Math.round(challenge.pointsDistributed / claimed) : 0
-      };
-    });
+        // Unique participants for this challenge
+        const participants = new Set(challengeCompletionData.map(c => c.userId)).size;
 
-    res.json({
-      sponsor: {
-        id: sponsor.id,
-        name: sponsor.name,
-        status: sponsor.status
-      },
-      overview: {
-        totalBudget: sponsor.totalBudget,
-        spentBudget: sponsor.spentBudget,
-        remainingBudget: sponsor.totalBudget - sponsor.spentBudget,
-        totalChallenges,
-        activeChallenges,
-        totalBudgetAllocated,
-        totalPointsDistributed,
-        totalParticipants,
-        totalCompletions,
-        totalClaims,
-        avgCompletionRate: totalParticipants > 0
-          ? Math.round((totalCompletions / totalParticipants) * 100)
-          : 0,
-        avgClaimRate: totalCompletions > 0
-          ? Math.round((totalClaims / totalCompletions) * 100)
-          : 0
-      },
-      challenges: challengeAnalytics
-    });
-  } catch (error: any) {
-    console.error("Error fetching sponsor analytics:", error);
-    res.status(500).json({ message: error.message || "Failed to fetch analytics" });
-  }
-});
+        // Unique users who completed (met requirement)
+        const completed = new Set(
+          challengeCompletionData
+            .filter(c => c.progress >= challenge.requirementCount)
+            .map(c => c.userId)
+        ).size;
 
-// ==================== FOUNDER CONTROLS ====================
-// Import founder controls functionality
-const { adjustUserPoints, getUserAuditLog, getAllAuditLogs, getSystemHealth, checkSpendingLimits } = await import('./founderControls');
+        // Unique users who claimed
+        const claimed = new Set(
+          challengeCompletionData
+            .filter(c => c.claimed)
+            .map(c => c.userId)
+        ).size;
 
-// Manual Point Adjustment
-app.post('/api/admin/points/adjust', adminMiddleware, async (req: any, res) => {
-  try {
-    const schema = z.object({
-      targetUserId: z.string().uuid(),
-      amount: z.number().int(),
-      reason: z.string().min(5, "Reason must be at least 5 characters"),
-    });
+        const completionRate = participants > 0 ? (completed / participants) * 100 : 0;
+        const claimRate = completed > 0 ? (claimed / completed) * 100 : 0;
 
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({
-        message: "Invalid request data",
-        errors: parsed.error.errors
+        return {
+          challengeId: challenge.id,
+          title: challenge.title,
+          isActive: challenge.isActive,
+          budget: challenge.totalBudget,
+          distributed: challenge.pointsDistributed,
+          participants,
+          completed,
+          claimed,
+          completionRate: Math.round(completionRate),
+          claimRate: Math.round(claimRate),
+          costPerClaim: claimed > 0 ? Math.round(challenge.pointsDistributed / claimed) : 0
+        };
       });
-    }
 
-    const { targetUserId, amount, reason } = parsed.data;
-    const adminUser = req.dbUser;
-    const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
-
-    const result = await adjustUserPoints(
-      adminUser.id,
-      adminUser.email || 'unknown',
-      targetUserId,
-      amount,
-      reason,
-      ipAddress
-    );
-
-    res.json({
-      ...result,
-      message: amount > 0
-        ? `Successfully added ${amount} points`
-        : `Successfully removed ${Math.abs(amount)} points`
-    });
-  } catch (error: any) {
-    console.error("Error adjusting points:", error);
-    res.status(500).json({ message: error.message || "Failed to adjust points" });
-  }
-});
-
-// Get Audit Log (all or for specific user)
-app.get('/api/admin/audit-log', adminMiddleware, async (req: any, res) => {
-  try {
-    const userId = req.query.userId as string | undefined;
-    const limit = parseInt(req.query.limit as string) || 100;
-
-    const logs = userId
-      ? await getUserAuditLog(userId, limit)
-      : await getAllAuditLogs(limit);
-
-    res.json(logs);
-  } catch (error: any) {
-    console.error("Error fetching audit log:", error);
-    res.status(500).json({ message: error.message || "Failed to fetch audit log" });
-  }
-});
-
-// System Health Dashboard
-app.get('/api/admin/system-health', adminMiddleware, async (req: any, res) => {
-  try {
-    const health = await getSystemHealth();
-    res.json(health);
-  } catch (error: any) {
-    console.error("Error fetching system health:", error);
-    res.status(500).json({ message: error.message || "Failed to fetch system health" });
-  }
-});
-
-// Check Spending Limits (for testing/debugging)
-app.post('/api/admin/check-spending-limit', adminMiddleware, async (req: any, res) => {
-  try {
-    const schema = z.object({
-      userId: z.string().uuid(),
-      rewardValue: z.number().positive(),
-    });
-
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({
-        message: "Invalid request data",
-        errors: parsed.error.errors
+      res.json({
+        sponsor: {
+          id: sponsor.id,
+          name: sponsor.name,
+          status: sponsor.status
+        },
+        overview: {
+          totalBudget: sponsor.totalBudget,
+          spentBudget: sponsor.spentBudget,
+          remainingBudget: sponsor.totalBudget - sponsor.spentBudget,
+          totalChallenges,
+          activeChallenges,
+          totalBudgetAllocated,
+          totalPointsDistributed,
+          totalParticipants,
+          totalCompletions,
+          totalClaims,
+          avgCompletionRate: totalParticipants > 0
+            ? Math.round((totalCompletions / totalParticipants) * 100)
+            : 0,
+          avgClaimRate: totalCompletions > 0
+            ? Math.round((totalClaims / totalCompletions) * 100)
+            : 0
+        },
+        challenges: challengeAnalytics
       });
+    } catch (error: any) {
+      console.error("Error fetching sponsor analytics:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch analytics" });
     }
+  });
 
-    const { userId, rewardValue } = parsed.data;
-    const result = await checkSpendingLimits(userId, rewardValue);
+  // ==================== FOUNDER CONTROLS ====================
+  // Import founder controls functionality
+  const { adjustUserPoints, getUserAuditLog, getAllAuditLogs, getSystemHealth, checkSpendingLimits } = await import('./founderControls');
 
-    res.json(result);
-  } catch (error: any) {
-    console.error("Error checking spending limits:", error);
-    res.status(500).json({ message: error.message || "Failed to check limits" });
-  }
-});
-
-const tiktokCopySchema = z.object({
-  templateId: z.string().min(1)
-});
-
-app.post('/api/tiktok/track-copy', getUserMiddleware, async (req: any, res) => {
-  try {
-    const parsed = tiktokCopySchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ message: "Invalid request data" });
-    }
-
-    const { templateId } = parsed.data;
-    const userId = req.dbUser.id;
-
-    // Check if user already earned points for this template
-    const existingTransaction = await db.select()
-      .from(require('@shared/schema').pointTransactions)
-      .where(and(
-        eq(require('@shared/schema').pointTransactions.userId, userId),
-        eq(require('@shared/schema').pointTransactions.sourceType, 'tiktok_template'),
-        eq(require('@shared/schema').pointTransactions.sourceId, templateId)
-      ))
-      .limit(1);
-
-    if (existingTransaction.length > 0) {
-      return res.json({
-        pointsAwarded: 0,
-        message: "You've already earned points for this template"
+  // Manual Point Adjustment
+  app.post('/api/admin/points/adjust', adminMiddleware, async (req: any, res) => {
+    try {
+      const schema = z.object({
+        targetUserId: z.string().uuid(),
+        amount: z.number().int(),
+        reason: z.string().min(5, "Reason must be at least 5 characters"),
       });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid request data",
+          errors: parsed.error.errors
+        });
+      }
+
+      const { targetUserId, amount, reason } = parsed.data;
+      const adminUser = req.dbUser;
+      const ipAddress = req.ip || req.headers['x-forwarded-for'] as string;
+
+      const result = await adjustUserPoints(
+        adminUser.id,
+        adminUser.email || 'unknown',
+        targetUserId,
+        amount,
+        reason,
+        ipAddress
+      );
+
+      res.json({
+        ...result,
+        message: amount > 0
+          ? `Successfully added ${amount} points`
+          : `Successfully removed ${Math.abs(amount)} points`
+      });
+    } catch (error: any) {
+      console.error("Error adjusting points:", error);
+      res.status(500).json({ message: error.message || "Failed to adjust points" });
     }
+  });
 
-    const POINTS_PER_TEMPLATE = 50;
-    await pointsEngine.awardPoints(
-      userId,
-      POINTS_PER_TEMPLATE,
-      "CONTENT_CREATION",
-      templateId,
-      "tiktok_template",
-      `Created TikTok content using template #${templateId}`
-    );
+  // Get Audit Log (all or for specific user)
+  app.get('/api/admin/audit-log', adminMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.query.userId as string | undefined;
+      const limit = parseInt(req.query.limit as string) || 100;
 
-    res.json({
-      pointsAwarded: POINTS_PER_TEMPLATE,
-      message: `+${POINTS_PER_TEMPLATE} points earned! Post your content to help grow GG Loop.`
-    });
-  } catch (error: any) {
-    console.error("Error tracking TikTok copy:", error);
-    res.status(500).json({ message: error.message || "Failed to track content creation" });
-  }
-});
+      const logs = userId
+        ? await getUserAuditLog(userId, limit)
+        : await getAllAuditLogs(limit);
 
-// ====================
-// AFFILIATE PROGRAM ROUTES
-// ====================
-
-// GET /api/affiliate/stats - Get current user's affiliate stats
-app.get('/api/affiliate/stats', getUserMiddleware, async (req: any, res) => {
-  try {
-    const userId = req.dbUser.id;
-
-    // Get affiliate application for this user
-    const [application] = await db
-      .select()
-      .from(affiliateApplications)
-      .where(eq(affiliateApplications.userId, userId))
-      .limit(1);
-
-    // Get user's referral code from users table
-    const [user] = await db
-      .select({ referralCode: users.referralCode })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    // Count total referrals (people this user has referred)
-    const referralCount = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(referrals)
-      .where(eq(referrals.referrerId, userId));
-
-    res.json({
-      status: application?.status || 'not_applied',
-      totalReferrals: referralCount[0]?.count || 0,
-      monthlyEarnings: application?.monthlyEarnings || 0,
-      totalEarnings: application?.totalEarnings || 0,
-      commissionTier: application?.commissionTier || 'standard',
-      referralCode: user?.referralCode || '',
-    });
-  } catch (error: any) {
-    console.error("Error fetching affiliate stats:", error);
-    res.status(500).json({ message: "Failed to fetch affiliate stats" });
-  }
-});
-
-// POST /api/affiliate/apply - Submit affiliate application
-app.post('/api/affiliate/apply', getUserMiddleware, async (req: any, res) => {
-  try {
-    const userId = req.dbUser.id;
-
-    // Check if user already applied
-    const [existing] = await db
-      .select()
-      .from(affiliateApplications)
-      .where(eq(affiliateApplications.userId, userId))
-      .limit(1);
-
-    if (existing) {
-      return res.status(400).json({ message: "You already have an affiliate application" });
+      res.json(logs);
+    } catch (error: any) {
+      console.error("Error fetching audit log:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch audit log" });
     }
+  });
 
-    const schema = z.object({
-      platform: z.string().min(1),
-      audience: z.string().min(1),
-      contentType: z.string().min(1),
-      reason: z.string().min(50),
-      payoutEmail: z.string().email(),
-    });
-
-    const validated = schema.parse(req.body);
-
-    await db.insert(affiliateApplications).values({
-      userId,
-      status: 'pending',
-      applicationData: validated,
-      commissionTier: 'standard',
-      payoutEmail: validated.payoutEmail,
-    });
-
-    res.json({ success: true, message: "Application submitted successfully" });
-  } catch (error: any) {
-    console.error("Error submitting affiliate application:", error);
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Invalid application data" });
+  // System Health Dashboard
+  app.get('/api/admin/system-health', adminMiddleware, async (req: any, res) => {
+    try {
+      const health = await getSystemHealth();
+      res.json(health);
+    } catch (error: any) {
+      console.error("Error fetching system health:", error);
+      res.status(500).json({ message: error.message || "Failed to fetch system health" });
     }
-    res.status(500).json({ message: error.message || "Failed to submit application" });
-  }
-});
+  });
 
-// ADMIN: GET /api/admin/affiliate-stats - Get affiliate program stats
-app.get('/api/admin/affiliate-stats', adminMiddleware, async (req: any, res) => {
-  try {
-    const totalApplications = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(affiliateApplications);
+  // Check Spending Limits (for testing/debugging)
+  app.post('/api/admin/check-spending-limit', adminMiddleware, async (req: any, res) => {
+    try {
+      const schema = z.object({
+        userId: z.string().uuid(),
+        rewardValue: z.number().positive(),
+      });
 
-    const pendingReview = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(affiliateApplications)
-      .where(eq(affiliateApplications.status, 'pending'));
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          message: "Invalid request data",
+          errors: parsed.error.errors
+        });
+      }
 
-    const activeAffiliates = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(affiliateApplications)
-      .where(eq(affiliateApplications.status, 'approved'));
+      const { userId, rewardValue } = parsed.data;
+      const result = await checkSpendingLimits(userId, rewardValue);
 
-    const totalEarnings = await db
-      .select({ sum: sql<number>`coalesce(sum(total_earnings), 0)::int` })
-      .from(affiliateApplications);
-
-    res.json({
-      totalApplications: totalApplications[0]?.count || 0,
-      pendingReview: pendingReview[0]?.count || 0,
-      activeAffiliates: activeAffiliates[0]?.count || 0,
-      totalPaid: totalEarnings[0]?.sum || 0,
-    });
-  } catch (error: any) {
-    console.error("Error fetching affiliate stats:", error);
-    res.status(500).json({ message: "Failed to fetch stats" });
-  }
-});
-
-// ADMIN: GET /api/admin/affiliates - Get all affiliate applications
-app.get('/api/admin/affiliates', adminMiddleware, async (req: any, res) => {
-  try {
-    const applications = await db
-      .select({
-        id: affiliateApplications.id,
-        userId: affiliateApplications.userId,
-        status: affiliateApplications.status,
-        applicationData: affiliateApplications.applicationData,
-        commissionTier: affiliateApplications.commissionTier,
-        monthlyEarnings: affiliateApplications.monthlyEarnings,
-        totalEarnings: affiliateApplications.totalEarnings,
-        reviewNotes: affiliateApplications.reviewNotes,
-        approvedAt: affiliateApplications.approvedAt,
-        createdAt: affiliateApplications.createdAt,
-        username: users.username,
-        email: users.email,
-      })
-      .from(affiliateApplications)
-      .leftJoin(users, eq(affiliateApplications.userId, users.id))
-      .orderBy(desc(affiliateApplications.createdAt));
-
-    const enriched = applications.map(app => ({
-      ...app,
-      user: {
-        id: app.userId,
-        username: app.username,
-        email: app.email,
-      },
-    }));
-
-    res.json(enriched);
-  } catch (error: any) {
-    console.error("Error fetching affiliates:", error);
-    res.status(500).json({ message: "Failed to fetch affiliates" });
-  }
-});
-
-// ADMIN: PATCH /api/admin/affiliates/:id - Update affiliate application
-app.patch('/api/admin/affiliates/:id', adminMiddleware, async (req: any, res) => {
-  try {
-    const { id } = req.params;
-    const schema = z.object({
-      status: z.enum(['pending', 'approved', 'rejected']).optional(),
-      reviewNotes: z.string().optional(),
-      commissionTier: z.enum(['standard', 'silver', 'gold', 'platinum']).optional(),
-      monthlyEarnings: z.number().int().min(0).optional(),
-      totalEarnings: z.number().int().min(0).optional(),
-    });
-
-    const validated = schema.parse(req.body);
-    const updateData: any = { ...validated, updatedAt: new Date() };
-
-    if (validated.status === 'approved') {
-      updateData.approvedAt = new Date();
-      updateData.reviewedBy = req.dbUser.id;
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error checking spending limits:", error);
+      res.status(500).json({ message: error.message || "Failed to check limits" });
     }
+  });
 
-    await db
-      .update(affiliateApplications)
-      .set(updateData)
-      .where(eq(affiliateApplications.id, id));
+  const tiktokCopySchema = z.object({
+    templateId: z.string().min(1)
+  });
 
-    res.json({ success: true });
-  } catch (error: any) {
-    console.error("Error updating affiliate:", error);
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+  app.post('/api/tiktok/track-copy', getUserMiddleware, async (req: any, res) => {
+    try {
+      const parsed = tiktokCopySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid request data" });
+      }
+
+      const { templateId } = parsed.data;
+      const userId = req.dbUser.id;
+
+      // Check if user already earned points for this template
+      const existingTransaction = await db.select()
+        .from(require('@shared/schema').pointTransactions)
+        .where(and(
+          eq(require('@shared/schema').pointTransactions.userId, userId),
+          eq(require('@shared/schema').pointTransactions.sourceType, 'tiktok_template'),
+          eq(require('@shared/schema').pointTransactions.sourceId, templateId)
+        ))
+        .limit(1);
+
+      if (existingTransaction.length > 0) {
+        return res.json({
+          pointsAwarded: 0,
+          message: "You've already earned points for this template"
+        });
+      }
+
+      const POINTS_PER_TEMPLATE = 50;
+      await pointsEngine.awardPoints(
+        userId,
+        POINTS_PER_TEMPLATE,
+        "CONTENT_CREATION",
+        templateId,
+        "tiktok_template",
+        `Created TikTok content using template #${templateId}`
+      );
+
+      res.json({
+        pointsAwarded: POINTS_PER_TEMPLATE,
+        message: `+${POINTS_PER_TEMPLATE} points earned! Post your content to help grow GG Loop.`
+      });
+    } catch (error: any) {
+      console.error("Error tracking TikTok copy:", error);
+      res.status(500).json({ message: error.message || "Failed to track content creation" });
     }
-    res.status(500).json({ message: "Failed to update affiliate" });
-  }
-});
+  });
 
-// ====================
-// GG LOOP CARES ROUTES
-// ====================
+  // ====================
+  // AFFILIATE PROGRAM ROUTES
+  // ====================
 
-// PUBLIC: GET /api/charities - Get active charities
-app.get('/api/charities', async (req, res) => {
-  try {
-    const activeCharities = await db
-      .select()
-      .from(charities)
-      .where(eq(charities.isActive, true))
-      .orderBy(charities.featuredOrder);
+  // GET /api/affiliate/stats - Get current user's affiliate stats
+  app.get('/api/affiliate/stats', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
 
-    res.json(activeCharities);
-  } catch (error: any) {
-    console.error("Error fetching charities:", error);
-    res.status(500).json({ message: "Failed to fetch charities" });
-  }
-});
+      // Get affiliate application for this user
+      const [application] = await db
+        .select()
+        .from(affiliateApplications)
+        .where(eq(affiliateApplications.userId, userId))
+        .limit(1);
 
-// PUBLIC: GET /api/charity-campaigns - Get active campaigns with charity data
-app.get('/api/charity-campaigns', async (req, res) => {
-  try {
-    const activeCampaigns = await db
-      .select({
-        id: charityCampaigns.id,
-        charityId: charityCampaigns.charityId,
-        title: charityCampaigns.title,
-        description: charityCampaigns.description,
-        goalAmount: charityCampaigns.goalAmount,
-        currentAmount: charityCampaigns.currentAmount,
-        startDate: charityCampaigns.startDate,
-        endDate: charityCampaigns.endDate,
-        isActive: charityCampaigns.isActive,
-        createdAt: charityCampaigns.createdAt,
-        charity: charities,
-      })
-      .from(charityCampaigns)
-      .leftJoin(charities, eq(charityCampaigns.charityId, charities.id))
-      .where(and(
-        eq(charityCampaigns.isActive, true),
-        eq(charities.isActive, true)
-      ))
-      .orderBy(desc(charityCampaigns.createdAt));
+      // Get user's referral code from users table
+      const [user] = await db
+        .select({ referralCode: users.referralCode })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
 
-    res.json(activeCampaigns);
-  } catch (error: any) {
-    console.error("Error fetching campaigns:", error);
-    res.status(500).json({ message: "Failed to fetch campaigns" });
-  }
-});
+      // Count total referrals (people this user has referred)
+      const referralCount = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(referrals)
+        .where(eq(referrals.referrerId, userId));
 
-// ADMIN: GET /api/admin/charities - Get all charities
-app.get('/api/admin/charities', adminMiddleware, async (req: any, res) => {
-  try {
-    const allCharities = await db
-      .select()
-      .from(charities)
-      .orderBy(charities.featuredOrder);
-
-    res.json(allCharities);
-  } catch (error: any) {
-    console.error("Error fetching charities:", error);
-    res.status(500).json({ message: "Failed to fetch charities" });
-  }
-});
-
-// ADMIN: POST /api/admin/charities - Create new charity
-app.post('/api/admin/charities', adminMiddleware, async (req: any, res) => {
-  try {
-    const schema = z.object({
-      name: z.string().min(1),
-      description: z.string(),
-      website: z.string().url().optional().or(z.literal('')),
-      logo: z.string().optional(),
-      category: z.enum(['gaming', 'education', 'health', 'environment', 'youth', 'other']),
-      impactMetric: z.string().optional(),
-      impactValue: z.string().optional(),
-      totalDonated: z.number().int().min(0).default(0),
-      featuredOrder: z.number().int().default(0),
-      isActive: z.boolean().default(true),
-    });
-
-    const validated = schema.parse(req.body);
-
-    const result = await db
-      .insert(charities)
-      .values(validated)
-      .returning();
-
-    res.json(result[0]);
-  } catch (error: any) {
-    console.error("Error creating charity:", error);
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Invalid charity data", errors: error.errors });
+      res.json({
+        status: application?.status || 'not_applied',
+        totalReferrals: referralCount[0]?.count || 0,
+        monthlyEarnings: application?.monthlyEarnings || 0,
+        totalEarnings: application?.totalEarnings || 0,
+        commissionTier: application?.commissionTier || 'standard',
+        referralCode: user?.referralCode || '',
+      });
+    } catch (error: any) {
+      console.error("Error fetching affiliate stats:", error);
+      res.status(500).json({ message: "Failed to fetch affiliate stats" });
     }
-    res.status(500).json({ message: "Failed to create charity" });
-  }
-});
+  });
 
-// ADMIN: PATCH /api/admin/charities/:id - Update charity
-app.patch('/api/admin/charities/:id', adminMiddleware, async (req: any, res) => {
-  try {
-    const { id } = req.params;
-    const schema = z.object({
-      name: z.string().min(1).optional(),
-      description: z.string().optional(),
-      website: z.string().url().optional().or(z.literal('')),
-      logo: z.string().optional(),
-      category: z.enum(['gaming', 'education', 'health', 'environment', 'youth', 'other']).optional(),
-      impactMetric: z.string().optional(),
-      impactValue: z.string().optional(),
-      totalDonated: z.number().int().min(0).optional(),
-      featuredOrder: z.number().int().optional(),
-      isActive: z.boolean().optional(),
-    });
+  // POST /api/affiliate/apply - Submit affiliate application
+  app.post('/api/affiliate/apply', getUserMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
 
-    const validated = schema.parse(req.body);
+      // Check if user already applied
+      const [existing] = await db
+        .select()
+        .from(affiliateApplications)
+        .where(eq(affiliateApplications.userId, userId))
+        .limit(1);
 
-    await db
-      .update(charities)
-      .set({ ...validated, updatedAt: new Date() })
-      .where(eq(charities.id, id));
+      if (existing) {
+        return res.status(400).json({ message: "You already have an affiliate application" });
+      }
 
-    res.json({ success: true });
-  } catch (error: any) {
-    console.error("Error updating charity:", error);
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+      const schema = z.object({
+        platform: z.string().min(1),
+        audience: z.string().min(1),
+        contentType: z.string().min(1),
+        reason: z.string().min(50),
+        payoutEmail: z.string().email(),
+      });
+
+      const validated = schema.parse(req.body);
+
+      await db.insert(affiliateApplications).values({
+        userId,
+        status: 'pending',
+        applicationData: validated,
+        commissionTier: 'standard',
+        payoutEmail: validated.payoutEmail,
+      });
+
+      res.json({ success: true, message: "Application submitted successfully" });
+    } catch (error: any) {
+      console.error("Error submitting affiliate application:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid application data" });
+      }
+      res.status(500).json({ message: error.message || "Failed to submit application" });
     }
-    res.status(500).json({ message: "Failed to update charity" });
-  }
-});
+  });
 
-// ADMIN: DELETE /api/admin/charities/:id - Delete charity
-app.delete('/api/admin/charities/:id', adminMiddleware, async (req: any, res) => {
-  try {
-    const { id } = req.params;
+  // ADMIN: GET /api/admin/affiliate-stats - Get affiliate program stats
+  app.get('/api/admin/affiliate-stats', adminMiddleware, async (req: any, res) => {
+    try {
+      const totalApplications = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(affiliateApplications);
 
-    await db
-      .delete(charities)
-      .where(eq(charities.id, id));
+      const pendingReview = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(affiliateApplications)
+        .where(eq(affiliateApplications.status, 'pending'));
 
-    res.json({ success: true });
-  } catch (error: any) {
-    console.error("Error deleting charity:", error);
-    res.status(500).json({ message: "Failed to delete charity" });
-  }
-});
+      const activeAffiliates = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(affiliateApplications)
+        .where(eq(affiliateApplications.status, 'approved'));
 
-// ADMIN: GET /api/admin/charity-campaigns - Get all campaigns
-app.get('/api/admin/charity-campaigns', adminMiddleware, async (req: any, res) => {
-  try {
-    const allCampaigns = await db
-      .select({
-        id: charityCampaigns.id,
-        charityId: charityCampaigns.charityId,
-        title: charityCampaigns.title,
-        description: charityCampaigns.description,
-        goalAmount: charityCampaigns.goalAmount,
-        currentAmount: charityCampaigns.currentAmount,
-        startDate: charityCampaigns.startDate,
-        endDate: charityCampaigns.endDate,
-        isActive: charityCampaigns.isActive,
-        createdAt: charityCampaigns.createdAt,
-        charity: charities,
-      })
-      .from(charityCampaigns)
-      .leftJoin(charities, eq(charityCampaigns.charityId, charities.id))
-      .orderBy(desc(charityCampaigns.createdAt));
+      const totalEarnings = await db
+        .select({ sum: sql<number>`coalesce(sum(total_earnings), 0)::int` })
+        .from(affiliateApplications);
 
-    res.json(allCampaigns);
-  } catch (error: any) {
-    console.error("Error fetching campaigns:", error);
-    res.status(500).json({ message: "Failed to fetch campaigns" });
-  }
-});
-
-// ADMIN: POST /api/admin/charity-campaigns - Create new campaign
-app.post('/api/admin/charity-campaigns', adminMiddleware, async (req: any, res) => {
-  try {
-    const schema = z.object({
-      charityId: z.string().uuid(),
-      title: z.string().min(1),
-      description: z.string(),
-      goalAmount: z.number().positive(),
-      currentAmount: z.number().default(0),
-      startDate: z.string().optional(),
-      endDate: z.string().optional(),
-      isActive: z.boolean().default(true),
-    });
-
-    const validated = schema.parse(req.body);
-
-    const result = await db
-      .insert(charityCampaigns)
-      .values({
-        ...validated,
-        startDate: validated.startDate ? new Date(validated.startDate) : null,
-        endDate: validated.endDate ? new Date(validated.endDate) : null,
-      })
-      .returning();
-
-    res.json(result[0]);
-  } catch (error: any) {
-    console.error("Error creating campaign:", error);
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Invalid campaign data" });
+      res.json({
+        totalApplications: totalApplications[0]?.count || 0,
+        pendingReview: pendingReview[0]?.count || 0,
+        activeAffiliates: activeAffiliates[0]?.count || 0,
+        totalPaid: totalEarnings[0]?.sum || 0,
+      });
+    } catch (error: any) {
+      console.error("Error fetching affiliate stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
     }
-    res.status(500).json({ message: "Failed to create campaign" });
-  }
-});
+  });
 
-// ADMIN: PATCH /api/admin/charity-campaigns/:id - Update campaign
-app.patch('/api/admin/charity-campaigns/:id', adminMiddleware, async (req: any, res) => {
-  try {
-    const { id } = req.params;
-    const schema = z.object({
-      charityId: z.string().uuid().optional(),
-      title: z.string().optional(),
-      description: z.string().optional(),
-      goalAmount: z.number().optional(),
-      currentAmount: z.number().optional(),
-      startDate: z.string().optional(),
-      endDate: z.string().optional(),
-      isActive: z.boolean().optional(),
-    });
+  // ADMIN: GET /api/admin/affiliates - Get all affiliate applications
+  app.get('/api/admin/affiliates', adminMiddleware, async (req: any, res) => {
+    try {
+      const applications = await db
+        .select({
+          id: affiliateApplications.id,
+          userId: affiliateApplications.userId,
+          status: affiliateApplications.status,
+          applicationData: affiliateApplications.applicationData,
+          commissionTier: affiliateApplications.commissionTier,
+          monthlyEarnings: affiliateApplications.monthlyEarnings,
+          totalEarnings: affiliateApplications.totalEarnings,
+          reviewNotes: affiliateApplications.reviewNotes,
+          approvedAt: affiliateApplications.approvedAt,
+          createdAt: affiliateApplications.createdAt,
+          username: users.username,
+          email: users.email,
+        })
+        .from(affiliateApplications)
+        .leftJoin(users, eq(affiliateApplications.userId, users.id))
+        .orderBy(desc(affiliateApplications.createdAt));
 
-    const validated = schema.parse(req.body);
+      const enriched = applications.map(app => ({
+        ...app,
+        user: {
+          id: app.userId,
+          username: app.username,
+          email: app.email,
+        },
+      }));
 
-    await db
-      .update(charityCampaigns)
-      .set({
-        ...validated,
-        startDate: validated.startDate ? new Date(validated.startDate) : undefined,
-        endDate: validated.endDate ? new Date(validated.endDate) : undefined,
-        updatedAt: new Date()
-      })
-      .where(eq(charityCampaigns.id, id));
-
-    res.json({ success: true });
-  } catch (error: any) {
-    console.error("Error updating campaign:", error);
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+      res.json(enriched);
+    } catch (error: any) {
+      console.error("Error fetching affiliates:", error);
+      res.status(500).json({ message: "Failed to fetch affiliates" });
     }
-    res.status(500).json({ message: "Failed to update campaign" });
-  }
-});
+  });
 
-const httpServer = createServer(app);
+  // ADMIN: PATCH /api/admin/affiliates/:id - Update affiliate application
+  app.patch('/api/admin/affiliates/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const schema = z.object({
+        status: z.enum(['pending', 'approved', 'rejected']).optional(),
+        reviewNotes: z.string().optional(),
+        commissionTier: z.enum(['standard', 'silver', 'gold', 'platinum']).optional(),
+        monthlyEarnings: z.number().int().min(0).optional(),
+        totalEarnings: z.number().int().min(0).optional(),
+      });
 
-// Get referral leaderboard
-app.get("/api/referrals/leaderboard", async (req, res) => {
-  try {
-    const leaderboardData = await db
-      .select({
-        referrerId: referrals.referrerId,
-        count: sql<number>`count(*)`,
-        username: users.username,
-        totalPoints: users.totalPoints,
-        profileImageUrl: users.profileImageUrl,
-      })
-      .from(referrals)
-      .leftJoin(users, eq(referrals.referrerId, users.id))
-      .groupBy(referrals.referrerId, users.username, users.totalPoints, users.profileImageUrl)
-      .orderBy(desc(sql`count(*)`))
-      .limit(10);
+      const validated = schema.parse(req.body);
+      const updateData: any = { ...validated, updatedAt: new Date() };
 
-    const formattedLeaderboard = leaderboardData.map((entry, index) => ({
-      rank: index + 1,
-      username: entry.username || "Unknown",
-      referralCount: Number(entry.count),
-      totalPoints: entry.totalPoints || 0,
-      profileImageUrl: entry.profileImageUrl,
-    }))
+      if (validated.status === 'approved') {
+        updateData.approvedAt = new Date();
+        updateData.reviewedBy = req.dbUser.id;
+      }
 
-    res.json({ leaderboard: formattedLeaderboard });
-  } catch (error) {
-    console.error("Error fetching referral leaderboard:", error);
-    res.status(500).json({ message: "Failed to fetch leaderboard" });
-  }
-});
+      await db
+        .update(affiliateApplications)
+        .set(updateData)
+        .where(eq(affiliateApplications.id, id));
 
-// Admin Routes (Founder Control Pack)
-app.use("/api/admin", adminRouter);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error updating affiliate:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update affiliate" });
+    }
+  });
 
-return httpServer;
-  }
+  // ====================
+  // GG LOOP CARES ROUTES
+  // ====================
+
+  // PUBLIC: GET /api/charities - Get active charities
+  app.get('/api/charities', async (req, res) => {
+    try {
+      const activeCharities = await db
+        .select()
+        .from(charities)
+        .where(eq(charities.isActive, true))
+        .orderBy(charities.featuredOrder);
+
+      res.json(activeCharities);
+    } catch (error: any) {
+      console.error("Error fetching charities:", error);
+      res.status(500).json({ message: "Failed to fetch charities" });
+    }
+  });
+
+  // PUBLIC: GET /api/charity-campaigns - Get active campaigns with charity data
+  app.get('/api/charity-campaigns', async (req, res) => {
+    try {
+      const activeCampaigns = await db
+        .select({
+          id: charityCampaigns.id,
+          charityId: charityCampaigns.charityId,
+          title: charityCampaigns.title,
+          description: charityCampaigns.description,
+          goalAmount: charityCampaigns.goalAmount,
+          currentAmount: charityCampaigns.currentAmount,
+          startDate: charityCampaigns.startDate,
+          endDate: charityCampaigns.endDate,
+          isActive: charityCampaigns.isActive,
+          createdAt: charityCampaigns.createdAt,
+          charity: charities,
+        })
+        .from(charityCampaigns)
+        .leftJoin(charities, eq(charityCampaigns.charityId, charities.id))
+        .where(and(
+          eq(charityCampaigns.isActive, true),
+          eq(charities.isActive, true)
+        ))
+        .orderBy(desc(charityCampaigns.createdAt));
+
+      res.json(activeCampaigns);
+    } catch (error: any) {
+      console.error("Error fetching campaigns:", error);
+      res.status(500).json({ message: "Failed to fetch campaigns" });
+    }
+  });
+
+  // ADMIN: GET /api/admin/charities - Get all charities
+  app.get('/api/admin/charities', adminMiddleware, async (req: any, res) => {
+    try {
+      const allCharities = await db
+        .select()
+        .from(charities)
+        .orderBy(charities.featuredOrder);
+
+      res.json(allCharities);
+    } catch (error: any) {
+      console.error("Error fetching charities:", error);
+      res.status(500).json({ message: "Failed to fetch charities" });
+    }
+  });
+
+  // ADMIN: POST /api/admin/charities - Create new charity
+  app.post('/api/admin/charities', adminMiddleware, async (req: any, res) => {
+    try {
+      const schema = z.object({
+        name: z.string().min(1),
+        description: z.string(),
+        website: z.string().url().optional().or(z.literal('')),
+        logo: z.string().optional(),
+        category: z.enum(['gaming', 'education', 'health', 'environment', 'youth', 'other']),
+        impactMetric: z.string().optional(),
+        impactValue: z.string().optional(),
+        totalDonated: z.number().int().min(0).default(0),
+        featuredOrder: z.number().int().default(0),
+        isActive: z.boolean().default(true),
+      });
+
+      const validated = schema.parse(req.body);
+
+      const result = await db
+        .insert(charities)
+        .values(validated)
+        .returning();
+
+      res.json(result[0]);
+    } catch (error: any) {
+      console.error("Error creating charity:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid charity data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create charity" });
+    }
+  });
+
+  // ADMIN: PATCH /api/admin/charities/:id - Update charity
+  app.patch('/api/admin/charities/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const schema = z.object({
+        name: z.string().min(1).optional(),
+        description: z.string().optional(),
+        website: z.string().url().optional().or(z.literal('')),
+        logo: z.string().optional(),
+        category: z.enum(['gaming', 'education', 'health', 'environment', 'youth', 'other']).optional(),
+        impactMetric: z.string().optional(),
+        impactValue: z.string().optional(),
+        totalDonated: z.number().int().min(0).optional(),
+        featuredOrder: z.number().int().optional(),
+        isActive: z.boolean().optional(),
+      });
+
+      const validated = schema.parse(req.body);
+
+      await db
+        .update(charities)
+        .set({ ...validated, updatedAt: new Date() })
+        .where(eq(charities.id, id));
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error updating charity:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update charity" });
+    }
+  });
+
+  // ADMIN: DELETE /api/admin/charities/:id - Delete charity
+  app.delete('/api/admin/charities/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+
+      await db
+        .delete(charities)
+        .where(eq(charities.id, id));
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting charity:", error);
+      res.status(500).json({ message: "Failed to delete charity" });
+    }
+  });
+
+  // ADMIN: GET /api/admin/charity-campaigns - Get all campaigns
+  app.get('/api/admin/charity-campaigns', adminMiddleware, async (req: any, res) => {
+    try {
+      const allCampaigns = await db
+        .select({
+          id: charityCampaigns.id,
+          charityId: charityCampaigns.charityId,
+          title: charityCampaigns.title,
+          description: charityCampaigns.description,
+          goalAmount: charityCampaigns.goalAmount,
+          currentAmount: charityCampaigns.currentAmount,
+          startDate: charityCampaigns.startDate,
+          endDate: charityCampaigns.endDate,
+          isActive: charityCampaigns.isActive,
+          createdAt: charityCampaigns.createdAt,
+          charity: charities,
+        })
+        .from(charityCampaigns)
+        .leftJoin(charities, eq(charityCampaigns.charityId, charities.id))
+        .orderBy(desc(charityCampaigns.createdAt));
+
+      res.json(allCampaigns);
+    } catch (error: any) {
+      console.error("Error fetching campaigns:", error);
+      res.status(500).json({ message: "Failed to fetch campaigns" });
+    }
+  });
+
+  // ADMIN: POST /api/admin/charity-campaigns - Create new campaign
+  app.post('/api/admin/charity-campaigns', adminMiddleware, async (req: any, res) => {
+    try {
+      const schema = z.object({
+        charityId: z.string().uuid(),
+        title: z.string().min(1),
+        description: z.string(),
+        goalAmount: z.number().positive(),
+        currentAmount: z.number().default(0),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        isActive: z.boolean().default(true),
+      });
+
+      const validated = schema.parse(req.body);
+
+      const result = await db
+        .insert(charityCampaigns)
+        .values({
+          ...validated,
+          startDate: validated.startDate ? new Date(validated.startDate) : null,
+          endDate: validated.endDate ? new Date(validated.endDate) : null,
+        })
+        .returning();
+
+      res.json(result[0]);
+    } catch (error: any) {
+      console.error("Error creating campaign:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid campaign data" });
+      }
+      res.status(500).json({ message: "Failed to create campaign" });
+    }
+  });
+
+  // ADMIN: PATCH /api/admin/charity-campaigns/:id - Update campaign
+  app.patch('/api/admin/charity-campaigns/:id', adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const schema = z.object({
+        charityId: z.string().uuid().optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        goalAmount: z.number().optional(),
+        currentAmount: z.number().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        isActive: z.boolean().optional(),
+      });
+
+      const validated = schema.parse(req.body);
+
+      await db
+        .update(charityCampaigns)
+        .set({
+          ...validated,
+          startDate: validated.startDate ? new Date(validated.startDate) : undefined,
+          endDate: validated.endDate ? new Date(validated.endDate) : undefined,
+          updatedAt: new Date()
+        })
+        .where(eq(charityCampaigns.id, id));
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error updating campaign:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid update data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update campaign" });
+    }
+  });
+
+  const httpServer = createServer(app);
+
+  // Get referral leaderboard
+  app.get("/api/referrals/leaderboard", async (req, res) => {
+    try {
+      const leaderboardData = await db
+        .select({
+          referrerId: referrals.referrerId,
+          count: sql<number>`count(*)`,
+          username: users.username,
+          totalPoints: users.totalPoints,
+          profileImageUrl: users.profileImageUrl,
+        })
+        .from(referrals)
+        .leftJoin(users, eq(referrals.referrerId, users.id))
+        .groupBy(referrals.referrerId, users.username, users.totalPoints, users.profileImageUrl)
+        .orderBy(desc(sql`count(*)`))
+        .limit(10);
+
+      const formattedLeaderboard = leaderboardData.map((entry, index) => ({
+        rank: index + 1,
+        username: entry.username || "Unknown",
+        referralCount: Number(entry.count),
+        totalPoints: entry.totalPoints || 0,
+        profileImageUrl: entry.profileImageUrl,
+      }))
+
+      res.json({ leaderboard: formattedLeaderboard });
+    } catch (error) {
+      console.error("Error fetching referral leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
+  // Admin Routes (Founder Control Pack)
+  app.use("/api/admin", adminRouter);
+
+  return httpServer;
+}

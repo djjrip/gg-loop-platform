@@ -155,10 +155,22 @@ app.use((req, res, next) => {
     // ═══════════════════════════════════════════════════════════════
 
     /**
-     * Enhanced health check with component validation
-     * Docker HEALTHCHECK uses this endpoint
+     * Simple health check for Railway/Docker
+     * Returns 200 OK if server is running - no external dependencies
      */
-    app.get('/health', async (req, res) => {
+    app.get('/health', (req, res) => {
+      res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+      });
+    });
+
+    /**
+     * Detailed health check with component validation
+     * Use /health/detailed for monitoring dashboards
+     */
+    app.get('/health/detailed', async (req, res) => {
       const checks: Record<string, { status: 'ok' | 'error', message?: string, latency?: number }> = {
         overall: { status: 'ok' },
       };
