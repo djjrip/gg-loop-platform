@@ -16,3 +16,8 @@ backups/
 .env.backup
 .env
 .local/
+.env.*.local
+.railway-vars.txt
+*.pem
+*.key
+*_credentials.json
