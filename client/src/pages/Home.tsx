@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import {
   Gamepad2,
@@ -73,8 +74,8 @@ export default function Home() {
 
               <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto mb-8 font-medium">
                 {isAuthenticated
-                  ? `Welcome back, ${user?.firstName || 'Operator'}! Your gaming portfolio is ready.`
-                  : "The gaming rewards platform that pays you to dominate. Connect your accounts, win ranked matches, and redeem real gear."}
+                  ? `Welcome back, ${user?.firstName || 'Operator'}! Your rewards hub is ready.`
+                  : "The gaming rewards platform built for the culture. Join the community, earn points, and redeem rewards."}
               </p>
 
               {!isAuthenticated && (
@@ -175,7 +176,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-3">PLAY</h3>
                 <p className="text-gray-400">
-                  Connect your Riot, Steam, or Xbox account. We automatically track your ranked matches and performance.
+                  Connect your accounts early. Complete profile missions and join the community.
                 </p>
               </div>
 
@@ -185,7 +186,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-3">EARN</h3>
                 <p className="text-gray-400">
-                  Earn points for every win. Subscribers get monthly point allocations plus bonus challenges.
+                  Earn points monthly via subscriptions. Get bonus points for referrals and login streaks.
                 </p>
               </div>
 
@@ -195,7 +196,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-3">REDEEM</h3>
                 <p className="text-gray-400">
-                  Exchange points for gaming peripherals, gift cards, exclusive gear, and real-world prizes.
+                  Exchange points for gift cards and rewards. (Manual fulfillment subject to availability).
                 </p>
               </div>
             </div>
@@ -206,7 +207,7 @@ export default function Home() {
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Supported Games</h2>
               <p className="text-gray-400 text-lg">
-                Currently tracking ranked play across Riot Games titles
+                Building support for ranked play across Riot Games titles (Coming Soon)
               </p>
             </div>
 
@@ -216,7 +217,7 @@ export default function Home() {
                   <h3 className="text-xl font-bold text-white">League of Legends</h3>
                   <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
                 </div>
-                <p className="text-gray-400 text-sm">Ranked Summoner's Rift • 5v5</p>
+                <p className="text-gray-400 text-sm">Competitive Community</p>
               </Card>
 
               <Card className="bg-card border-primary/30 p-6 hover:border-primary transition-colors">
@@ -224,7 +225,7 @@ export default function Home() {
                   <h3 className="text-xl font-bold text-white">VALORANT</h3>
                   <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
                 </div>
-                <p className="text-gray-400 text-sm">Competitive Queue • 5v5</p>
+                <p className="text-gray-400 text-sm">Competitive Community</p>
               </Card>
 
               <Card className="bg-card border-primary/30 p-6 hover:border-primary transition-colors">
@@ -232,7 +233,7 @@ export default function Home() {
                   <h3 className="text-xl font-bold text-white">Teamfight Tactics</h3>
                   <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
                 </div>
-                <p className="text-gray-400 text-sm">Ranked Tactics • Auto Battler</p>
+                <p className="text-gray-400 text-sm">Competitive Community</p>
               </Card>
             </div>
           </section>
@@ -251,7 +252,7 @@ export default function Home() {
                 <Target className="h-16 w-16 text-ggloop-orange mx-auto mb-6" />
                 <h3 className="text-2xl font-bold text-white mb-4">Global Rankings Coming Soon</h3>
                 <p className="text-gray-400 max-w-2xl mx-auto">
-                  Track your progress against the best players worldwide. Leaderboards will feature ranked stats, win rates, and exclusive rewards for top performers.
+                  Join the community of early adopters. Leaderboards will feature ranked stats and exclusive rewards.
                 </p>
                 {isAuthenticated && (
                   <Link href="/stats">
@@ -260,6 +261,39 @@ export default function Home() {
                     </button>
                   </Link>
                 )}
+              </div>
+            </div>
+          </section>
+
+          {/* ABOUT, MISSION & WHY - RESTORED CONTENT */}
+          <section id="about" className="container mx-auto px-4 py-20 max-w-7xl border-t border-ggloop-orange/10">
+            <div className="grid md:grid-cols-2 gap-16 items-start">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                  About <span className="text-ggloop-orange">GG LOOP</span>
+                </h2>
+                <p className="text-gray-400 text-lg leading-relaxed mb-8">
+                  GG LOOP is a culture-driven gaming rewards ecosystem built for everyday gamers. We blend sneaker culture, basketball flow, streetwear aesthetics, and personal identity into a platform where players earn real value for doing what they already love — gaming.
+                </p>
+
+                <h3 className="text-2xl font-bold text-white mb-4">Our Mission</h3>
+                <p className="text-gray-400 text-lg leading-relaxed">
+                  To build the most inclusive and culturally-rooted rewards platform that empowers gamers with real value, real community, and real-life support — from sneakers to groceries to wellness resources — all through a modern, subscription-first ecosystem that respects their time and grind.
+                </p>
+              </div>
+
+              <div className="bg-ggloop-dark-shadow/60 border border-ggloop-orange/20 rounded-xl p-8">
+                <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                  <Target className="h-6 w-6 text-ggloop-rose-gold" />
+                  Why We're Building This
+                </h3>
+                <p className="text-gray-400 text-lg leading-relaxed mb-6">
+                  GG LOOP exists to uplift gamers who never get rewarded for the grind they put in. It’s built for the communities we grew up with — culture-first, identity-driven, and grounded in the reality that gaming is more than a hobby. It’s lifestyle, escape, art, and hustle.
+                </p>
+                <div className="flex items-center gap-2 text-sm text-ggloop-orange font-bold uppercase tracking-wider">
+                  <Shield className="h-4 w-4" />
+                  Built for the Culture
+                </div>
               </div>
             </div>
           </section>
@@ -284,6 +318,8 @@ export default function Home() {
             </div>
           </section>
         </main>
+
+        <Footer />
       </div>
     </div>
   );

@@ -75,7 +75,6 @@ function Router() {
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/roadmap" component={Roadmap} />
-      <Route path="/aws-roadmap" component={AWSRoadmap} />
 
       {/* User Routes */}
       <Route path="/login" component={Login} />
@@ -102,6 +101,7 @@ function Router() {
       <Route path="/admin/fulfillment" component={AdminFulfillment} />
       <Route path="/admin/founder-hub" component={FounderHub} />
       <Route path="/admin/users" component={UserManagement} />
+      <Route path="/admin/aws-roadmap" component={AWSRoadmap} />
       <Route path="/fulfillment" component={FulfillmentDashboard} />
 
       {/* 404 */}

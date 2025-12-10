@@ -79,24 +79,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
-app.use(express.json({
-  verify: (req, _res, buf, encoding) => {
-    req.rawBody = buf.toString((encoding as BufferEncoding) || 'utf8');
-  }
-}));
-import { requestId } from './middleware/requestId';
-import { metricsMiddleware, registerMetricsEndpoint } from './metrics';
-app.use(requestId);
-app.use(metricsMiddleware);
-app.use(express.urlencoded({ extended: false }));
-
-app.get('/debug/session', (req, res) => {
-  // Return the current session object for debugging purposes
-  res.json({ session: req.session ?? null });
-});
-registerMetricsEndpoint(app);
-
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

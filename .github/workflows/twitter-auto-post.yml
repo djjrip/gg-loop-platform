@@ -10,7 +10,7 @@ on:
   #   - cron: '0 0 * * *'   # 7 PM EST
   
   # workflow_dispatch disabled to prevent accidental runs
-  # workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   post-to-twitter:

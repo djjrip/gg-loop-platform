@@ -113,7 +113,7 @@ export default function Shop() {
             Rewards Shop
           </h1>
           <p className="text-muted-foreground">
-            Redeem your points for gaming gear, gift cards, and subscriptions
+            Redeem your points for gift cards and rewards (Manual fulfillment subject to availability)
           </p>
           {isAuthenticated && user && (
             <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/20">
@@ -265,8 +265,8 @@ export default function Shop() {
           <CardContent className="py-8 text-center">
             <h3 className="text-xl font-bold mb-2">How Redemption Works</h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Redeem your points for instant digital delivery of gift cards and gaming gear.
-              Rewards are processed manually by our team within 24 hours.
+              Request redemption for available rewards.
+              Rewards are processed manually by our team (subject to availability).
             </p>
           </CardContent>
         </Card>

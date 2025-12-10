@@ -1,0 +1,41 @@
+{
+    "name": "gg-loop-discord-bot",
+    "version": "1.0.0",
+    "description": "GG LOOP autonomous Discord moderation and engagement bot",
+    "main": "dist/index.js",
+    "scripts": {
+        "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "lint": "eslint src --ext .ts",
+        "clean": "rimraf dist"
+    },
+    "keywords": [
+        "discord",
+        "moderation",
+        "gg-loop"
+    ],
+    "author": "GG LOOP LLC",
+    "license": "MIT",
+    "dependencies": {
+        "discord.js": "^14.14.1",
+        "dotenv": "^16.3.1",
+        "better-sqlite3": "^9.2.2",
+        "axios": "^1.6.5",
+        "node-cron": "^3.0.3"
+    },
+    "devDependencies": {
+        "@types/better-sqlite3": "^7.6.8",
+        "@types/node": "^20.10.6",
+        "@types/node-cron": "^3.0.11",
+        "typescript": "^5.3.3",
+        "ts-node-dev": "^2.0.0",
+        "eslint": "^8.56.0",
+        "@typescript-eslint/eslint-plugin": "^6.18.0",
+        "@typescript-eslint/parser": "^6.18.0",
+        "rimraf": "^5.0.5"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

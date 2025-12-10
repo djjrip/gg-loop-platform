@@ -56,11 +56,11 @@ export default function SubscriptionPage() {
     enabled: isAuthenticated,
   });
 
-  const { data: freeTierData } = useQuery<{ 
-    ggCoins: number; 
-    coinsNeeded: number; 
+  const { data: freeTierData } = useQuery<{
+    ggCoins: number;
+    coinsNeeded: number;
     canRedeemTrial: boolean;
-    hasActiveTrial: boolean; 
+    hasActiveTrial: boolean;
     currentStreak: number;
   }>({
     queryKey: ["/api/free-tier/status"],
@@ -91,8 +91,8 @@ export default function SubscriptionPage() {
 
   const freeTrialMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/referrals/start-trial", { 
-        referralCode: referralCode.trim() || undefined 
+      const response = await apiRequest("POST", "/api/referrals/start-trial", {
+        referralCode: referralCode.trim() || undefined
       });
       return response.json();
     },
@@ -178,7 +178,7 @@ export default function SubscriptionPage() {
         { text: "50 GG Coins per 7-day login streak", included: true },
         { text: "100 coin monthly cap", included: true },
         { text: "Unlock 7-day Basic tier trial with 500 coins", included: true },
-        { text: "Track match wins & achievements", included: true },
+
         { text: "Leaderboard rankings", included: true },
         { text: "Monthly point allocation (subscribe for this!)", included: false, highlight: true },
         { text: "Rewards catalog access (subscribe for this!)", included: false, highlight: true },
@@ -189,13 +189,13 @@ export default function SubscriptionPage() {
       name: "Basic",
       price: 5,
       icon: Trophy,
-      description: "Start redeeming gaming gear and rewards",
+      description: "Start redeeming rewards (Manual fulfillment)",
       pointsHighlight: "3,000 monthly points",
       features: [
-        { text: "Access rewards catalog - redeem for gaming gear, peripherals & subscriptions", included: true, highlight: true },
+        { text: "Access rewards catalog (Manual fulfillment)", included: true, highlight: true },
         { text: "3,000 points deposited monthly", included: true },
         { text: "Automatic point allocation on billing cycle", included: true },
-        { text: "Track match wins & achievements", included: true },
+
         { text: "Leaderboard rankings", included: true },
         { text: "Achievement tracking", included: true },
         { text: "Bonus challenge eligibility", included: false },
@@ -228,13 +228,13 @@ export default function SubscriptionPage() {
       name: "Elite",
       price: 25,
       icon: Star,
-      description: "Maximum rewards - redeem premium gear monthly",
+      description: "Maximum point earning potential",
       badge: "3-Day Free Trial",
       freeTrial: "3 days free",
       pointsHighlight: "25,000 monthly points",
       features: [
         { text: "3-day free trial, then $25/month", included: true },
-        { text: "Access rewards catalog - redeem premium rewards every month", included: true, highlight: true },
+        { text: "Access rewards catalog - redeem rewards (Subject to availability)", included: true, highlight: true },
         { text: "25,000 points deposited monthly (8.3x Basic!)", included: true },
         { text: "Automatic point allocation on billing cycle", included: true },
         { text: "Priority bonus challenge access for extra points", included: true },
@@ -347,11 +347,10 @@ export default function SubscriptionPage() {
         ) : (
           <>
             {showSubscriptionCard && subscription && (
-              <Card className={`mb-8 ${
-                subscription.status === "active" || subscription.status === "past_due"
+              <Card className={`mb-8 ${subscription.status === "active" || subscription.status === "past_due"
                   ? "bg-primary/5 border-primary/20"
                   : "bg-muted/50 border-muted"
-              }`} data-testid="card-current-subscription">
+                }`} data-testid="card-current-subscription">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
@@ -363,7 +362,7 @@ export default function SubscriptionPage() {
                         {subscription.tier === "elite" ? "Elite" : subscription.tier === "pro" ? "Pro" : "Basic"} Plan
                       </CardDescription>
                     </div>
-                    <Badge 
+                    <Badge
                       variant={subscription.status === "active" ? "default" : "secondary"}
                       data-testid="badge-status"
                     >
@@ -383,10 +382,10 @@ export default function SubscriptionPage() {
                       </div>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2 mb-3">
-                      <div 
-                        className="bg-primary h-2 rounded-full transition-all" 
-                        style={{ 
-                          width: `${Math.max(0, Math.min(100, (getRemainingDays(subscription.currentPeriodEnd) / 30) * 100))}%` 
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all"
+                        style={{
+                          width: `${Math.max(0, Math.min(100, (getRemainingDays(subscription.currentPeriodEnd) / 30) * 100))}%`
                         }}
                       />
                     </div>
@@ -411,7 +410,7 @@ export default function SubscriptionPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {subscription.status === "past_due" && (
                     <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4">
                       <p className="text-sm text-destructive font-medium">
@@ -419,7 +418,7 @@ export default function SubscriptionPage() {
                       </p>
                     </div>
                   )}
-                  
+
                   {subscription.status === "canceling" && (
                     <div className="bg-muted border border-border rounded-lg p-4 mb-4">
                       <p className="text-sm text-muted-foreground">
@@ -445,15 +444,15 @@ export default function SubscriptionPage() {
                       <p className="text-sm text-muted-foreground">
                         To update your payment method, please cancel and create a new subscription:
                       </p>
-                      <PayPalSubscriptionButton 
-                        planId={paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds]} 
+                      <PayPalSubscriptionButton
+                        planId={paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds]}
                         tier={subscription.tier}
                       />
                     </div>
                   )}
                   {subscription.status === "canceling" && paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds] && (
-                    <PayPalSubscriptionButton 
-                      planId={paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds]} 
+                    <PayPalSubscriptionButton
+                      planId={paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds]}
                       tier={subscription.tier}
                     />
                   )}
@@ -483,7 +482,7 @@ export default function SubscriptionPage() {
                     </div>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent>
                   <div className="space-y-4">
                     <div className="grid md:grid-cols-3 gap-4 mb-4">
@@ -584,19 +583,19 @@ export default function SubscriptionPage() {
                       </div>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2 mb-3">
-                      <div 
-                        className="bg-primary h-2 rounded-full transition-all" 
-                        style={{ 
-                          width: `${Math.max(0, Math.min(100, (getRemainingDays(userData.freeTrialEndsAt) / 7) * 100))}%` 
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all"
+                        style={{
+                          width: `${Math.max(0, Math.min(100, (getRemainingDays(userData.freeTrialEndsAt) / 7) * 100))}%`
                         }}
                       />
                     </div>
                     <p className="text-sm text-muted-foreground mb-1">Trial Ends On</p>
                     <p className="text-lg font-semibold mb-2" data-testid="text-trial-end-date">
-                      {new Date(userData.freeTrialEndsAt).toLocaleDateString('en-US', { 
-                        month: 'long', 
-                        day: 'numeric', 
-                        year: 'numeric' 
+                      {new Date(userData.freeTrialEndsAt).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
                       })}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -613,27 +612,26 @@ export default function SubscriptionPage() {
                 const isCurrentTier = subscription?.tier === tier.id;
                 const isElite = tier.id === "elite";
                 const isFree = tier.id === "free";
-                
+
                 // Allow upgrades: if user has basic, they can upgrade to pro/elite
                 // if user has pro, they can upgrade to elite
                 const canUpgrade = subscription && (
                   (subscription.tier === 'basic' && (tier.id === 'pro' || tier.id === 'elite')) ||
                   (subscription.tier === 'pro' && tier.id === 'elite')
                 );
-                
+
                 // Block downgrades: if user has a higher tier, block lower tiers
                 const isDowngrade = Boolean(subscription && (
                   (subscription.tier === 'elite' && (tier.id === 'pro' || tier.id === 'basic')) ||
                   (subscription.tier === 'pro' && tier.id === 'basic')
                 ));
-                
+
 
                 return (
                   <Card
                     key={tier.id}
-                    className={`relative flex flex-col ${
-                      isElite ? "border-primary/50 bg-primary/5" : ""
-                    }`}
+                    className={`relative flex flex-col ${isElite ? "border-primary/50 bg-primary/5" : ""
+                      }`}
                     data-testid={`card-tier-${tier.id}`}
                   >
                     {tier.badge && (
@@ -647,14 +645,12 @@ export default function SubscriptionPage() {
                     <CardHeader>
                       <div className="flex items-center gap-3 mb-2">
                         <div
-                          className={`p-2 rounded-lg ${
-                            isElite ? "bg-primary/20" : "bg-muted"
-                          }`}
+                          className={`p-2 rounded-lg ${isElite ? "bg-primary/20" : "bg-muted"
+                            }`}
                         >
                           <TierIcon
-                            className={`w-6 h-6 ${
-                              isElite ? "text-primary" : "text-muted-foreground"
-                            }`}
+                            className={`w-6 h-6 ${isElite ? "text-primary" : "text-muted-foreground"
+                              }`}
                           />
                         </div>
                         <CardTitle>{tier.name}</CardTitle>
@@ -723,8 +719,8 @@ export default function SubscriptionPage() {
                                   </div>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-2">
-                                  <div 
-                                    className="bg-accent h-2 rounded-full transition-all" 
+                                  <div
+                                    className="bg-accent h-2 rounded-full transition-all"
                                     style={{ width: `${Math.min(100, (freeTierData.ggCoins / 500) * 100)}%` }}
                                   />
                                 </div>
@@ -792,8 +788,8 @@ export default function SubscriptionPage() {
                         </div>
                       ) : !isDowngrade && paypalPlanIds[tier.id as keyof typeof paypalPlanIds] ? (
                         <div className="w-full">
-                          <PayPalSubscriptionButton 
-                            planId={paypalPlanIds[tier.id as keyof typeof paypalPlanIds]} 
+                          <PayPalSubscriptionButton
+                            planId={paypalPlanIds[tier.id as keyof typeof paypalPlanIds]}
                             tier={tier.name}
                           />
                         </div>
@@ -847,7 +843,7 @@ export default function SubscriptionPage() {
           </div>
         </div>
       </div>
-      
+
     </div>
   );
 }

@@ -34,17 +34,31 @@ export async function sendEmailAlert(payload: AlertPayload): Promise<void> {
 }
 
 export async function sendSmsAlert(payload: AlertPayload): Promise<void> {
+  // ⚠️ COST SAVINGS: Only send SMS for CRITICAL alerts to avoid Twilio charges
+  // Emails are free/cheap - use those for info/warning
+  if (payload.severity !== 'critical') {
+    console.log(`[SMS] Skipped ${payload.severity} alert (not critical) - check email instead`);
+    return;
+  }
+
   if (!smsClient || !TWILIO_FROM_NUMBER || ALERT_SMS_TO.length === 0) return;
-  const body = `[${payload.severity}] ${payload.source}: ${payload.message}`.slice(0, 140);
+  const body = `🚨 CRITICAL: ${payload.source}: ${payload.message}`.slice(0, 160);
   try {
     await Promise.all(ALERT_SMS_TO.map(to => smsClient.messages.create({ from: TWILIO_FROM_NUMBER, to, body })));
+    console.log(`[SMS] Critical alert sent to ${ALERT_SMS_TO.length} number(s)`);
   } catch (err) {
     console.error('SMS alert failed:', err);
   }
 }
 
 export async function notify(payload: AlertPayload): Promise<void> {
-  await Promise.all([sendEmailAlert(payload), sendSmsAlert(payload)]);
+  // Always send email (cheap/free)
+  await sendEmailAlert(payload);
+
+  // Only send SMS for critical alerts (expensive)
+  if (payload.severity === 'critical') {
+    await sendSmsAlert(payload);
+  }
 }
 
 function escapeHtml(str: string): string {

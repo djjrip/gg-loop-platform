@@ -1,0 +1,10 @@
+{
+    "scripts": {
+        "dev": "tsx watch server/index.ts",
+        "build": "tsc --noEmit",
+        "start": "npx tsx server/index.ts",
+        "preflight": "npm run build && npm run lint:check",
+        "lint:check": "echo 'Checking for syntax errors...' && tsc --noEmit",
+        "deploy:safe": "npm run preflight && echo 'Build successful! Safe to deploy.' || echo 'BUILD FAILED - DO NOT DEPLOY'"
+    }
+}

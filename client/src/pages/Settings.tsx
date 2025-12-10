@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { CheckCircle2, AlertCircle, Link2, Gamepad2, Trophy } from "lucide-react";
+import { CheckCircle2, AlertCircle, Link2, Gamepad2, Trophy, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 type RiotAccountStatus = {
@@ -46,8 +46,6 @@ const VALORANT_REGIONS = [
   { value: 'latam', label: 'Latin America' },
   { value: 'br', label: 'Brazil' },
 ];
-
-import { RiotAccountVerification } from "@/components/RiotAccountVerification";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -282,34 +280,47 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          {/* Valorant - SECURE VERIFICATION */}
-          {!valorantAccount?.linked ? (
-            <RiotAccountVerification
-              game="valorant"
-              title="Valorant"
-              description="Securely link your Valorant account with 2-step verification"
-              regions={VALORANT_REGIONS}
-            />
-          ) : (
-            <Card data-testid="card-valorant">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Gamepad2 className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-2xl">Valorant</CardTitle>
-                    <CardDescription>
-                      Account securely linked and verified ✓
-                    </CardDescription>
+          {/* Valorant - COSMETIC ONLY */}
+          <Card data-testid="card-valorant">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Gamepad2 className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl">Valorant</CardTitle>
+                  <CardDescription>
+                    Cosmetic profile display only
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* SECURITY NOTICE */}
+              <div className="p-4 bg-orange-500/10 border-2 border-orange-500/30 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                  <div className="space-y-2">
+                    <p className="font-semibold text-sm">Game Account Linking: Display Only</p>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p>• Riot account linking is <strong>cosmetic only</strong></p>
+                      <p>• Does NOT affect points, rewards, or earning</p>
+                      <p>• Match stats display for your profile only</p>
+                    </div>
+                    <div className="pt-2 mt-2 border-t border-orange-500/20">
+                      <p className="text-xs font-medium text-orange-400">
+                        ⚡ Verified gameplay rewards return with Desktop App - Coming 2025
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </div>
+
+              {valorantAccount?.linked ? (
                 <div className="p-4 border rounded-lg bg-muted/30">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    <span className="font-semibold" data-testid="text-valorant-connected">Connected</span>
+                    <span className="font-semibold" data-testid="text-valorant-connected">Linked (Display Only)</span>
                   </div>
                   <p className="text-sm text-muted-foreground mb-1">
                     Riot ID: <span className="font-mono" data-testid="text-valorant-riot-id">{valorantAccount.gameName}#{valorantAccount.tagLine}</span>
@@ -317,11 +328,6 @@ export default function Settings() {
                   <p className="text-sm text-muted-foreground mb-1">
                     Region: {VALORANT_REGIONS.find(r => r.value === valorantAccount.region)?.label || valorantAccount.region}
                   </p>
-                  {valorantAccount.lastSyncedAt && (
-                    <p className="text-sm text-muted-foreground">
-                      Last synced: {formatDistanceToNow(new Date(valorantAccount.lastSyncedAt))} ago
-                    </p>
-                  )}
                   {valorantAccount.totalMatches !== undefined && (
                     <div className="flex items-center gap-4 mt-3">
                       <Badge variant="secondary" data-testid="badge-valorant-matches">
@@ -336,9 +342,18 @@ export default function Settings() {
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <div className="p-4 border rounded-lg bg-muted/50 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Valorant linking temporarily unavailable
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Returns with secure Desktop App verification
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Coming Soon Games */}
           <Card data-testid="card-coming-soon-games">
@@ -374,9 +389,12 @@ export default function Settings() {
                   </div>
                 ))}
               </div>
-              <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
-                <p className="text-sm text-center">
-                  <strong>GG Loop is for ALL gamers!</strong> You can join and redeem rewards with your monthly points even without linking game accounts. Game linking is optional for match tracking.
+              <div className="mt-4 p-4 rounded-lg bg-orange-500/5 border border-orange-500/20">
+                <p className="text-sm text-center font-medium">
+                  ⚡ Game linking is currently for profile display only
+                </p>
+                <p className="text-xs text-center text-muted-foreground mt-1">
+                  Earn rewards now through subscriptions + platform missions • Verified gameplay rewards coming with Desktop App 2025
                 </p>
               </div>
             </CardContent>

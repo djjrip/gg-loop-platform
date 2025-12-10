@@ -69,10 +69,13 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-semibold mb-3">Support</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="font-semibold mb-3">Company Identity</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="font-medium text-foreground">GG LOOP LLC</li>
+              <li>Domain: ggloop.io</li>
+              <li>Founder: Jayson Quindao</li>
               <li>
-                <a href="mailto:jaysonquindao@ggloop.io" className="text-muted-foreground hover:text-foreground" data-testid="link-contact">
+                <a href="mailto:jaysonquindao@ggloop.io" className="hover:text-ggloop-orange" data-testid="link-contact">
                   jaysonquindao@ggloop.io
                 </a>
               </li>
@@ -80,14 +83,14 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border pt-6">
-          <p className="text-xs text-muted-foreground leading-relaxed">
+        <div className="border-t border-border pt-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
             GG Loop isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games
             or anyone officially involved in producing or managing Riot Games properties. Riot Games, and
             all associated properties are trademarks or registered trademarks of Riot Games, Inc.
           </p>
-          <p className="text-xs text-muted-foreground mt-4">
-            © 2025 GG Loop. All rights reserved.
+          <p className="text-xs text-muted-foreground whitespace-nowrap">
+            © 2025 GG LOOP LLC. All rights reserved.
           </p>
         </div>
       </div>
