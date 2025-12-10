@@ -1,13 +1,16 @@
-name: Auto-Post to Twitter
+name: Auto-Post to Twitter (DISABLED)
 
 on:
-  # DISABLED - Docker antisocial-bot is primary Twitter integration
+  # PERMANENTLY DISABLED - CEO directive 2025-12-09
+  # This was posting Options Hunter content to @ggloopllc (wrong account)
+  # Twitter posting moved to manual GG LOOP content only
   # schedule:
   #   - cron: '0 15 * * *'  # 10 AM EST
   #   - cron: '0 19 * * *'  # 2 PM EST
   #   - cron: '0 0 * * *'   # 7 PM EST
   
-  workflow_dispatch:  # Manual trigger still available
+  # workflow_dispatch disabled to prevent accidental runs
+  # workflow_dispatch:
 
 jobs:
   post-to-twitter:
