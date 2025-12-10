@@ -26,22 +26,25 @@
   --popover: 0 0% 96%;
   --popover-foreground: 0 0% 10%;
   --popover-border: 0 0% 90%;
-  --primary: 15 35% 52%;
+  --primary: 28 45% 59%;
+  /* #C19A6B Copper */
   --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 80%;
-  --secondary-foreground: 0 0% 12%;
-  --muted: 0 0% 90%;
-  --muted-foreground: 0 0% 45%;
-  --accent: 0 0% 88%;
-  --accent-foreground: 0 0% 12%;
+  --secondary: 15 25% 20%;
+  /* Dark Brownish Grey */
+  --secondary-foreground: 0 0% 95%;
+  --muted: 28 20% 90%;
+  --muted-foreground: 15 10% 40%;
+  --accent: 28 30% 85%;
+  --accent-foreground: 15 40% 15%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
-  --input: 0 0% 80%;
-  --ring: 20 30% 58%;
-  --chart-1: 25 50% 48%;
-  --chart-2: 80 30% 45%;
-  --chart-3: 35 40% 42%;
-  --chart-4: 45 35% 50%;
+  --input: 15 10% 80%;
+  --ring: 28 45% 59%;
+  /* Match Primary Copper */
+  --chart-1: 28 45% 59%;
+  --chart-2: 35 40% 65%;
+  --chart-3: 15 30% 30%;
+  --chart-4: 28 30% 70%;
   --chart-5: 20 45% 48%;
   --font-sans: Inter, sans-serif;
   --font-heading: 'Space Grotesk', Inter, sans-serif;
