@@ -125,20 +125,20 @@ export default function MyRewards() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {claimedRewards.map((claimed) => {
               const FulfillmentIcon = getFulfillmentIcon(claimed.reward.fulfillmentType);
-              
+
               return (
                 <Card key={claimed.id} data-testid={`card-claimed-${claimed.id}`}>
                   <CardHeader className="space-y-4">
                     {claimed.reward.imageUrl && (
                       <div className="aspect-video w-full rounded-lg overflow-hidden bg-muted">
-                        <img 
-                          src={claimed.reward.imageUrl} 
+                        <img
+                          src={claimed.reward.imageUrl}
                           alt={claimed.reward.title}
                           className="w-full h-full object-cover"
                         />
                       </div>
                     )}
-                    
+
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1 flex-1">
                         <CardTitle className="text-lg">{claimed.reward.title}</CardTitle>
@@ -151,7 +151,7 @@ export default function MyRewards() {
                       </Badge>
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Points Spent</span>
@@ -159,7 +159,7 @@ export default function MyRewards() {
                         {claimed.pointsSpent.toLocaleString()}
                       </span>
                     </div>
-                    
+
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Claimed On</span>
                       <span className="font-medium">
@@ -270,7 +270,7 @@ export default function MyRewards() {
               <div className="max-w-md mx-auto">
                 <h3 className="text-2xl font-bold mb-2">Your Rewards Await!</h3>
                 <p className="text-muted-foreground mb-6">
-                  You haven't claimed any rewards yet. Browse our catalog and redeem your points for gaming gear, gift cards, and exclusive perks!
+                  You haven't claimed any rewards yet. Browse our catalog and request rewards with your points (manual fulfillment, 2-5 days)!
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Link href="/shop">

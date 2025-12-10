@@ -16,14 +16,33 @@ enforceSecureStartup();
 import { validateRequiredEnv, logEnvChecks } from './envValidation';
 logEnvChecks(validateRequiredEnv());
 
-// Global error handling – any uncaught exception will be printed and exit the process.
-process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
-  // process.exit(1);
+// Global error handling – graceful shutdown on fatal errors
+process.on('uncaughtException', async (err) => {
+  console.error('❌ FATAL: Uncaught Exception:', err);
+  try {
+    await notify({ severity: 'critical', source: 'server.uncaughtException', message: `Server crash: ${err.message}` });
+  } catch (notifyError) {
+    console.error('Failed to send crash alert:', notifyError);
+  }
+  // Allow time for logging before exit
+  setTimeout(() => {
+    console.error('Exiting due to uncaught exception...');
+    process.exit(1);
+  }, 1000);
 });
-process.on('unhandledRejection', (reason) => {
-  console.error('❌ Unhandled Rejection:', reason);
-  // process.exit(1);
+
+process.on('unhandledRejection', async (reason) => {
+  console.error('❌ FATAL: Unhandled Rejection:', reason);
+  try {
+    await notify({ severity: 'critical', source: 'server.unhandledRejection', message: `Unhandled rejection: ${reason}` });
+  } catch (notifyError) {
+    console.error('Failed to send rejection alert:', notifyError);
+  }
+  // Allow time for logging before exit
+  setTimeout(() => {
+    console.error('Exiting due to unhandled rejection...');
+    process.exit(1);
+  }, 1000);
 });
 import { registerRoutes } from "./routes";
 import { notify, type AlertPayload } from './alerts';

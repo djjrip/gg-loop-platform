@@ -11,6 +11,8 @@ const MATCHES_TO_CHECK = 5; // Only check last 5 matches per sync
 
 let syncInterval: NodeJS.Timeout | null = null;
 let achievementDetector: AchievementDetector | null = null;
+let consecutiveErrors = 0;
+const MAX_CONSECUTIVE_ERRORS = 3;
 
 export function initializeAchievementDetector(storage: IStorage) {
   achievementDetector = new AchievementDetector(storage);
@@ -22,13 +24,36 @@ export async function startMatchSyncService() {
   // Run immediately on startup (with error protection)
   try {
     await syncAllAccounts();
+    consecutiveErrors = 0; // Reset on success
   } catch (error) {
-    console.error('[MatchSync] Error during initial sync, will retry on next interval:', error);
+    consecutiveErrors++;
+    console.error(`[MatchSync] Error during initial sync (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}):`, error);
   }
 
-  // Then run every 10 minutes
+  // Then run every 5 minutes with circuit breaker
   syncInterval = setInterval(async () => {
-    await syncAllAccounts();
+    try {
+      await syncAllAccounts();
+      consecutiveErrors = 0; // Reset on success
+    } catch (error) {
+      consecutiveErrors++;
+      console.error(`[MatchSync] Error during sync (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}):`, error);
+
+      if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+        console.error('[MatchSync] ⚠️ Circuit breaker triggered - stopping service due to repeated failures');
+        stopMatchSyncService();
+        // Notify founder of service failure
+        try {
+          const { notify } = await import('./alerts');
+          await notify({
+            level: 'error',
+            message: `Match sync service disabled after ${MAX_CONSECUTIVE_ERRORS} consecutive failures. Manual restart required.`
+          });
+        } catch (notifyError) {
+          console.error('[MatchSync] Failed to send alert:', notifyError);
+        }
+      }
+    }
   }, SYNC_INTERVAL_MS);
 
   console.log(`[MatchSync] Service started. Syncing every ${SYNC_INTERVAL_MS / 1000 / 60} minutes.`);

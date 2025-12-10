@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import {
   Gift,
@@ -18,7 +19,8 @@ import {
   Sparkles,
   Star,
   Zap,
-  Loader2
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -124,6 +126,15 @@ export default function Shop() {
             </div>
           )}
         </div>
+
+        {/* Manual Fulfillment Banner */}
+        <Alert variant="default" className="mb-6 border-primary/50 bg-primary/5">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Manual Fulfillment Process</AlertTitle>
+          <AlertDescription>
+            All reward redemptions are processed manually by our team. Please allow 2-5 business days for fulfillment. Rewards are subject to availability.
+          </AlertDescription>
+        </Alert>
 
         {/* Search and Filters */}
         <div className="mb-8 space-y-4">
@@ -239,7 +250,7 @@ export default function Shop() {
                         ) : (
                           <Gift className="mr-2 h-4 w-4" />
                         )}
-                        {reward.inStock ? 'Redeem Reward' : 'Out of Stock'}
+                        {reward.inStock ? 'Request Reward' : 'Out of Stock'}
                       </Button>
                     ) : (
                       <div className="space-y-2">

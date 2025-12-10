@@ -77,7 +77,7 @@ export default function Stats() {
   const hasLinkedAccounts = leagueAccount?.linked || valorantAccount?.linked;
   const recentMatches = matches?.slice(0, 5) || [];
   const topRewards = rewards?.slice(0, 3) || [];
-  
+
   const wins = matches?.filter(m => m.isWin).length || 0;
   const losses = matches?.filter(m => !m.isWin).length || 0;
   const totalGames = wins + losses;
@@ -87,7 +87,7 @@ export default function Stats() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Welcome Header */}
         <div className="mb-8">
@@ -112,7 +112,7 @@ export default function Stats() {
           <Alert className="mb-6 border-primary/20 bg-primary/5" data-testid="alert-game-linking-optional">
             <Info className="h-5 w-5 text-primary" />
             <AlertDescription className="ml-2">
-              <span className="font-semibold">GG Loop is for all gamers!</span> Your monthly subscription gives you points to redeem rewards. 
+              <span className="font-semibold">GG Loop is for all gamers!</span> Your monthly subscription gives you points to redeem rewards.
               Linking game accounts is <span className="font-semibold">completely optional</span> - it just enables automatic match tracking and bonus point opportunities.
             </AlertDescription>
           </Alert>
@@ -134,9 +134,9 @@ export default function Stats() {
               </p>
               <div className="flex items-center justify-center gap-4 pt-4">
                 <Link href="/shop">
-                  <Button size="lg" data-testid="button-redeem-points">
+                  <Button size="lg" data-testid="button-browse-rewards">
                     <Gift className="mr-2 h-5 w-5" />
-                    Redeem Points
+                    Browse Rewards
                   </Button>
                 </Link>
                 <Link href="/subscription">
@@ -163,7 +163,7 @@ export default function Stats() {
                   </CardTitle>
                 </CardHeader>
               </Card>
-              
+
               <Card data-testid="card-win-rate">
                 <CardHeader className="pb-3">
                   <CardDescription>Win Rate</CardDescription>
@@ -172,7 +172,7 @@ export default function Stats() {
                   </CardTitle>
                 </CardHeader>
               </Card>
-              
+
               <Card data-testid="card-points-earned">
                 <CardHeader className="pb-3">
                   <CardDescription>Points Earned</CardDescription>
@@ -249,13 +249,13 @@ export default function Stats() {
                 ) : (
                   <div className="space-y-3">
                     {recentMatches.map((match) => (
-                      <div 
-                        key={match.id} 
+                      <div
+                        key={match.id}
                         className="flex items-center justify-between p-4 rounded-lg border hover-elevate"
                         data-testid={`match-${match.id}`}
                       >
                         <div className="flex items-center gap-4">
-                          <Badge 
+                          <Badge
                             variant={match.isWin ? "default" : "secondary"}
                             className="w-16 justify-center"
                             data-testid={`badge-result-${match.id}`}
@@ -300,15 +300,15 @@ export default function Stats() {
                 ) : (
                   <div className="space-y-4">
                     {topRewards.map((reward) => (
-                      <div 
-                        key={reward.id} 
+                      <div
+                        key={reward.id}
                         className="border rounded-lg overflow-hidden hover-elevate"
                         data-testid={`reward-${reward.id}`}
                       >
                         {reward.imageUrl && (
                           <div className="aspect-video bg-muted">
-                            <img 
-                              src={reward.imageUrl} 
+                            <img
+                              src={reward.imageUrl}
                               alt={reward.title}
                               className="w-full h-full object-cover"
                             />
