@@ -2547,6 +2547,39 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     }
   });
 
+  // PayPal: Create subscription (called by PayPal SDK on button click)
+  app.post('/api/paypal/create-subscription', getUserMiddleware, async (req: any, res) => {
+    const { planId, tier } = req.body;
+    const userId = req.dbUser.id;
+
+    if (!planId || !tier) {
+      return res.status(400).json({ message: "Plan ID and tier are required" });
+    }
+
+    try {
+      // Validate tier
+      const validTiers = ['basic', 'pro', 'elite', 'Basic', 'Pro', 'Elite'];
+      if (!validTiers.includes(tier)) {
+        return res.status(400).json({ message: "Invalid subscription tier" });
+      }
+
+      // The PayPal SDK handles the actual subscription creation on the client side
+      // This endpoint just validates the request and returns the plan ID
+      // The SDK will use this plan ID to create the subscription with PayPal
+      console.log(`PayPal subscription creation initiated: planId=${planId}, tier=${tier}, userId=${userId}`);
+
+      res.json({
+        planId: planId,
+        message: "Subscription creation initiated"
+      });
+    } catch (error: any) {
+      console.error("Error in PayPal create-subscription:", error);
+      res.status(500).json({
+        message: error.message || "Failed to initiate subscription"
+      });
+    }
+  });
+
   // Manual PayPal subscription sync - for users who had issues during checkout
   app.post('/api/paypal/manual-sync', getUserMiddleware, async (req: any, res) => {
     const { subscriptionId } = req.body;
