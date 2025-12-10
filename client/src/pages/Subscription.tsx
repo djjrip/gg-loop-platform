@@ -348,8 +348,8 @@ export default function SubscriptionPage() {
           <>
             {showSubscriptionCard && subscription && (
               <Card className={`mb-8 ${subscription.status === "active" || subscription.status === "past_due"
-                  ? "bg-primary/5 border-primary/20"
-                  : "bg-muted/50 border-muted"
+                ? "bg-primary/5 border-primary/20"
+                : "bg-muted/50 border-muted"
                 }`} data-testid="card-current-subscription">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -470,14 +470,14 @@ export default function SubscriptionPage() {
                     </div>
                     <div className="flex-1">
                       <CardTitle className="flex items-center gap-2">
-                        Start Your Free Trial
+                        Early Access Preview
                         <Badge variant="default" className="animate-pulse">
                           <Sparkles className="w-3 h-3 mr-1" />
                           7 Days Free
                         </Badge>
                       </CardTitle>
                       <CardDescription>
-                        Try GG Loop risk-free. No credit card required.
+                        Experience GG Loop features. Payment integration coming soon.
                       </CardDescription>
                     </div>
                   </div>
@@ -546,7 +546,7 @@ export default function SubscriptionPage() {
                     disabled={freeTrialMutation.isPending}
                     data-testid="button-start-free-trial"
                   >
-                    {freeTrialMutation.isPending ? "Starting Trial..." : "Start 7-Day Free Trial"}
+                    {freeTrialMutation.isPending ? "Requesting Access..." : "Request Early Access"}
                   </Button>
                 </CardFooter>
               </Card>
@@ -563,7 +563,7 @@ export default function SubscriptionPage() {
                         Free Trial Active
                       </CardTitle>
                       <CardDescription>
-                        Enjoying GG Loop? Subscribe to keep earning rewards!
+                        Payment integration coming soon. Your progress is saved!
                       </CardDescription>
                     </div>
                     <Badge variant="default">
@@ -599,7 +599,7 @@ export default function SubscriptionPage() {
                       })}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Subscribe before your trial ends to keep your points and continue earning rewards!
+                      Payment integration coming soon. Your trial progress is saved - you'll be able to subscribe when we launch!
                     </p>
                   </div>
                 </CardContent>
@@ -760,7 +760,7 @@ export default function SubscriptionPage() {
                             variant={isElite ? "default" : "outline"}
                             data-testid={`button-login-${tier.id}`}
                           >
-                            Log in to Subscribe
+                            Join Waitlist
                           </Button>
                         </Link>
                       ) : isCurrentTier ? (
