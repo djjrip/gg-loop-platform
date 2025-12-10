@@ -2289,11 +2289,6 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         message: 'No new wins found in your recent matches. All recent wins have already been redeemed!'
       });
 
-    } catch (apiError: any) {
-      console.error("Riot API verification error:", apiError);
-      return res.status(500).json({
-        message: 'Unable to verify match with Riot API. Please try again later.'
-      });
     }
   } catch (error: any) {
     console.error("Error creating match submission:", error);
