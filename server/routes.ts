@@ -5467,10 +5467,360 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     }
   });
 
+  // ========================================
+  // LEVEL 10 PHASE 1: ACHIEVEMENT & XP SYSTEM
+  // ========================================
+
+  // GET /api/achievements - List all achievements for user
+  app.get("/api/achievements", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+
+      const userAchievements = await db
+        .select()
+        .from(achievements)
+        .where(eq(achievements.userId, userId))
+        .orderBy(desc(achievements.achievedAt));
+
+      res.json({ achievements: userAchievements });
+    } catch (error) {
+      console.error("Error fetching achievements:", error);
+      res.status(500).json({ message: "Failed to fetch achievements" });
+    }
+  });
+
+  // GET /api/xp/stats - Get XP stats by game
+  app.get("/api/xp/stats", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+
+      // Get user's current XP and level
+      const [user] = await db
+        .select({
+          xpLevel: users.xpLevel,
+          xpPoints: users.xpPoints,
+          totalPoints: users.totalPoints
+        })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get XP breakdown by game from user_games table
+      const gameStats = await db
+        .select({
+          gameId: userGames.gameId,
+          gameName: games.title,
+          xpEarned: sql<number>`COALESCE(SUM(${userGames.xpEarned}), 0)`,
+          matchesPlayed: sql<number>`COALESCE(COUNT(${userGames.id}), 0)`
+        })
+        .from(userGames)
+        .leftJoin(games, eq(userGames.gameId, games.id))
+        .where(eq(userGames.userId, userId))
+        .groupBy(userGames.gameId, games.title);
+
+      // Calculate next level XP requirement (100 XP per level, exponential)
+      const nextLevelXP = user.xpLevel * 100;
+      const progressToNextLevel = (user.xpPoints / nextLevelXP) * 100;
+
+      res.json({
+        currentLevel: user.xpLevel,
+        currentXP: user.xpPoints,
+        nextLevelXP,
+        progressToNextLevel: Math.min(progressToNextLevel, 100),
+        totalPoints: user.totalPoints,
+        gameStats: gameStats.map(stat => ({
+          gameId: stat.gameId,
+          gameName: stat.gameName || "Unknown",
+          xpEarned: Number(stat.xpEarned),
+          matchesPlayed: Number(stat.matchesPlayed)
+        }))
+      });
+    } catch (error) {
+      console.error("Error fetching XP stats:", error);
+      res.status(500).json({ message: "Failed to fetch XP stats" });
+    }
+  });
+
+  // POST /api/xp/sync - Sync XP from desktop session
+  app.post("/api/xp/sync", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const schema = z.object({
+        gameId: z.string().uuid(),
+        xpEarned: z.number().min(0).max(1000), // Max 1000 XP per sync
+        matchId: z.string().optional(),
+        sessionId: z.string().optional(),
+        desktopVerified: z.boolean().default(false)
+      });
+
+      const validated = schema.parse(req.body);
+
+      // Require desktop verification for XP sync
+      if (!validated.desktopVerified) {
+        return res.status(403).json({
+          message: "Desktop verification required for XP sync"
+        });
+      }
+
+      // Get current user XP
+      const [user] = await db
+        .select({
+          xpLevel: users.xpLevel,
+          xpPoints: users.xpPoints
+        })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Calculate new XP and level
+      let newXP = user.xpPoints + validated.xpEarned;
+      let newLevel = user.xpLevel;
+      const xpPerLevel = 100;
+
+      // Level up logic
+      while (newXP >= (newLevel * xpPerLevel)) {
+        newXP -= (newLevel * xpPerLevel);
+        newLevel++;
+      }
+
+      // Update user XP and level
+      await db
+        .update(users)
+        .set({
+          xpPoints: newXP,
+          xpLevel: newLevel,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+
+      // Record XP in user_games table
+      await db
+        .insert(userGames)
+        .values({
+          userId,
+          gameId: validated.gameId,
+          xpEarned: validated.xpEarned
+        })
+        .onConflictDoUpdate({
+          target: [userGames.userId, userGames.gameId],
+          set: {
+            xpEarned: sql`${userGames.xpEarned} + ${validated.xpEarned}`,
+            updatedAt: new Date()
+          }
+        });
+
+      res.json({
+        success: true,
+        xpEarned: validated.xpEarned,
+        newLevel,
+        newXP,
+        leveledUp: newLevel > user.xpLevel
+      });
+    } catch (error: any) {
+      console.error("Error syncing XP:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid XP sync data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to sync XP" });
+    }
+  });
+
+  // GET /api/referrals/:code - Get referral info by code
+  app.get("/api/referrals/:code", async (req, res) => {
+    try {
+      const { code } = req.params;
+
+      const [referrer] = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          profileImageUrl: users.profileImageUrl,
+          totalPoints: users.totalPoints,
+          referralCode: users.referralCode
+        })
+        .from(users)
+        .where(eq(users.referralCode, code))
+        .limit(1);
+
+      if (!referrer) {
+        return res.status(404).json({ message: "Referral code not found" });
+      }
+
+      // Get referral stats
+      const referralStats = await db
+        .select({
+          totalReferrals: sql<number>`COUNT(*)`,
+          activeReferrals: sql<number>`COUNT(*) FILTER (WHERE ${referrals.status} = 'active')`,
+          totalPointsEarned: sql<number>`COALESCE(SUM(${referrals.pointsAwarded}), 0)`
+        })
+        .from(referrals)
+        .where(eq(referrals.referrerId, referrer.id));
+
+      res.json({
+        referrer: {
+          username: referrer.username,
+          profileImageUrl: referrer.profileImageUrl,
+          totalPoints: referrer.totalPoints
+        },
+        stats: {
+          totalReferrals: Number(referralStats[0]?.totalReferrals || 0),
+          activeReferrals: Number(referralStats[0]?.activeReferrals || 0),
+          totalPointsEarned: Number(referralStats[0]?.totalPointsEarned || 0)
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching referral info:", error);
+      res.status(500).json({ message: "Failed to fetch referral info" });
+    }
+  });
+
+  // ========================================
+  // LEVEL 10 PHASE 2: ADMIN INTEGRITY DASHBOARD
+  // ========================================
+
+  // GET /api/admin/integrity/alerts - Get fraud pattern alerts
+  app.get("/api/admin/integrity/alerts", adminMiddleware, async (req: any, res) => {
+    try {
+      const { severity, limit = 50 } = req.query;
+
+      let query = db
+        .select({
+          id: fraudDetectionLogs.id,
+          userId: fraudDetectionLogs.userId,
+          username: users.username,
+          detectionType: fraudDetectionLogs.detectionType,
+          severity: fraudDetectionLogs.severity,
+          riskScore: fraudDetectionLogs.riskScore,
+          sourceType: fraudDetectionLogs.sourceType,
+          sourceId: fraudDetectionLogs.sourceId,
+          detectionData: fraudDetectionLogs.detectionData,
+          status: fraudDetectionLogs.status,
+          createdAt: fraudDetectionLogs.createdAt
+        })
+        .from(fraudDetectionLogs)
+        .leftJoin(users, eq(fraudDetectionLogs.userId, users.id))
+        .where(eq(fraudDetectionLogs.status, 'pending'))
+        .orderBy(desc(fraudDetectionLogs.riskScore), desc(fraudDetectionLogs.createdAt))
+        .limit(parseInt(limit as string));
+
+      if (severity) {
+        query = query.where(
+          and(
+            eq(fraudDetectionLogs.status, 'pending'),
+            eq(fraudDetectionLogs.severity, severity as string)
+          )
+        ) as any;
+      }
+
+      const alerts = await query;
+
+      res.json({ alerts });
+    } catch (error) {
+      console.error("Error fetching integrity alerts:", error);
+      res.status(500).json({ message: "Failed to fetch integrity alerts" });
+    }
+  });
+
+  // GET /api/admin/integrity/patterns - Get fraud detection patterns
+  app.get("/api/admin/integrity/patterns", adminMiddleware, async (req: any, res) => {
+    try {
+      // Get pattern statistics
+      const patternStats = await db
+        .select({
+          detectionType: fraudDetectionLogs.detectionType,
+          count: sql<number>`COUNT(*)`,
+          avgRiskScore: sql<number>`AVG(${fraudDetectionLogs.riskScore})`,
+          highSeverityCount: sql<number>`COUNT(*) FILTER (WHERE ${fraudDetectionLogs.severity} IN ('high', 'critical'))`
+        })
+        .from(fraudDetectionLogs)
+        .groupBy(fraudDetectionLogs.detectionType);
+
+      // Get recent high-risk patterns
+      const recentPatterns = await db
+        .select({
+          detectionType: fraudDetectionLogs.detectionType,
+          detectionData: fraudDetectionLogs.detectionData,
+          count: sql<number>`COUNT(*)`,
+          latestOccurrence: sql<Date>`MAX(${fraudDetectionLogs.createdAt})`
+        })
+        .from(fraudDetectionLogs)
+        .where(
+          and(
+            eq(fraudDetectionLogs.status, 'pending'),
+            sql`${fraudDetectionLogs.severity} IN ('high', 'critical')`
+          )
+        )
+        .groupBy(fraudDetectionLogs.detectionType, fraudDetectionLogs.detectionData)
+        .orderBy(desc(sql`COUNT(*)`))
+        .limit(10);
+
+      res.json({
+        statistics: patternStats.map(stat => ({
+          detectionType: stat.detectionType,
+          totalCount: Number(stat.count),
+          avgRiskScore: Number(stat.avgRiskScore).toFixed(2),
+          highSeverityCount: Number(stat.highSeverityCount)
+        })),
+        recentPatterns: recentPatterns.map(pattern => ({
+          detectionType: pattern.detectionType,
+          occurrences: Number(pattern.count),
+          latestOccurrence: pattern.latestOccurrence,
+          detectionData: pattern.detectionData
+        }))
+      });
+    } catch (error) {
+      console.error("Error fetching fraud patterns:", error);
+      res.status(500).json({ message: "Failed to fetch fraud patterns" });
+    }
+  });
+
+  // POST /api/admin/integrity/resolve/:id - Resolve fraud alert
+  app.post("/api/admin/integrity/resolve/:id", adminMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const adminId = req.dbUser.id;
+      const schema = z.object({
+        action: z.enum(['dismiss', 'confirm', 'escalate']),
+        actionTaken: z.enum(['none', 'warning', 'points_reversed', 'account_suspended']).optional(),
+        notes: z.string().optional()
+      });
+
+      const validated = schema.parse(req.body);
+
+      // Update fraud log
+      await db
+        .update(fraudDetectionLogs)
+        .set({
+          status: validated.action === 'dismiss' ? 'dismissed' :
+            validated.action === 'confirm' ? 'confirmed' : 'reviewed',
+          reviewedBy: adminId,
+          reviewedAt: new Date(),
+          actionTaken: validated.actionTaken || 'none'
+        })
+        .where(eq(fraudDetectionLogs.id, id));
+
+      res.json({ success: true, action: validated.action });
+    } catch (error: any) {
+      console.error("Error resolving fraud alert:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid resolution data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to resolve fraud alert" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Get referral leaderboard
   app.get("/api/referrals/leaderboard", async (req, res) => {
+
+
     try {
       const leaderboardData = await db
         .select({
