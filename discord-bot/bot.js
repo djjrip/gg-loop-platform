@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const axios = require('axios');
 require('dotenv').config();
 
 // Discord Bot Configuration
@@ -12,32 +13,58 @@ const client = new Client({
     ],
 });
 
+// API Configuration
+const API_URL = process.env.GG_LOOP_API_URL || 'https://ggloop.io/api';
+
 // Channel IDs (from .env)
 const CHANNELS = {
     changelog: process.env.CHANGELOG_CHANNEL_ID,
     buildLog: process.env.BUILD_LOG_CHANNEL_ID,
     welcome: process.env.WELCOME_CHANNEL_ID,
     logs: process.env.LOGS_CHANNEL_ID,
-    productHunt: process.env.PRODUCT_HUNT_CHANNEL_ID,
 };
 
-// Slash Commands
+// Role IDs for XP-based assignment
+const ROLES = {
+    rookie: process.env.ROLE_ROOKIE_ID,
+    veteran: process.env.ROLE_VETERAN_ID,
+    champion: process.env.ROLE_CHAMPION_ID,
+    elite: process.env.ROLE_ELITE_ID,
+};
+
+// Slash Commands - Level 10
 const commands = [
     new SlashCommandBuilder()
-        .setName('ggstatus')
+        .setName('status')
         .setDescription('Get current GG LOOP platform status'),
 
     new SlashCommandBuilder()
-        .setName('roadmap')
-        .setDescription('View GG LOOP roadmap (requires CEO approval)'),
+        .setName('xp')
+        .setDescription('Check your XP and level progress')
+        .addUserOption(option =>
+            option.setName('user')
+                .setDescription('User to check (defaults to you)')
+                .setRequired(false)),
+
+    new SlashCommandBuilder()
+        .setName('rewards')
+        .setDescription('View available rewards and your points'),
+
+    new SlashCommandBuilder()
+        .setName('passport')
+        .setDescription('View your GG LOOP Passport stats'),
+
+    new SlashCommandBuilder()
+        .setName('changelog')
+        .setDescription('View recent platform updates'),
+
+    new SlashCommandBuilder()
+        .setName('help')
+        .setDescription('Get help with GG LOOP commands'),
 
     new SlashCommandBuilder()
         .setName('tiers')
         .setDescription('View subscription tier information'),
-
-    new SlashCommandBuilder()
-        .setName('howitworks')
-        .setDescription('Learn how GG LOOP works'),
 ].map(command => command.toJSON());
 
 // Register slash commands
@@ -59,7 +86,10 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN)
 // Bot Ready Event
 client.once('ready', () => {
     console.log(`✅ GG LOOP Transparency Bot is online as ${client.user.tag}`);
-    logActivity('Bot started', 'Bot came online successfully');
+    logActivity('Bot started', 'Level 10 bot came online successfully');
+
+    // Start changelog monitoring
+    startChangelogMonitor();
 });
 
 // Slash Command Handler
@@ -69,46 +99,118 @@ client.on('interactionCreate', async interaction => {
     const { commandName } = interaction;
 
     try {
-        if (commandName === 'ggstatus') {
+        if (commandName === 'status') {
             const statusEmbed = new EmbedBuilder()
                 .setColor('#FF7A28')
                 .setTitle('🎮 GG LOOP Platform Status')
                 .setDescription('Current platform status and metrics')
                 .addFields(
                     { name: '🟢 Platform', value: 'Online', inline: true },
-                    { name: '📊 Current Phase', value: 'Level 4: Verification Backbone', inline: true },
-                    { name: '👥 Total Users', value: 'Pre-Launch', inline: true },
+                    { name: '📊 Current Phase', value: 'Level 10: Achievement System', inline: true },
+                    { name: '🏆 Total Endpoints', value: '39 Active', inline: true },
                     { name: '💰 Tiers Active', value: 'Free, Basic ($5), Pro ($12), Elite ($25)', inline: false },
                     { name: '🔐 Sponsor Access', value: 'Gated (10K+ verified points required)', inline: false },
-                    { name: '🚀 Next Milestone', value: 'Desktop App Verifier (Level 5)', inline: false }
+                    { name: '🚀 Latest Features', value: 'XP System, Achievements, Admin Integrity Dashboard', inline: false }
                 )
                 .setTimestamp()
                 .setFooter({ text: 'GG LOOP LLC' });
 
             await interaction.reply({ embeds: [statusEmbed] });
-            logActivity('Command: /ggstatus', `Used by ${interaction.user.tag}`);
+            logActivity('Command: /status', `Used by ${interaction.user.tag}`);
         }
 
-        else if (commandName === 'roadmap') {
-            const roadmapEmbed = new EmbedBuilder()
-                .setColor('#FF7A28')
-                .setTitle('🗺️ GG LOOP Roadmap')
-                .setDescription('**⚠️ CEO Approval Required for Public Roadmap Posts**')
-                .addFields(
-                    { name: '✅ Level 1-3', value: 'Core Platform, Riot Integration, Subscription System', inline: false },
-                    { name: '🔄 Level 4 (Current)', value: 'Verification Backbone - In Progress', inline: false },
-                    { name: '📅 Level 5', value: 'Desktop Verifier App', inline: false },
-                    { name: '📅 Level 6', value: 'Mobile App', inline: false },
-                    { name: '📅 Level 7', value: 'Reward Economy Engine', inline: false },
-                    { name: '📅 Level 8', value: 'Creator Tools', inline: false },
-                    { name: '📅 Level 9', value: 'GG LOOP Passport', inline: false },
-                    { name: '📅 Level 10', value: 'Marketplace & GG LOOP OS', inline: false }
-                )
-                .setTimestamp()
-                .setFooter({ text: 'Roadmap updates require manual CEO approval' });
+        else if (commandName === 'xp') {
+            const targetUser = interaction.options.getUser('user') || interaction.user;
 
-            await interaction.reply({ embeds: [roadmapEmbed] });
-            logActivity('Command: /roadmap', `Viewed by ${interaction.user.tag} (CEO approval noted)`);
+            const xpEmbed = new EmbedBuilder()
+                .setColor('#FF7A28')
+                .setTitle(`⚡ XP Progress - ${targetUser.username}`)
+                .setDescription('Connect your account at ggloop.io to track XP')
+                .addFields(
+                    { name: '📊 Current Level', value: 'Connect account to view', inline: true },
+                    { name: '💎 Total XP', value: 'Connect account to view', inline: true },
+                    { name: '🎮 Games Played', value: 'LoL, VALORANT, TFT', inline: false },
+                    { name: '🔗 Link Account', value: 'Visit ggloop.io/passport', inline: false }
+                )
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [xpEmbed] });
+            logActivity('Command: /xp', `Used by ${interaction.user.tag} for ${targetUser.tag}`);
+        }
+
+        else if (commandName === 'rewards') {
+            const rewardsEmbed = new EmbedBuilder()
+                .setColor('#FF7A28')
+                .setTitle('🎁 Available Rewards')
+                .setDescription('Exchange your verified points for real rewards')
+                .addFields(
+                    { name: '🖱️ Razer DeathAdder V3 Pro', value: '20,000 points', inline: true },
+                    { name: '🎁 Amazon Gift Card ($50)', value: '5,000 points', inline: true },
+                    { name: '💰 PayPal Cash ($25)', value: '2,500 points', inline: true },
+                    { name: '🎮 Riot Points (1350 RP)', value: '1,500 points', inline: true },
+                    { name: '🔐 Requirements', value: 'Desktop verified + Fraud score ≤30 + Admin approval', inline: false },
+                    { name: '📋 View Full Catalog', value: 'Visit ggloop.io/rewards', inline: false }
+                )
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [rewardsEmbed] });
+            logActivity('Command: /rewards', `Used by ${interaction.user.tag}`);
+        }
+
+        else if (commandName === 'passport') {
+            const passportEmbed = new EmbedBuilder()
+                .setColor('#FF7A28')
+                .setTitle('🎫 GG LOOP Passport')
+                .setDescription('Your verified gaming identity')
+                .addFields(
+                    { name: '🏆 Badge Tiers', value: 'Rookie → Veteran → Champion → Elite', inline: false },
+                    { name: '📊 Stats Tracked', value: 'Points, XP Level, Trust Score, Verification History', inline: false },
+                    { name: '🔒 Verification', value: 'Desktop app required for all point-earning activities', inline: false },
+                    { name: '🎯 Unlock Tiers', value: '10K pts = Veteran | 25K pts = Champion | 50K pts = Elite', inline: false },
+                    { name: '🔗 View Your Passport', value: 'Visit ggloop.io/passport', inline: false }
+                )
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [passportEmbed] });
+            logActivity('Command: /passport', `Used by ${interaction.user.tag}`);
+        }
+
+        else if (commandName === 'changelog') {
+            const changelogEmbed = new EmbedBuilder()
+                .setColor('#00FF00')
+                .setTitle('📢 Recent Platform Updates')
+                .setDescription('Latest GG LOOP development progress')
+                .addFields(
+                    { name: '✅ Level 10 Phase 1+2', value: 'Achievement System + Admin Integrity Dashboard', inline: false },
+                    { name: '✅ Level 9', value: 'GG LOOP Passport - User Identity System', inline: false },
+                    { name: '✅ Level 8', value: 'Brand Marketplace - Tiered Sponsorship', inline: false },
+                    { name: '✅ Level 7', value: 'Reward Engine - Smart Approval Flow', inline: false },
+                    { name: '📋 Full Changelog', value: 'Visit ggloop.io/changelog', inline: false }
+                )
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [changelogEmbed] });
+            logActivity('Command: /changelog', `Used by ${interaction.user.tag}`);
+        }
+
+        else if (commandName === 'help') {
+            const helpEmbed = new EmbedBuilder()
+                .setColor('#FF7A28')
+                .setTitle('❓ GG LOOP Bot Commands')
+                .setDescription('Available slash commands')
+                .addFields(
+                    { name: '/status', value: 'Platform status and metrics', inline: true },
+                    { name: '/xp', value: 'Check XP and level progress', inline: true },
+                    { name: '/rewards', value: 'View available rewards', inline: true },
+                    { name: '/passport', value: 'View Passport info', inline: true },
+                    { name: '/changelog', value: 'Recent platform updates', inline: true },
+                    { name: '/tiers', value: 'Subscription tier info', inline: true },
+                    { name: '🔗 Get Started', value: 'Visit ggloop.io to create your account', inline: false }
+                )
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [helpEmbed] });
+            logActivity('Command: /help', `Used by ${interaction.user.tag}`);
         }
 
         else if (commandName === 'tiers') {
@@ -128,26 +230,6 @@ client.on('interactionCreate', async interaction => {
             await interaction.reply({ embeds: [tiersEmbed] });
             logActivity('Command: /tiers', `Used by ${interaction.user.tag}`);
         }
-
-        else if (commandName === 'howitworks') {
-            const howItWorksEmbed = new EmbedBuilder()
-                .setColor('#FF7A28')
-                .setTitle('❓ How GG LOOP Works')
-                .setDescription('Verified gameplay. Real rewards. No fluff.')
-                .addFields(
-                    { name: '1️⃣ Subscribe', value: 'Choose a tier (Free, Basic, Pro, Elite)', inline: false },
-                    { name: '2️⃣ Play Games', value: 'Play League of Legends, VALORANT, TFT', inline: false },
-                    { name: '3️⃣ Earn Points', value: 'Get monthly point allocations + gameplay bonuses', inline: false },
-                    { name: '4️⃣ Verify', value: 'Desktop app validates your gameplay (Level 5)', inline: false },
-                    { name: '5️⃣ Redeem', value: 'Exchange points for gaming gear, gift cards, cash', inline: false },
-                    { name: '🔐 Sponsor Access', value: 'Unlock at 10K+ verified points', inline: false }
-                )
-                .setTimestamp()
-                .setFooter({ text: 'Join at ggloop.io' });
-
-            await interaction.reply({ embeds: [howItWorksEmbed] });
-            logActivity('Command: /howitworks', `Used by ${interaction.user.tag}`);
-        }
     } catch (error) {
         console.error(`Error handling command ${commandName}:`, error);
         await interaction.reply({ content: 'An error occurred while processing your command.', ephemeral: true });
@@ -164,10 +246,10 @@ client.on('guildMemberAdd', member => {
         .setTitle(`Welcome to GG LOOP, ${member.user.username}! 🎮`)
         .setDescription('**PLAY. EARN. LOOP.**')
         .addFields(
-            { name: '🎯 Current Status', value: 'Level 4: Verification Backbone (In Progress)', inline: false },
+            { name: '🎯 Current Status', value: 'Level 10: Achievement System (Live)', inline: false },
             { name: '💰 Tiers', value: 'Free, Basic ($5), Pro ($12), Elite ($25)', inline: false },
-            { name: '🚀 Next Up', value: 'Desktop App Verifier (Level 5)', inline: false },
-            { name: '📋 Get Started', value: 'Use `/ggstatus` to see platform status\nUse `/tiers` to view subscription options', inline: false }
+            { name: '🏆 Latest Features', value: 'XP System, Achievements, Passport, Admin Integrity', inline: false },
+            { name: '📋 Get Started', value: 'Use `/help` to see all commands\nUse `/status` to view platform status', inline: false }
         )
         .setTimestamp()
         .setFooter({ text: 'Verified gameplay. Real rewards. No fluff.' });
@@ -212,37 +294,49 @@ async function postToChangelog(message) {
     logActivity('Changelog Posted', message);
 }
 
-// Helper: Post to Build Log
-async function postToBuildLog(message) {
-    const buildLogChannel = client.channels.cache.get(CHANNELS.buildLog);
-    if (!buildLogChannel) {
-        console.log(`[BUILD LOG] ${message}`);
-        return;
-    }
+// Helper: Post Sponsor Unlock
+async function postSponsorUnlock(username, tier, points) {
+    const changelogChannel = client.channels.cache.get(CHANNELS.changelog);
+    if (!changelogChannel) return;
 
-    const buildEmbed = new EmbedBuilder()
-        .setColor('#0099FF')
-        .setTitle('🔨 Build Update')
-        .setDescription(message)
-        .setTimestamp()
-        .setFooter({ text: 'GG LOOP Build System' });
+    const unlockEmbed = new EmbedBuilder()
+        .setColor('#FFD700')
+        .setTitle(`🎉 Sponsor Tier Unlocked!`)
+        .setDescription(`**${username}** just unlocked **${tier}** tier!`)
+        .addFields(
+            { name: '💎 Points', value: points.toLocaleString(), inline: true },
+            { name: '🏆 Tier', value: tier, inline: true }
+        )
+        .setTimestamp();
 
-    await buildLogChannel.send({ embeds: [buildEmbed] });
-    logActivity('Build Log Posted', message);
+    await changelogChannel.send({ embeds: [unlockEmbed] });
 }
 
-// Monitor GG_LOOP_Public directory for changes (placeholder)
-// TODO: Implement file watcher for GG_LOOP_Public/CHANGELOG.md
-// When file changes, auto-post to #changelog
+// Changelog Monitor
+let lastChangelogContent = '';
 
-// Product Hunt Tracker (placeholder)
-// TODO: Implement Product Hunt API integration
-// Track listing status and post updates to #product-hunt-feed
+function startChangelogMonitor() {
+    const changelogPath = path.join(__dirname, '../GG_LOOP_Public/CHANGELOG.md');
+
+    // Check every 5 minutes
+    setInterval(() => {
+        if (fs.existsSync(changelogPath)) {
+            const content = fs.readFileSync(changelogPath, 'utf-8');
+            if (content !== lastChangelogContent && lastChangelogContent !== '') {
+                // New changelog entry detected
+                const lines = content.split('\n');
+                const latestEntry = lines.slice(0, 10).join('\n');
+                postToChangelog(`New changelog update detected:\n\`\`\`\n${latestEntry}\n\`\`\``);
+            }
+            lastChangelogContent = content;
+        }
+    }, 5 * 60 * 1000); // 5 minutes
+}
 
 // Export functions for external use
 module.exports = {
     postToChangelog,
-    postToBuildLog,
+    postSponsorUnlock,
     logActivity
 };
 
