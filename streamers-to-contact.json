@@ -1,0 +1,71 @@
+{
+  "streamers": [
+    {
+      "username": "EXAMPLE_STREAMER_1",
+      "email": "business@example1.com",
+      "game": "League of Legends",
+      "avgViewers": 500,
+      "twitchUrl": "https://www.twitch.tv/example1",
+      "notes": "Found via TwitchTracker - has business email in panels",
+      "status": "not_contacted"
+    },
+    {
+      "username": "EXAMPLE_STREAMER_2",
+      "email": "contact@example2.com",
+      "game": "VALORANT",
+      "avgViewers": 300,
+      "twitchUrl": "https://www.twitch.tv/example2",
+      "notes": "Active streamer, good community engagement",
+      "status": "contacted",
+      "contactedAt": "2025-12-10T09:43:47.244Z"
+    }
+  ],
+  "contacted": [
+    {
+      "username": "EXAMPLE_STREAMER_2",
+      "email": "contact@example2.com",
+      "game": "VALORANT",
+      "avgViewers": 300,
+      "twitchUrl": "https://www.twitch.tv/example2",
+      "notes": "Active streamer, good community engagement",
+      "status": "contacted",
+      "contactedAt": "2025-12-10T09:43:47.244Z"
+    }
+  ],
+  "responded": [],
+  "partners": [],
+  "metadata": {
+    "created": "2025-12-10T03:15:00Z",
+    "lastUpdated": "2025-12-10T03:15:00Z",
+    "totalStreamers": 2,
+    "totalContacted": 0,
+    "totalResponded": 0,
+    "totalPartners": 0
+  },
+  "instructions": {
+    "howToUse": [
+      "1. Find streamers on TwitchTracker.com",
+      "2. Add their info to the 'streamers' array above",
+      "3. Run STREAMER-OUTREACH.ps1 to find emails automatically",
+      "4. Review and send partnership emails",
+      "5. Move contacted streamers to 'contacted' array",
+      "6. Move responders to 'responded' array",
+      "7. Move partners to 'partners' array"
+    ],
+    "targetCriteria": {
+      "games": [
+        "League of Legends",
+        "VALORANT",
+        "Teamfight Tactics"
+      ],
+      "avgViewers": "100-1,000",
+      "activity": "Streams 3+ times per week",
+      "hasEmail": "Business email in Twitch panels or about section"
+    },
+    "findStreamers": [
+      "https://twitchtracker.com/games/21779/streamers (League)",
+      "https://twitchtracker.com/games/516575/streamers (Valorant)",
+      "https://twitchtracker.com/games/513143/streamers (TFT)"
+    ]
+  }
+}

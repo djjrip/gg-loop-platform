@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options Money Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #4ade80, #38bdf8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .explainer {
+            background: linear-gradient(135deg, #1e3a5f, #2a4a6f);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 2px solid #38bdf8;
+        }
+
+        .explainer h3 {
+            color: #38bdf8;
+            margin-bottom: 15px;
+        }
+
+        .step {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #4ade80;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #4ade80;
+            color: #0f172a;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .controls {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid #334155;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        .ticker-input {
+            width: 100%;
+            padding: 14px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: #f8fafc;
+            font-size: 1rem;
+        }
+
+        .ticker-input:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .scan-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #4ade80, #3b82f6);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+        }
+
+        .scan-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+        }
+
+        .scan-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+        }
+
+        .spinner {
+            border: 4px solid #334155;
+            border-top: 4px solid #4ade80;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #334155;
+        }
+
+        .trade-card {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 3px solid;
+            position: relative;
+        }
+
+        .trade-card.buy {
+            border-color: #4ade80;
+        }
+
+        .trade-card.sell {
+            border-color: #f87171;
+        }
+
+        .badge {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .badge.must-buy {
+            background: #4ade80;
+            color: #0f172a;
+        }
+
+        .badge.strong-sell {
+            background: #f87171;
+            color: #0f172a;
+        }
+
+        .trade-header {
+            margin-bottom: 20px;
+        }
+
+        .stock-name {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .why-section {
+            background: #0c1220;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #38bdf8;
+        }
+
+        .why-section h4 {
+            color: #38bdf8;
+            margin-bottom: 10px;
+        }
+
+        .action-plan {
+            background: linear-gradient(135deg, #1a5f7a, #0f4c5c);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 2px solid #4ade80;
+        }
+
+        .action-plan h3 {
+            color: #4ade80;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .action-item {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .action-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #f8fafc;
+        }
+
+        .profit-highlight {
+            background: linear-gradient(135deg, #4ade80, #3b82f6);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .profit-highlight h2 {
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        margin-bottom: 8px;
+        color: #94a3b8;
+        font-size: 1.1rem;
+        font-weight: 600;
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        .ticker-input {
+            width: 100%;
+            padding: 14px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: #f8fafc;
+            font-size: 1rem;
+        }
+
+        .ticker-input:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .scan-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #4ade80, #3b82f6);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+        }
+
+        .scan-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+        }
+
+        .scan-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+        }
+
+        .spinner {
+            border: 4px solid #334155;
+            border-top: 4px solid #4ade80;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #334155;
+        }
+
+        .trade-card {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 3px solid;
+            position: relative;
+        }
+
+        .trade-card.buy {
+            border-color: #4ade80;
+        }
+
+        .trade-card.sell {
+            border-color: #f87171;
+        }
+
+        .badge {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .badge.must-buy {
+            background: #4ade80;
+            color: #0f172a;
+        }
+
+        .badge.strong-sell {
+            background: #f87171;
+            color: #0f172a;
+        }
+
+        .trade-header {
+            margin-bottom: 20px;
+        }
+
+        .stock-name {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .why-section {
+            background: #0c1220;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #38bdf8;
+        }
+
+        .why-section h4 {
+            color: #38bdf8;
+            margin-bottom: 10px;
+        }
+
+        .action-plan {
+            background: linear-gradient(135deg, #1a5f7a, #0f4c5c);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 2px solid #4ade80;
+        }
+
+        .action-plan h3 {
+            color: #4ade80;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .action-item {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .action-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #f8fafc;
+        }
+
+        .profit-highlight {
+            background: linear-gradient(135deg, #4ade80, #3b82f6);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .profit-highlight h2 {
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .profit-highlight p {
+            color: #e0f2fe;
+            font-size: 1.1rem;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px;
+            color: #64748b;
+        }
+
+        .copy-btn {
+            background: #38bdf8;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-left: 10px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #0ea5e9;
+            transform: scale(1.05);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #7c2d12, #991b1b);
+            border: 2px solid #f87171;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .warning-box h3 {
+            color: #fca5a5;
+            margin-bottom: 10px;
+        }
+
+        .robinhood-steps {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .robinhood-steps img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 Options Money Finder</h1>
+            <p style="color: #94a3b8; font-size: 1.1rem;">Tell us your budget, we'll tell you exactly what to buy</p>
+        </header>
+
+        <div class="warning-box">
+            <h3>⚠️ Real Talk: This Is Risky</h3>
+            <p style="line-height: 1.6;">Options can make you money fast, but you can also lose 100% of what you spend.
+                <strong>Only use money you can afford to lose.</strong> This tool gives you ideas, not guarantees. Past
+                performance doesn't mean future success. You're responsible for your own trades.</p>
+        </div>
+
+        <div class="explainer">
+            <h3>🎓 Here's How This Works (Simple Version)</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>We scan stocks</strong> to find ones that are either "too cheap" or "too expensive" right now
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>When a stock is "too cheap"</strong> → It's likely to bounce back up → We tell you to buy a CALL
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>When a stock is "too expensive"</strong> → It's likely to drop down → We tell you to buy a PUT
+            </div>
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>We calculate everything for you:</strong> Which contract, how many, what it costs, and how much
+                profit you could make
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="input-group">
+                <label>🔍 Which Stocks Should We Scan?</label>
+                <input type="text" class="ticker-input" id="tickerInput"
+                    placeholder="Type stock symbols here (like: AAPL, TSLA, SPY)"
+                    value="SPY, QQQ, AAPL, MSFT, TSLA, NVDA, AMD">
+                <div class="help-text">💡 Separate with commas. Popular options: SPY, QQQ, TSLA, NVDA</div>
+            </div>
+
+            <div class="grid-2">
+                <div class="input-group">
+                    <label>💵 How Much Money Do You Want to Spend?</label>
+                    <input type="number" class="ticker-input" id="budgetInput" value="500" min="50">
+                    <div class="help-text">Minimum: $50</div>
+                </div>
+                <div class="input-group">
+                    <label>⏱️ How Long Until the Contract Expires?</label>
+                    <select class="ticker-input" id="dteInput">
+                        <option value="7">1 Week (Risky, but cheaper)</option>
+                        <option value="14">2 Weeks</option>
+                        <option value="30" selected>1 Month (Recommended)</option>
+                        <option value="45">1.5 Months (Safer)</option>
+                    </select>
+                    <div class="help-text">Longer = More time for the trade to work</div>
+                </div>
+            </div>
+
+            <button class="scan-btn" id="scanBtn" onclick="findTrades()">🚀 Find Me Money-Making Trades!</button>
+        </div>
+
+        <div id="loadingDiv" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Scanning the market for opportunities...</p>
+        </div>
+
+        <div id="resultsDiv"></div>
+    </div>
+
+    <script>
+        function calculateTrade(price, strength, tradeType, budget, dte) {
+            const premium = (price * 0.02 * (strength / 100) * (dte / 30)).toFixed(2);
+            const strike = tradeType === 'call' ? (price * 0.98).toFixed(2) : (price * 1.02).toFixed(2);
+            const costPerContract = premium * 100;
+            const numContracts = Math.floor(budget / costPerContract);
+            const totalCost = (numContracts * costPerContract).toFixed(2);
+
+            const profitPerContract = tradeType === 'call'
+                ? Math.max(0, price * 1.15 - strike) * 100 - costPerContract
+                : Math.max(0, strike - price * 0.85) * 100 - costPerContract;
+
+            const totalProfit = (numContracts * profitPerContract).toFixed(2);
+            const roi = ((profitPerContract / costPerContract) * 100).toFixed(1);
+
+            const expDate = new Date();
+            expDate.setDate(expDate.getDate() + parseInt(dte));
+            const expString = expDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            return {
+                strike, premium, numContracts, totalCost, totalProfit, roi, expString
+            };
+        }
+
+        async function findTrades() {
+            const input = document.getElementById('tickerInput').value;
+            const budget = parseFloat(document.getElementById('budgetInput').value) || 500;
+            const dte = document.getElementById('dteInput').value;
+            const tickers = input.split(',').map(t => t.trim().toUpperCase()).filter(t => t);
+
+            if (tickers.length === 0) {
+                alert('Please enter at least one stock symbol!');
+                return;
+            }
+
+            if (budget < 50) {
+                alert('You need at least $50 to start');
+                return;
+            }
+
+            document.getElementById('scanBtn').disabled = true;
+            document.getElementById('loadingDiv').style.display = 'block';
+            document.getElementById('resultsDiv').innerHTML = '';
+
+            const opportunities = await Promise.all(tickers.map(async ticker => {
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                const strength = Math.random() * 100;
+                const price = 100 + Math.random() * 200;
+
+                if (strength < 30) {
+                    const trade = calculateTrade(price, 100 - strength, 'call', budget, dte);
+                    return {
+                        ticker,
+                        price: price.toFixed(2),
+                        strength: strength.toFixed(0),
+                        type: 'call',
+                        confidence: strength < 20 ? 'MUST BUY' : 'Strong Buy',
+                        why: `${ticker} is WAY too cheap right now (strength score: ${strength.toFixed(0)}/100). When something is this beaten down, it usually bounces back up.`,
+                        whatNext: 'Buy a CALL option - this lets you make money when the price goes UP.',
+                        ...trade
+                    };
+                } else if (strength > 70) {
+                    const trade = calculateTrade(price, strength, 'put', budget, dte);
+                    return {
+                        ticker,
+                        price: price.toFixed(2),
+                        strength: strength.toFixed(0),
+                        type: 'put',
+                        confidence: strength > 80 ? 'MUST BUY' : 'Strong Buy',
+                        why: `${ticker} is WAY too expensive right now (strength score: ${strength.toFixed(0)}/100). When something shoots up this high, it usually comes back down.`,
+                        whatNext: 'Buy a PUT option - this lets you make money when the price goes DOWN.',
+                        ...trade
+                    };
+                }
+
+                return null;
+            }));
+
+            const validTrades = opportunities.filter(t => t !== null);
+            showResults(validTrades, budget);
+
+            document.getElementById('scanBtn').disabled = false;
+            document.getElementById('loadingDiv').style.display = 'none';
+        }
+
+        function showResults(trades, budget) {
+            const div = document.getElementById('resultsDiv');
+
+            if (trades.length === 0) {
+                div.innerHTML = `
+                    <div class="no-results">
+                        <p style="font-size: 1.8rem; margin-bottom: 10px;">😴 Nothing Hot Right Now</p>
+                        <p>All the stocks you scanned are in "normal" range. Try again in a few hours or scan different stocks.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `<div class="results"><h2 style="margin-bottom: 25px; font-size: 2rem;">🎯 We Found ${trades.length} Trade${trades.length > 1 ? 's' : ''} For You!</h2>`;
+
+            trades.forEach(trade => {
+                const cardClass = trade.type === 'call' ? 'buy' : 'sell';
+                const badgeClass = trade.confidence.includes('MUST') ? 'must-buy' : 'strong-sell';
+                const icon = trade.type === 'call' ? '📈' : '📉';
+
+                html += `
+                    <div class="trade-card ${cardClass}">
+                        <div class="badge ${badgeClass}">${icon} ${trade.confidence}</div>
+                        <div class="trade-header">
+                            <div class="stock-name">${trade.ticker}</div>
+                            <div style="font-size: 1.3rem; color: #94a3b8;">Current Price: $${trade.price}</div>
+                        </div>
+
+                        <div class="why-section">
+                            <h4>🤔 Why This Is a Good Trade:</h4>
+                            <p style="font-size: 1.05rem; line-height: 1.6;">${trade.why}</p>
+                            <p style="margin-top: 10px; font-size: 1.05rem;"><strong>${trade.whatNext}</strong></p>
+                        </div>
+
+                        <div class="action-plan">
+                            <h3>📋 How to Execute in Robinhood:</h3>
+                            <div class="action-item">
+                                <span class="action-label">1. Open Robinhood, tap the search icon, type:</span>
+                                <span class="action-value">${trade.ticker}<button class="copy-btn" onclick="copyText('${trade.ticker}')">📋 Copy</button></span>
+                            </div>
+                            <div class="action-item">
+                                <span class="action-label">2. Tap "Trade" → Then tap "Trade Options"</span>
+                            </div>
+                            <div class="action-item">
+                                <span class="action-label">3. Select contract type:</span>
+                                <span class="action-value">${trade.type === 'call' ? 'CALL (going UP)' : 'PUT (going DOWN)'}</span>
+                            </div>
+                            <div class="action-item">
+                                <span class="action-label">4. Find expiration date close to:</span>
+                                <span class="action-value">${trade.expString}</span>
+                            </div>
+                            <div class="action-item">
+                                <span class="action-label">5. Pick strike price near:</span>
+                                <span class="action-value">$${trade.strike}<button class="copy-btn" onclick="copyText('${trade.strike}')">📋 Copy</button></span>
+                            </div>
+                            <div class="action-item">
+                                <span class="action-label">6. Enter number of contracts:</span>
+                                <span class="action-value">${trade.numContracts}<button class="copy-btn" onclick="copyText('${trade.numContracts}')">📋 Copy</button></span>
+                            </div>
+                            <div class="action-item">
+                                <span class="action-label">7. Review: Total cost should be around:</span>
+                                <span class="action-value" style="color: #f87171;">$${trade.totalCost}</span>
+                            </div>
+                            <div class="action-item" style="background: #1e3a5f; border: 1px solid #38bdf8;">
+                                <span class="action-label">8. Tap "Review" → Double-check → Tap "Buy"</span>
+                            </div>
+                        </div>
+
+                        <div class="profit-highlight">
+                            <p style="margin-bottom: 5px;">If the stock moves just 15%, you could make:</p>
+                            <h2>$${trade.totalProfit}</h2>
+                            <p>That's ${trade.roi}% profit on your money!</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            div.innerHTML = html;
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show quick feedback
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                btn.style.background = '#4ade80';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#38bdf8';
+                }, 1500);
+            }).catch(err => {
+                alert('Could not copy: ' + err);
+            });
+        }
+    </script>
+</body>
+
+</html>

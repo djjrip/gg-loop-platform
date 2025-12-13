@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>GG LOOP Dashboard</title>
+  <style>
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+    }
+    @keyframes glow-pulse {
+      0%, 100% { opacity: 0.2; filter: blur(15px); }
+      50% { opacity: 0.5; filter: blur(20px); }
+    }
+    @keyframes loop-rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    body {
+      background: #05060a;
+      color: #f5f5f5;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    /* Lava lamp background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(255, 122, 60, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(255, 122, 60, 0.06) 0%, transparent 40%);
+      animation: loop-rotate 25s linear infinite;
+      pointer-events: none;
+      z-index: -2;
+    }
+    
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 122, 60, 0.12), transparent 70%);
+      filter: blur(50px);
+      animation: float 8s ease-in-out infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
+    .card{
+      background:#111320;
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 12px 24px rgba(0,0,0,0.4), 0 0 30px rgba(255, 122, 60, 0.08);
+      border: 1px solid rgba(255, 122, 60, 0.08);
+      position: relative;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, rgba(255, 122, 60, 0.25), transparent 70%);
+      filter: blur(20px);
+      animation: glow-pulse 4s ease-in-out infinite;
+      pointer-events: none;
+      opacity: 0;
+    }
+    
+    h1 {
+      background: linear-gradient(135deg, #ff7a3c 0%, #ff9c5c 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    h2{margin-top:0;}
+    button{
+      background: linear-gradient(135deg, #ff7a3c 0%, #ff5722 100%);
+      border:none;
+      border-radius:999px;
+      padding:8px 16px;
+      color:white;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:13px;
+      box-shadow: 0 0 15px rgba(255, 122, 60, 0.3);
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      box-shadow: 0 0 25px rgba(255, 122, 60, 0.6);
+      transform: translateY(-2px);
+    }
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th,td{padding:6px 4px;border-bottom:1px solid #22263a;text-align:left;}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#22263a;}
+    .cap-warning{color:#ffb347;font-size:12px;margin-top:4px;}
+    a{color:#ffb347;text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .tier-list li{margin-bottom:4px;}
+  </style>
+</head>
+<body>
+  <h1>GG LOOP — Arcade Dashboard</h1>
+  <p style="opacity:.8;font-size:14px;">This is a demo experience: mock wins, real point logic, free tier by default.</p>
+  <div class="grid">
+    <div class="card">
+      <h2>Your Stats</h2>
+      <div id="userBox">Loading...</div>
+      <button onclick="mockWin()">Log Mock Win (+pts)</button>
+      <div id="capMsg" class="cap-warning"></div>
+      <h3>Redeem Rewards</h3>
+      <div id="rewards"></div>
+      <div id="redeemMsg" class="cap-warning"></div>
+    </div>
+    <div class="card">
+      <h2>Leaderboard (Top 10)</h2>
+      <table>
+        <thead><tr><th>User</th><th>Tier</th><th>Points</th></tr></thead>
+        <tbody id="board"></tbody>
+      </table>
+      <p style="font-size:11px;opacity:.7;">Demo IDs reset when sessions clear. In production, this is tied to Discord/Twitch/Google login.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <h2>Tiers (Demo)</h2>
+    <ul class="tier-list" id="tierList"></ul>
+    <p style="font-size:12px;opacity:.8;">Payment & upgrades are mocked here. In production, PayPal/Stripe webhooks will call <code>/api/set-tier</code>.</p>
+  </div>
+
+<script>
+let currentUser = null;
+let tiers = {};
+
+async function fetchMe(){
+  const r = await fetch('/api/me');
+  const j = await r.json();
+  currentUser = j.user;
+  tiers = j.tiers;
+  renderUser();
+  renderTiers();
+  loadLeaderboard();
+  loadRewards();
+}
+function renderUser(){
+  if(!currentUser) return;
+  const tierInfo = tiers[currentUser.tier];
+  const capLeft = tierInfo.monthly_cap - currentUser.pointsThisMonth;
+  const box = document.getElementById('userBox');
+  box.innerHTML = `
+    <div><strong>ID:</strong> ${currentUser.id}</div>
+    <div><strong>Tier:</strong> <span class="pill">${tierInfo.name}</span></div>
+    <div><strong>Points:</strong> ${currentUser.points}</div>
+    <div><strong>This month:</strong> ${currentUser.pointsThisMonth} / ${tierInfo.monthly_cap}</div>
+    <div><strong>Wins logged:</strong> ${currentUser.winsThisMonth}</div>
+  `;
+  const capMsg = document.getElementById('capMsg');
+  if (capLeft <= 0){
+    capMsg.textContent = `Cap reached for ${tierInfo.name}. In real app you'd see an upgrade link here.`;
+  } else if (capLeft < tierInfo.monthly_cap * 0.2){
+    capMsg.textContent = `You are close to your monthly cap. Remaining: ${capLeft} pts.`;
+  } else {
+    capMsg.textContent = '';
+  }
+}
+async function mockWin(){
+  const r = await fetch('/api/mock-win',{method:'POST'});
+  const j = await r.json();
+  if(j.user) currentUser = j.user;
+  if(j.message) document.getElementById('capMsg').textContent = j.message;
+  renderUser();
+  loadLeaderboard();
+}
+async function loadLeaderboard(){
+  const r = await fetch('/api/leaderboard');
+  const list = await r.json();
+  const body = document.getElementById('board');
+  body.innerHTML = '';
+  list.slice(0,10).forEach((u,i)=>{
+    const tr = document.createElement('tr');
+    const crown = i===0 ? "👑 " : "";
+    tr.innerHTML = `<td>${crown}${u.id}</td><td>${tiers[u.tier]?.name || u.tier}</td><td>${u.points}</td>`;
+    body.appendChild(tr);
+  });
+}
+async function loadRewards(){
+  const r = await fetch('/api/rewards');
+  const rewards = await r.json();
+  const box = document.getElementById('rewards');
+  box.innerHTML = '';
+  for(const id in rewards){
+    const rw = rewards[id];
+    const div = document.createElement('div');
+    div.style.marginBottom = '6px';
+    div.innerHTML = `${rw.label} — <strong>${rw.cost} pts</strong> <button onclick="redeem('${id}')">Redeem</button>`;
+    box.appendChild(div);
+  }
+}
+async function redeem(id){
+  const r = await fetch('/api/redeem',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rewardId:id})});
+  const j = await r.json();
+  if(j.user) currentUser = j.user;
+  renderUser();
+  document.getElementById('redeemMsg').textContent = j.message || '';
+}
+function renderTiers(){
+  const ul = document.getElementById('tierList');
+  ul.innerHTML = '';
+  Object.entries(tiers).forEach(([id,t])=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${t.name}</strong> — cap ${t.monthly_cap} pts/mo, ${t.points_per_win} pts per win. <span style="opacity:.7;font-size:11px;">${t.description}</span>`;
+    ul.appendChild(li);
+  });
+}
+fetchMe();
+</script>
+</body>
+</html>

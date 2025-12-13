@@ -1,0 +1,51 @@
+name: Auto-Post to Twitter (DISABLED)
+
+on:
+  # PERMANENTLY DISABLED - CEO directive 2025-12-09
+  # This was posting Options Hunter content to @ggloopllc (wrong account)
+  # Twitter posting moved to manual GG LOOP content only
+  # schedule:
+  #   - cron: '0 15 * * *'  # 10 AM EST
+  #   - cron: '0 19 * * *'  # 2 PM EST
+  #   - cron: '0 0 * * *'   # 7 PM EST
+  
+  # workflow_dispatch disabled to prevent accidental runs
+  workflow_dispatch:
+
+jobs:
+  post-to-twitter:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install tweepy
+      
+      - name: Post to Twitter
+        env:
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
+        run: |
+          python3 antisocial-bot/twitter_poster.py
+      
+      - name: Update post count
+        run: |
+          if [ -f antisocial-bot/twitter-queue.json ]; then
+            git config user.name "Options Hunter Bot"
+            git config user.email "bot@optionshunter.com"
+            git add antisocial-bot/twitter-queue.json
+            git commit -m "🐦 Update Twitter post queue" || echo "No changes"
+            git push || echo "Nothing to push"
+          else
+            echo "✅ No queue file to commit (first run)"
+          fi

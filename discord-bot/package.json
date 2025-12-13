@@ -1,0 +1,21 @@
+{
+  "name": "gg-loop-discord-bot",
+  "version": "1.0.0",
+  "description": "GG LOOP Transparency Bot - Railway Deployment",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "node bot.js"
+  },
+  "keywords": ["discord", "bot", "gg-loop", "transparency"],
+  "author": "GG LOOP LLC",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

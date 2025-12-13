@@ -1,0 +1,30 @@
+{
+  "tiers": {
+    "free":  { "name": "Free",  "monthly_cap": 250,  "points_per_win": 10, "description": "Try the loop with no payment." },
+    "basic": { "name": "Basic", "monthly_cap": 500,  "points_per_win": 15, "description": "Casual grinder tier." },
+    "pro":   { "name": "Pro",   "monthly_cap": 1200, "points_per_win": 20, "description": "Serious ranked climbers." },
+    "elite": { "name": "Elite", "monthly_cap": 2500, "points_per_win": 25, "description": "Hardcore no-lifer gods." }
+  },
+  "rewards_catalog": {
+    "badge_gg": {
+      "label": "Exclusive GG LOOP Badge",
+      "cost": 100,
+      "type": "digital"
+    },
+    "role_pro": {
+      "label": "Discord Pro Role (Mock)",
+      "cost": 300,
+      "type": "digital"
+    },
+    "gift_5": {
+      "label": "$5 Gift Card (Mock)",
+      "cost": 500,
+      "type": "manual"
+    }
+  },
+  "discord_webhook": "",
+  "sponsor_banner": "Powered by GG LOOP — Play. Earn. Loop.",
+  "economy": {
+    "points_per_dollar": 100
+  }
+}

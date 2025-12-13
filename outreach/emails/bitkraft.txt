@@ -1,0 +1,66 @@
+TO: pitch@bitkraft.vc
+SUBJECT: Pre-Seed Gaming Rewards Platform - GG LOOP
+
+Dear BITKRAFT Team,
+
+I'm Jayson Quindao, founder of GG LOOP LLC - a gaming rewards platform that's bringing the "NIL model" to competitive gamers.
+
+**The Problem:**
+Millions of competitive gamers grind daily with zero financial return. Traditional gaming rewards are either crypto-based (volatile, complex) or ad-driven (low engagement, bot traffic). Brands struggle to authentically connect with gaming audiences.
+
+**Our Solution:**
+GG LOOP lets gamers "sign" with sponsors like athletes do. Players choose a brand (Nike, Logitech, etc.), earn verified points through competitive gameplay, and redeem them for that brand's products. It's sponsorship at scale.
+
+**Traction & Status:**
+- Stage: Pre-seed, MVP complete, pre-launch
+- Integration: Riot Games API (League of Legends, VALORANT, TFT)
+- Verification: 4-layer system (automated, proof, fraud detection, manual review)
+- Monetization: Subscription tiers ($5-$25/month) + brand partnerships
+- Current Users: 0 (transparent pre-launch status)
+
+**What's Built:**
+✅ Full platform (React, Node.js, PostgreSQL)
+✅ Riot API integration with match verification
+✅ Fraud detection engine (6 detection types, risk scoring)
+✅ Sponsor gating system (10K+ verified points required)
+✅ Points engine with gameplay-based calculations
+✅ 4-tier subscription model with monthly allocations
+
+**10-Level Roadmap:**
+- Level 4 (Current): Verification backbone
+- Level 5: Desktop verifier app
+- Level 6: Mobile app
+- Level 7: Reward economy engine
+- Level 8: Creator tools
+- Level 9: GG LOOP Passport
+- Level 10: Marketplace & GG LOOP OS
+
+**Market Opportunity:**
+- 3B+ gamers worldwide
+- Esports audience: 500M+
+- Gaming market: $200B+ annually
+- Sponsorship gap: Gamers want brand deals, brands want authentic engagement
+
+**Why BITKRAFT:**
+Your portfolio (Discord, FaZe Clan, Overwolf) shows deep gaming expertise. We're building infrastructure that could integrate with your existing investments and unlock new revenue streams for competitive gaming.
+
+**Ask:**
+- Pre-seed funding discussion
+- Strategic guidance on gaming partnerships
+- Intro to brand partners in your network
+
+**Transparency:**
+We're pre-revenue with zero users. Our MVP is complete and verified. We're not pitching vaporware - everything mentioned is built and working. Beta launch targeted for Q1 2026.
+
+**Next Steps:**
+I'd love to share our pitch deck and schedule a brief call to discuss how GG LOOP fits into the future of gaming monetization.
+
+Best regards,
+Jayson Quindao
+Founder & CEO, GG LOOP LLC
+Email: jayson@ggloop.io
+Website: ggloop.io
+Discord: discord.gg/Ny7ATHrh
+
+---
+**DO NOT SEND - DRAFT ONLY - AWAITING CEO APPROVAL**

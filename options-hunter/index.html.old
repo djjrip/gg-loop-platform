@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 MAKE MONEY - Just Hit the Button</title>
+    <style>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Options Hunter</title>
+          <style>
+            *{box-sizing:border-box} body{margin:0;padding:24px;background:#0f172a;color:#e5e7eb;font-family:system-ui, -apple-system, Segoe UI, Roboto}
+            .wrap{max-width:900px;margin:0 auto}
+            h1{margin:0 0 8px;font-size:40px;color:#fff}
+            .disclaimer{background:#1e293b;border:2px solid #334155;border-radius:10px;padding:14px;margin:8px 0 20px;color:#eab308;font-weight:700}
+            .panel{background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;margin-bottom:16px}
+            label{display:block;margin:0 0 6px;color:#93c5fd;font-weight:600}
+            input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0b1220;color:#e5e7eb}
+            .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+            .btn{margin-top:12px;width:100%;padding:18px;border-radius:12px;border:2px solid #22c55e;background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;font-size:18px;font-weight:800;cursor:pointer}
+            .note{font-size:12px;color:#9ca3af;margin-top:6px}
+            .card{border:3px solid #374151;border-radius:12px;padding:16px;margin:12px 0;background:#0b1220}
+            .card.call{border-color:#10b981}
+            .card.put{border-color:#ef4444}
+            .title{font-size:18px;font-weight:800;margin-bottom:8px}
+            .kv{display:grid;grid-template-columns:180px 1fr;gap:6px;margin:4px 0}
+            .kv .k{color:#9ca3af}
+            .kv .v{color:#e5e7eb}
+            .source{margin-top:8px;color:#93c5fd;font-size:12px}
+            .unavail{background:#312e81;border:2px solid #60a5fa;border-radius:12px;padding:16px;margin-top:12px}
+          </style>
+        </head>
+        <body>
+          <div class="wrap">
+            <h1>Options Hunter</h1>
+            <div class="disclaimer">⚠️ This is NOT financial advice. Options are VERY risky. This is a learning tool only.</div>
+
+            <div class="panel">
+              <div class="row">
+                <div>
+                  <label>Budget</label>
+                  <input id="budget" type="number" min="1" step="1" placeholder="Enter any amount, even $1" value="100" />
+                  <div class="note">We only show REAL contracts priced at or under your budget.</div>
+                </div>
+                <div>
+                  <label>Expiration</label>
+                  <input id="expiry" type="date" />
+                  <div class="note">Pick a Friday expiry to see more contracts.</div>
+                </div>
+              </div>
+              <button class="btn" id="scanBtn">🚀 Hunt for Trades</button>
+            </div>
+
+            <div id="results"></div>
+          </div>
+
+          <script>
+            function setDefaultExpiry(){
+              const d=new Date();
+              // next Friday
+              const day=d.getDay();
+              const diff=(5-day+7)%7||7; // at least next
+              d.setDate(d.getDate()+diff);
+              const iso=d.toISOString().slice(0,10);
+              document.getElementById('expiry').value=iso;
+            }
+            setDefaultExpiry();
+
+            document.getElementById('scanBtn').addEventListener('click', async ()=>{
+              const budget=parseFloat(document.getElementById('budget').value||'0');
+              const expiry=document.getElementById('expiry').value;
+              const results=document.getElementById('results');
+              results.innerHTML='<div class="panel">Scanning live markets…</div>';
+              if(!budget||!expiry){results.innerHTML='<div class="unavail">Please enter budget and choose expiration.</div>';return}
+              try{
+                const qs=new URLSearchParams({budget:String(budget),expiry});
+                const resp=await fetch('/api/scan?'+qs.toString());
+                const data=await resp.json();
+                if(!resp.ok){
+                  results.innerHTML='<div class="unavail"><div class="title">LIVE DATA UNAVAILABLE</div><div>The data provider is rate limited or offline. No prices are being simulated. Please wait or add another API key.</div></div>';
+                  return;
+                }
+                if(!data.results || data.results.length===0){
+                  results.innerHTML=`<div class="unavail"><div class="title">No contracts under your budget</div><div>${data.message||'Try a slightly higher budget or a different expiration.'}</div></div>`;
+                  return;
+                }
+                                const roles=['best_overall','cheapest','highest_probability'];
+                                const roleTitles={
+                                    best_overall:'Best Overall',
+                                    cheapest:'Cheapest',
+                                    highest_probability:'Highest Probability'
+                                };
+                                let cards='';
+                                for(const role of roles){
+                                    const r=(data.results||[]).find(x=>x.role===role);
+                                    if(!r || r.available===false){
+                                        cards+=`
+                                            <div class="card unavail">
+                                                <div class="title">${roleTitles[role]}</div>
+                                                <div>No contract fits this category with live data.</div>
+                                            </div>
+                                        `;
+                                        continue;
+                                    }
+                                    const c=r.contract||{};
+                                    const side=((c.type||'call').toLowerCase()==='put')?'put':'call';
+                                    const cost = c.mid? (c.mid*100).toFixed(2) : '—';
+                                    const strike = (typeof c.strike==='number')? ('$'+Number(c.strike).toFixed(2)) : '—';
+                                    const exp = c.expiration || document.getElementById('expiry').value;
+                                    const breakeven = (r.metrics&&r.metrics.breakeven)? ('$'+Number(r.metrics.breakeven).toFixed(2)) : 'N/A';
+                                    const profit10 = r.metrics? formatMoney(r.metrics.profit_10) : 'N/A';
+                                    const profit5 = r.metrics? formatMoney(r.metrics.profit_5) : 'N/A';
+                                    const expMove = (r.metrics&&r.metrics.expected_move)? ('$'+Number(r.metrics.expected_move).toFixed(2)) : 'N/A';
+                                    const why = r.simple_reason || '';
+                                    const priceSrc = r.price_source? `Live price from: ${r.price_source}` : '';
+                                    const optSrc = r.options_source? `Options source: ${r.options_source}` : 'Options source: N/A';
+                                    const ts = r.timestamp || '';
+                                    cards+=`
+                                        <div class="card ${side}">
+                                            <div class="title">${roleTitles[role]}</div>
+                                            <div class="kv"><div class="k">Stock:</div><div class="v">${r.ticker}</div></div>
+                                            <div class="kv"><div class="k">Call or Put:</div><div class="v" style="font-weight:800;">${(c.type||'').toString().toUpperCase()||'—'}</div></div>
+                                            <div class="kv"><div class="k">Price Now:</div><div class="v">$${Number(r.spot||0).toFixed(2)}</div></div>
+                                            <div class="kv"><div class="k">Strike:</div><div class="v">${strike}</div></div>
+                                            <div class="kv"><div class="k">Expiration:</div><div class="v">${exp}</div></div>
+                                            <div class="kv"><div class="k">Cost to Buy 1 Contract:</div><div class="v">${cost==='—'?'—':('$'+cost)}</div></div>
+                                            <div class="kv"><div class="k">Breakeven:</div><div class="v">${breakeven}</div></div>
+                                            <div class="kv"><div class="k">Profit @ +10%:</div><div class="v">${profit10}</div></div>
+                                            <div class="kv"><div class="k">Profit @ +5%:</div><div class="v">${profit5}</div></div>
+                                            <div class="kv"><div class="k">Expected Move (IV):</div><div class="v">${expMove}</div></div>
+                                            <div class="kv"><div class="k">Why this showed up:</div><div class="v">${why}</div></div>
+                                            <div class="source">${priceSrc}${ts?` at ${ts}`:''} • ${optSrc}</div>
+                                        </div>
+                                    `;
+                                }
+                                results.innerHTML = `<div class="panel"><div style="font-weight:800;color:#10b981;margin-bottom:8px;">Top ${roles.length} Opportunities</div>${cards}</div>`;
+              }catch(e){
+                console.error(e);
+                results.innerHTML='<div class="unavail"><div class="title">LIVE DATA UNAVAILABLE</div><div>Request failed. No numbers are being simulated. Please retry.</div></div>';
+              }
+            });
+
+            function formatMoney(n){
+              const v = Number(n||0).toFixed(2);
+              return (Number(n)>=0?'+$':'-$') + Math.abs(Number(v)).toFixed(2);
+            }
+          </script>
+        </body>
+        </html>
+                    bid: option.bidPrice.toFixed(2),
+                    ask: option.askPrice.toFixed(2),
+                    numContracts: option.num,
+                    totalCost: option.total,
+                    expiration: expDate,
+                    strike: option.strike,
+                    breakeven: breakeven.toFixed(2),
+                    profit: totalProfit.toFixed(2),
+                    roi: roi.toFixed(1),
+                    riskScore: riskScore.toFixed(0),
+                    bestFor: budgetStrategy.description,
+                    profitPotential: roi > 100 ? 'Very High' : (roi > 50 ? 'High' : 'Moderate')
+                };
+            } catch (e) {
+                console.error(`Error scanning ${ticker}:`, e);
+                return null;
+            }
+        }
+
+        async function findBestOptionFromChain(chain, type, budget, currentPrice, budgetStrategy) {
+            try {
+                if (!Array.isArray(chain) || chain.length === 0) return null;
+                const [minStrike, maxStrike] = [
+                    currentPrice * budgetStrategy.strikeMultiplier[type][0],
+                    currentPrice * budgetStrategy.strikeMultiplier[type][1]
+                ];
+
+                const flattened = [];
+                for (const row of chain) {
+                    const strike = row.strike;
+                    if (strike < minStrike || strike > maxStrike) continue;
+                    const leg = type === 'call' ? row.call : row.put;
+                    if (!leg) continue;
+                    const bid = leg.bid || leg.premium * 0.98;
+                    const ask = leg.ask || leg.premium * 1.02;
+                    const mid = (bid + ask) / 2;
+                    if (mid <= 0) continue;
+                    flattened.push({ strike, bidPrice: bid, askPrice: ask, premium: mid });
+                }
+
+                if (flattened.length === 0) return null;
+                // For calls: prefer higher strike within range (cheaper). For puts: prefer lower strike (cheaper)
+                flattened.sort((a, b) => type === 'call' ? b.strike - a.strike : a.strike - b.strike);
+
+                for (const c of flattened.slice(0, 15)) {
+                    const costPerContract = c.premium * 100;
+                    const numContracts = Math.floor(budget / costPerContract);
+                    if (numContracts > 0 && numContracts <= budgetStrategy.maxContracts) {
+                        return { strike: c.strike, premium: c.premium, bidPrice: c.bidPrice, askPrice: c.askPrice, num: numContracts, total: (numContracts * costPerContract).toFixed(2) };
+                    }
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // ==================== ROBINHOOD INSTRUCTIONS ====================
+        function generateRobinhoodSteps(ticker, strike, expiration, type) {
+            const typeUpper = type.toUpperCase();
+            const emoji = type === 'call' ? '📈' : '📉';
+            const direction = type === 'call' ? 'GO UP' : 'GO DOWN';
+            const exampleProfit = type === 'call' ? 'stock goes up $10' : 'stock drops $10';
+            
+            return `
+                <div class="step"><span class="step-number">1</span>Open the Robinhood app on your phone</div>
+                <div class="step"><span class="step-number">2</span>Search for "<strong>${ticker}</strong>" at the top</div>
+                <div class="step"><span class="step-number">3</span>Tap the stock, then tap <strong>"Trade"</strong></div>
+                <div class="step"><span class="step-number">4</span>Tap <strong>"Trade Options"</strong> (not regular stock)</div>
+                <div class="step"><span class="step-number">5</span>Pick <strong>"${typeUpper}"</strong> ${emoji} - this means you think the stock will <strong>${direction}</strong></div>
+                <div class="step"><span class="step-number">6</span>Pick the date closest to <strong>${expiration}</strong> (that's when the bet expires)</div>
+                <div class="step"><span class="step-number">7</span>Pick the price <strong>$${strike.toFixed(2)}</strong> (the "strike price")</div>
+                <div class="step"><span class="step-number">8</span>It'll show you how much 1 contract costs - check if it matches what we said above</div>
+                <div class="step"><span class="step-number">9</span>Type how many contracts you want (1 contract = 100 shares worth of bet)</div>
+                <div class="step"><span class="step-number">10</span>Change order type to <strong>"Limit"</strong> and use the middle price (between bid/ask)</div>
+                <div class="step"><span class="step-number">11</span>Review: Make sure total cost fits your budget</div>
+                <div class="step"><span class="step-number">12</span>Swipe up to confirm and <strong>BUY</strong></div>
+                <div class="step"><span class="step-number">13</span>You make money if ${exampleProfit} before ${expiration}. Watch it daily! 📱💰</div>
+            `;
+        }
+
+        // ==================== UI RENDERING ====================
+        function renderTrade(trade, rank) {
+            const typeClass = trade.signal.toLowerCase();
+            const confidenceClass = trade.confidence >= 80 ? 'high' : (trade.confidence >= 65 ? 'medium' : 'low');
+            const confidenceLabel = trade.confidence >= 80 ? `${trade.confidence}% High` : (trade.confidence >= 65 ? `${trade.confidence}% Medium` : `${trade.confidence}% Moderate`);
+            const arrow = typeClass === 'call' ? '📈' : '📉';
+            const direction = typeClass === 'call' ? 'UP' : 'DOWN';
+            
+            return `
+                <div class="trade-card ${typeClass}">
+                    <div class="rank-badge">#${rank}</div>
+                    <div class="confidence-badge confidence-${confidenceClass}">${confidenceLabel}</div>
+                    
+                    <div class="trade-header ${typeClass}">
+                        <h3>${arrow} BUY ${trade.signal}</h3>
+                        <p style="font-size: 1.1rem;"><strong>${trade.ticker}</strong> - ${trade.signalText}</p>
+                        <p style="color: #fbbf24; font-size: 0.95rem; margin-top: 8px;">
+                            ${typeClass === 'call' ? '🚀 Betting the stock goes UP' : '📉 Betting the stock goes DOWN'}
+                        </p>
+                    </div>
+                    
+                    <div class="trade-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">Stock Price Now</div>
+                            <div class="meta-value" style="color: #10b981;">$${trade.price}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Total Cost</div>
+                            <div class="meta-value" style="color: #fbbf24; font-size: 1.2rem; font-weight: bold;">$${trade.totalCost}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">If Stock Moves 10%</div>
+                            <div class="meta-value" style="color: #10b981;">${trade.profitPotential}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Return %</div>
+                            <div class="meta-value" style="color: #fbbf24; font-weight: bold;">${trade.roi}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="contract-details">
+                        <h4 style="color: #38bdf8; margin-bottom: 15px;">📋 What You're Actually Buying</h4>
+                        <div class="detail-row">
+                            <span class="detail-label">The Contract Name</span>
+                            <span class="detail-value" style="font-size: 0.9rem;">${trade.contract}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Price Per Contract</span>
+                            <span class="detail-value">$${trade.premium}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">How Many to Buy</span>
+                            <span class="detail-value">${trade.numContracts} contract(s)</span>
+                        </div>
+                        </div>
+                        <div class="detail-row" style="background: #0a1929; padding: 12px; border-radius: 6px; margin-top: 10px;">
+                            <span class="detail-label" style="color: #fbbf24; font-weight: bold;">TOTAL COST</span>
+                            <span class="detail-value" style="color: #ef4444; font-size: 1.4rem;">$${trade.totalCost}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="budget-tag">${trade.bestFor}</div>
+                    
+                    <div class="profit-section">
+                        <h4>💰 Expected Profit (10% Move ${direction})</h4>
+                        <div class="profit-amount">+$${trade.profit}</div>
+                        <div class="roi">${trade.roi}% Return on Investment</div>
+                        <p style="font-size: 0.9rem; margin-top: 10px; color: #e0f2fe;">Based on ${trade.ticker} moving 10% in favorable direction</p>
+                    </div>
+                    
+                    <div class="risk-score">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: #94a3b8;">Risk/Reward Score</span>
+                            <span style="color: #10b981; font-weight: bold;">${trade.riskScore}/100</span>
+                        </div>
+                        <div class="risk-score-bar">
+                            <div class="risk-score-fill" style="width: ${trade.riskScore}%;"></div>
+                        </div>
+                        <p style="color: #64748b; font-size: 0.85rem; margin-top: 8px;">
+                            Considers spread quality, profit potential, and market conditions
+                        </p>
+                    </div>
+                    
+                    <div class="instructions">
+                        <h4>📱 Copy These EXACT Steps in Robinhood</h4>
+                        ${generateRobinhoodSteps(trade.ticker, trade.strike, trade.expiration, typeClass)}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==================== MAIN SCAN FUNCTION ====================
+        async function scanMarket() {
+            const budget = parseFloat(document.getElementById('budget').value);
+            const dte = parseInt(document.getElementById('dte').value);
+
+            if (!budget || budget <= 0) {
+                alert('⚠️ Please enter a valid budget amount');
+                return;
+            }
+
+            console.log(`🚀 Starting scan: Budget=$${budget}, DTE=${dte}d`);
+
+            // UI state
+            document.getElementById('scanBtn').disabled = true;
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('results').innerHTML = '';
+
+            const budgetStrategy = getBudgetStrategy(budget);
+            console.log(`💰 Budget strategy: ${budgetStrategy.mode} (${budgetStrategy.description})`);
+            
+            const allTrades = [];
+
+            try {
+                console.log(`📊 Scanning ${STOCKS.length} optionable stocks...`);
+                
+                // Scan all tickers
+                const funMessages = [
+                    'Looking for money plays...',
+                    'Checking which stocks about to pop...',
+                    'Finding opportunities...',
+                    'Hunting for profits...',
+                    'Scanning the market...',
+                    'Almost there...',
+                    'Got some good ones...'
+                ];
+                
+                for (let i = 0; i < STOCKS.length; i++) {
+                    const ticker = STOCKS[i];
+                    const progress = ((i + 1) / STOCKS.length * 100).toFixed(0);
+                    const messageIndex = Math.floor(i / (STOCKS.length / funMessages.length));
+                    
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    document.getElementById('loadingText').textContent = `${funMessages[Math.min(messageIndex, funMessages.length - 1)]} ${ticker} (${allTrades.length} found so far)`;
+                    
+                    const trade = await scanMarketLive(ticker, budget, dte, budgetStrategy);
+                    if (trade) {
+                        console.log(`✅ Found trade: ${ticker} ${trade.signal} @ $${trade.premium}`);
+                        allTrades.push(trade);
+                    } else {
+                        console.log(`⊘ Skipped: ${ticker}`);
+                    }
+                    
+                    // Stop early if we have enough GREAT trades
+                    if (allTrades.length >= 15 && i >= 20) {
+                        console.log(`✓ Found ${allTrades.length} trades, stopping early`);
+                        break;
+                    }
+                    
+                    // Fast scanning - no rate limits with yfinance!
+                    await new Promise(r => setTimeout(r, 500));
+                }
+
+                console.log(`📈 Found ${allTrades.length} total trades`);
+                
+                // GUARANTEE 3 TRADES: Sort and categorize
+                allTrades.sort((a, b) => {
+                    // Primary sort: confidence
+                    if (b.confidence !== a.confidence) {
+                        return b.confidence - a.confidence;
+                    }
+                    // Secondary sort: ROI
+                    return parseFloat(b.roi) - parseFloat(a.roi);
+                });
+
+                // Select top 3 diverse opportunities
+                const top3 = selectTop3Trades(allTrades, budget);
+                console.log(`🎯 Selected top ${top3.length} trades`);
+
+                // Render results
+                if (top3.length === 0) {
+                    // ULTIMATE FALLBACK: Show detailed error
+                    console.error('❌ NO TRADES FOUND - This should never happen!');
+                    document.getElementById('results').innerHTML = `
+                        <div style="background: #1e293b; padding: 40px; border-radius: 12px; text-align: center;">
+                            <h2 style="color: #ef4444; margin-bottom: 15px;">⚠️ API Connection Issue</h2>
+                            <p style="color: #94a3b8; margin-bottom: 15px;">Unable to retrieve market data. This could be due to:</p>
+                            <ul style="color: #64748b; text-align: left; max-width: 400px; margin: 0 auto 20px;">
+                                <li>Network firewall or CORS restrictions</li>
+                                <li>API rate limits exceeded</li>
+                                <li>Market data provider outage</li>
+                            </ul>
+                            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">Check browser console (F12) for detailed error logs.</p>
+                            <button onclick="scanMarket()" style="margin-top: 20px; padding: 12px 24px; background: #10b981; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer;">🔄 Retry Scan</button>
+                        </div>
+                    `;
+                } else {
+                    let html = `
+                        <div class="results-header">
+                            <h2>🎯 Your Top ${top3.length} Opportunities</h2>
+                            <p>Customized for your $${budget.toFixed(2)} budget • ${budgetStrategy.description}</p>
+                        </div>
+                    `;
+                    top3.forEach((trade, i) => {
+                        html += renderTrade(trade, i + 1);
+                    });
+                    document.getElementById('results').innerHTML = html;
+                }
+
+                document.getElementById('results').classList.add('active');
+            } catch (error) {
+                console.error('Scan error:', error);
+                document.getElementById('results').innerHTML = `
+                    <div style="background: #1e293b; padding: 40px; border-radius: 12px; text-align: center;">
+                        <h2 style="color: #ef4444; margin-bottom: 15px;">❌ Scan Error</h2>
+                        <p style="color: #94a3b8;">${error.message}</p>
+                    </div>
+                `;
+                document.getElementById('results').classList.add('active');
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('scanBtn').disabled = false;
+            }
+        }
+
+        // ==================== TOP 3 SELECTION ALGORITHM ====================
+        function selectTop3Trades(trades, budget) {
+            if (trades.length === 0) return [];
+            if (trades.length <= 3) return trades;
+
+            const selected = [];
+            
+            // 1. Best overall (highest confidence + ROI)
+            selected.push(trades[0]);
+            
+            // 2. Cheapest affordable (lowest cost but still good quality)
+            const cheapest = trades
+                .filter(t => !selected.includes(t) && parseFloat(t.totalCost) < budget * 0.5)
+                .sort((a, b) => parseFloat(a.totalCost) - parseFloat(b.totalCost))[0];
+            if (cheapest) selected.push(cheapest);
+            
+            // 3. Highest ROI potential (aggressive but higher reward)
+            const highestROI = trades
+                .filter(t => !selected.includes(t))
+                .sort((a, b) => parseFloat(b.roi) - parseFloat(a.roi))[0];
+            if (highestROI) selected.push(highestROI);
+            
+            // Fill remaining slots if needed
+            while (selected.length < 3 && selected.length < trades.length) {
+                const next = trades.find(t => !selected.includes(t));
+                if (next) selected.push(next);
+                else break;
+            }
+            
+            return selected;
+        }
+
+        // ==================== INIT ====================
+        window.addEventListener('load', () => {
+            console.log('✅ Options Hunter Pro - Guaranteed Opportunities Mode');
+            console.log('📊 Always returns 3 trades for ANY budget');
+            console.log(`🌐 Using Same-Origin API at ${window.location.origin}`);
+            console.log('💡 TIP: Open Console (F12) to see detailed scan logs');
+            
+            // Test server connection
+            fetch(`/api/summary?ticker=SPY&expiry=${getNextFriday(14)}`)
+                .then(r => r.json())
+                .then(d => console.log('✅ Server test OK, SPY price:', d.currentPrice))
+                .catch(e => console.error('❌ Proxy test failed:', e));
+        });
+    </script>
+</body>
+</html>

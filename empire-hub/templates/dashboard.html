@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚔️ EMPIRE COMMAND CENTER</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto+Mono:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --predator-green: #00ff41;
+            --dark-bg: #0a0e0f;
+            --tactical-gray: #1a1f20;
+            --warning: #ff6b00;
+            --danger: #ff0040;
+            --success: #00ff41;
+            --info: #00d9ff;
+        }
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background: var(--dark-bg);
+            color: #fff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Tactical Grid Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+            animation: gridPulse 4s ease-in-out infinite;
+        }
+
+        /* Scanline Effect */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg,
+                    rgba(0, 255, 65, 0.03),
+                    rgba(0, 255, 65, 0.03) 1px,
+                    transparent 1px,
+                    transparent 2px);
+            pointer-events: none;
+            z-index: 1;
+            animation: scanline 8s linear infinite;
+        }
+
+        @keyframes gridPulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes scanline {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(50px);
+            }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Header */
+        header {
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--predator-green);
+            padding-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--predator-green);
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.8),
+                0 0 40px rgba(0, 255, 65, 0.4);
+            letter-spacing: 3px;
+            animation: titleGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 20px rgba(0, 255, 65, 0.8), 0 0 40px rgba(0, 255, 65, 0.4);
+            }
+
+            50% {
+                text-shadow: 0 0 30px rgba(0, 255, 65, 1), 0 0 60px rgba(0, 255, 65, 0.6);
+            }
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .system-time {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--predator-green);
+            letter-spacing: 2px;
+        }
+
+        .system-health {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .health-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* Quick Access Panel */
+        .quick-access {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .quick-link {
+            background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.05) 100%);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .quick-link:hover::before {
+            left: 100%;
+        }
+
+        .quick-link:hover {
+            border-color: var(--predator-green);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .quick-link-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-link-name {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .quick-link-type {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        /* Service Grid */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .service-card {
+            background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.03) 100%);
+            border: 2px solid rgba(0, 255, 65, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--predator-green), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .service-card:hover::before {
+            opacity: 1;
+        }
+
+        .service-card:hover {
+            border-color: var(--predator-green);
+            box-shadow: 0 5px 30px rgba(0, 255, 65, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .service-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .status-healthy {
+            background: rgba(0, 255, 65, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .status-degraded {
+            background: rgba(255, 107, 0, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+            box-shadow: 0 0 10px rgba(255, 107, 0, 0.3);
+        }
+
+        .status-down {
+            background: rgba(255, 0, 64, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            box-shadow: 0 0 10px rgba(255, 0, 64, 0.3);
+        }
+
+        .service-type {
+            color: #888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .service-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .service-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--predator-green);
+            border-radius: 6px;
+            color: var(--predator-green);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .service-link:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+        }
+
+        /* Metrics Section */
+        .metrics-section {
+            background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.03) 100%);
+            border: 2px solid rgba(0, 255, 65, 0.2);
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.4;
+        }
+        }
+
+        /* Quick Access Panel */
+        .quick-access {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .quick-link {
+            background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.05) 100%);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .quick-link:hover::before {
+            left: 100%;
+        }
+
+        .quick-link:hover {
+            border-color: var(--predator-green);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .quick-link-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-link-name {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .quick-link-type {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        /* Service Grid */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .service-card {
+            background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.03) 100%);
+            border: 2px solid rgba(0, 255, 65, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--predator-green), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .service-card:hover::before {
+            opacity: 1;
+        }
+
+        .service-card:hover {
+            border-color: var(--predator-green);
+            box-shadow: 0 5px 30px rgba(0, 255, 65, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .service-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .status-healthy {
+            background: rgba(0, 255, 65, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .status-degraded {
+            background: rgba(255, 107, 0, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+            box-shadow: 0 0 10px rgba(255, 107, 0, 0.3);
+        }
+
+        .status-down {
+            background: rgba(255, 0, 64, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            box-shadow: 0 0 10px rgba(255, 0, 64, 0.3);
+        }
+
+        .service-type {
+            color: #888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .service-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .service-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--predator-green);
+            border-radius: 6px;
+            color: var(--predator-green);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .service-link:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+        }
+
+        /* Metrics Section */
+        .metrics-section {
+            background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.03) 100%);
+            border: 2px solid rgba(0, 255, 65, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* Quick Access Panel */
+        .quick-access {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .quick-link {
+            background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.05) 100%);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .quick-link:hover::before {
+            left: 100%;
+        }
+
+        .quick-link:hover {
+            border-color: var(--predator-green);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .quick-link-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-link-name {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .quick-link-type {
+            font-size: 0.75rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        /* Service Grid */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .service-card {
+            background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.03) 100%);
+            border: 2px solid rgba(0, 255, 65, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--predator-green), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .service-card:hover::before {
+            opacity: 1;
+        }
+
+        .service-card:hover {
+            border-color: var(--predator-green);
+            box-shadow: 0 5px 30px rgba(0, 255, 65, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .service-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .status-healthy {
+            background: rgba(0, 255, 65, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .status-degraded {
+            background: rgba(255, 107, 0, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+            box-shadow: 0 0 10px rgba(255, 107, 0, 0.3);
+        }
+
+        .status-down {
+            background: rgba(255, 0, 64, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            box-shadow: 0 0 10px rgba(255, 0, 64, 0.3);
+        }
+
+        .service-type {
+            color: #888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .service-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .service-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--predator-green);
+            border-radius: 6px;
+            color: var(--predator-green);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .service-link:hover {
+            background: rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+        }
+
+        /* Metrics Section */
+        .metrics-section {
+            background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.03) 100%);
+            border: 2px solid rgba(0, 255, 65, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        < !-- INTEL FEED SECTION --><div class="intel-section" style="margin-bottom: 2rem; background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.03) 100%); border: 2px solid rgba(0, 255, 65, 0.2); border-radius: 12px; padding: 2rem;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;"><h2 class="section-title" style="margin-bottom: 0;">📡 LIVE INTEL FEED</h2><div class="status-badge status-healthy">ANTISOCIAL BOT ACTIVE</div></div><div class="intel-feed" id="intel-feed" style="height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; padding-right: 0.5rem;"><div class="loading">SCANNING NETWORKS...</div></div></div>< !-- MISSION OBJECTIVES SECTION --><div class="mission-section" style="margin-bottom: 2rem; background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.03) 100%); border: 2px solid rgba(0, 255, 65, 0.2); border-radius: 12px; padding: 2rem;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;"><h2 class="section-title" style="margin-bottom: 0;">🎯 MISSION OBJECTIVES</h2><div style="display: flex; gap: 1rem;"><input type="text" id="new-mission-input" placeholder="NEW OBJECTIVE..." style="background: rgba(0,0,0,0.3); border: 1px solid rgba(0,255,65,0.3); color: #fff; padding: 0.5rem 1rem; border-radius: 4px; font-family: 'Roboto Mono', monospace;"><select id="new-mission-priority" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(0,255,65,0.3); color: #fff; padding: 0.5rem; border-radius: 4px; font-family: 'Roboto Mono', monospace;"><option value="high">HIGH PRIORITY</option><option value="medium" selected>MEDIUM PRIORITY</option><option value="low">LOW PRIORITY</option></select><button onclick="addMission()" class="btn" style="padding: 0.5rem 1rem;">ADD</button></div></div><div class="mission-board" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">< !-- HIGH PRIORITY --><div class="mission-column" id="col-high" style="background: rgba(255, 0, 64, 0.1); border: 1px solid rgba(255, 0, 64, 0.3); border-radius: 8px; padding: 1rem; min-height: 200px;"><h3 style="color: var(--danger); font-size: 1rem; margin-bottom: 1rem; text-align: center; text-transform: uppercase; letter-spacing: 2px;">🚨 HIGH PRIORITY</h3><div class="mission-list" id="list-high"></div></div>< !-- MEDIUM PRIORITY --><div class="mission-column" id="col-medium" style="background: rgba(255, 107, 0, 0.1); border: 1px solid rgba(255, 107, 0, 0.3); border-radius: 8px; padding: 1rem; min-height: 200px;"><h3 style="color: var(--warning); font-size: 1rem; margin-bottom: 1rem; text-align: center; text-transform: uppercase; letter-spacing: 2px;">⚠️ MEDIUM PRIORITY</h3><div class="mission-list" id="list-medium"></div></div>< !-- LOW PRIORITY --><div class="mission-column" id="col-low" style="background: rgba(0, 217, 255, 0.1); border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 8px; padding: 1rem; min-height: 200px;"><h3 style="color: var(--info); font-size: 1rem; margin-bottom: 1rem; text-align: center; text-transform: uppercase; letter-spacing: 2px;">📋 LOW PRIORITY</h3><div class="mission-list" id="list-low"></div></div></div></div>< !-- CAPTAIN'S LOG SECTION -->
+ <div class="log-section" style="margin-bottom: 2rem; background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(0, 255, 65, 0.03) 100%); border: 2px solid rgba(0, 255, 65, 0.2); border-radius: 12px; padding: 2rem;"><h2 class="section-title">📝 CAPTAIN'S LOG</h2>
+
+        <div class="log-container" style="display: flex; gap: 2rem; height: 400px;">< !-- Log Input --><div class="log-input-area" style="flex: 1; display: flex; flex-direction: column; gap: 1rem;"><textarea id="log-input" placeholder="ENTER MISSION LOG..." style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,255,65,0.3); color: #fff; padding: 1rem; border-radius: 8px; font-family: 'Roboto Mono', monospace; resize: none; font-size: 1rem;"></textarea><button onclick="addLog()" class="btn" style="width: 100%;">TRANSMIT LOG</button></div>< !-- Log Stream --><div class="log-stream" id="log-stream" style="flex: 2; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,255,65,0.1); border-radius: 8px; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem;"><div class="loading">LOADING LOGS...</div></div></div></div>< !-- TREASURY SECTION --><div class="treasury-section" style="margin-bottom: 2rem; background: linear-gradient(135deg, var(--tactical-gray) 0%, rgba(255, 215, 0, 0.03) 100%); border: 2px solid rgba(255, 215, 0, 0.2); border-radius: 12px; padding: 2rem;"><h2 class="section-title" style="color: #FFD700;">💰 EMPIRE TREASURY</h2><div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;"><div class="metric-card" style="border-color: rgba(255, 215, 0, 0.3);"><div class="metric-label" style="color: #FFD700;">DAILY REVENUE</div><div class="metric-value" id="treasury-daily">$0.00</div></div><div class="metric-card" style="border-color: rgba(255, 215, 0, 0.3);"><div class="metric-label" style="color: #FFD700;">MONTHLY REVENUE</div><div class="metric-value" id="treasury-monthly">$0.00</div></div><div class="metric-card" style="border-color: rgba(255, 215, 0, 0.3);"><div class="metric-label" style="color: #FFD700;">PROJECTED (EOM)</div><div class="metric-value" id="treasury-projected">$0.00</div></div></div><h3 style="color: #FFD700; font-size: 1rem; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">RECENT TRANSACTIONS</h3><div id="transaction-list" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255, 215, 0, 0.1); border-radius: 8px; padding: 1rem;"><div class="loading">ACCESSING BANKING RECORDS...</div></div></div><div class="grafana-section"><div class="section-header"><h2 class="section-title">📈 VISUAL INTEL</h2><a href="{{ grafana_url }}" target="_blank" class="btn">LAUNCH GRAFANA</a></div><iframe src="{{ grafana_url }}/d/empire-overview?orgId=1&theme=dark&kiosk" class="grafana-embed"></iframe></div></div><script> // System Time
+
+        function updateTime() {
+            const now=new Date();
+            const hours=String(now.getHours()).padStart(2, '0');
+            const minutes=String(now.getMinutes()).padStart(2, '0');
+            const seconds=String(now.getSeconds()).padStart(2, '0');
+
+            document.getElementById('system-time').textContent=`$ {
+                hours
+            }
+
+            :$ {
+                minutes
+            }
+
+            :$ {
+                seconds
+            }
+
+            `;
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Quick Links
+        async function updateQuickLinks() {
+            try {
+                const response=await fetch('/api/links');
+                const links=await response.json();
+                const container=document.getElementById('quick-access');
+
+                container.innerHTML=Object.entries(links).map(([id, link])=> ` <a href="${link.url}" target="_blank" class="quick-link" > <div class="quick-link-icon" >$ {
+                        link.icon
+                    }
+
+                    </div> <div class="quick-link-name" >$ {
+                        link.name
+                    }
+
+                    </div> <div class="quick-link-type" >$ {
+                        link.type
+                    }
+
+                    </div> </a> `).join('');
+            }
+
+            catch (error) {
+                console.error('Failed to fetch links:', error);
+            }
+        }
+
+        // Service Status
+        async function updateServices() {
+            try {
+                const response=await fetch('/api/services/status');
+                const services=await response.json();
+
+                const grid=document.getElementById('services-grid');
+
+                grid.innerHTML=Object.entries(services).map(([id, service])=> ` <div class="service-card" > <div class="service-header" > <div class="service-name" > $ {
+                        service.icon || '🔧'
+                    }
+
+                    $ {
+                        service.name
+                    }
+
+                    </div> <div class="status-badge status-${service.status}" > $ {
+                        service.status==='healthy' ? '● ONLINE' : service.status==='degraded' ? '◐ DEGRADED' : '○ OFFLINE'
+                    }
+
+                    </div> </div> <div class="service-type" >$ {
+                        service.type
+                    }
+
+                    </div> $ {
+                        service.response_time ? ` <div class="service-meta" > <span>PING: $ {
+                            (service.response_time * 1000).toFixed(0)
+                        }
+
+                        ms</span> <span>STATUS: $ {
+                            service.status.toUpperCase()
+                        }
+
+                        </span> </div> ` : ''
+                    }
+
+                    $ {
+                        service.error ? ` <div style="margin-top: 0.5rem; color: var(--danger); font-size: 0.85rem;" > ERROR: $ {
+                            service.error
+                        }
+
+                        </div> ` : ''
+                    }
+
+                    $ {
+                        service.external_url ? ` <a href="${service.external_url}" target="_blank" class="service-link" > OPEN $ {
+                            service.name.toUpperCase()
+                        }
+
+                        &#8599;
+                        </a> ` : ''
+                    }
+
+                    </div> `).join('');
+
+                // Update system health
+                const healthyCount=Object.values(services).filter(s=> s.status==='healthy').length;
+                const totalCount=Object.keys(services).length;
+                const healthPercent=(healthyCount / totalCount * 100).toFixed(0);
+
+                document.getElementById('health-status').textContent=healthPercent>=80 ? 'SYSTEMS NOMINAL' : healthPercent>=50 ? 'DEGRADED PERFORMANCE' : 'CRITICAL SYSTEMS DOWN';
+
+            }
+
+            catch (error) {
+                console.error('Failed to fetch services:', error);
+            }
+        }
+
+        // Metrics
+        async function updateMetrics() {
+            try {
+                const response=await fetch('/api/metrics/summary');
+                const metrics=await response.json();
+
+                document.getElementById('total-users').textContent=metrics.total_users !==null ? Math.round(metrics.total_users): '0';
+
+                document.getElementById('total-revenue').textContent=metrics.total_revenue !==null ? `$$ {
+                    metrics.total_revenue.toFixed(2)
+                }
+
+                ` : '$0';
+                document.getElementById('active-subscriptions').textContent=metrics.active_subscriptions !==null ? Math.round(metrics.active_subscriptions) : '0';
+
+                document.getElementById('api-errors').textContent=metrics.api_requests !==null ? `$ {
+                    (metrics.api_requests * 100).toFixed(2)
+                }
+
+                %` : '0%';
+            }
+
+            catch (error) {
+                console.error('Failed to fetch metrics:', error);
+            }
+        }
+
+        // TREASURY LOGIC
+        async function fetchTreasury() {
+            try {
+                const response=await fetch('/api/treasury');
+                const data=await response.json();
+
+                document.getElementById('treasury-daily').textContent=`$$ {
+                    data.daily_revenue.toFixed(2)
+                }
+
+                `;
+
+                document.getElementById('treasury-monthly').textContent=`$$ {
+                    data.monthly_revenue.toFixed(2)
+                }
+
+                `;
+
+                document.getElementById('treasury-projected').textContent=`$$ {
+                    data.projected_revenue.toFixed(2)
+                }
+
+                `;
+
+                const list=document.getElementById('transaction-list');
+
+                list.innerHTML=data.recent_transactions.map(txn=> ` <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 215, 0, 0.1);" > <div style="display: flex; gap: 1rem;" > <span style="color: #FFD700;" >$ {
+                        txn.id
+                    }
+
+                    </span> <span style="color: #fff;" >$ {
+                        txn.user
+                    }
+
+                    </span> </div> <div style="display: flex; gap: 1rem;" > <span style="color: #aaa;" >$ {
+                        txn.time
+                    }
+
+                    </span> <span style="color: ${txn.status === 'completed' ? '#00FF41' : '#FF0040'};" >$ {
+                        txn.status.toUpperCase()
+                    }
+
+                    </span> <span style="color: #FFD700; font-weight: bold;" >$$ {
+                        txn.amount.toFixed(2)
+                    }
+
+                    </span> </div> </div> `).join('');
+            }
+
+            catch (error) {
+                console.error('Failed to fetch treasury:', error);
+            }
+        }
+
+        // INTEL FEED LOGIC
+        async function fetchIntel() {
+            try {
+                const response=await fetch('/api/intel');
+                const logs=await response.json();
+                const container=document.getElementById('intel-feed');
+
+                if (logs.length===0) {
+                    container.innerHTML='<div style="color: #666; text-align: center; padding: 2rem;">NO INTEL DETECTED</div>';
+                    return;
+                }
+
+                container.innerHTML=logs.map(log=> ` <div class="intel-entry" style="background: rgba(0,0,0,0.4); border-left: 3px solid ${log.platform === 'Twitter' ? '#1DA1F2' : log.platform === 'Reddit' ? '#FF4500' : '#5865F2'}; padding: 1rem; border-radius: 4px; display: flex; gap: 1rem; align-items: start;" > <div style="font-size: 1.5rem;" >$ {
+                        log.platform==='Twitter' ? '🐦' : log.platform==='Reddit' ? '🤖' : '💬'
+                    }
+
+                    </div> <div style="flex: 1;" > <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem; font-size: 0.8rem; color: #aaa;" > <span style="font-weight: bold; color: #fff;" >$ {
+                        log.platform.toUpperCase()
+                    }
+
+                    BOT</span> <span>$ {
+                        log.timestamp
+                    }
+
+                    </span> </div> <div style="color: #ddd; font-size: 0.9rem;" >$ {
+                        log.content
+                    }
+
+                    </div> </div> </div> `).join('');
+            }
+
+            catch (error) {
+                console.error('Failed to fetch intel:', error);
+            }
+        }
+
+        // MISSION OBJECTIVES LOGIC
+        async function fetchMissions() {
+            try {
+                const response=await fetch('/api/missions');
+                const missions=await response.json();
+
+                // Clear lists
+                document.getElementById('list-high').innerHTML='';
+                document.getElementById('list-medium').innerHTML='';
+                document.getElementById('list-low').innerHTML='';
+
+                missions.forEach(mission=> {
+                        const el=document.createElement('div');
+                        el.className='mission-card';
+                        el.style.cssText=` background: rgba(0, 0, 0, 0.3);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        padding: 0.8rem;
+                        margin-bottom: 0.8rem;
+                        border-radius: 4px;
+                        position: relative;
+                        transition: all 0.2s;
+                        `;
+
+                        el.innerHTML=` <div style="font-weight: bold; margin-bottom: 0.3rem;" >$ {
+                            mission.title
+                        }
+
+                        </div> <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #aaa;" > <span>$ {
+                            new Date(mission.timestamp).toLocaleDateString()
+                        }
+
+                        </span> <div style="display: flex; gap: 0.5rem;" > <span style="cursor: pointer; color: var(--predator-green);" onclick="moveMission(${mission.id}, '${mission.priority}')" >MOVE</span> <span style="cursor: pointer; color: var(--danger);" onclick="deleteMission(${mission.id})" >✖</span> </div> </div> `;
+
+                        document.getElementById(`list-$ {
+                                mission.priority
+                            }
+
+                            `).appendChild(el);
+                    });
+            }
+
+            catch (error) {
+                console.error('Failed to fetch missions:', error);
+            }
+        }
+
+        async function addMission() {
+            const input=document.getElementById('new-mission-input');
+            const priority=document.getElementById('new-mission-priority').value;
+            const title=input.value.trim();
+            if ( !title) return;
+
+            try {
+                await fetch('/api/missions', {
+
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+
+                    ,
+                    body: JSON.stringify({
+                        title, priority
+                    })
+            });
+        input.value='';
+        fetchMissions();
+        }
+
+        catch (error) {
+            console.error('Failed to add mission:', error);
+        }
+        }
+
+        async function moveMission(id, currentPriority) {
+            const priorities=['high',
+            'medium',
+            'low'];
+            const nextPriority=priorities[(priorities.indexOf(currentPriority) + 1) % priorities.length];
+
+            try {
+                await fetch(`/api/missions/$ {
+                        id
+                    }
+
+                    `, {
+
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+
+                    ,
+                    body: JSON.stringify({
+                        priority: nextPriority
+                    })
+            });
+        fetchMissions();
+        }
+
+        catch (error) {
+            console.error('Failed to move mission:', error);
+        }
+        }
+
+        async function deleteMission(id) {
+            if ( !confirm('DELETE MISSION OBJECTIVE?')) return;
+
+            try {
+                await fetch(`/api/missions/$ {
+                        id
+                    }
+
+                    `, {
+                    method: 'DELETE'
+                });
+            fetchMissions();
+        }
+
+        catch (error) {
+            console.error('Failed to delete mission:', error);
+        }
+        }
+
+        // CAPTAIN'S LOG LOGIC
+        async function fetchLogs() {
+            try {
+                const response=await fetch('/api/notes');
+                const logs=await response.json();
+                const container=document.getElementById('log-stream');
+
+                if (logs.length===0) {
+                    container.innerHTML='<div style="color: #666; text-align: center; padding: 2rem;">NO LOGS RECORDED</div>';
+                    return;
+                }
+
+                container.innerHTML=logs.map(log=> ` <div class="log-entry" style="background: rgba(0,255,65,0.05); border-left: 3px solid var(--predator-green); padding: 1rem; border-radius: 4px;" > <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--predator-green);" > <span>$ {
+                        new Date(log.timestamp).toLocaleString()
+                    }
+
+                    </span> <span style="cursor: pointer; opacity: 0.7;" onclick="deleteLog(${log.id})" >DELETE</span> </div> <div style="white-space: pre-wrap;" >$ {
+                        log.content
+                    }
+
+                    </div> </div> `).join('');
+            }
+
+            catch (error) {
+                console.error('Failed to fetch logs:', error);
+            }
+        }
+
+        async function addLog() {
+            const input=document.getElementById('log-input');
+            const content=input.value.trim();
+            if ( !content) return;
+
+            try {
+                await fetch('/api/notes', {
+
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+
+                    ,
+                    body: JSON.stringify({
+                        content
+                    })
+            });
+        input.value='';
+        fetchLogs();
+        }
+
+        catch (error) {
+            console.error('Failed to add log:', error);
+        }
+        }
+
+        async function deleteLog(id) {
+            if ( !confirm('DELETE LOG ENTRY?')) return;
+
+            try {
+                await fetch(`/api/notes/$ {
+                        id
+                    }
+
+                    `, {
+                    method: 'DELETE'
+                });
+            fetchLogs();
+        }
+
+        catch (error) {
+            console.error('Failed to delete log:', error);
+        }
+        }
+
+        // Initialize
+        updateQuickLinks();
+        updateServices();
+        updateMetrics();
+        fetchIntel();
+        fetchMissions();
+        fetchLogs();
+        fetchTreasury();
+
+        // Auto-refresh
+        setInterval(updateServices, 5000);
+        setInterval(updateMetrics, 10000);
+        setInterval(fetchIntel, 10000);
+        setInterval(fetchTreasury, 30000);
+        </script></body></html>

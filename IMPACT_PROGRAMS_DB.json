@@ -1,0 +1,188 @@
+{
+    "programs": [
+        {
+            "id": "gearup",
+            "brandName": "GearUP Booster",
+            "landingUrl": "https://www.gearupbooster.com",
+            "vanityUrl": "gearup.sjv.io/09rPQM",
+            "vertical": "Gaming/Tech",
+            "pillar": "Gaming Setup",
+            "notes": "Gaming VPN/network optimizer for ranked grind. Perfect for 'how I hit Diamond' content.",
+            "priorityScore": 5,
+            "status": "priority"
+        },
+        {
+            "id": "alaska-atmos-1",
+            "brandName": "Alaska Airlines ATMOS Rewards (Points.com)",
+            "landingUrl": "https://storefront.points.com/mileage-plan*",
+            "vanityUrl": "alaska.gqco.net/xLWL01",
+            "vertical": "Travel/Points",
+            "pillar": "Travel & Points",
+            "notes": "Buy Alaska miles. Core to 'Manila for $200' travel hack content.",
+            "priorityScore": 5,
+            "status": "priority"
+        },
+        {
+            "id": "alaska-atmos-2",
+            "brandName": "Alaska Airlines ATMOS Rewards (Points.com) - Alt",
+            "landingUrl": "https://storefront.points.com/mileage-plan*",
+            "vanityUrl": "alaska.gqco.net/BnWPE1",
+            "vertical": "Travel/Points",
+            "pillar": "Travel & Points",
+            "notes": "Duplicate Alaska link with different partnerpropertyid. Use for A/B testing.",
+            "priorityScore": 4,
+            "status": "supporting"
+        },
+        {
+            "id": "shopify",
+            "brandName": "Shopify",
+            "landingUrl": "https://www.shopify.com/free-trial",
+            "vanityUrl": "shopify.pxf.io/gOjOZr",
+            "vertical": "Money/Finance",
+            "pillar": "Money Stack",
+            "notes": "E-commerce platform. Angle: 'how I'd monetize my gaming content if I started over'.",
+            "priorityScore": 4,
+            "status": "priority"
+        },
+        {
+            "id": "gemini",
+            "brandName": "Gemini Exchange",
+            "landingUrl": "https://www.gemini.com/partners/affiliate",
+            "vanityUrl": "gemini.sjv.io/raZaAv",
+            "vertical": "Money/Finance",
+            "pillar": "Money Stack",
+            "notes": "Crypto exchange. Angle: 'broke gamer investing tournament winnings smart'.",
+            "priorityScore": 4,
+            "status": "priority"
+        },
+        {
+            "id": "marketxls",
+            "brandName": "MarketXLS",
+            "landingUrl": "https://marketxls.com/pricing",
+            "vanityUrl": "marketxls.pxf.io/yq0qn3",
+            "vertical": "Money/Finance",
+            "pillar": "Money Stack",
+            "notes": "Excel add-in for stock data. Angle: 'how I track my broke portfolio'.",
+            "priorityScore": 3,
+            "status": "supporting"
+        },
+        {
+            "id": "dhgate",
+            "brandName": "DHgate",
+            "landingUrl": "https://www.dhgate.com",
+            "vanityUrl": "dhgate.sjv.io/9LRLb5",
+            "vertical": "Lifestyle/Other",
+            "pillar": "Lifestyle Extras",
+            "notes": "Wholesale marketplace. Angle: 'budget gaming accessories that don't suck'.",
+            "priorityScore": 3,
+            "status": "supporting"
+        },
+        {
+            "id": "easyship",
+            "brandName": "Easyship Ambassador Program",
+            "landingUrl": "http://www.easyship.com",
+            "vanityUrl": "easyship.ilbqy6.net/e191dO",
+            "vertical": "Money/Finance",
+            "pillar": "Money Stack",
+            "notes": "Shipping platform. Only relevant if building e-commerce side hustle.",
+            "priorityScore": 2,
+            "status": "parked"
+        },
+        {
+            "id": "coffeebros",
+            "brandName": "Coffee Bros.",
+            "landingUrl": "https://coffeebros.com",
+            "vanityUrl": "coffeebros.sjv.io/mOAODM",
+            "vertical": "Lifestyle/Other",
+            "pillar": "Lifestyle Extras",
+            "notes": "Specialty coffee. Angle: 'what I drink during ranked grind sessions'.",
+            "priorityScore": 3,
+            "status": "supporting"
+        },
+        {
+            "id": "iproyal",
+            "brandName": "IPRoyal",
+            "landingUrl": "https://iproyal.com",
+            "vanityUrl": "iproyal.sjv.io/YR6RrP",
+            "vertical": "Gaming/Tech",
+            "pillar": "Gaming Setup",
+            "notes": "Proxy service. Niche use case, low brand fit.",
+            "priorityScore": 2,
+            "status": "parked"
+        },
+        {
+            "id": "jalbum",
+            "brandName": "jAlbum Affiliate Program",
+            "landingUrl": "https://www.jalbum.net",
+            "vanityUrl": "jalbum-affiliate-program.sjv.io/4GbGZn",
+            "vertical": "Lifestyle/Other",
+            "pillar": "Lifestyle Extras",
+            "notes": "Photo album software. Doesn't fit GG LOOP brand.",
+            "priorityScore": 1,
+            "status": "parked"
+        },
+        {
+            "id": "cbdforlife",
+            "brandName": "CBD For Life",
+            "landingUrl": "https://www.cbdforlife.us",
+            "vanityUrl": "imp.i295461.net/N9Z9nV",
+            "vertical": "Lifestyle/Other",
+            "pillar": "Lifestyle Extras",
+            "notes": "CBD products. Doesn't fit gaming/travel/money brand.",
+            "priorityScore": 1,
+            "status": "parked"
+        },
+        {
+            "id": "wherelight",
+            "brandName": "wherelight",
+            "landingUrl": "https://wherelight.com",
+            "vanityUrl": "wherelight.pxf.io/MAJA0q",
+            "vertical": "Lifestyle/Other",
+            "pillar": "Lifestyle Extras",
+            "notes": "Lighting products. Doesn't fit brand.",
+            "priorityScore": 1,
+            "status": "parked"
+        },
+        {
+            "id": "puzzleready",
+            "brandName": "Puzzle Ready",
+            "landingUrl": "https://puzzleready.com",
+            "vanityUrl": "puzzlereadyaffiliateprogram.pxf.io/7a2aWg",
+            "vertical": "Lifestyle/Other",
+            "pillar": "Lifestyle Extras",
+            "notes": "Puzzle subscription. Doesn't fit brand.",
+            "priorityScore": 1,
+            "status": "parked"
+        },
+        {
+            "id": "modlily",
+            "brandName": "Modlily",
+            "landingUrl": "https://www.modlily.com/",
+            "vanityUrl": "modlily.sjv.io/LKVKzM",
+            "vertical": "Lifestyle/Other",
+            "pillar": "Lifestyle Extras",
+            "notes": "Fashion marketplace. Doesn't fit gaming/travel/money brand.",
+            "priorityScore": 1,
+            "status": "parked"
+        },
+        {
+            "id": "funwhole",
+            "brandName": "Funwhole",
+            "landingUrl": "https://www.funwhole.com/",
+            "vanityUrl": "funwhole.sjv.io/qzJzeY",
+            "vertical": "Lifestyle/Other",
+            "pillar": "Lifestyle Extras",
+            "notes": "Building block sets. Doesn't fit brand.",
+            "priorityScore": 1,
+            "status": "parked"
+        }
+    ],
+    "metadata": {
+        "totalPrograms": 16,
+        "priorityPrograms": 5,
+        "supportingPrograms": 4,
+        "parkedPrograms": 7,
+        "lastUpdated": "2025-12-10",
+        "notes": "Prioritized based on GG LOOP brand pillars: Gaming Setup, Travel & Points, Money Stack. Parked programs don't align with gaming/travel/money grind positioning."
+    }
+}

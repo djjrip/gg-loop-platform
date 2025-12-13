@@ -1,0 +1,116 @@
+{
+    "rewards": [
+        {
+            "id": "reward_001",
+            "name": "Razer DeathAdder V3 Pro",
+            "description": "Wireless gaming mouse with 30K DPI sensor",
+            "costInPoints": 15000,
+            "stock": 50,
+            "type": "physical",
+            "category": "peripherals",
+            "imageUrl": "https://assets.ggloop.io/rewards/razer-deathadder.jpg",
+            "active": true
+        },
+        {
+            "id": "reward_002",
+            "name": "$25 Amazon Gift Card",
+            "description": "Digital gift card code delivered via email",
+            "costInPoints": 5000,
+            "stock": 1000,
+            "type": "digital",
+            "category": "gift_cards",
+            "imageUrl": "https://assets.ggloop.io/rewards/amazon-25.jpg",
+            "active": true
+        },
+        {
+            "id": "reward_003",
+            "name": "HyperX Cloud II Headset",
+            "description": "7.1 surround sound gaming headset",
+            "costInPoints": 12000,
+            "stock": 30,
+            "type": "physical",
+            "category": "peripherals",
+            "imageUrl": "https://assets.ggloop.io/rewards/hyperx-cloud2.jpg",
+            "active": true
+        },
+        {
+            "id": "reward_004",
+            "name": "$10 Riot Points",
+            "description": "1380 RP for League of Legends",
+            "costInPoints": 2000,
+            "stock": 500,
+            "type": "digital",
+            "category": "game_currency",
+            "imageUrl": "https://assets.ggloop.io/rewards/riot-points.jpg",
+            "active": true
+        },
+        {
+            "id": "reward_005",
+            "name": "SteelSeries QcK Gaming Mouse Pad",
+            "description": "Large cloth gaming surface",
+            "costInPoints": 3000,
+            "stock": 100,
+            "type": "physical",
+            "category": "peripherals",
+            "imageUrl": "https://assets.ggloop.io/rewards/steelseries-qck.jpg",
+            "active": true
+        },
+        {
+            "id": "reward_006",
+            "name": "$50 PayPal Cash",
+            "description": "Direct PayPal transfer",
+            "costInPoints": 10000,
+            "stock": 200,
+            "type": "cash",
+            "category": "cash_payout",
+            "imageUrl": "https://assets.ggloop.io/rewards/paypal-50.jpg",
+            "active": true
+        },
+        {
+            "id": "reward_007",
+            "name": "Logitech G Pro X Keyboard",
+            "description": "Mechanical gaming keyboard with GX switches",
+            "costInPoints": 18000,
+            "stock": 25,
+            "type": "physical",
+            "category": "peripherals",
+            "imageUrl": "https://assets.ggloop.io/rewards/logitech-gpro.jpg",
+            "active": true
+        },
+        {
+            "id": "reward_008",
+            "name": "$100 Steam Gift Card",
+            "description": "Digital Steam wallet code",
+            "costInPoints": 20000,
+            "stock": 150,
+            "type": "digital",
+            "category": "gift_cards",
+            "imageUrl": "https://assets.ggloop.io/rewards/steam-100.jpg",
+            "active": true
+        }
+    ],
+    "categories": [
+        {
+            "id": "peripherals",
+            "name": "Gaming Peripherals"
+        },
+        {
+            "id": "gift_cards",
+            "name": "Gift Cards"
+        },
+        {
+            "id": "game_currency",
+            "name": "Game Currency"
+        },
+        {
+            "id": "cash_payout",
+            "name": "Cash Payouts"
+        }
+    ],
+    "metadata": {
+        "lastUpdated": "2025-12-13T14:00:00Z",
+        "totalRewards": 8,
+        "minPoints": 2000,
+        "maxPoints": 20000
+    }
+}

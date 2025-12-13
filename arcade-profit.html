@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>GG LOOP Profit Safety Calculator</title>
+<style>
+  body{background:#05060a;color:#f5f5f5;font-family:sans-serif;margin:0;padding:20px;}
+  .card{background:#111320;border-radius:16px;padding:16px;max-width:480px;box-shadow:0 12px 24px rgba(0,0,0,0.4);}
+  label{display:block;font-size:13px;margin-top:8px;}
+  input{width:100%;padding:6px;border-radius:8px;border:none;margin-top:2px;background:#181b2a;color:#f5f5f5;}
+  button{margin-top:12px;background:#ff7a3c;border:none;border-radius:999px;padding:8px 16px;color:white;font-weight:bold;cursor:pointer;font-size:13px;}
+  .result{margin-top:12px;font-size:13px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Profit Safety Calculator</h2>
+  <p style="font-size:13px;opacity:.8;">Rough monthly estimate to make sure rewards never bankrupt you.</p>
+  <label>Free users</label><input id="freeUsers" value="150"/>
+  <label>Basic users</label><input id="basicUsers" value="35"/>
+  <label>Pro users</label><input id="proUsers" value="10"/>
+  <label>Elite users</label><input id="eliteUsers" value="5"/>
+  <label>Server + tools cost ($/mo)</label><input id="serverCost" value="30"/>
+  <button onclick="calc()">Calculate</button>
+  <div id="res" class="result"></div>
+</div>
+<script>
+async function calc(){
+  const body = {
+    freeUsers: Number(freeUsers.value),
+    basicUsers: Number(basicUsers.value),
+    proUsers: Number(proUsers.value),
+    eliteUsers: Number(eliteUsers.value),
+    serverCost: Number(serverCost.value)
+  };
+  const r = await fetch('/api/profit-calc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j = await r.json();
+  res.innerHTML = `
+    Revenue: $${j.revenue.toFixed(2)}<br/>
+    Reward cost (est): $${j.rewardCost.toFixed(2)}<br/>
+    Server/tools: $${j.serverCost.toFixed(2)}<br/>
+    <strong>Estimated profit: $${j.profit.toFixed(2)}</strong>
+  `;
+}
+</script>
+</body>
+</html>

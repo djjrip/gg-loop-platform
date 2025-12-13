@@ -1,0 +1,5 @@
+{
+    "scripts": {
+        "preflight": "echo '🚀 PRE-DEPLOYMENT CHECKLIST' && echo '' && echo '⚠️  CRITICAL: Did you manually test PayPal subscription flow?' && echo '  1. Go to http://localhost:5173/subscription' && echo '  2. Refresh 5 times - buttons should NOT jump' && echo '  3. Click subscribe - PayPal modal should open' && echo '  4. Test payment flow' && echo '' && echo 'Press Ctrl+C if NO, or wait to continue...' && timeout /t 10 && npm run build"
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "high": [
+        "n-word",
+        "f-slur",
+        "extreme-slur1",
+        "extreme-slur2"
+    ],
+    "medium": [
+        "kys",
+        "kill yourself",
+        "harassment1",
+        "harassment2"
+    ],
+    "low": [
+        "damn",
+        "hell",
+        "crap"
+    ]
+}

@@ -1,0 +1,77 @@
+I need you to add a Privacy Policy page to this GG LOOP project.
+
+Follow the existing stack and styling.
+
+Create a public route/page at /privacy.
+
+Reuse the same layout/header/footer as other pages.
+
+On that page, render the following Privacy Policy text in a readable format (headings + paragraphs).
+
+Add a “Privacy Policy” link in the footer that points to /privacy.
+
+Don’t break any existing routes or components.
+
+Here is the Privacy Policy content to use:
+
+GG LOOP – PRIVACY POLICY
+Last Updated: [Month] [Day], 2025
+
+GG LOOP (“we,” “us,” “our”) operates the gaming rewards platform available at ggloop.io (“Platform”). This Privacy Policy explains how we collect, use, and protect information when you use the Platform. If you do not agree, please do not use GG LOOP.
+
+1. Information We Collect
+– Account information: email address, username, and basic profile details you provide.
+– Game-related information: in-game IDs, match data, rank or stats obtained via third-party game APIs (for example, Riot Games APIs).
+– Usage data: pages visited, actions taken on the Platform, device information, IP address, and general location (city/region level).
+– Payment information: handled by our third-party payment processors; we do not store full card numbers.
+
+2. How We Use Information
+We use your information to:
+– Create and manage your GG LOOP account and profile.
+– Verify your in-game activity and award points or rewards.
+– Operate, maintain, and improve the Platform.
+– Prevent fraud, abuse, match manipulation, or security issues.
+– Communicate with you about your account, updates, and promotions (where allowed).
+
+3. Third-Party Services
+We may integrate with:
+– Game APIs (e.g., Riot Games) to fetch match and account data.
+– Social platforms (e.g., TikTok, Discord) for login or sharing features.
+– Payment providers for processing subscription fees or purchases.
+These third parties have their own privacy policies, and your use of their services is governed by those policies.
+
+4. Cookies and Similar Technologies
+We may use cookies or similar technologies to remember your preferences, keep you logged in, and understand how users interact with the Platform. You can usually manage cookies through your browser settings, but disabling them may impact some features.
+
+5. Data Sharing
+We may share information with:
+– Service providers who help us host, operate, analyze, or support the Platform.
+– Partners, sponsors, or reward providers when needed to deliver rewards.
+– Authorities or third parties when required by law or to protect our rights, users, or the public.
+We do not sell your personal information.
+
+6. Data Retention
+We keep your information for as long as needed to operate the Platform, comply with legal obligations, resolve disputes, and enforce our agreements.
+
+7. Your Choices
+– You can update or correct certain account details in your profile settings.
+– You may request deletion of your account by contacting us at our support email.
+– You may opt out of certain marketing communications by following the instructions in those messages.
+
+8. Security
+We use reasonable technical and organizational measures to protect your information. However, no system is completely secure, and we cannot guarantee absolute security.
+
+9. Children’s Privacy
+GG LOOP is not intended for children under 13 (or the minimum age of digital consent in your region). If we learn that we have collected personal information from a child without appropriate consent, we will take steps to delete it.
+
+10. Changes to This Policy
+We may update this Privacy Policy from time to time. We will post the updated version on the Platform and update the “Last Updated” date.
+
+11. Contact Us
+If you have questions about this Privacy Policy, contact us at [your support email] and include “Privacy” in the subject line.
+
+When you’re done, tell me which files you changed and how to access /privacy.
+
+Once that’s live, set:
+
+Privacy Policy URL: https://ggloop.io/privacy

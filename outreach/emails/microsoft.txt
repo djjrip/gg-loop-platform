@@ -1,0 +1,55 @@
+TO: InvestorNetworkSupport@microsoft.com
+SUBJECT: Microsoft for Startups Application - GG LOOP (Gaming Rewards Platform)
+
+Dear Microsoft for Startups Team,
+
+I'm reaching out to apply for the Microsoft for Startups program on behalf of GG LOOP LLC, a pre-seed gaming rewards platform that's reimagining how competitive gamers earn real value from their gameplay.
+
+**Company Overview:**
+- Name: GG LOOP LLC
+- Stage: Pre-seed, MVP complete
+- Industry: Gaming, Rewards, Esports
+- Current Users: Pre-launch (platform ready for beta)
+- Tech Stack: Node.js, React, TypeScript, PostgreSQL, Azure-ready
+
+**What We're Building:**
+GG LOOP is the first platform that lets gamers "sign" with sponsors like athletes do. We've built a verified gameplay rewards system integrated with Riot Games API (League of Legends, VALORANT, TFT) that allows players to earn points through competitive play and redeem them for real gaming gear, gift cards, and cash.
+
+**Current Progress:**
+✅ Core platform deployed (subscription system, Riot API integration)
+✅ Verification backbone in development (fraud detection, proof validation)
+✅ 4-tier subscription model ($0, $5, $12, $25/month)
+✅ Sponsor gating system (10K+ verified points required)
+✅ Points engine with gameplay-based calculations
+
+**Why Microsoft for Startups:**
+We're seeking Azure credits to support our infrastructure as we scale:
+- PostgreSQL database hosting (Neon currently)
+- API gateway and load balancing
+- File storage for verification proofs
+- Discord bot hosting (community engagement)
+
+Our 10-level roadmap includes a desktop verifier app (Level 5), mobile app (Level 6), and full marketplace (Level 10) - all of which will benefit from Azure's ecosystem.
+
+**Ask:**
+- Azure credits (up to $150K)
+- Technical mentorship for scaling
+- Access to Microsoft's gaming/esports network
+
+**Transparency:**
+We're pre-revenue, pre-seed, with zero users currently. Our MVP is complete and we're preparing for beta launch in Q1 2026. All features are working and verified - no vaporware.
+
+**Next Steps:**
+I'd love to schedule a brief call to discuss our application and answer any questions. Our pitch deck and technical documentation are ready to share.
+
+Thank you for considering GG LOOP for the Microsoft for Startups program.
+
+Best regards,
+Jayson Quindao
+Founder & CEO, GG LOOP LLC
+Email: jayson@ggloop.io
+Website: ggloop.io
+Discord: discord.gg/Ny7ATHrh
+
+---
+**DO NOT SEND - DRAFT ONLY - AWAITING CEO APPROVAL**

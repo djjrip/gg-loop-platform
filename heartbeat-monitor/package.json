@@ -1,0 +1,13 @@
+{
+    "name": "empire-heartbeat-monitor",
+    "version": "1.0.0",
+    "description": "Local heartbeat monitor for Empire services",
+    "type": "module",
+    "scripts": {
+        "start": "node monitor.js",
+        "dev": "node --watch monitor.js"
+    },
+    "dependencies": {
+        "node-fetch": "^3.3.2"
+    }
+}
