@@ -26,7 +26,7 @@ import crypto from 'crypto';
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import adminRouter from "./routes/admin";
 import { verificationService } from "./services/verificationService";
-import { fraudDetectionService } from "./services/fraudDetectionService";
+import * as fraudDetectionService from "./services/fraudDetectionService";
 
 // Middleware that accepts BOTH guest sessions AND OAuth sessions
 const requireAuth = async (req: any, res: any, next: any) => {
