@@ -25,7 +25,7 @@ import { calculateReferralReward, FREE_TRIAL_DURATION_DAYS } from "./lib/referra
 import crypto from 'crypto';
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import adminRouter from "./routes/admin";
-import { verificationService } from "./services/verificationService";
+import * as verificationService from "./services/verificationService";
 import * as fraudDetectionService from "./services/fraudDetectionService";
 
 // Middleware that accepts BOTH guest sessions AND OAuth sessions
