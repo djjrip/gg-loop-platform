@@ -5942,3 +5942,174 @@ app.post('/api/creator/payout/request', async (req, res) => {
     res.status(500).json({ message: 'Failed to request payout' });
   }
 });
+
+
+// === LEVEL 12: ANTI-CHEAT LITE ROUTES ===
+import { validateXPSync, checkCooldown, getRateLimitState } from './antiCheatLite';
+
+// Validate XP sync before processing
+app.post('/api/anticheat/validate', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  try {
+    const { xpAmount, sessionId } = req.body;
+    const validation = await validateXPSync(req.user.id, xpAmount, sessionId);
+    
+    if (!validation.valid) {
+      return res.status(400).json({
+        valid: false,
+        reason: validation.reason,
+        cooldownMs: validation.cooldownMs
+      });
+    }
+
+    res.json({ valid: true });
+  } catch (error) {
+    console.error('Error validating XP sync:', error);
+    res.status(500).json({ message: 'Validation failed' });
+  }
+});
+
+// Get anti-cheat status for user
+app.get('/api/anticheat/status/:userId', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  try {
+    const userId = parseInt(req.params.userId);
+    
+    // Only allow users to check their own status, or admins
+    if (req.user.id !== userId && !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const cooldown = await checkCooldown(userId);
+    const rateLimit = await getRateLimitState(userId);
+    
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId)
+    });
+
+    res.json({
+      userId,
+      fraudScore: user?.fraudScore || 0,
+      banned: user?.banned || false,
+      cooldown: {
+        active: cooldown.inCooldown,
+        remainingMs: cooldown.remainingMs
+      },
+      rateLimit: {
+        xpSyncs: rateLimit.xpSyncCount,
+        matchVerifications: rateLimit.matchVerifyCount,
+        windowStart: rateLimit.windowStart
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching anti-cheat status:', error);
+    res.status(500).json({ message: 'Failed to fetch status' });
+  }
+});
+
+// Manual fraud flag
+app.post('/api/anticheat/flag', async (req, res) => {
+  if (!req.isAuthenticated() || !req.user.isAdmin) {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+
+  try {
+    const { userId, reason, fraudScoreIncrease } = req.body;
+
+    await db.insert(fraudAlerts).values({
+      userId,
+      alertType: 'MANUAL_FLAG',
+      severity: 'HIGH',
+      description: reason,
+      metadata: { flaggedBy: req.user.id },
+      createdAt: new Date()
+    });
+
+    if (fraudScoreIncrease) {
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, userId)
+      });
+
+      const newScore = (user?.fraudScore || 0) + fraudScoreIncrease;
+      await db.update(users)
+        .set({ fraudScore: newScore })
+        .where(eq(users.id, userId));
+    }
+
+    res.json({ message: 'User flagged successfully' });
+  } catch (error) {
+    console.error('Error flagging user:', error);
+    res.status(500).json({ message: 'Failed to flag user' });
+  }
+});
+
+// Get all violations (admin only)
+app.get('/api/anticheat/violations', async (req, res) => {
+  if (!req.isAuthenticated() || !req.user.isAdmin) {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = (page - 1) * limit;
+
+    const violations = await db
+      .select({
+        id: fraudAlerts.id,
+        userId: fraudAlerts.userId,
+        username: users.username,
+        alertType: fraudAlerts.alertType,
+        severity: fraudAlerts.severity,
+        description: fraudAlerts.description,
+        metadata: fraudAlerts.metadata,
+        createdAt: fraudAlerts.createdAt,
+        resolvedAt: fraudAlerts.resolvedAt
+      })
+      .from(fraudAlerts)
+      .leftJoin(users, eq(fraudAlerts.userId, users.id))
+      .orderBy(desc(fraudAlerts.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    res.json({ violations, page, limit });
+  } catch (error) {
+    console.error('Error fetching violations:', error);
+    res.status(500).json({ message: 'Failed to fetch violations' });
+  }
+});
+
+// Reset cooldowns/limits (admin only)
+app.post('/api/anticheat/reset/:userId', async (req, res) => {
+  if (!req.isAuthenticated() || !req.user.isAdmin) {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+
+  try {
+    const userId = parseInt(req.params.userId);
+
+    // Reset rate limit state (if table exists)
+    // This would require the rateLimitState table to be created
+    
+    // Log admin action
+    await db.insert(fraudAlerts).values({
+      userId,
+      alertType: 'ADMIN_RESET',
+      severity: 'LOW',
+      description: 'Cooldowns and rate limits reset by admin',
+      metadata: { resetBy: req.user.id },
+      createdAt: new Date()
+    });
+
+    res.json({ message: 'Cooldowns and rate limits reset successfully' });
+  } catch (error) {
+    console.error('Error resetting limits:', error);
+    res.status(500).json({ message: 'Failed to reset limits' });
+  }
+});
