@@ -49,6 +49,7 @@ import CreatorDashboard from "@/pages/CreatorDashboard";
 import CreatorLeaderboard from "@/pages/CreatorLeaderboard";
 import AdminAntiCheat from "@/pages/AdminAntiCheat";
 import AdminAnalytics from "@/pages/AdminAnalytics";
+import PitchDeck from "@/pages/PitchDeck";
 
 // 404
 import NotFound from "@/pages/not-found";
@@ -115,6 +116,7 @@ function Router() {
       {/* Level 12: Anti-Cheat Lite */}
       <Route path="/admin/anticheat" component={AdminAntiCheat} />
       <Route path="/admin/analytics" component={AdminAnalytics} />
+      <Route path="/vision" component={PitchDeck} />
 
       {/* 404 */}
       <Route component={NotFound} />
