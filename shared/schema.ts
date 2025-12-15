@@ -963,3 +963,48 @@ export const rateLimitState = pgTable("rate_limit_state", {
   cooldownUntil: timestamp("cooldown_until"),
   windowStart: timestamp("window_start").defaultNow()
 });
+
+// === LEVEL 13: ANALYTICS TABLES ===
+
+export const analyticsEvents = pgTable("analytics_events", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  eventData: jsonb("event_data"),
+  createdAt: timestamp("created_at").defaultNow(),
+  sessionId: varchar("session_id", { length: 255 })
+});
+
+export const userSessions = pgTable("user_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  sessionId: varchar("session_id", { length: 255 }).notNull(),
+  startTime: timestamp("start_time").defaultNow(),
+  endTime: timestamp("end_time"),
+  duration: integer("duration"), // in seconds
+  pageViews: integer("page_views").default(0),
+  actionsCount: integer("actions_count").default(0)
+});
+
+export const dailyMetrics = pgTable("daily_metrics", {
+  id: serial("id").primaryKey(),
+  date: date("date").notNull(),
+  totalUsers: integer("total_users").default(0),
+  activeUsers: integer("active_users").default(0),
+  newUsers: integer("new_users").default(0),
+  totalXP: integer("total_xp").default(0),
+  avgXPPerUser: integer("avg_xp_per_user").default(0),
+  fraudViolations: integer("fraud_violations").default(0)
+});
+
+export const conversionFunnels = pgTable("conversion_funnels", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  signupDate: timestamp("signup_date").defaultNow(),
+  firstXPDate: timestamp("first_xp_date"),
+  firstReferralDate: timestamp("first_referral_date"),
+  creatorTierDate: timestamp("creator_tier_date"),
+  timeToFirstXP: integer("time_to_first_xp"), // in hours
+  timeToFirstReferral: integer("time_to_first_referral"), // in hours
+  timeToCreatorTier: integer("time_to_creator_tier") // in hours
+});
