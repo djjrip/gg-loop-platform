@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -443,12 +443,12 @@ export default function Home() {
                   About <span className="text-ggloop-orange">GG LOOP</span>
                 </h2>
                 <p className="text-gray-400 text-lg leading-relaxed mb-8">
-                  GG LOOP is a culture-driven gaming rewards ecosystem built for everyday gamers. We blend sneaker culture, basketball flow, streetwear aesthetics, and personal identity into a platform where players earn real value for doing what they already love — gaming.
+                  GG LOOP is a culture-driven gaming rewards ecosystem built for everyday gamers. We blend sneaker culture, basketball flow, streetwear aesthetics, and personal identity into a platform where players earn real value for doing what they already love â€” gaming.
                 </p>
 
                 <h3 className="text-2xl font-bold text-white mb-4">Our Mission</h3>
                 <p className="text-gray-400 text-lg leading-relaxed">
-                  To build the most inclusive and culturally-rooted rewards platform that empowers gamers with real value, real community, and real-life support — from sneakers to groceries to wellness resources — all through a modern, subscription-first ecosystem that respects their time and grind.
+                  To build the most inclusive and culturally-rooted rewards platform that empowers gamers with real value, real community, and real-life support â€” from sneakers to groceries to wellness resources â€” all through a modern, subscription-first ecosystem that respects their time and grind.
                 </p>
               </div>
 
@@ -458,7 +458,7 @@ export default function Home() {
                   Why We're Building This
                 </h3>
                 <p className="text-gray-400 text-lg leading-relaxed mb-6">
-                  GG LOOP exists to uplift gamers who never get rewarded for the grind they put in. It’s built for the communities we grew up with — culture-first, identity-driven, and grounded in the reality that gaming is more than a hobby. It’s lifestyle, escape, art, and hustle.
+                  GG LOOP exists to uplift gamers who never get rewarded for the grind they put in. Itâ€™s built for the communities we grew up with â€” culture-first, identity-driven, and grounded in the reality that gaming is more than a hobby. Itâ€™s lifestyle, escape, art, and hustle.
                 </p>
                 <div className="flex items-center gap-2 text-sm text-ggloop-orange font-bold uppercase tracking-wider">
                   <Shield className="h-4 w-4" />
