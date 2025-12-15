@@ -1,4 +1,4 @@
-import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, Package, TrendingUp, DollarSign, Megaphone, Heart, ChevronDown, MoreHorizontal } from "lucide-react";
+﻿import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, Package, TrendingUp, DollarSign, Megaphone, Heart, ChevronDown, MoreHorizontal } from "lucide-react";
 import logoImage from "@assets/ChatGPT Image Nov 11, 2025, 06_17_23 PM_1763403383212.png";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -256,7 +256,7 @@ export default function Header() {
                     <div className="px-2 py-1.5">
                       <p className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
                         <Shield className="h-3 w-3" />
-                        Admin Tools
+                        ADMIN TOOLS
                       </p>
                     </div>
                     <Link href="/admin/daily-ops">
@@ -285,7 +285,7 @@ export default function Header() {
                     </Link>
                     <Link href="/admin">
                       <DropdownMenuItem data-testid="link-admin-dashboard">
-                        <Shield className="mr-2 h-4 w-4 text-primary" />
+                        <ShieldCheck className="mr-2 h-4 w-4 text-primary" />
                         Admin Dashboard
                       </DropdownMenuItem>
                     </Link>
@@ -397,7 +397,7 @@ export default function Header() {
               <Trophy className="h-3.5 w-3.5 text-primary" />
               About
             </Link>
-            {isAuthenticated && user && user.isFounder && (
+            {isAuthenticated && user && (user.isFounder || (user.username === "kuyajrip" || user.email === "jaysonquindao1@gmail.com")) && (
               <Link
                 href="/launch-dashboard"
                 className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
@@ -451,3 +451,5 @@ export default function Header() {
     </header>
   );
 }
+
+

@@ -1,12 +1,14 @@
 ﻿import { Link, useLocation } from "wouter";
-import { Home, Trophy, User, ShieldCheck } from "lucide-react";
+import { Home, Trophy, User, ShieldCheck, QrCode, Activity } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function MobileNav() {
   const [location] = useLocation();
   const { user } = useAuth();
 
-  if (!user) return null;
+  // Show even if not logged in (to encourage signup), specific items gated if needed
+  // For PWA "user experience", we might want it visible always, or at least public routes.
+  // User script implies these are verified features, so lets require user for some.
 
   const isActive = (path: string) => location === path;
 
@@ -16,25 +18,32 @@ export default function MobileNav() {
         <Link href="/">
           <div className={`flex flex-col items-center gap-1 p-2 ${isActive("/") ? "text-ggloop-orange" : "text-gray-500"}`}>
             <Home className="h-6 w-6" />
-            <span className="text-xs font-medium">Home</span>
+            <span className="text-[10px] font-medium uppercase tracking-wide">Home</span>
           </div>
         </Link>
-        <Link href="/creator-leaderboard">
-          <div className={`flex flex-col items-center gap-1 p-2 ${isActive("/creator-leaderboard") ? "text-ggloop-orange" : "text-gray-500"}`}>
-            <Trophy className="h-6 w-6" />
-            <span className="text-xs font-medium">Rank</span>
+        <Link href="/track">
+          <div className={`flex flex-col items-center gap-1 p-2 ${isActive("/track") ? "text-ggloop-orange" : "text-gray-500"}`}>
+            <Activity className="h-6 w-6" />
+            <span className="text-[10px] font-medium uppercase tracking-wide">Track</span>
           </div>
         </Link>
-        <Link href="/creator-dashboard">
-          <div className={`flex flex-col items-center gap-1 p-2 ${isActive("/creator-dashboard") ? "text-ggloop-orange" : "text-gray-500"}`}>
+        <Link href="/verify">
+          <div className={`flex flex-col items-center gap-1 p-2 ${isActive("/verify") ? "text-ggloop-orange" : "text-gray-500"}`}>
             <ShieldCheck className="h-6 w-6" />
-            <span className="text-xs font-medium">Verify</span>
+            <div className="absolute -mt-1 ml-4 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-[10px] font-medium uppercase tracking-wide">Verify</span>
+          </div>
+        </Link>
+        <Link href="/passport">
+          <div className={`flex flex-col items-center gap-1 p-2 ${isActive("/passport") ? "text-ggloop-orange" : "text-gray-500"}`}>
+            <QrCode className="h-6 w-6" />
+            <span className="text-[10px] font-medium uppercase tracking-wide">Pass</span>
           </div>
         </Link>
         <Link href="/profile">
           <div className={`flex flex-col items-center gap-1 p-2 ${isActive("/profile") ? "text-ggloop-orange" : "text-gray-500"}`}>
             <User className="h-6 w-6" />
-            <span className="text-xs font-medium">Profile</span>
+            <span className="text-[10px] font-medium uppercase tracking-wide">Profile</span>
           </div>
         </Link>
       </div>

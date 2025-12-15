@@ -64,8 +64,8 @@ const RoadmapItem = ({ phase, title, status, description }: { phase: string, tit
 
 export default function PitchDeck() {
   const { user } = useAuth();
-  // Safe check for admin access (djjrip specific or generic admin flag)
-  const isAdmin = user && (user.username === "djjrip" || (user as any).isAdmin);
+  // Safe check for admin access (kuyajrip specific or generic admin flag)
+  const isAdmin = user && ((user.username === "kuyajrip" || user.email === "jaysonquindao1@gmail.com") || (user as any).isAdmin);
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-ggloop-orange/30">
@@ -269,3 +269,4 @@ export default function PitchDeck() {
     </div>
   );
 }
+
