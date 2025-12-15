@@ -1,5 +1,5 @@
-﻿import { db } from "./db";
-import { users, xpTransactions, referrals, fraudAlerts } from "@db/schema";
+import { db } from "./db";
+import { users, xpTransactions, referrals, fraudAlerts } from "../shared/schema";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 
 // Creator tier thresholds

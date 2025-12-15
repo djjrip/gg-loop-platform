@@ -1,5 +1,5 @@
-﻿import { db } from "./db";
-import { users, xpTransactions, fraudAlerts } from "@db/schema";
+import { db } from "./db";
+import { users, xpTransactions, fraudAlerts } from "../shared/schema";
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
 
 // Rate limit configuration
