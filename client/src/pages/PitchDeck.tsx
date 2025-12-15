@@ -103,8 +103,8 @@ export default function PitchDeck() {
             <span className="text-ggloop-orange">OF TRUST</span>
           </HeroText>
           <SubText className="mx-auto mb-12">
-            The world''s first verified skills economy for gamers. <br/>
-            We don''t just track stats. We validate careers.
+            The world's first verified skills economy for gamers. <br/>
+            We don't just track stats. We validate careers.
           </SubText>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
@@ -140,7 +140,7 @@ export default function PitchDeck() {
              </div>
              <div className="p-6 bg-red-500/10 border border-red-500/20 rounded-xl">
                <h4 className="font-bold text-white mb-2 flex items-center gap-2"><Users className="text-red-500 w-5 h-5" /> Fragmented Identity</h4>
-               <p className="text-sm text-gray-400">A player''s skill on PC doesn''t carry over to Mobile or Console.</p>
+               <p className="text-sm text-gray-400">A player''s skill on PC doesn't carry over to Mobile or Console.</p>
              </div>
           </div>
         </div>
@@ -201,10 +201,10 @@ export default function PitchDeck() {
             <h2 className="text-ggloop-rose-gold font-bold tracking-widest uppercase mb-4 text-sm">Where We Are</h2>
             <h3 className="text-4xl md:text-5xl font-bold text-white mb-8">Execution Machine.</h3>
             <p className="text-gray-400 text-lg mb-8">
-              We don''t write decks. We ship code. In the last 48 hours, we''ve deployed our core analytics engine and mobile beta.
+              We don't write decks. We ship code. In the last 48 hours, we've deployed our core analytics engine and mobile beta.
             </p>
             
-            <Link href="/vision">
+            <Link href="/">
               <div className="inline-flex items-center gap-2 bg-white text-black font-bold px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
                 <Rocket className="h-5 w-5" />
                 Live Demo
@@ -231,7 +231,7 @@ export default function PitchDeck() {
                  phase="Level 15" 
                  title="Partner API" 
                  status="In Development" 
-                 description="Opening our ''Trust Protocol'' to 3rd party tournament organizers." 
+                 description="Opening our 'Trust Protocol' to 3rd party tournament organizers." 
                />
             </div>
           </div>
@@ -269,4 +269,5 @@ export default function PitchDeck() {
     </div>
   );
 }
+
 

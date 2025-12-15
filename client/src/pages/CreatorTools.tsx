@@ -1,4 +1,4 @@
-import Header from "@/components/Header";
+﻿import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -295,7 +295,7 @@ export default function CreatorTools() {
                   Get Started
                 </Button>
               </a>
-              <a href="https://discord.gg/X6GXg2At2D" target="_blank" rel="noopener noreferrer">
+              <a href="https://discord.gg/Ny7ATHrh" target="_blank" rel="noopener noreferrer">
                 <Button variant="outline" size="lg" data-testid="button-join-community">
                   Join Our Community
                 </Button>
@@ -307,3 +307,4 @@ export default function CreatorTools() {
     </div>
   );
 }
+

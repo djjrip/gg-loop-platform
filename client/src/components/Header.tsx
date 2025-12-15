@@ -256,7 +256,7 @@ export default function Header() {
                     <div className="px-2 py-1.5">
                       <p className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
                         <Shield className="h-3 w-3" />
-                        ADMIN TOOLS
+                        FOUNDER HUB
                       </p>
                     </div>
                     <Link href="/admin/daily-ops">
@@ -451,5 +451,6 @@ export default function Header() {
     </header>
   );
 }
+
 
 

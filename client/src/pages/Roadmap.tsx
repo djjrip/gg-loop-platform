@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { Target, Zap, Globe, Shield, Gift, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,21 +45,21 @@ export default function Roadmap() {
                         <div className="grid md:grid-cols-2 gap-8">
                             <ul className="space-y-4 text-gray-300">
                                 <li className="flex items-start gap-3">
-                                    <span className="text-green-500 font-bold">✓</span>
+                                    <span className="text-green-500 font-bold">âœ“</span>
                                     <span>**Player Profiles:** Basic stat tracking and identity.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <span className="text-green-500 font-bold">✓</span>
+                                    <span className="text-green-500 font-bold">âœ“</span>
                                     <span>**"Choose Your Sponsor" Beta:** Players can select a brand affinity.</span>
                                 </li>
                             </ul>
                             <ul className="space-y-4 text-gray-300">
                                 <li className="flex items-start gap-3">
-                                    <span className="text-green-500 font-bold">✓</span>
+                                    <span className="text-green-500 font-bold">âœ“</span>
                                     <span>**Manual Rewards:** Real humans fulfilling real rewards. No bots.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <span className="text-green-500 font-bold">✓</span>
+                                    <span className="text-green-500 font-bold">âœ“</span>
                                     <span>**Community Core:** A verified Discord ecosystem.</span>
                                 </li>
                             </ul>
@@ -80,21 +80,21 @@ export default function Roadmap() {
                         <div className="grid md:grid-cols-2 gap-8">
                             <ul className="space-y-4 text-gray-300">
                                 <li className="flex items-start gap-3">
-                                    <span className="text-orange-500 font-bold">►</span>
+                                    <span className="text-orange-500 font-bold">â–º</span>
                                     <span>**Brand Pilots:** 30-day challenges with specific partners.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <span className="text-orange-500 font-bold">►</span>
+                                    <span className="text-orange-500 font-bold">â–º</span>
                                     <span>**Verified Gameplay:** Moving to deeper API connections.</span>
                                 </li>
                             </ul>
                             <ul className="space-y-4 text-gray-300">
                                 <li className="flex items-start gap-3">
-                                    <span className="text-orange-500 font-bold">►</span>
+                                    <span className="text-orange-500 font-bold">â–º</span>
                                     <span>**Referral Leaderboards:** Incentivizing community "Scouts".</span>
                                 </li>
                                 <li className="flex items-start gap-3">
-                                    <span className="text-orange-500 font-bold">►</span>
+                                    <span className="text-orange-500 font-bold">â–º</span>
                                     <span>**Team Queues:** Rewards for squad play.</span>
                                 </li>
                             </ul>
@@ -117,15 +117,15 @@ export default function Roadmap() {
                         </p>
                         <ul className="space-y-4 text-gray-400">
                             <li className="flex items-start gap-3">
-                                <span className="opacity-50">•</span>
+                                <span className="opacity-50">â€¢</span>
                                 <span>Direct-to-Bank Payouts (Partnered Fintech)</span>
                             </li>
                             <li className="flex items-start gap-3">
-                                <span className="opacity-50">•</span>
+                                <span className="opacity-50">â€¢</span>
                                 <span>Pro-Tier Scouting for Esports Orgs</span>
                             </li>
                             <li className="flex items-start gap-3">
-                                <span className="opacity-50">•</span>
+                                <span className="opacity-50">â€¢</span>
                                 <span>Physical Events & LANs</span>
                             </li>
                         </ul>
@@ -146,7 +146,7 @@ export default function Roadmap() {
                                 Join Early Access
                             </Button>
                         </Link>
-                        <a href="https://discord.gg/X6GXg2At2D" target="_blank" rel="noopener noreferrer">
+                        <a href="https://discord.gg/Ny7ATHrh" target="_blank" rel="noopener noreferrer">
                             <Button variant="outline" className="border-orange-500 text-orange-500 px-8 py-6 text-lg font-bold rounded-full hover:bg-orange-500/10">
                                 Join Discord
                             </Button>
@@ -157,3 +157,4 @@ export default function Roadmap() {
         </div>
     );
 }
+
