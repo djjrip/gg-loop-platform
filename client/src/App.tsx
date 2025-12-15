@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+﻿import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -45,6 +45,9 @@ import AffiliateManagement from "@/pages/admin/AffiliateManagement";
 import CharityManagement from "@/pages/admin/CharityManagement";
 import FounderHub from "@/pages/admin/FounderHub";
 import UserManagement from "@/pages/admin/UserManagement";
+import CreatorDashboard from "@/pages/CreatorDashboard";
+import CreatorLeaderboard from "@/pages/CreatorLeaderboard";
+import AdminAntiCheat from "@/pages/AdminAntiCheat";
 
 // 404
 import NotFound from "@/pages/not-found";
@@ -103,6 +106,13 @@ function Router() {
       <Route path="/admin/users" component={UserManagement} />
       {/* Route removed: AWS Roadmap */}
       <Route path="/fulfillment" component={FulfillmentDashboard} />
+
+      {/* Level 11: Creator Economy */}
+      <Route path="/creator-dashboard" component={CreatorDashboard} />
+      <Route path="/creator-leaderboard" component={CreatorLeaderboard} />
+
+      {/* Level 12: Anti-Cheat Lite */}
+      <Route path="/admin/anticheat" component={AdminAntiCheat} />
 
       {/* 404 */}
       <Route component={NotFound} />
