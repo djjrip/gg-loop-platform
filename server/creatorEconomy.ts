@@ -1,4 +1,4 @@
-import { db } from "./db";
+﻿import { db } from "./db";
 import { users, pointTransactions, referrals, fraudDetectionLogs } from "../shared/schema";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 
@@ -11,51 +11,63 @@ export const CREATOR_TIERS = {
 };
 
 export function getCreatorTier(totalXP: number) {
-  if (totalXP >= CREATOR_TIERS.ELITE.min) return { tier: "ELITE", ...CREATOR_TIERS.ELITE };
-  if (totalXP >= CREATOR_TIERS.VETERAN.min) return { tier: "VETERAN", ...CREATOR_TIERS.VETERAN };
-  if (totalXP >= CREATOR_TIERS.RISING.min) return { tier: "RISING", ...CREATOR_TIERS.RISING };
-  return { tier: "ROOKIE", ...CREATOR_TIERS.ROOKIE };
+  if (totalXP >= CREATOR_TIERS.ELITE.min) return CREATOR_TIERS.ELITE;
+  if (totalXP >= CREATOR_TIERS.VETERAN.min) return CREATOR_TIERS.VETERAN;
+  if (totalXP >= CREATOR_TIERS.RISING.min) return CREATOR_TIERS.RISING;
+  return CREATOR_TIERS.ROOKIE;
 }
 
-// Get creator stats for a user
 export async function getCreatorStats(userId: number) {
   const xpResult = await db
-    .select({
-      totalXP: sql`COALESCE(SUM(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{pointTransactions.amount}), 0)`,
-      gamesPlayed: sql`COUNT(DISTINCT C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{pointTransactions.gameId})`,
-      lastActivity: sql`MAX(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{pointTransactions.createdAt})`
-    })
+    .select({ totalXP: sql<number>`COALESCE(SUM(${pointTransactions.amount}), 0)` })
     .from(pointTransactions)
-    .where(
-      and(
-        eq(pointTransactions.userId, userId),
-        eq(pointTransactions.verified, true),
-        gte(pointTransactions.amount, 0)
-      )
-    );
+    .where(and(eq(pointTransactions.userId, userId), eq(pointTransactions.verified, true), gte(pointTransactions.amount, 0)));
 
   const totalXP = xpResult[0]?.totalXP || 0;
-  const tierInfo = getCreatorTier(totalXP);
+  const currentTier = getCreatorTier(totalXP);
   
-  return {
-    totalXP,
-    tier: tierInfo
-  };
+  let nextTier = null, xpToNextTier = 0, nextTierProgress = 0;
+  if (currentTier.name === "Rookie Creator") {
+    nextTier = "Rising Star";
+    xpToNextTier = CREATOR_TIERS.RISING.min - totalXP;
+    nextTierProgress = (totalXP / CREATOR_TIERS.RISING.min) * 100;
+  } else if (currentTier.name === "Rising Star") {
+    nextTier = "Veteran Creator";
+    xpToNextTier = CREATOR_TIERS.VETERAN.min - totalXP;
+    nextTierProgress = ((totalXP - CREATOR_TIERS.RISING.min) / (CREATOR_TIERS.VETERAN.min - CREATOR_TIERS.RISING.min)) * 100;
+  } else if (currentTier.name === "Veteran Creator") {
+    nextTier = "Elite Creator";
+    xpToNextTier = CREATOR_TIERS.ELITE.min - totalXP;
+    nextTierProgress = ((totalXP - CREATOR_TIERS.VETERAN.min) / (CREATOR_TIERS.ELITE.min - CREATOR_TIERS.VETERAN.min)) * 100;
+  }
+
+  const referralStats = await db.select({ total: sql<number>`COUNT(*)`, active: sql<number>`COUNT(CASE WHEN ${users.lastLogin} > NOW() - INTERVAL '30 days' THEN 1 END)` }).from(referrals).leftJoin(users, eq(referrals.referredUserId, users.id)).where(eq(referrals.referrerId, userId));
+  const totalReferrals = referralStats[0]?.total || 0;
+  const activeReferrals = referralStats[0]?.active || 0;
+  const estimatedEarnings = totalXP * 0.01;
+  const gamesResult = await db.select({ count: sql<number>`COUNT(DISTINCT ${pointTransactions.id})` }).from(pointTransactions).where(and(eq(pointTransactions.userId, userId), eq(pointTransactions.verified, true)));
+  const gamesPlayed = gamesResult[0]?.count || 0;
+
+  return { totalXP, gamesPlayed, tier: currentTier, nextTier, nextTierProgress, xpToNextTier, referrals: { total: totalReferrals, active: activeReferrals }, earnings: { estimated: estimatedEarnings, currency: "USD" } };
 }
 
 export async function getCreatorLeaderboard(limit: number = 100) {
-  const leaderboard = await db
-    .select({
-      userId: users.id,
-      username: users.username,
-      totalXP: sql`COALESCE(SUM(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{pointTransactions.amount}), 0)`
-    })
-    .from(users)
-    .leftJoin(pointTransactions, eq(pointTransactions.userId, users.id))
-    .where(sql`C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{users.fraudScore} <= 30`)
-    .groupBy(users.id)
-    .orderBy(desc(sql`COALESCE(SUM(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{pointTransactions.amount}), 0)`))
-    .limit(limit);
+  const leaderboard = await db.select({ userId: users.id, username: users.username, totalXP: sql<number>`COALESCE(SUM(${pointTransactions.amount}), 0)`, gamesPlayed: sql<number>`COUNT(DISTINCT ${pointTransactions.id})`, fraudScore: users.fraudScore }).from(users).leftJoin(pointTransactions, and(eq(pointTransactions.userId, users.id), eq(pointTransactions.verified, true))).where(and(sql`${users.fraudScore} <= 30`, eq(users.banned, false))).groupBy(users.id, users.username, users.fraudScore).orderBy(desc(sql`COALESCE(SUM(${pointTransactions.amount}), 0)`)).limit(limit);
+  return leaderboard.map((entry, index) => ({ rank: index + 1, userId: entry.userId, username: entry.username, totalXP: entry.totalXP, gamesPlayed: entry.gamesPlayed, tier: getCreatorTier(entry.totalXP), fraudScore: entry.fraudScore }));
+}
 
-  return leaderboard;
+export async function getReferralDetails(userId: number) {
+  const referralList = await db.select({ referredUserId: referrals.referredUserId, referredUsername: users.username, referredAt: referrals.createdAt, lastLogin: users.lastLogin, totalXP: sql<number>`COALESCE(SUM(${pointTransactions.amount}), 0)` }).from(referrals).leftJoin(users, eq(referrals.referredUserId, users.id)).leftJoin(pointTransactions, and(eq(pointTransactions.userId, referrals.referredUserId), eq(pointTransactions.verified, true))).where(eq(referrals.referrerId, userId)).groupBy(referrals.referredUserId, users.username, referrals.createdAt, users.lastLogin);
+  return referralList.map(ref => ({ userId: ref.referredUserId, username: ref.referredUsername, referredAt: ref.referredAt, lastActive: ref.lastLogin, totalXP: ref.totalXP, isActive: ref.lastLogin && new Date(ref.lastLogin) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }));
+}
+
+export async function checkPayoutEligibility(userId: number) {
+  const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+  if (!user) return { eligible: false, reason: "User not found" };
+  if (user.banned) return { eligible: false, reason: "Account is banned" };
+  if ((user.fraudScore || 0) > 30) return { eligible: false, reason: "Fraud score too high (must be ≤30)" };
+  const stats = await getCreatorStats(userId);
+  const minPayout = stats.tier.payoutMin;
+  if (stats.earnings.estimated < minPayout) return { eligible: false, reason: `Minimum payout for ${stats.tier.name} is $${minPayout}`, currentEarnings: stats.earnings.estimated, minimumRequired: minPayout };
+  return { eligible: true, amount: stats.earnings.estimated, tier: stats.tier.name };
 }
