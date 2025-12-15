@@ -591,7 +591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { severity, limit = 50 } = req.query;
 
-      const alerts = await fraudDetectionService.getActiveFraudAlerts(
+      const alerts = await fraudDetectionService.getActivefraudDetectionLogs(
         severity as 'low' | 'medium' | 'high' | 'critical' | undefined,
         Number(limit)
       );
@@ -6022,7 +6022,7 @@ app.post('/api/anticheat/flag', async (req, res) => {
   try {
     const { userId, reason, fraudScoreIncrease } = req.body;
 
-    await db.insert(fraudAlerts).values({
+    await db.insert(fraudDetectionLogs).values({
       userId,
       alertType: 'MANUAL_FLAG',
       severity: 'HIGH',
@@ -6062,19 +6062,19 @@ app.get('/api/anticheat/violations', async (req, res) => {
 
     const violations = await db
       .select({
-        id: fraudAlerts.id,
-        userId: fraudAlerts.userId,
+        id: fraudDetectionLogs.id,
+        userId: fraudDetectionLogs.userId,
         username: users.username,
-        alertType: fraudAlerts.alertType,
-        severity: fraudAlerts.severity,
-        description: fraudAlerts.description,
-        metadata: fraudAlerts.metadata,
-        createdAt: fraudAlerts.createdAt,
-        resolvedAt: fraudAlerts.resolvedAt
+        alertType: fraudDetectionLogs.alertType,
+        severity: fraudDetectionLogs.severity,
+        description: fraudDetectionLogs.description,
+        metadata: fraudDetectionLogs.metadata,
+        createdAt: fraudDetectionLogs.createdAt,
+        resolvedAt: fraudDetectionLogs.resolvedAt
       })
-      .from(fraudAlerts)
-      .leftJoin(users, eq(fraudAlerts.userId, users.id))
-      .orderBy(desc(fraudAlerts.createdAt))
+      .from(fraudDetectionLogs)
+      .leftJoin(users, eq(fraudDetectionLogs.userId, users.id))
+      .orderBy(desc(fraudDetectionLogs.createdAt))
       .limit(limit)
       .offset(offset);
 
@@ -6098,7 +6098,7 @@ app.post('/api/anticheat/reset/:userId', async (req, res) => {
     // This would require the rateLimitState table to be created
     
     // Log admin action
-    await db.insert(fraudAlerts).values({
+    await db.insert(fraudDetectionLogs).values({
       userId,
       alertType: 'ADMIN_RESET',
       severity: 'LOW',

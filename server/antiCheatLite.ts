@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, xpTransactions, fraudAlerts } from "../shared/schema";
+import { users, pointTransactions, fraudDetectionLogs } from "../shared/schema";
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
 
 // Rate limit configuration
@@ -134,12 +134,12 @@ export async function checkVelocity(userId: number, xpAmount: number): Promise<b
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
   
   const recentXP = await db
-    .select({ total: sql<number>`COALESCE(SUM(${xpTransactions.amount}), 0)` })
-    .from(xpTransactions)
+    .select({ total: sql<number>`COALESCE(SUM(${pointTransactions.amount}), 0)` })
+    .from(pointTransactions)
     .where(
       and(
-        eq(xpTransactions.userId, userId),
-        gte(xpTransactions.createdAt, oneHourAgo)
+        eq(pointTransactions.userId, userId),
+        gte(pointTransactions.createdAt, oneHourAgo)
       )
     );
 
@@ -160,10 +160,10 @@ export async function checkVelocity(userId: number, xpAmount: number): Promise<b
 
 // Check for duplicate submissions
 export async function checkDuplicate(userId: number, sessionId: string): Promise<boolean> {
-  const existing = await db.query.xpTransactions.findFirst({
+  const existing = await db.query.pointTransactions.findFirst({
     where: and(
-      eq(xpTransactions.userId, userId),
-      sql`${xpTransactions.metadata}->>'sessionId' = ${sessionId}`
+      eq(pointTransactions.userId, userId),
+      sql`${pointTransactions.metadata}->>'sessionId' = ${sessionId}`
     )
   });
 
@@ -186,8 +186,8 @@ async function logViolation(
   evidence: any,
   fraudScoreImpact: number
 ): Promise<void> {
-  // Log to fraudAlerts table
-  await db.insert(fraudAlerts).values({
+  // Log to fraudDetectionLogs table
+  await db.insert(fraudDetectionLogs).values({
     userId,
     alertType: violationType,
     severity,

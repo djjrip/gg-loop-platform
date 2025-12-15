@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, xpTransactions, referrals, fraudAlerts } from "../shared/schema";
+import { users, pointTransactions, referrals, fraudDetectionLogs } from "../shared/schema";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 
 // Creator tier thresholds
@@ -21,16 +21,16 @@ export function getCreatorTier(totalXP: number) {
 export async function getCreatorStats(userId: number) {
   const xpResult = await db
     .select({
-      totalXP: sql`COALESCE(SUM(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{xpTransactions.amount}), 0)`,
-      gamesPlayed: sql`COUNT(DISTINCT C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{xpTransactions.gameId})`,
-      lastActivity: sql`MAX(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{xpTransactions.createdAt})`
+      totalXP: sql`COALESCE(SUM(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{pointTransactions.amount}), 0)`,
+      gamesPlayed: sql`COUNT(DISTINCT C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{pointTransactions.gameId})`,
+      lastActivity: sql`MAX(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{pointTransactions.createdAt})`
     })
-    .from(xpTransactions)
+    .from(pointTransactions)
     .where(
       and(
-        eq(xpTransactions.userId, userId),
-        eq(xpTransactions.verified, true),
-        gte(xpTransactions.amount, 0)
+        eq(pointTransactions.userId, userId),
+        eq(pointTransactions.verified, true),
+        gte(pointTransactions.amount, 0)
       )
     );
 
@@ -48,13 +48,13 @@ export async function getCreatorLeaderboard(limit: number = 100) {
     .select({
       userId: users.id,
       username: users.username,
-      totalXP: sql`COALESCE(SUM(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{xpTransactions.amount}), 0)`
+      totalXP: sql`COALESCE(SUM(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{pointTransactions.amount}), 0)`
     })
     .from(users)
-    .leftJoin(xpTransactions, eq(xpTransactions.userId, users.id))
+    .leftJoin(pointTransactions, eq(pointTransactions.userId, users.id))
     .where(sql`C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{users.fraudScore} <= 30`)
     .groupBy(users.id)
-    .orderBy(desc(sql`COALESCE(SUM(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{xpTransactions.amount}), 0)`))
+    .orderBy(desc(sql`COALESCE(SUM(C:\Users\Jayson Quindao\.gemini\antigravity\playground\stellar-satellite{pointTransactions.amount}), 0)`))
     .limit(limit);
 
   return leaderboard;
