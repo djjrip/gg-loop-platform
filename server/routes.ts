@@ -5968,5 +5968,87 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     }
   });
 
+  // === LEVEL 13: ANALYTICS ROUTES ===
+  const { trackEvent, getPlatformOverview, getUserAnalytics, getEngagementMetrics, getRevenueMetrics } = await import('./analytics.js');
+
+  // POST /api/analytics/track - Track custom event
+  app.post('/api/analytics/track', async (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    try {
+      const { eventType, eventData } = req.body;
+      await trackEvent({
+        userId: req.user.id,
+        eventType,
+        eventData,
+        timestamp: new Date()
+      });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error tracking event:', error);
+      res.status(500).json({ message: 'Failed to track event' });
+    }
+  });
+
+  // GET /api/analytics/overview - Platform overview metrics
+  app.get('/api/analytics/overview', async (req: any, res) => {
+    if (!req.isAuthenticated() || !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    try {
+      const overview = await getPlatformOverview();
+      res.json(overview);
+    } catch (error) {
+      console.error('Error fetching overview:', error);
+      res.status(500).json({ message: 'Failed to fetch overview' });
+    }
+  });
+
+  // GET /api/analytics/users - User analytics
+  app.get('/api/analytics/users', async (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    try {
+      const userId = req.user.isAdmin && req.query.userId 
+        ? parseInt(req.query.userId as string) 
+        : req.user.id;
+      const analytics = await getUserAnalytics(userId);
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching user analytics:', error);
+      res.status(500).json({ message: 'Failed to fetch user analytics' });
+    }
+  });
+
+  // GET /api/analytics/engagement - Engagement metrics
+  app.get('/api/analytics/engagement', async (req: any, res) => {
+    if (!req.isAuthenticated() || !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    try {
+      const engagement = await getEngagementMetrics();
+      res.json(engagement);
+    } catch (error) {
+      console.error('Error fetching engagement:', error);
+      res.status(500).json({ message: 'Failed to fetch engagement' });
+    }
+  });
+
+  // GET /api/analytics/revenue - Revenue metrics
+  app.get('/api/analytics/revenue', async (req: any, res) => {
+    if (!req.isAuthenticated() || !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    try {
+      const revenue = await getRevenueMetrics();
+      res.json(revenue);
+    } catch (error) {
+      console.error('Error fetching revenue:', error);
+      res.status(500).json({ message: 'Failed to fetch revenue' });
+    }
+  });
+
   return httpServer;
 }
