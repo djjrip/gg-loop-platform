@@ -145,11 +145,12 @@ export default function PitchDeck() {
             The Roadmap (Level 14-20)
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-black/40 border border-white/10 rounded-xl p-6">
-              <div className="text-ggloop-orange text-lg font-bold mb-4 flex items-center gap-2">
-                <Smartphone className="h-5 w-5" /> Mobile First
+            <div className="bg-black/40 border border-green-500/30 rounded-xl p-6 relative overflow-hidden">
+               <div className="absolute top-0 right-0 bg-green-500 text-black text-xs font-bold px-2 py-1">LIVE BETA</div>
+              <div className="text-green-400 text-lg font-bold mb-4 flex items-center gap-2">
+                <Smartphone className="h-5 w-5" /> Mobile Companion (Level 14)
               </div>
-              <p className="text-gray-400">Push notifications for verified match results. The companion app for every competitive gamer.</p>
+              <p className="text-gray-400">PWA Verified. "Verified Skill Anywhere." Matches synced from desktop to mobile instantly.</p>
             </div>
             <div className="bg-black/40 border border-white/10 rounded-xl p-6">
               <div className="text-ggloop-orange text-lg font-bold mb-4 flex items-center gap-2">

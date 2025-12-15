@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LoginNotification } from "@/components/LoginNotification";
 import Footer from "@/components/Footer";
 import { useAuth } from "./hooks/useAuth";
+import MobileNav from "@/components/MobileNav";
 
 // Public pages
 import Home from "@/pages/Home";
