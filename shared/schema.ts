@@ -939,3 +939,27 @@ export type FraudDetectionLog = typeof fraudDetectionLogs.$inferSelect;
 
 export type InsertVerificationQueue = z.infer<typeof insertVerificationQueueSchema>;
 export type VerificationQueue = typeof verificationQueue.$inferSelect;
+
+// === LEVEL 12: ANTI-CHEAT LITE TABLES ===
+
+export const antiCheatViolations = pgTable("anti_cheat_violations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  violationType: varchar("violation_type", { length: 50 }).notNull(),
+  severity: varchar("severity", { length: 20 }).notNull(),
+  evidence: jsonb("evidence"),
+  fraudScoreImpact: integer("fraud_score_impact").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: integer("resolved_by").references(() => users.id)
+});
+
+export const rateLimitState = pgTable("rate_limit_state", {
+  userId: integer("user_id").primaryKey().references(() => users.id),
+  xpSyncCount: integer("xp_sync_count").default(0),
+  matchVerifyCount: integer("match_verify_count").default(0),
+  lastXpSync: timestamp("last_xp_sync"),
+  lastMatchVerify: timestamp("last_match_verify"),
+  cooldownUntil: timestamp("cooldown_until"),
+  windowStart: timestamp("window_start").defaultNow()
+});

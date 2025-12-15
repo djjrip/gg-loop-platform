@@ -1,4 +1,4 @@
-import type { Express } from "express";
+﻿import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
@@ -74,7 +74,7 @@ const adminMiddleware = async (req: any, res: any, next: any) => {
 
     // FAIL-SAFE #1: If ADMIN_EMAILS is not set, deny all access
     if (!adminEmailsEnv || adminEmailsEnv.trim() === '') {
-      console.error('❌ SECURITY: ADMIN_EMAILS not configured - denying admin access');
+      console.error('âŒ SECURITY: ADMIN_EMAILS not configured - denying admin access');
       return res.status(403).json({
         message: "Forbidden: Admin system not configured"
       });
@@ -84,7 +84,7 @@ const adminMiddleware = async (req: any, res: any, next: any) => {
 
     // FAIL-SAFE #2: If no valid emails after parsing, deny all access
     if (ADMIN_EMAILS.length === 0) {
-      console.error('❌ SECURITY: ADMIN_EMAILS contains no valid emails - denying admin access');
+      console.error('âŒ SECURITY: ADMIN_EMAILS contains no valid emails - denying admin access');
       return res.status(403).json({
         message: "Forbidden: Admin system not configured"
       });
@@ -92,7 +92,7 @@ const adminMiddleware = async (req: any, res: any, next: any) => {
 
     // FAIL-SAFE #3: User must have a valid email address
     if (!dbUser.email || dbUser.email.trim() === '') {
-      console.warn(`⚠️ SECURITY: User ${dbUser.id} attempted admin access with no email`);
+      console.warn(`âš ï¸ SECURITY: User ${dbUser.id} attempted admin access with no email`);
       return res.status(403).json({
         message: "Forbidden: Admin access requires verified email"
       });
@@ -100,7 +100,7 @@ const adminMiddleware = async (req: any, res: any, next: any) => {
 
     // FINAL CHECK: User email must be in admin list
     if (!ADMIN_EMAILS.includes(dbUser.email)) {
-      console.warn(`⚠️ SECURITY: User ${dbUser.email} attempted unauthorized admin access`);
+      console.warn(`âš ï¸ SECURITY: User ${dbUser.email} attempted unauthorized admin access`);
       return res.status(403).json({ message: "Forbidden: Admin access required" });
     }
 
@@ -114,10 +114,10 @@ const adminMiddleware = async (req: any, res: any, next: any) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize authentication FIRST - this is critical for OAuth to work
-  console.log('🔐 Initializing authentication...');
+  console.log('ðŸ” Initializing authentication...');
   await setupAuth(app);
   await setupTwitchAuth(app);
-  console.log('✅ Authentication initialized');
+  console.log('âœ… Authentication initialized');
   // TEMPORARY: Direct admin login for testing (REMOVE IN PRODUCTION)
   app.get('/api/test/admin-login', async (req: any, res) => {
     if (process.env.NODE_ENV === 'production') {
@@ -1720,8 +1720,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         verificationCode,
         riotId: `${account.gameName}#${account.tagLine}`,
         instructions: gameId.includes('league')
-          ? 'Enter this code in League client: Settings → Verification'
-          : 'Add this code to your Valorant profile (Account → Profile → About Me)'
+          ? 'Enter this code in League client: Settings â†’ Verification'
+          : 'Add this code to your Valorant profile (Account â†’ Profile â†’ About Me)'
       });
     } catch (error: any) {
       console.error('Error requesting Riot verification:', error);
@@ -2631,7 +2631,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Lightweight public metrics for authenticated users (non-admin) — used for dashboards
+  // Lightweight public metrics for authenticated users (non-admin) â€” used for dashboards
   app.get('/api/public/daily-metrics', requireAuth, async (req: any, res) => {
     try {
       const metrics = await storage.getDailyMetrics();
@@ -2712,7 +2712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User reward not found" });
       }
 
-      console.log(`📦 Tracking number added for reward ${userRewardId}: ${trackingNumber}`);
+      console.log(`ðŸ“¦ Tracking number added for reward ${userRewardId}: ${trackingNumber}`);
 
       res.json(userReward[0]);
     } catch (error: any) {
@@ -2793,7 +2793,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Redemption not found" });
       }
 
-      console.log(`✅ Redemption fulfilled: ${redemptionId}`);
+      console.log(`âœ… Redemption fulfilled: ${redemptionId}`);
       res.json(updated);
     } catch (error: any) {
       console.error("Error fulfilling redemption:", error);
@@ -2805,7 +2805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const rewardData = insertRewardSchema.parse(req.body);
       const newReward = await storage.createReward(rewardData);
-      console.log(`✨ Created reward: ${newReward.title} (${newReward.pointsCost} points)`);
+      console.log(`âœ¨ Created reward: ${newReward.title} (${newReward.pointsCost} points)`);
       res.json(newReward);
     } catch (error: any) {
       console.error("Error creating reward:", error);
@@ -2818,7 +2818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = z.object({ id: z.string() }).parse(req.params);
       const updates = insertRewardSchema.partial().parse(req.body);
       const updatedReward = await storage.updateReward(id, updates);
-      console.log(`✏️ Updated reward: ${updatedReward.title}`);
+      console.log(`âœï¸ Updated reward: ${updatedReward.title}`);
       res.json(updatedReward);
     } catch (error: any) {
       console.error("Error updating reward:", error);
@@ -2830,7 +2830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = z.object({ id: z.string() }).parse(req.params);
       await storage.deleteReward(id);
-      console.log(`🗑️ Deleted reward: ${id}`);
+      console.log(`ðŸ—‘ï¸ Deleted reward: ${id}`);
       res.json({ message: "Reward deleted successfully" });
     } catch (error: any) {
       console.error("Error deleting reward:", error);
@@ -2864,7 +2864,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if reward is Founder-only (contains "Founder Exclusive" in title)
-      if (reward.title.includes('Founder Exclusive') || reward.title.includes('🏆')) {
+      if (reward.title.includes('Founder Exclusive') || reward.title.includes('ðŸ†')) {
         if (!user.isFounder) {
           return res.status(403).json({
             message: "This reward is exclusive to Founder Badge members (first 100 signups only)"
@@ -3004,15 +3004,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : '';
 
       console.log(`
-🎁 REWARD REDEMPTION ALERT 🎁
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ðŸŽ REWARD REDEMPTION ALERT ðŸŽ
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 User: ${req.dbUser.email} (${req.dbUser.firstName || 'Unknown'})
 Reward: ${reward.title}
 Points Spent: ${reward.pointsCost}
 Real Value: $${reward.realValue}
 Fulfillment Type: ${reward.fulfillmentType}${shippingInfo}
 Time: ${new Date().toLocaleString()}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 ACTION NEEDED: ${reward.fulfillmentType === 'physical'
           ? 'Purchase and ship item to address above'
           : `Buy and email gift card code to ${req.dbUser.email}`}
@@ -3027,7 +3027,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               embeds: [{
-                title: '🎁 New Reward Redemption!',
+                title: 'ðŸŽ New Reward Redemption!',
                 description: `**User:** ${req.dbUser.email}\n**Reward:** ${reward.title}\n**Cost:** ${reward.pointsCost} pts`,
                 color: 0x10B981, // Emerald Green
                 fields: [
@@ -5853,6 +5853,120 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
   // Admin Routes (Founder Control Pack)
   app.use("/api/admin", adminRouter);
+
+  // === LEVEL 11: CREATOR ECONOMY ROUTES ===
+  const { getCreatorStats, getCreatorLeaderboard, getReferralDetails, checkPayoutEligibility } = await import('./creatorEconomy.js');
+
+  app.get('/api/creator/stats', async (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    try {
+      const stats = await getCreatorStats(req.user.id);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching creator stats:', error);
+      res.status(500).json({ message: 'Failed to fetch stats' });
+    }
+  });
+
+  app.get('/api/creator/leaderboard', async (req: any, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100;
+      const leaderboard = await getCreatorLeaderboard(limit);
+      res.json({ leaderboard });
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      res.status(500).json({ message: 'Failed to fetch leaderboard' });
+    }
+  });
+
+  app.get('/api/creator/tier', async (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    try {
+      const stats = await getCreatorStats(req.user.id);
+      res.json({ tier: stats.tier, nextTier: stats.nextTier, progress: stats.nextTierProgress });
+    } catch (error) {
+      console.error('Error fetching tier:', error);
+      res.status(500).json({ message: 'Failed to fetch tier' });
+    }
+  });
+
+  app.get('/api/creator/referrals', async (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    try {
+      const referrals = await getReferralDetails(req.user.id);
+      res.json({ referrals });
+    } catch (error) {
+      console.error('Error fetching referrals:', error);
+      res.status(500).json({ message: 'Failed to fetch referrals' });
+    }
+  });
+
+  app.post('/api/creator/payout/request', async (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    try {
+      const eligibility = await checkPayoutEligibility(req.user.id);
+      if (!eligibility.eligible) {
+        return res.status(400).json({ message: eligibility.reason });
+      }
+      res.json({ message: 'Payout request submitted for admin review', amount: eligibility.amount });
+    } catch (error) {
+      console.error('Error requesting payout:', error);
+      res.status(500).json({ message: 'Failed to request payout' });
+    }
+  });
+
+  // === LEVEL 12: ANTI-CHEAT LITE ROUTES ===
+  const { validateXPSync, checkCooldown, getRateLimitState } = await import('./antiCheatLite.js');
+
+  app.post('/api/anticheat/validate', async (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    try {
+      const { xpAmount, sessionId } = req.body;
+      const validation = await validateXPSync(req.user.id, xpAmount, sessionId);
+      if (!validation.valid) {
+        return res.status(400).json({ valid: false, reason: validation.reason, cooldownMs: validation.cooldownMs });
+      }
+      res.json({ valid: true });
+    } catch (error) {
+      console.error('Error validating XP sync:', error);
+      res.status(500).json({ message: 'Validation failed' });
+    }
+  });
+
+  app.get('/api/anticheat/status/:userId', async (req: any, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    try {
+      const userId = parseInt(req.params.userId);
+      if (req.user.id !== userId && !req.user.isAdmin) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+      const cooldown = await checkCooldown(userId);
+      const rateLimit = await getRateLimitState(userId);
+      const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+      res.json({
+        userId,
+        fraudScore: user?.fraudScore || 0,
+        banned: user?.banned || false,
+        cooldown: { active: cooldown.inCooldown, remainingMs: cooldown.remainingMs },
+        rateLimit: { xpSyncs: rateLimit.xpSyncCount, matchVerifications: rateLimit.matchVerifyCount, windowStart: rateLimit.windowStart }
+      });
+    } catch (error) {
+      console.error('Error fetching anti-cheat status:', error);
+      res.status(500).json({ message: 'Failed to fetch status' });
+    }
+  });
 
   return httpServer;
 }
