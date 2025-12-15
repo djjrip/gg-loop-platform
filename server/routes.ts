@@ -5856,3 +5856,89 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
   return httpServer;
 }
+
+
+// === LEVEL 11: CREATOR ECONOMY ROUTES ===
+// Creator Economy Routes
+import { getCreatorStats, getCreatorLeaderboard, getReferralDetails, checkPayoutEligibility } from './creatorEconomy';
+
+app.get('/api/creator/stats', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+  
+  try {
+    const stats = await getCreatorStats(req.user.id);
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching creator stats:', error);
+    res.status(500).json({ message: 'Failed to fetch creator stats' });
+  }
+});
+
+app.get('/api/creator/leaderboard', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 100;
+    const leaderboard = await getCreatorLeaderboard(limit);
+    res.json({ leaderboard });
+  } catch (error) {
+    console.error('Error fetching creator leaderboard:', error);
+    res.status(500).json({ message: 'Failed to fetch leaderboard' });
+  }
+});
+
+app.get('/api/creator/tier', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+  
+  try {
+    const stats = await getCreatorStats(req.user.id);
+    res.json({
+      currentTier: stats.tier,
+      nextTier: stats.nextTier,
+      progress: stats.nextTierProgress,
+      xpToNext: stats.xpToNextTier
+    });
+  } catch (error) {
+    console.error('Error fetching tier info:', error);
+    res.status(500).json({ message: 'Failed to fetch tier info' });
+  }
+});
+
+app.get('/api/creator/referrals', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+  
+  try {
+    const referrals = await getReferralDetails(req.user.id);
+    res.json({ referrals });
+  } catch (error) {
+    console.error('Error fetching referrals:', error);
+    res.status(500).json({ message: 'Failed to fetch referrals' });
+  }
+});
+
+app.post('/api/creator/payout/request', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+  
+  try {
+    const eligibility = await checkPayoutEligibility(req.user.id);
+    
+    if (!eligibility.eligible) {
+      return res.status(400).json({ message: eligibility.reason });
+    }
+    
+    // TODO: Create payout request in database for admin approval
+    res.json({ 
+      message: 'Payout request submitted for admin review',
+      amount: eligibility.amount
+    });
+  } catch (error) {
+    console.error('Error requesting payout:', error);
+    res.status(500).json({ message: 'Failed to request payout' });
+  }
+});

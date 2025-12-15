@@ -1,0 +1,44 @@
+{
+    "name": "gg-loop-desktop",
+    "version": "0.1.0",
+    "description": "GG Loop Desktop Verification App - PLAY → EARN → LOOP",
+    "main": "electron.js",
+    "scripts": {
+        "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+        "build": "vite build",
+        "package": "electron-builder"
+    },
+    "author": "GG LOOP LLC",
+    "license": "UNLICENSED",
+    "dependencies": {
+        "electron": "^28.0.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+        "@types/react": "^18.2.0",
+        "@types/react-dom": "^18.2.0",
+        "@vitejs/plugin-react": "^4.2.0",
+        "concurrently": "^8.2.0",
+        "electron-builder": "^24.9.0",
+        "typescript": "^5.3.0",
+        "vite": "^5.0.0",
+        "wait-on": "^7.2.0"
+    },
+    "build": {
+        "appId": "com.ggloop.desktop",
+        "productName": "GG Loop Desktop",
+        "directories": {
+            "output": "dist-electron"
+        },
+        "files": [
+            "dist/**/*",
+            "electron.js",
+            "preload.js"
+        ],
+        "win": {
+            "target": "nsis",
+            "icon": "assets/icon.ico"
+        }
+    }
+}

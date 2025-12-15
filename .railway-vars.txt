@@ -1,0 +1,10 @@
+
+# COPY THESE TO RAILWAY:
+# Settings → Variables → Add each one
+
+PAYPAL_CLIENT_ID=AW4YgjL5NXw5TgdDZrQ5vV2Zi0rjqjop913D1xEgRrkhRvGgxyjYrgtQdoR1RF_9V7g6nVaQWKc3Ndpu
+PAYPAL_CLIENT_SECRET=EPYCdf_WuwRPUFeLX2RvfVbxBdB2CufcS5HvEWN1RCRPF6zwJL4tGVm4VmhGqzRjV01FhEQ_KLbUjqjL
+PAYPAL_MODE=sandbox
+CLIENT_URL=https://ggloop.io
+
+# NOTE: Switch to 'live' mode when ready for production
