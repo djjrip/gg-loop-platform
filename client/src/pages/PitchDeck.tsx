@@ -58,7 +58,7 @@ export default function PitchDeck() {
                   <Trophy className="h-8 w-8 text-ggloop-orange" />
                   <div>
                     <div className="font-bold text-white">Merit-Based</div>
-                    <div className="text-sm text-gray-400">Skill > Popularity</div>
+                    <div className="text-sm text-gray-400">Skill &gt; Popularity</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 bg-black/40 p-4 rounded-lg border border-white/10">
