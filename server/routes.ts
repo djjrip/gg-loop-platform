@@ -3616,14 +3616,25 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     }
   });
 
+  // CRITICAL: Subscription status must NEVER crash the app
+  // This endpoint is called during initialization - must fail soft
   app.get('/api/subscription/status', getUserMiddleware, async (req: any, res) => {
     try {
       const userId = req.dbUser.id;
-      const subscription = await storage.getSubscription(userId);
-      res.json(subscription || null);
+
+      // SAFETY: Try to get subscription, but don't crash if schema is out of sync
+      try {
+        const subscription = await storage.getSubscription(userId);
+        res.json(subscription || null);
+      } catch (dbError: any) {
+        // If database query fails (e.g., missing column), return safe default
+        console.warn('[SAFE MODE] Subscription query failed, returning null:', dbError.message);
+        res.json(null);
+      }
     } catch (error) {
-      console.error("Error fetching subscription:", error);
-      res.status(500).json({ message: "Failed to fetch subscription" });
+      console.error("Error in subscription status endpoint:", error);
+      // NEVER return 500 - return safe default instead
+      res.json(null);
     }
   });
 
@@ -6013,8 +6024,8 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       return res.status(401).json({ message: 'Not authenticated' });
     }
     try {
-      const userId = req.user.isAdmin && req.query.userId 
-        ? parseInt(req.query.userId as string) 
+      const userId = req.user.isAdmin && req.query.userId
+        ? parseInt(req.query.userId as string)
         : req.user.id;
       const analytics = await getUserAnalytics(userId);
       res.json(analytics);

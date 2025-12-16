@@ -165,6 +165,16 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    // PHASE 1: Schema Reconciliation (CRITICAL - must run before routes)
+    console.log('🔍 Checking database schema...');
+    try {
+      const { reconcileSubscriptionSchema } = await import('./schemaReconciliation');
+      await reconcileSubscriptionSchema();
+    } catch (schemaError: any) {
+      console.warn('⚠️ Schema reconciliation failed, continuing with safe defaults:', schemaError.message);
+      // Don't crash - the app will use safe defaults
+    }
+
     console.log('🔧 Registering routes...');
     const server = await registerRoutes(app);
     console.log('✅ Routes registered successfully');
