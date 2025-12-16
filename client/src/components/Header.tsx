@@ -1,4 +1,4 @@
-﻿import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, Package, TrendingUp, DollarSign, Megaphone, Heart, ChevronDown, MoreHorizontal } from "lucide-react";
+﻿import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, ShieldCheck, Package, TrendingUp, DollarSign, Megaphone, Heart, ChevronDown, MoreHorizontal, Bell } from "lucide-react";
 import logoImage from "@assets/ChatGPT Image Nov 11, 2025, 06_17_23 PM_1763403383212.png";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -124,12 +124,12 @@ export default function Header() {
             </Link>
 
             {/* More Dropdown for overflow links */}
-          <Link href="/notifications">
-            <div className="relative mr-4 cursor-pointer">
-              <Bell className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
-            </div>
-          </Link>
-          <DropdownMenu>
+            <Link href="/notifications">
+              <div className="relative mr-4 cursor-pointer">
+                <Bell className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
+              </div>
+            </Link>
+            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="text-sm font-medium px-3 py-2 flex items-center gap-1.5" data-testid="button-more-nav">
                   <MoreHorizontal className="h-3.5 w-3.5 text-primary" />
@@ -206,109 +206,109 @@ export default function Header() {
 
           {isAuthenticated && user ? (
             <>
-          <Link href="/notifications">
-            <div className="relative mr-4 cursor-pointer">
-              <Bell className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
-            </div>
-          </Link>
-          <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="hidden md:flex items-center gap-2" data-testid="button-profile">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.profileImageUrl || undefined} />
-                    <AvatarFallback>
-                      {user.firstName?.[0] || user.email?.[0] || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium">
-                    {user.firstName || user.email?.split("@")[0] || "User"}
-                  </span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{user.firstName || "User"}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <p className="text-xs text-primary font-semibold">{user.totalPoints} points</p>
-                    {freeTierData && freeTierData.ggCoins > 0 && (
-                      <p className="text-xs text-accent-foreground font-semibold">{freeTierData.ggCoins} GG Coins</p>
-                    )}
-                  </div>
+              <Link href="/notifications">
+                <div className="relative mr-4 cursor-pointer">
+                  <Bell className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
                 </div>
-                <DropdownMenuSeparator />
-                <Link href={`/profile/${user.id}`}>
-                  <DropdownMenuItem data-testid="link-my-profile">
-                    <Trophy className="mr-2 h-4 w-4" />
-                    My Profile
-                  </DropdownMenuItem>
-                </Link>
-                <Link href="/my-rewards">
-                  <DropdownMenuItem data-testid="link-my-rewards">
-                    <Gift className="mr-2 h-4 w-4" />
-                    My Rewards
-                  </DropdownMenuItem>
-                </Link>
-                <Link href="/subscription">
-                  <DropdownMenuItem data-testid="link-subscription">
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Subscription
-                  </DropdownMenuItem>
-                </Link>
-                <Link href="/settings">
-                  <DropdownMenuItem data-testid="link-settings">
-                    <SettingsIcon className="mr-2 h-4 w-4" />
-                    Settings
-                  </DropdownMenuItem>
-                </Link>
-                {isAdmin && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <div className="px-2 py-1.5">
-                      <p className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
-                        <Shield className="h-3 w-3" />
-                        FOUNDER HUB
-                      </p>
+              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="hidden md:flex items-center gap-2" data-testid="button-profile">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.profileImageUrl || undefined} />
+                      <AvatarFallback>
+                        {user.firstName?.[0] || user.email?.[0] || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium">
+                      {user.firstName || user.email?.split("@")[0] || "User"}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{user.firstName || "User"}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <p className="text-xs text-primary font-semibold">{user.totalPoints} points</p>
+                      {freeTierData && freeTierData.ggCoins > 0 && (
+                        <p className="text-xs text-accent-foreground font-semibold">{freeTierData.ggCoins} GG Coins</p>
+                      )}
                     </div>
-                    <Link href="/admin/daily-ops">
-                      <DropdownMenuItem data-testid="link-daily-ops">
-                        <Activity className="mr-2 h-4 w-4 text-primary" />
-                        Daily Operations
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href="/fulfillment">
-                      <DropdownMenuItem data-testid="link-fulfillment">
-                        <Package className="mr-2 h-4 w-4 text-primary" />
-                        Fulfillment
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href="/admin/rewards">
-                      <DropdownMenuItem data-testid="link-rewards-management">
-                        <Gift className="mr-2 h-4 w-4 text-primary" />
-                        Manage Rewards
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href="/launch-dashboard">
-                      <DropdownMenuItem data-testid="link-launch-dashboard">
-                        <TrendingUp className="mr-2 h-4 w-4 text-primary" />
-                        Launch KPIs
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link href="/admin">
-                      <DropdownMenuItem data-testid="link-admin-dashboard">
-                        <ShieldCheck className="mr-2 h-4 w-4 text-primary" />
-                        Admin Dashboard
-                      </DropdownMenuItem>
-                    </Link>
-                  </>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <Link href={`/profile/${user.id}`}>
+                    <DropdownMenuItem data-testid="link-my-profile">
+                      <Trophy className="mr-2 h-4 w-4" />
+                      My Profile
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/my-rewards">
+                    <DropdownMenuItem data-testid="link-my-rewards">
+                      <Gift className="mr-2 h-4 w-4" />
+                      My Rewards
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/subscription">
+                    <DropdownMenuItem data-testid="link-subscription">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Subscription
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/settings">
+                    <DropdownMenuItem data-testid="link-settings">
+                      <SettingsIcon className="mr-2 h-4 w-4" />
+                      Settings
+                    </DropdownMenuItem>
+                  </Link>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-1.5">
+                        <p className="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
+                          <Shield className="h-3 w-3" />
+                          FOUNDER HUB
+                        </p>
+                      </div>
+                      <Link href="/admin/daily-ops">
+                        <DropdownMenuItem data-testid="link-daily-ops">
+                          <Activity className="mr-2 h-4 w-4 text-primary" />
+                          Daily Operations
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/fulfillment">
+                        <DropdownMenuItem data-testid="link-fulfillment">
+                          <Package className="mr-2 h-4 w-4 text-primary" />
+                          Fulfillment
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/admin/rewards">
+                        <DropdownMenuItem data-testid="link-rewards-management">
+                          <Gift className="mr-2 h-4 w-4 text-primary" />
+                          Manage Rewards
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/launch-dashboard">
+                        <DropdownMenuItem data-testid="link-launch-dashboard">
+                          <TrendingUp className="mr-2 h-4 w-4 text-primary" />
+                          Launch KPIs
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href="/admin">
+                        <DropdownMenuItem data-testid="link-admin-dashboard">
+                          <ShieldCheck className="mr-2 h-4 w-4 text-primary" />
+                          Admin Dashboard
+                        </DropdownMenuItem>
+                      </Link>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} data-testid="button-logout">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <Button variant="default" size="sm" className="hidden md:flex" onClick={handleLogin} data-testid="button-sign-in">
