@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { 
   Trophy, Gift, TrendingUp, ShieldCheck, Activity, Package, Star, 
-  Search, Users, Mail, FileText, Copy, ExternalLink, MessageSquare 
+  Search, Users, Mail, FileText, Copy, ExternalLink, MessageSquare, Terminal, Send 
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -232,3 +232,4 @@ export default function FounderHub() {
     </div>
   );
 }
+

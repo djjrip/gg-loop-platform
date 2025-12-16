@@ -1,4 +1,6 @@
-﻿import type { Express } from "express";
+﻿import notificationRoutes from "./routes/notifications";
+import partnerRoutes from "./routes/partner";
+import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
@@ -6052,3 +6054,4 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
   return httpServer;
 }
+

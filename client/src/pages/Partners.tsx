@@ -1,314 +1,103 @@
-import Header from "@/components/Header";
+﻿import React from "react";
+import { Link } from "wouter";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Target,
-  Users,
-  TrendingUp,
-  Award,
-  Sparkles,
-  Mail,
-  Lock,
-  Trophy
-} from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+import { Layout, Code, ShieldCheck, Zap } from "lucide-react";
 
 export default function Partners() {
-  const { toast } = useToast();
-  const { user, isAuthenticated } = useAuth();
-  const [formData, setFormData] = useState({
-    company: "",
-    name: "",
-    email: "",
-    message: ""
-  });
-
-  // Check sponsor eligibility
-  const { data: eligibilityData } = useQuery<{
-    eligible: boolean;
-    verifiedPoints: number;
-    desktopVerified: boolean;
-    fraudScore: number;
-  }>({
-    queryKey: ["/api/sponsors/eligibility"],
-    enabled: isAuthenticated,
-  });
-
-  const isEligible = eligibilityData?.eligible || false;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Create mailto link with form data
-    const subject = encodeURIComponent(`Partnership Inquiry from ${formData.company}`);
-    const body = encodeURIComponent(
-      `Company: ${formData.company}\n` +
-      `Name: ${formData.name}\n` +
-      `Email: ${formData.email}\n\n` +
-      `Message:\n${formData.message}`
-    );
-
-    window.location.href = `mailto:info@ggloop.io?subject=${subject}&body=${body}`;
-
-    toast({
-      title: "Opening email client",
-      description: "Your default email app will open with the partnership inquiry."
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div className="min-h-screen bg-black text-white pt-24 pb-12 px-6">
+       <div className="max-w-5xl mx-auto">
+           {/* HERO */}
+           <div className="text-center mb-16">
+               <Badge className="bg-ggloop-orange/20 text-ggloop-orange hover:bg-ggloop-orange/30 mb-4 border-ggloop-orange/50">LEVEL 15 API LIVE</Badge>
+               <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tighter">
+                   The <span className="text-ggloop-rose-gold">Infrastructure of Trust</span> for Your Platform
+               </h1>
+               <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+                   Integrate GG LOOP''s Verified Skill Protocol directly into your tournament platform, recruitment tool, or matchmaking engine.
+               </p>
+               <div className="flex justify-center gap-4">
+                   <Button size="lg" className="bg-white text-black hover:bg-gray-200 font-bold">Read Documentation</Button>
+                   <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10">Request API Key</Button>
+               </div>
+           </div>
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-24 text-center">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-muted/50" data-testid="badge-partnerships">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">Brand Partnerships</span>
-          </div>
+           {/* FEATURES */}
+           <div className="grid md:grid-cols-3 gap-6 mb-24">
+               <Card className="bg-zinc-900 border-white/10">
+                   <CardContent className="p-8">
+                       <ShieldCheck className="w-10 h-10 text-green-500 mb-6" />
+                       <h3 className="text-xl font-bold mb-2">Fraud-Free Identity</h3>
+                       <p className="text-gray-400 text-sm">Verify user hardware ID and gameplay integrity instantly via the device-verified badge.</p>
+                   </CardContent>
+               </Card>
+               <Card className="bg-zinc-900 border-white/10">
+                   <CardContent className="p-8">
+                       <Zap className="w-10 h-10 text-yellow-500 mb-6" />
+                       <h3 className="text-xl font-bold mb-2">Real-Time Stats</h3>
+                       <p className="text-gray-400 text-sm">Fetch live skill ratings (XP, Match History) verified by our local anti-cheat client.</p>
+                   </CardContent>
+               </Card>
+               <Card className="bg-zinc-900 border-white/10">
+                   <CardContent className="p-8">
+                       <Layout className="w-10 h-10 text-purple-500 mb-6" />
+                       <h3 className="text-xl font-bold mb-2">Universal Profile</h3>
+                       <p className="text-gray-400 text-sm">One ID for all games. Eliminate smurfs from your platform forever.</p>
+                   </CardContent>
+               </Card>
+           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold font-heading tracking-tight" data-testid="text-hero-title">
-            THE 'NIL' MODEL FOR
-            <span className="text-primary"> GAMERS</span>
-          </h1>
+           {/* DOCS */}
+           <div className="p-8 md:p-12 bg-zinc-900/50 border border-white/10 rounded-2xl mb-12">
+               <h2 className="text-3xl font-bold mb-8 flex items-center gap-3"><Code className="text-ggloop-orange" /> Integration</h2>
 
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto" data-testid="text-hero-subtitle">
-            Reach the most engaged demographic in the world by becoming their sponsor, not just their advertiser.
-          </p>
+               <div className="space-y-12">
+                   <div>
+                       <h3 className="text-xl font-bold mb-4">1. Verify User</h3>
+                       <p className="text-gray-400 mb-4">Check if a user matches our Verified Database.</p>
+                       <div className="bg-black p-6 rounded-xl border border-white/10 font-mono text-sm overflow-x-auto text-gray-300">
+                           <div className="flex gap-2 mb-2">
+                               <span className="text-purple-400">POST</span>
+                               <span className="text-white">https://api.ggloop.io/v1/partner/verify-user</span>
+                           </div>
+                           <pre className="text-green-400 mb-2">Header: x-api-key: YOUR_KEY</pre>
+                           <pre>{`{
+  "email": "player@example.com"
+}`}</pre>
+                       </div>
+                   </div>
 
-          <Button
-            className="bg-primary text-white hover:bg-primary/90 text-lg px-8 py-6 rounded-full font-bold"
-            onClick={() => document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' })}
-          >
-            Inquire About Pilots
-          </Button>
-        </div>
-      </section>
+                   <div>
+                       <h3 className="text-xl font-bold mb-4">2. Get Status & Skill</h3>
+                       <p className="text-gray-400 mb-4">Retrieve verified metrics for matchmaking or rewards.</p>
+                       <div className="bg-black p-6 rounded-xl border border-white/10 font-mono text-sm overflow-x-auto text-gray-300">
+                           <div className="flex gap-2 mb-2">
+                               <span className="text-blue-400">GET</span>
+                               <span className="text-white">https://api.ggloop.io/v1/partner/user-status/:id</span>
+                           </div>
+                           <pre className="text-yellow-400">{`{
+  "userId": 1024,
+  "username": "TopGamer",
+  "trustScore": 100,
+  "isHardwareVerified": true,
+  "totalXp": 15450,
+  "status": "active"
+}`}</pre>
+                       </div>
+                   </div>
+               </div>
+           </div>
+           
+           <div className="flex flex-col items-center justify-center p-12 bg-gradient-to-br from-ggloop-orange/20 to-transparent rounded-2xl border border-ggloop-orange/20">
+               <h3 className="text-2xl font-bold mb-4">Ready to build?</h3>
+               <Link href="/vision">
+                   <Button size="lg" className="bg-ggloop-orange text-black hover:bg-orange-400 font-bold">View Our Vision</Button>
+               </Link>
+           </div>
 
-      {/* Sponsor Access Gating */}
-      {!isEligible && isAuthenticated ? (
-        <section className="container mx-auto px-4 py-24">
-          <Card className="max-w-3xl mx-auto bg-muted/10 border-primary/30">
-            <CardHeader className="text-center">
-              <div className="flex justify-center mb-4">
-                <div className="p-4 rounded-full bg-primary/10 border border-primary/30">
-                  <Lock className="h-12 w-12 text-primary" />
-                </div>
-              </div>
-              <CardTitle className="text-3xl font-bold mb-4">
-                Sponsor Options Locked
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <p className="text-lg text-muted-foreground text-center">
-                You'll unlock sponsorship options after verified gameplay milestones.
-              </p>
-
-              <div className="bg-background/50 rounded-lg p-6 space-y-4">
-                <h3 className="text-xl font-bold mb-4">Requirements to Unlock:</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <Trophy className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-semibold">10,000+ Verified Points</div>
-                      <div className="text-sm text-muted-foreground">
-                        Current: {eligibilityData?.verifiedPoints || 0} points
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Target className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-semibold">Desktop App Verification</div>
-                      <div className="text-sm text-muted-foreground">
-                        {eligibilityData?.desktopVerified ? "✓ Verified" : "Pending - Install desktop app"}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Award className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-semibold">Fraud Risk Score ≤ 30</div>
-                      <div className="text-sm text-muted-foreground">
-                        Current: {eligibilityData?.fraudScore || 0}/100
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center pt-4">
-                <Button
-                  onClick={() => window.location.href = '/stats'}
-                  className="bg-primary text-white hover:bg-primary/90"
-                >
-                  View Your Progress
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      ) : (
-        <>
-          {/* The Problem */}
-          <section className="container mx-auto px-4 py-16 bg-muted/10 border-y border-white/5">
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl font-bold mb-4">GAMERS HATE ADS. THEY LOVE SPONSORS.</h2>
-              <p className="text-lg text-gray-400">
-                Traditional ad spend in gaming is dying. Ad-blockers are standard. But every gamer dreams of being 'sponsored.' We turned that dream into a scalable platform.
-              </p>
-            </div>
-          </section>
-
-          {/* The Solution */}
-          <section className="container mx-auto px-4 py-24">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold font-heading mb-4">
-                INTRODUCING: CHOOSE YOUR SPONSOR
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                On GG LOOP, players don't just see your logo. They pledge allegiance to it. They sign up as 'Team [Your Brand]' and earn points specifically to redeem your products.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              <Card className="p-8 bg-muted/5">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-heading text-primary">
-                    Zero Integration Tax
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    We handle the tech. You don't need to build APIs or dashboards. We track the gameplay; you provide the rewards.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="p-8 border-primary bg-primary/5">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-heading text-primary">
-                    Capped Reward Pools
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    You control the budget. Set a specific number of gift cards or products for the pilot. No runaway costs.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="p-8 bg-muted/5">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-heading text-primary">
-                    Verified Humans
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    No bot traffic. Just real competitive gamers grinding for rewards, verified manually by our team.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
-        </>
-      )}
-
-      {/* Contact Form */}
-      <section id="contact-form" className="container mx-auto px-4 py-24 bg-muted/30">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold font-heading mb-4">
-              Start Your Scouting Report
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              We are currently accepting pilot partners for Q1.
-            </p>
-          </div>
-
-          <Card className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="company">Company Name</Label>
-                <Input
-                  id="company"
-                  data-testid="input-company"
-                  placeholder="Your Company"
-                  value={formData.company}
-                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="name">Your Name</Label>
-                <Input
-                  id="name"
-                  data-testid="input-name"
-                  placeholder="John Doe"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  data-testid="input-email"
-                  placeholder="you@company.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="message">Message / Pilot Interest</Label>
-                <Textarea
-                  id="message"
-                  data-testid="textarea-message"
-                  placeholder="Tell us about your brand goals..."
-                  rows={6}
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  required
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                data-testid="button-submit-partnership"
-              >
-                <Mail className="mr-2 h-5 w-5" />
-                Inquire About Pilots
-              </Button>
-            </form>
-          </Card>
-
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            Or email us directly at{" "}
-            <a
-              href="mailto:info@ggloop.io"
-              className="text-primary hover:underline"
-            >
-              info@ggloop.io
-            </a>
-          </p>
-        </div>
-      </section>
+       </div>
     </div>
   );
 }

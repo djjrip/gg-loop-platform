@@ -124,7 +124,12 @@ export default function Header() {
             </Link>
 
             {/* More Dropdown for overflow links */}
-            <DropdownMenu>
+          <Link href="/notifications">
+            <div className="relative mr-4 cursor-pointer">
+              <Bell className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
+            </div>
+          </Link>
+          <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="text-sm font-medium px-3 py-2 flex items-center gap-1.5" data-testid="button-more-nav">
                   <MoreHorizontal className="h-3.5 w-3.5 text-primary" />
@@ -200,7 +205,13 @@ export default function Header() {
           </Button>
 
           {isAuthenticated && user ? (
-            <DropdownMenu>
+            <>
+          <Link href="/notifications">
+            <div className="relative mr-4 cursor-pointer">
+              <Bell className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
+            </div>
+          </Link>
+          <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="hidden md:flex items-center gap-2" data-testid="button-profile">
                   <Avatar className="h-8 w-8">
@@ -298,6 +309,7 @@ export default function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </>
           ) : (
             <Button variant="default" size="sm" className="hidden md:flex" onClick={handleLogin} data-testid="button-sign-in">
               Sign In
@@ -451,6 +463,7 @@ export default function Header() {
     </header>
   );
 }
+
 
 
 

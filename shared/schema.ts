@@ -1008,3 +1008,61 @@ export const conversionFunnels = pgTable("conversion_funnels", {
   timeToFirstReferral: integer("time_to_first_referral"), // in hours
   timeToCreatorTier: integer("time_to_creator_tier") // in hours
 });
+
+// === LEVEL 15 PHASE 1: PARTNER API & LEVEL 15 PHASE 2: NOTIFICATIONS ===
+
+export const partnerApiKeys = pgTable("partner_api_keys", {
+  id: serial("id").primaryKey(),
+  partnerName: varchar("partner_name", { length: 100 }).notNull(),
+  apiKey: varchar("api_key", { length: 64 }).notNull().unique(), // Hashed or secure token
+  isActive: boolean("is_active").default(true),
+  rateLimit: integer("rate_limit").default(1000), // Requests per hour
+  totalRequests: integer("total_requests").default(0),
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  contactEmail: varchar("contact_email", { length: 255 }),
+});
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  type: varchar("type", { length: 50 }).notNull(), // 'system', 'reward', 'security', 'partner'
+  title: varchar("title", { length: 100 }).notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false),
+  metadata: jsonb("metadata"), // Link to action, deep links, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const notificationCampaigns = pgTable("notification_campaigns", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 100 }).notNull(),
+  message: text("message").notNull(),
+  targetAudience: varchar("target_audience", { length: 50 }).notNull(), // 'all', 'verified', 'vip'
+  scheduledFor: timestamp("scheduled_for"),
+  sentAt: timestamp("sent_at"),
+  status: varchar("status", { length: 20 }).default("draft"), // draft, scheduled, sent
+  totalSent: integer("total_sent").default(0),
+  createdBy: integer("created_by").references(() => users.id),
+});
+
+// ZOD SCHEMAS FOR LEVEL 15
+export const insertPartnerApiKeySchema = createInsertSchema(partnerApiKeys).omit({
+  id: true,
+  createdAt: true,
+  lastUsedAt: true,
+  totalRequests: true
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+  isRead: true
+});
+
+export const insertNotificationCampaignSchema = createInsertSchema(notificationCampaigns).omit({
+  id: true,
+  sentAt: true,
+  totalSent: true,
+  status: true
+});

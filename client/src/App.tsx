@@ -1,4 +1,6 @@
-﻿import Verify from '@/pages/Verify';
+﻿import Notifications from '@/pages/Notifications';
+import Partners from '@/pages/Partners';
+import Verify from '@/pages/Verify';
 import Track from '@/pages/Track';
 import Passport from '@/pages/Passport';
 import { Switch, Route } from "wouter";
@@ -146,6 +148,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
