@@ -123,6 +123,12 @@ export async function setupAuth(app: Express) {
                     profileImageUrl: profile.photos?.[0]?.value,
                 });
 
+                // Defensive check: upsertUser should always return a user, but handle edge case
+                if (!user) {
+                    console.error('[Auth] CRITICAL: upsertUser returned undefined for Google user', { email, oidcSub: `google:${profile.id}` });
+                    return done(new Error('Failed to create or retrieve user from database'));
+                }
+
                 // Check if this is a new user (created within last 10 seconds)
                 const isNewUser = user.createdAt && (new Date().getTime() - new Date(user.createdAt).getTime() < 10000);
                 if (isNewUser) {
@@ -161,6 +167,12 @@ export async function setupAuth(app: Express) {
                     profileImageUrl: profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : undefined,
                 });
 
+                // Defensive check: upsertUser should always return a user, but handle edge case
+                if (!user) {
+                    console.error('[Auth] CRITICAL: upsertUser returned undefined for Discord user', { email, oidcSub: `discord:${profile.id}` });
+                    return done(new Error('Failed to create or retrieve user from database'));
+                }
+
                 // Check if this is a new user (created within last 10 seconds)
                 const isNewUser = user.createdAt && (new Date().getTime() - new Date(user.createdAt).getTime() < 10000);
                 if (isNewUser) {
@@ -198,6 +210,12 @@ export async function setupAuth(app: Express) {
                     lastName: '',
                     profileImageUrl: profile.profile_image_url,
                 });
+
+                // Defensive check: upsertUser should always return a user, but handle edge case
+                if (!user) {
+                    console.error('[Auth] CRITICAL: upsertUser returned undefined for Twitch user', { email, oidcSub: `twitch:${profile.id}` });
+                    return done(new Error('Failed to create or retrieve user from database'));
+                }
 
                 // Check if this is a new user (created within last 10 seconds)
                 const isNewUser = user.createdAt && (new Date().getTime() - new Date(user.createdAt).getTime() < 10000);
