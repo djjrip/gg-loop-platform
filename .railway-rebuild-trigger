@@ -1,0 +1,4 @@
+RAILWAY REBUILD TRIGGER
+Timestamp: 2025-12-16T03:25:21-06:00
+Reason: Force frontend rebuild to deploy Bell import fix (commit 4af9e58)
+Bundle: Must change from index-CNArSX7O.js to new hash
