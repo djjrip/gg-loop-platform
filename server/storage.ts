@@ -128,6 +128,14 @@ export class DbStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    // LOG INPUTS (safe, no secrets)
+    console.log('[Storage] upsertUser called:', {
+      provider: userData.oidcSub?.split(':')[0],
+      providerId: userData.oidcSub?.split(':')[1]?.substring(0, 8) + '...',
+      email: userData.email ? `${userData.email.substring(0, 3)}***@${userData.email.split('@')[1]}` : 'none',
+      hasFirstName: !!userData.firstName,
+    });
+
     let referralCode: string | undefined;
     let codeExists = true;
 
@@ -137,103 +145,137 @@ export class DbStorage implements IStorage {
       codeExists = !!existing;
     }
 
-    // Check if user exists by oidcSub
-    const existingUser = userData.oidcSub ? await this.getUserByOidcSub(userData.oidcSub) : undefined;
+    try {
+      // Check if user exists by oidcSub
+      const existingUser = userData.oidcSub ? await this.getUserByOidcSub(userData.oidcSub) : undefined;
 
-    // If not found by oidcSub, check by email (for multi-provider support)
-    const existingEmailUser = !existingUser && userData.email
-      ? await this.getUserByEmail(userData.email)
-      : undefined;
+      // If not found by oidcSub, check by email (for multi-provider support)
+      const existingEmailUser = !existingUser && userData.email
+        ? await this.getUserByEmail(userData.email)
+        : undefined;
 
-    // For new users only, use transaction to safely assign founder status
-    if (!existingUser && !existingEmailUser) {
-      return db.transaction(async (tx: any) => {
-        // Advisory lock (id=1001) to serialize founder assignment even when table is empty
-        // await tx.execute(sql`SELECT pg_advisory_xact_lock(1001)`);
+      // For new users only, use transaction to safely assign founder status
+      if (!existingUser && !existingEmailUser) {
+        console.log('[Storage] Creating new user');
+        return db.transaction(async (tx: any) => {
+          // Get next founder number
+          const [lastFounder] = await tx
+            .select({ founderNumber: users.founderNumber })
+            .from(users)
+            .where(sql`${users.founderNumber} IS NOT NULL`)
+            .orderBy(sql`${users.founderNumber} DESC`)
+            .limit(1);
 
-        // Get next founder number (safe now that we have advisory lock)
-        const [lastFounder] = await tx
-          .select({ founderNumber: users.founderNumber })
-          .from(users)
-          .where(sql`${users.founderNumber} IS NOT NULL`)
-          .orderBy(sql`${users.founderNumber} DESC`)
-          .limit(1);
+          const nextFounderNumber = (lastFounder?.founderNumber || 0) + 1;
+          const isFounder = nextFounderNumber <= 100;
+          const founderNumber = isFounder ? nextFounderNumber : undefined;
 
-        const nextFounderNumber = (lastFounder?.founderNumber || 0) + 1;
-        const isFounder = nextFounderNumber <= 100;
-        const founderNumber = isFounder ? nextFounderNumber : undefined;
+          const [user] = await tx
+            .insert(users)
+            .values({ ...userData, referralCode, isFounder, founderNumber })
+            .returning();
 
-        const [user] = await tx
-          .insert(users)
-          .values({ ...userData, referralCode, isFounder, founderNumber })
-          .returning();
-
-        // Award 1,000 bonus points to founders
-        if (isFounder && founderNumber) {
-          const { pointsEngine } = await import('./pointsEngine');
-          await pointsEngine.awardPoints(
-            user.id,
-            1000,
-            'FOUNDER_BONUS',
-            `founder-${founderNumber}`,
-            'signup',
-            `Founder #${founderNumber} Bonus - Welcome to GG Loop!`,
-            tx
-          );
-          console.log(`🎉 Awarded 1,000 bonus points to Founder #${founderNumber}`);
-
-          // Send Discord notification for new founder
-          try {
-            const discordWebhookUrl = process.env.DISCORD_FOUNDER_WEBHOOK_URL;
-            if (discordWebhookUrl) {
-              const displayName = user.firstName
-                ? `${user.firstName} ${user.lastName || ''}`.trim()
-                : user.email?.split('@')[0] || 'New Member';
-
-              await fetch(discordWebhookUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  embeds: [{
-                    title: `🏆 Founder #${founderNumber} Joined!`,
-                    description: `${displayName} just became Founder #${founderNumber} of GG Loop!`,
-                    color: 0xF59E0B, // Amber color
-                    fields: [
-                      { name: 'Bonus Points', value: '1,000 pts', inline: true },
-                      { name: 'Spots Remaining', value: `${100 - founderNumber}/100`, inline: true }
-                    ],
-                    timestamp: new Date().toISOString()
-                  }]
-                })
-              });
-            }
-          } catch (discordError) {
-            console.error('Discord notification failed:', discordError);
+          if (!user) {
+            throw new Error('User insert returned no rows');
           }
+
+          console.log('[Storage] User created successfully:', { userId: user.id, isFounder, founderNumber });
+
+          // Award 1,000 bonus points to founders
+          if (isFounder && founderNumber) {
+            const { pointsEngine } = await import('./pointsEngine');
+            await pointsEngine.awardPoints(
+              user.id,
+              1000,
+              'FOUNDER_BONUS',
+              `founder-${founderNumber}`,
+              'signup',
+              `Founder #${founderNumber} Bonus - Welcome to GG Loop!`,
+              tx
+            );
+            console.log(`🎉 Awarded 1,000 bonus points to Founder #${founderNumber}`);
+
+            // Send Discord notification for new founder
+            try {
+              const discordWebhookUrl = process.env.DISCORD_FOUNDER_WEBHOOK_URL;
+              if (discordWebhookUrl) {
+                const displayName = user.firstName
+                  ? `${user.firstName} ${user.lastName || ''}`.trim()
+                  : user.email?.split('@')[0] || 'New Member';
+
+                await fetch(discordWebhookUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    embeds: [{
+                      title: `🏆 Founder #${founderNumber} Joined!`,
+                      description: `${displayName} just became Founder #${founderNumber} of GG Loop!`,
+                      color: 0xF59E0B, // Amber color
+                      fields: [
+                        { name: 'Bonus Points', value: '1,000 pts', inline: true },
+                        { name: 'Spots Remaining', value: `${100 - founderNumber}/100`, inline: true }
+                      ],
+                      timestamp: new Date().toISOString()
+                    }]
+                  })
+                });
+              }
+            } catch (discordError) {
+              console.error('Discord notification failed:', discordError);
+            }
+          }
+
+          return user;
+        });
+      }
+
+      // Existing user - update profile info
+      console.log('[Storage] Updating existing user');
+
+      if (!userData.oidcSub) {
+        throw new Error("Cannot update user without OIDC sub");
+      }
+
+      const [user] = await db
+        .update(users)
+        .set({
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          updatedAt: sql`NOW()`,
+        })
+        .where(eq(users.oidcSub, userData.oidcSub))
+        .returning();
+
+      // CRITICAL: Ensure we never return undefined
+      if (!user) {
+        console.error('[Storage] CRITICAL: User update returned no rows', {
+          oidcSub: userData.oidcSub,
+          email: userData.email,
+        });
+
+        // Attempt to fetch user directly as fallback
+        const fallbackUser = await this.getUserByOidcSub(userData.oidcSub);
+        if (fallbackUser) {
+          console.warn('[Storage] Fallback succeeded - returning existing user without update');
+          return fallbackUser;
         }
 
-        return user;
-      });
-    }
+        throw new Error(`Failed to update or retrieve user with oidcSub: ${userData.oidcSub}`);
+      }
 
-    // Existing user - just update profile info
-    if (!userData.oidcSub) {
-      throw new Error("Cannot update user without OIDC sub");
-    }
+      console.log('[Storage] User updated successfully:', { userId: user.id });
+      return user;
 
-    const [user] = await db
-      .update(users)
-      .set({
+    } catch (error) {
+      console.error('[Storage] upsertUser FAILED:', {
+        error: error instanceof Error ? error.message : String(error),
+        oidcSub: userData.oidcSub,
         email: userData.email,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        profileImageUrl: userData.profileImageUrl,
-        updatedAt: sql`NOW()`,
-      })
-      .where(eq(users.oidcSub, userData.oidcSub))
-      .returning();
-
-    return user;
+      });
+      throw error;
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
