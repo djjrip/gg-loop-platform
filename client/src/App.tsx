@@ -1,5 +1,4 @@
 ﻿import Notifications from '@/pages/Notifications';
-import Partners from '@/pages/Partners';
 import Verify from '@/pages/Verify';
 import Track from '@/pages/Track';
 import Passport from '@/pages/Passport';
@@ -12,6 +11,7 @@ import { LoginNotification } from "@/components/LoginNotification";
 import Footer from "@/components/Footer";
 import { useAuth } from "./hooks/useAuth";
 import MobileNav from "@/components/MobileNav";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Public pages
 import Home from "@/pages/Home";
@@ -132,18 +132,20 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <LoginNotification />
-        <Toaster />
-        <div className="flex flex-col min-h-screen">
-          <div className="flex-1">
-            <Router />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <LoginNotification />
+          <Toaster />
+          <div className="flex flex-col min-h-screen">
+            <div className="flex-1">
+              <Router />
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
-      </TooltipProvider>
-    </QueryClientProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

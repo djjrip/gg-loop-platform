@@ -1,7 +1,4 @@
 import { Component, ReactNode } from 'react';
-import { AlertCircle, RefreshCw, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Props {
   children: ReactNode;
@@ -13,6 +10,13 @@ interface State {
   errorCount: number;
 }
 
+/**
+ * CRITICAL SAFETY COMPONENT - NO EXTERNAL DEPENDENCIES
+ * 
+ * This Error Boundary catches ALL runtime errors and prevents white screens.
+ * It uses ZERO external dependencies (no icons, no UI components) to ensure
+ * it can NEVER fail itself.
+ */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -32,12 +36,22 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error('ErrorBoundary caught error:', error, errorInfo);
-    
+    console.error('🚨 ErrorBoundary caught error:', error, errorInfo);
+
     // Send error to monitoring service in production
-    if (process.env.NODE_ENV === 'production') {
-      // TODO: Send to Sentry, LogRocket, or similar service
-      console.error('Sending error to monitoring service...');
+    if (import.meta.env.PROD) {
+      fetch('/api/client-error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          error: error.toString(),
+          stack: error.stack,
+          componentStack: errorInfo.componentStack,
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch(() => {
+        // Silent fail - don't crash on error reporting
+      });
     }
   }
 
@@ -56,56 +70,114 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <Card className="w-full max-w-md border-destructive/50 bg-destructive/5">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-6 w-6 text-destructive" />
-                <div>
-                  <CardTitle>Something went wrong</CardTitle>
-                  <CardDescription>
-                    An unexpected error occurred while loading this page
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {this.state.error && (
-                <div className="bg-muted rounded-lg p-3 text-sm font-mono text-muted-foreground overflow-auto max-h-32">
-                  {this.state.error.message}
-                </div>
-              )}
-              
-              <p className="text-sm text-muted-foreground">
-                Our team has been notified. Try refreshing the page or returning to home.
-              </p>
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+          color: '#ffffff',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          padding: '20px',
+        }}>
+          <div style={{
+            maxWidth: '600px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 140, 66, 0.3)',
+            borderRadius: '12px',
+            padding: '40px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '64px', marginBottom: '20px' }}>⚠️</div>
 
-              <div className="flex gap-2 flex-col sm:flex-row">
-                <Button 
-                  onClick={this.handleReset}
-                  variant="outline"
-                  className="flex-1"
-                  data-testid="button-error-retry"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Try Again
-                </Button>
-                <Button 
-                  onClick={this.handleGoHome}
-                  variant="default"
-                  className="flex-1"
-                  data-testid="button-error-home"
-                >
-                  <Home className="h-4 w-4 mr-2" />
-                  Go Home
-                </Button>
-              </div>
+            <h1 style={{
+              fontSize: '24px',
+              fontWeight: 'bold',
+              marginBottom: '16px',
+              color: '#ff8c42',
+            }}>
+              Something Went Wrong
+            </h1>
 
-              <p className="text-xs text-muted-foreground text-center">
-                Error ID: {Date.now().toString(36)}
-              </p>
-            </CardContent>
-          </Card>
+            <p style={{
+              fontSize: '16px',
+              color: '#cccccc',
+              marginBottom: '24px',
+              lineHeight: '1.6',
+            }}>
+              We encountered an unexpected error. Don't worry - your data is safe.
+              Try reloading the page or returning home.
+            </p>
+
+            {import.meta.env.DEV && this.state.error && (
+              <details style={{
+                marginBottom: '24px',
+                textAlign: 'left',
+                background: 'rgba(0, 0, 0, 0.3)',
+                padding: '16px',
+                borderRadius: '8px',
+                fontSize: '12px',
+                fontFamily: 'monospace',
+                color: '#ff6b6b',
+              }}>
+                <summary style={{ cursor: 'pointer', marginBottom: '8px', fontWeight: 'bold' }}>
+                  Error Details (Development Only)
+                </summary>
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  {this.state.error.toString()}
+                  {'\n\n'}
+                  {this.state.error.stack}
+                </pre>
+              </details>
+            )}
+
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+            }}>
+              <button
+                onClick={this.handleReload}
+                style={{
+                  padding: '12px 24px',
+                  background: '#ff8c42',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                🔄 Reload Page
+              </button>
+
+              <button
+                onClick={this.handleGoHome}
+                style={{
+                  padding: '12px 24px',
+                  background: 'transparent',
+                  color: '#ff8c42',
+                  border: '2px solid #ff8c42',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                🏠 Go Home
+              </button>
+            </div>
+
+            <p style={{
+              marginTop: '24px',
+              fontSize: '14px',
+              color: '#888888',
+            }}>
+              If this problem persists, please contact support.
+            </p>
+          </div>
         </div>
       );
     }
