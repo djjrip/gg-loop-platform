@@ -70,15 +70,15 @@ export default function Home() {
 
               {/* Main Hero Text */}
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 leading-tight">
-                <span className="text-foreground">IDENTITY. </span>
-                <span className="text-primary font-bold">PERFORMANCE. </span>
-                <span className="text-foreground">LEAGUE.</span>
+                <span className="text-foreground">PLAY. </span>
+                <span className="text-primary font-bold">EARN. </span>
+                <span className="text-foreground">LOOP.</span>
               </h1>
 
               <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto mb-8 font-medium">
                 {isAuthenticated
                   ? `Welcome back, ${user?.firstName || 'Operator'}! Your rewards hub is ready.`
-                  : "Verified gameplay. Real rewards. No fluff."}
+                  : "A gaming identity platform for everyone. However you game, you belong here."}
               </p>
 
               {!isAuthenticated && (
@@ -86,7 +86,7 @@ export default function Home() {
                   <a href="#pricing">
                     <button className="bg-gradient-to-r from-ggloop-orange to-ggloop-rose-gold hover:shadow-[0_0_30px_var(--ggloop-neon-glow)] rounded-lg px-8 py-4 font-bold text-white text-lg transition-all duration-300 flex items-center gap-2">
                       <Rocket className="h-5 w-5" />
-                      CLAIM YOUR IDENTITY
+                      EXPLORE THE LOOP
                     </button>
                   </a>
                   <a href="https://discord.gg/Ny7ATHrh" target="_blank" rel="noopener noreferrer">
@@ -166,9 +166,9 @@ export default function Home() {
           {/* HOW IT WORKS */}
           <section className="container mx-auto px-4 py-20 max-w-7xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">The League Progression</h2>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Your Path, Your Pace</h2>
               <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-                Three stages of participation within the GG LOOP ecosystem
+                Ways to participate within the GG LOOP ecosystem
               </p>
             </div>
 
@@ -177,7 +177,7 @@ export default function Home() {
                 <div className="bg-gradient-to-br from-ggloop-orange/20 to-ggloop-rose-gold/20 border border-ggloop-orange/40 rounded-full w-16 h-16 flex items-center justify-center mb-6">
                   <Gamepad2 className="h-8 w-8 text-ggloop-orange" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">STAGE 1: THE GYM</h3>
+                <h3 className="text-2xl font-bold text-white mb-3">THE GYM</h3>
                 <p className="text-gray-400">
                   Focus on consistency. Build your baseline and learn the flow of the league. Casual play, verified.
                 </p>
@@ -187,7 +187,7 @@ export default function Home() {
                 <div className="bg-gradient-to-br from-ggloop-orange/20 to-ggloop-rose-gold/20 border border-ggloop-orange/40 rounded-full w-16 h-16 flex items-center justify-center mb-6">
                   <TrendingUp className="h-8 w-8 text-ggloop-orange" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">STAGE 2: THE PARK</h3>
+                <h3 className="text-2xl font-bold text-white mb-3">THE PARK</h3>
                 <p className="text-gray-400">
                   Step up the competition. Complete missions and challenges keyed off your actual gameplay performance.
                 </p>
@@ -197,7 +197,7 @@ export default function Home() {
                 <div className="bg-gradient-to-br from-ggloop-orange/20 to-ggloop-rose-gold/20 border border-ggloop-orange/40 rounded-full w-16 h-16 flex items-center justify-center mb-6">
                   <Gift className="h-8 w-8 text-ggloop-orange" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">STAGE 3: THE LEAGUE</h3>
+                <h3 className="text-2xl font-bold text-white mb-3">THE LEAGUE</h3>
                 <p className="text-gray-400">
                   The ultimate level. Optimize your performance for maximum visibility and elite opportunities.
                 </p>
@@ -258,7 +258,7 @@ export default function Home() {
                     <CardTitle className="text-xl">THE GYM</CardTitle>
                   </div>
                   <div className="text-4xl font-bold text-white mb-2">$5</div>
-                  <CardDescription>Casual Participation Level</CardDescription>
+                  <CardDescription>Casual Participation</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="bg-ggloop-orange/10 border border-ggloop-orange/30 rounded-lg p-3 mb-4">
@@ -300,7 +300,7 @@ export default function Home() {
                     <CardTitle className="text-xl">THE PARK</CardTitle>
                   </div>
                   <div className="text-4xl font-bold text-white mb-2">$12</div>
-                  <CardDescription>Semi-Competitive Participation</CardDescription>
+                  <CardDescription>Community Participation</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="bg-ggloop-orange/10 border border-ggloop-orange/30 rounded-lg p-3 mb-4">
@@ -339,7 +339,7 @@ export default function Home() {
                     <CardTitle className="text-xl">THE LEAGUE</CardTitle>
                   </div>
                   <div className="text-4xl font-bold text-white mb-2">$25</div>
-                  <CardDescription>High Performance Level</CardDescription>
+                  <CardDescription>Enhanced Participation</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="bg-ggloop-orange/20 border border-ggloop-orange/40 rounded-lg p-3 mb-4">
