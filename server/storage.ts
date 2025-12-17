@@ -238,10 +238,10 @@ export class DbStorage implements IStorage {
 
       console.log('[Storage] Existing user found - returning directly (no update needed)');
       console.log('[Storage] User:', {
-        id: targetUser.id.substring(0, 8) + '...',
+        id: (targetUser as any).id?.substring(0, 8) + '...',
         oidcSub: targetUser.oidcSub,
         hasEmail: !!targetUser.email,
-        hasCreatedAt: !!targetUser.createdAt,
+        hasCreatedAt: !!(targetUser as any).createdAt,
       });
 
       return targetUser;
