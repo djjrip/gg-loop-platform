@@ -369,6 +369,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // TEMP PROD VERIFICATION ENDPOINTS — REMOVE AFTER PASS
+  // ============================================
+  // These endpoints allow automated verification without manual OAuth
+  // SECURITY: Token-gated, admin-only, localhost/allowlist only
+  // TODO: REMOVE after verification passes
+
+  const ADMIN_TEST_TOKEN = process.env.ADMIN_TEST_TOKEN;
+  const ADMIN_TEST_EMAIL = process.env.ADMIN_TEST_EMAIL || 'jaysonquindao1@gmail.com';
+  const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+
+  const verifyAdminTestToken = (req: any, res: any) => {
+    if (!ADMIN_TEST_TOKEN) {
+      res.status(503).json({ error: 'Admin test endpoints disabled (ADMIN_TEST_TOKEN not configured)' });
+      return false;
+    }
+    const token = req.headers['x-admin-test-token'];
+    if (token !== ADMIN_TEST_TOKEN) {
+      res.status(403).json({ error: 'Invalid admin test token' });
+      return false;
+    }
+    if (!ADMIN_EMAILS.includes(ADMIN_TEST_EMAIL)) {
+      res.status(403).json({ error: 'Admin test email not in ADMIN_EMAILS allowlist' });
+      return false;
+    }
+    return true;
+  };
+
+  // TEMP: Synthetic login (creates auth session without OAuth)
+  app.post('/api/admin/synthetic-login', async (req: any, res) => {
+    if (!verifyAdminTestToken(req, res)) return;
+
+    try {
+      // Find or create admin user
+      let user = await storage.getUserByEmail(ADMIN_TEST_EMAIL);
+
+      if (!user) {
+        // Create synthetic user if doesn't exist
+        const oidcSub = `synthetic:${ADMIN_TEST_EMAIL}`;
+        user = await storage.upsertUser({
+          oidcSub,
+          email: ADMIN_TEST_EMAIL,
+          firstName: 'Test',
+          lastName: 'Admin',
+        });
+      }
+
+      // Create session exactly like OAuth does
+      req.login(user, (err: any) => {
+        if (err) {
+          console.error('[SYNTHETIC-LOGIN] Login error:', err);
+          return res.status(500).json({ ok: false, error: 'Failed to create session' });
+        }
+        req.session.save((err: any) => {
+          if (err) {
+            console.error('[SYNTHETIC-LOGIN] Session save error:', err);
+            return res.status(500).json({ ok: false, error: 'Failed to save session' });
+          }
+          console.log('[SYNTHETIC-LOGIN] Session created for:', ADMIN_TEST_EMAIL);
+          res.json({ ok: true, email: ADMIN_TEST_EMAIL });
+        });
+      });
+    } catch (error) {
+      console.error('[SYNTHETIC-LOGIN] Error:', error);
+      res.status(500).json({ ok: false, error: 'Internal error' });
+    }
+  });
+
+  // TEMP: Check auth state
+  app.get('/api/admin/synthetic-whoami', (req: any, res) => {
+    if (!verifyAdminTestToken(req, res)) return;
+
+    if (req.isAuthenticated()) {
+      res.json({
+        authenticated: true,
+        email: req.user?.email,
+        oidcSub: req.user?.oidcSub,
+      });
+    } else {
+      res.json({ authenticated: false });
+    }
+  });
+
+  // TEMP: Synthetic logout (destroys session)
+  app.post('/api/admin/synthetic-logout', (req: any, res) => {
+    if (!verifyAdminTestToken(req, res)) return;
+
+    req.logout((err: any) => {
+      if (err) {
+        console.error('[SYNTHETIC-LOGOUT] Logout error:', err);
+        return res.status(500).json({ ok: false, error: 'Logout failed' });
+      }
+      req.session.destroy((err: any) => {
+        if (err) {
+          console.error('[SYNTHETIC-LOGOUT] Session destroy error:', err);
+          return res.status(500).json({ ok: false, error: 'Session destroy failed' });
+        }
+        res.clearCookie('connect.sid', { path: '/' });
+        console.log('[SYNTHETIC-LOGOUT] Session destroyed');
+        res.json({ ok: true });
+      });
+    });
+  });
+
+  // ============================================
+  // END TEMP VERIFICATION ENDPOINTS
+  // ============================================
+
   // Sponsor Eligibility Check
   app.get('/api/sponsors/eligibility', requireAuth, async (req: any, res) => {
     try {
