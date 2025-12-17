@@ -229,8 +229,25 @@ export class DbStorage implements IStorage {
         });
       }
 
-      // Existing user - update profile info
+      // Existing user - only update if data changed
       console.log('[Storage] Updating existing user');
+
+      const targetUser = existingUser || existingEmailUser;
+      if (!targetUser) {
+        throw new Error("Internal error: no user found despite check");
+      }
+
+      // If user data hasn't changed, just return existing user
+      const hasChanges =
+        userData.email !== targetUser.email ||
+        userData.firstName !== targetUser.firstName ||
+        userData.lastName !== targetUser.lastName ||
+        userData.profileImageUrl !== targetUser.profileImageUrl;
+
+      if (!hasChanges) {
+        console.log('[Storage] No changes detected - returning existing user');
+        return targetUser;
+      }
 
       if (!userData.oidcSub) {
         throw new Error("Cannot update user without OIDC sub");
