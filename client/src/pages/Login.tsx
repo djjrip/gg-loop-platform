@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy } from "lucide-react";
+import { Trophy, ArrowRight } from "lucide-react";
 import { SiDiscord, SiTwitch } from "react-icons/si";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +40,10 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <Card className="w-full max-w-md">
+        <Link href="/" className="mb-8 text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+          <ArrowRight className="h-4 w-4 rotate-180" />
+          Back to Home
+        </Link>
         <CardHeader className="text-center space-y-2">
           <div className="flex items-center justify-center gap-3 mb-2">
             <Trophy className="h-12 w-12 text-primary" />

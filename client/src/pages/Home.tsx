@@ -70,9 +70,9 @@ export default function Home() {
 
               {/* Main Hero Text */}
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 leading-tight">
-                <span className="text-foreground">PLAY. </span>
-                <span className="text-primary font-bold">EARN. </span>
-                <span className="text-foreground">LOOP.</span>
+                <span className="text-foreground">IDENTITY. </span>
+                <span className="text-primary font-bold">PERFORMANCE. </span>
+                <span className="text-foreground">LEAGUE.</span>
               </h1>
 
               <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto mb-8 font-medium">
@@ -86,7 +86,7 @@ export default function Home() {
                   <a href="#pricing">
                     <button className="bg-gradient-to-r from-ggloop-orange to-ggloop-rose-gold hover:shadow-[0_0_30px_var(--ggloop-neon-glow)] rounded-lg px-8 py-4 font-bold text-white text-lg transition-all duration-300 flex items-center gap-2">
                       <Rocket className="h-5 w-5" />
-                      START EARNING REWARDS
+                      CLAIM YOUR IDENTITY
                     </button>
                   </a>
                   <a href="https://discord.gg/Ny7ATHrh" target="_blank" rel="noopener noreferrer">
@@ -108,7 +108,7 @@ export default function Home() {
 
               <div className="mt-8 text-sm text-gray-500 flex items-center justify-center gap-2">
                 <Zap className="h-4 w-4 text-ggloop-rose-gold" />
-                Built by Gamers. Verified by Humans. 100% Honest Rewards.
+                Built by Gamers. Verified by Humans. Join the Movement.
               </div>
             </div>
           </section>
@@ -166,9 +166,9 @@ export default function Home() {
           {/* HOW IT WORKS */}
           <section className="container mx-auto px-4 py-20 max-w-7xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">How It Works</h2>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">The League Progression</h2>
               <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-                Three simple steps to turn your gameplay into real rewards
+                Three stages of participation within the GG LOOP ecosystem
               </p>
             </div>
 
@@ -177,9 +177,9 @@ export default function Home() {
                 <div className="bg-gradient-to-br from-ggloop-orange/20 to-ggloop-rose-gold/20 border border-ggloop-orange/40 rounded-full w-16 h-16 flex items-center justify-center mb-6">
                   <Gamepad2 className="h-8 w-8 text-ggloop-orange" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">SIGN A DEAL</h3>
+                <h3 className="text-2xl font-bold text-white mb-3">STAGE 1: THE GYM</h3>
                 <p className="text-gray-400">
-                  Don't just play for free. Select a Brand Sponsor (like Nike or Logitech) on Day 1 and unlock their unique reward track.
+                  Focus on consistency. Build your baseline and learn the flow of the league. Casual play, verified.
                 </p>
               </div>
 
@@ -187,9 +187,9 @@ export default function Home() {
                 <div className="bg-gradient-to-br from-ggloop-orange/20 to-ggloop-rose-gold/20 border border-ggloop-orange/40 rounded-full w-16 h-16 flex items-center justify-center mb-6">
                   <TrendingUp className="h-8 w-8 text-ggloop-orange" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">PROVE YOUR WORTH</h3>
+                <h3 className="text-2xl font-bold text-white mb-3">STAGE 2: THE PARK</h3>
                 <p className="text-gray-400">
-                  Complete daily missions and competitive challenges keys off your actual gameplay. Your stats turn into currency.
+                  Step up the competition. Complete missions and challenges keyed off your actual gameplay performance.
                 </p>
               </div>
 
@@ -197,9 +197,9 @@ export default function Home() {
                 <div className="bg-gradient-to-br from-ggloop-orange/20 to-ggloop-rose-gold/20 border border-ggloop-orange/40 rounded-full w-16 h-16 flex items-center justify-center mb-6">
                   <Gift className="h-8 w-8 text-ggloop-orange" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">GET THE GEAR</h3>
+                <h3 className="text-2xl font-bold text-white mb-3">STAGE 3: THE LEAGUE</h3>
                 <p className="text-gray-400">
-                  Redeem your grind for the exact gear, gift cards, and cash payouts you actually want. No crypto. No fluff.
+                  The ultimate level. Optimize your performance for maximum visibility and elite opportunities.
                 </p>
               </div>
             </div>
@@ -208,9 +208,9 @@ export default function Home() {
           {/* PRICING SECTION */}
           <section id="pricing" className="container mx-auto px-4 py-20 max-w-7xl bg-ggloop-dark-shadow/20">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Choose Your Tier</h2>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Participation Tiers</h2>
               <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-                Monthly point allocations to redeem for gaming gear and rewards
+                Choose your level of engagement within the GG LOOP ecosystem.
               </p>
             </div>
 
@@ -255,10 +255,10 @@ export default function Home() {
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
                     <Trophy className="h-6 w-6 text-ggloop-orange" />
-                    <CardTitle className="text-xl">Basic</CardTitle>
+                    <CardTitle className="text-xl">THE GYM</CardTitle>
                   </div>
                   <div className="text-4xl font-bold text-white mb-2">$5</div>
-                  <CardDescription>3,000 points/month</CardDescription>
+                  <CardDescription>Casual Participation Level</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="bg-ggloop-orange/10 border border-ggloop-orange/30 rounded-lg p-3 mb-4">
@@ -297,10 +297,10 @@ export default function Home() {
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
                     <Flame className="h-6 w-6 text-ggloop-orange" />
-                    <CardTitle className="text-xl">Pro</CardTitle>
+                    <CardTitle className="text-xl">THE PARK</CardTitle>
                   </div>
                   <div className="text-4xl font-bold text-white mb-2">$12</div>
-                  <CardDescription>10,000 points/month</CardDescription>
+                  <CardDescription>Semi-Competitive Participation</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="bg-ggloop-orange/10 border border-ggloop-orange/30 rounded-lg p-3 mb-4">
@@ -336,10 +336,10 @@ export default function Home() {
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
                     <Star className="h-6 w-6 text-ggloop-orange" />
-                    <CardTitle className="text-xl">Elite</CardTitle>
+                    <CardTitle className="text-xl">THE LEAGUE</CardTitle>
                   </div>
                   <div className="text-4xl font-bold text-white mb-2">$25</div>
-                  <CardDescription>25,000 points/month</CardDescription>
+                  <CardDescription>High Performance Level</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="bg-ggloop-orange/20 border border-ggloop-orange/40 rounded-lg p-3 mb-4">
