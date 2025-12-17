@@ -206,10 +206,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <a href="/api/logout">
+                      <button
+                        onClick={async () => {
+                          try {
+                            await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+                          } catch (error) {
+                            console.error('Logout error:', error);
+                          }
+                          window.location.href = '/login';
+                        }}
+                        className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 transition-colors w-full"
+                      >
                         <LogOut className="h-4 w-4" />
-                        <span>Log Out</span>
-                      </a>
+                        Logout
+                      </button>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>

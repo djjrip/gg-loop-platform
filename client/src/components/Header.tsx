@@ -54,8 +54,17 @@ export default function Header() {
     window.location.href = "/login";
   };
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    // Always redirect even if API call fails (clears frontend state)
+    window.location.href = '/login';
   };
 
   return (

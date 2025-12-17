@@ -3389,6 +3389,44 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
   // ============================================
 
   // GET /api/challenges - List active challenges with user progress
+  app.get('/api/auth/user', async (req: any, res) => {
+    if (req.isAuthenticated()) {
+      console.log('User is authenticated:', req.user.id);
+      const dbUser = await storage.getUserByOidcSub(req.user.oidcSub);
+      if (!dbUser) {
+        console.error('User in session but not found in database:', req.user.oidcSub);
+        return res.status(401).json({ authenticated: false });
+      }
+
+      // CRITICAL: Make points and ggCoins numbers (not null)
+      const user = {
+        ...dbUser,
+        totalPoints: dbUser.totalPoints ?? 0,
+        ggCoins: dbUser.ggCoins ?? 0,
+      };
+
+      return res.json({ authenticated: true, user });
+    }
+    res.json({ authenticated: false });
+  });
+
+  // Logout endpoint - destroys session and clears cookie
+  app.post('/api/logout', (req: any, res) => {
+    req.logout((err: any) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({ ok: false, error: 'Logout failed' });
+      }
+      req.session.destroy((err: any) => {
+        if (err) {
+          console.error('Session destroy error:', err);
+          return res.status(500).json({ ok: false, error: 'Session destroy failed' });
+        }
+        res.clearCookie('connect.sid', { path: '/' });
+        res.json({ ok: true });
+      });
+    });
+  });
   app.get('/api/challenges', async (req: any, res) => {
     try {
       const userId = req.isAuthenticated() && req.user?.oidcSub
