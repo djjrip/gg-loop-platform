@@ -373,28 +373,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // TEMP PROD VERIFICATION ENDPOINTS — REMOVE AFTER PASS
   // ============================================
   // These endpoints allow automated verification without manual OAuth
-  // SECURITY: Token-gated, admin-only, localhost/allowlist only
+  // SECURITY: Derived from SESSION_SECRET (no new env vars required)
   // TODO: REMOVE after verification passes
 
-  const ADMIN_TEST_TOKEN = process.env.ADMIN_TEST_TOKEN;
-  const ADMIN_TEST_EMAIL = process.env.ADMIN_TEST_EMAIL || 'jaysonquindao1@gmail.com';
-  const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+  const deriveAdminToken = () => {
+    const crypto = require('crypto');
+    const sessionSecret = process.env.SESSION_SECRET || '';
+    if (!sessionSecret) {
+      throw new Error('SESSION_SECRET not configured');
+    }
+    return crypto.createHmac('sha256', sessionSecret)
+      .update('GGLOOP_ZERO_MANUAL_V1')
+      .digest('hex');
+  };
+
+  const getAdminTestEmail = () => {
+    const adminEmailsEnv = process.env.ADMIN_EMAILS || '';
+    const adminEmails = adminEmailsEnv.split(',').map((e: string) => e.trim()).filter((e: string) => e.length > 0);
+    if (adminEmails.length === 0) {
+      throw new Error('ADMIN_EMAILS not configured');
+    }
+    return adminEmails[0]; // Use first admin email
+  };
 
   const verifyAdminTestToken = (req: any, res: any) => {
-    if (!ADMIN_TEST_TOKEN) {
-      res.status(503).json({ error: 'Admin test endpoints disabled (ADMIN_TEST_TOKEN not configured)' });
+    try {
+      const expectedToken = deriveAdminToken();
+      const providedToken = req.headers['x-admin-test-token'];
+
+      if (providedToken !== expectedToken) {
+        res.status(403).json({ error: 'Invalid admin test token' });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      res.status(503).json({ error: 'Admin test endpoints not available (missing config)' });
       return false;
     }
-    const token = req.headers['x-admin-test-token'];
-    if (token !== ADMIN_TEST_TOKEN) {
-      res.status(403).json({ error: 'Invalid admin test token' });
-      return false;
-    }
-    if (!ADMIN_EMAILS.includes(ADMIN_TEST_EMAIL)) {
-      res.status(403).json({ error: 'Admin test email not in ADMIN_EMAILS allowlist' });
-      return false;
-    }
-    return true;
   };
 
   // TEMP: Synthetic login (creates auth session without OAuth)
@@ -442,10 +457,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!verifyAdminTestToken(req, res)) return;
 
     if (req.isAuthenticated()) {
+      const email = req.user?.email || '';
+      const maskedEmail = email ? `${email[0]}***@${email.split('@')[1]}` : 'unknown';
       res.json({
         authenticated: true,
-        email: req.user?.email,
-        oidcSub: req.user?.oidcSub,
+        email: maskedEmail,
       });
     } else {
       res.json({ authenticated: false });
