@@ -229,65 +229,27 @@ export class DbStorage implements IStorage {
         });
       }
 
-      // Existing user - only update if data changed
-      console.log('[Storage] Updating existing user');
-
+      // Existing user - return existing record directly
       const targetUser = existingUser || existingEmailUser;
+
       if (!targetUser) {
-        throw new Error("Internal error: no user found despite check");
+        throw new Error("Internal error: no user found despite existence check");
       }
 
-      // If user data hasn't changed, just return existing user
-      const hasChanges =
-        userData.email !== targetUser.email ||
-        userData.firstName !== targetUser.firstName ||
-        userData.lastName !== targetUser.lastName ||
-        userData.profileImageUrl !== targetUser.profileImageUrl;
+      console.log('[Storage] Existing user found - returning directly (no update needed)');
+      console.log('[Storage] User:', {
+        id: targetUser.id.substring(0, 8) + '...',
+        oidcSub: targetUser.oidcSub,
+        hasEmail: !!targetUser.email,
+        hasCreatedAt: !!targetUser.createdAt,
+      });
 
-      if (!hasChanges) {
-        console.log('[Storage] No changes detected - returning existing user');
-        return targetUser;
-      }
-
-      if (!userData.oidcSub) {
-        throw new Error("Cannot update user without OIDC sub");
-      }
-
-      const [user] = await db
-        .update(users)
-        .set({
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          profileImageUrl: userData.profileImageUrl,
-          updatedAt: sql`NOW()`,
-        })
-        .where(eq(users.oidcSub, userData.oidcSub))
-        .returning();
-
-      // CRITICAL: Ensure we never return undefined
-      if (!user) {
-        console.error('[Storage] CRITICAL: User update returned no rows', {
-          oidcSub: userData.oidcSub,
-          email: userData.email,
-        });
-
-        // Attempt to fetch user directly as fallback
-        const fallbackUser = await this.getUserByOidcSub(userData.oidcSub);
-        if (fallbackUser) {
-          console.warn('[Storage] Fallback succeeded - returning existing user without update');
-          return fallbackUser;
-        }
-
-        throw new Error(`Failed to update or retrieve user with oidcSub: ${userData.oidcSub}`);
-      }
-
-      console.log('[Storage] User updated successfully:', { userId: user.id });
-      return user;
+      return targetUser;
 
     } catch (error) {
       console.error('[Storage] upsertUser FAILED:', {
         error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
         oidcSub: userData.oidcSub,
         email: userData.email,
       });
