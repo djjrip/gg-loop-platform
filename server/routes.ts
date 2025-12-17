@@ -358,7 +358,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         database: 'connected',
-        uptime: process.uptime()
+        uptime: process.uptime(),
+        deploymentTest: 'ACTIVE-2025-12-17-02:24' // If present, Railway deployed this commit
       });
     } catch (error) {
       res.status(500).json({
