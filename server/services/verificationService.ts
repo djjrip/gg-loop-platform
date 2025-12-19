@@ -8,6 +8,7 @@ import { verificationProofs, fraudDetectionLogs, verificationQueue, matchSubmiss
 import { verificationConfig } from '../config/verificationConfig';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import type { VerificationMethod, QueuePriority } from '../config/verificationConfig';
+import { TrustScoreService } from './trustScoreService';
 
 /**
  * Verify a match submission
@@ -341,25 +342,49 @@ export async function processAdminReview(params: {
 
     // Update source item based on type
     if (queueItem.itemType === 'match_submission') {
+        const newStatus = params.action === 'approve' ? 'approved' : 'rejected';
         await db
             .update(matchSubmissions)
             .set({
-                status: params.action === 'approve' ? 'approved' : 'rejected',
+                status: newStatus,
                 reviewedBy: params.adminId,
                 reviewedAt: new Date(),
                 fraudFlags: params.fraudFlags || null,
                 verificationMethod: 'manual'
             })
             .where(eq(matchSubmissions.id, queueItem.itemId));
+
+        // Trust Score Event
+        if (newStatus === 'approved') {
+            await TrustScoreService.logEvent(
+                queueItem.userId,
+                'MATCH_VERIFIED_MANUAL',
+                1, // Value depends on scoring logic, but logEvent will trigger recalc
+                `Match ${queueItem.itemId} manually verified by admin`,
+                'admin_review'
+            );
+        }
     } else if (queueItem.itemType === 'proof_review') {
+        const newStatus = params.action === 'approve' ? 'verified' : params.action === 'flag' ? 'flagged' : 'rejected';
         await db
             .update(verificationProofs)
             .set({
-                status: params.action === 'approve' ? 'verified' : params.action === 'flag' ? 'flagged' : 'rejected',
+                status: newStatus,
                 verifiedBy: params.adminId,
                 verifiedAt: new Date()
             })
             .where(eq(verificationProofs.id, queueItem.itemId));
+
+        // Trust Score Event
+        if (newStatus === 'verified') {
+            await TrustScoreService.logEvent(
+                queueItem.userId,
+                'PROOF_VERIFIED_MANUAL',
+                10, // Proofs usually worth more
+                `Proof ${queueItem.itemId} manually verified by admin`,
+                'admin_review'
+            );
+        }
     }
 
     // If flagged, create fraud log
@@ -378,6 +403,15 @@ export async function processAdminReview(params: {
                 reviewedBy: params.adminId,
                 reviewedAt: new Date()
             });
+
+        // Log trust penalty
+        await TrustScoreService.logEvent(
+            queueItem.userId,
+            'FRAUD_FLAG_MANUAL',
+            -50,
+            `Flagged by admin: ${params.notes}`,
+            'admin_review'
+        );
     }
 
     return { success: true };

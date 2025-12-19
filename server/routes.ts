@@ -125,6 +125,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Trust Routes
   app.use("/api/trust", requireAuth, trustRouter);
 
+  // [MISSION 3] Temporary Admin Route for Controlled Tweets
+  // USAGE: POST /api/admin/mission-tweets
+  app.post("/api/admin/mission-tweets", async (req, res) => {
+    console.log("🐦 Starting Mission 3 Tweet Sequence...");
+
+    // Dynamic import to avoid dependency issues if not installed
+    const { TwitterApi } = await import('twitter-api-v2');
+    const { outboundConfig } = await import('./config/outbound');
+
+    const appKey = process.env.TWITTER_API_KEY;
+    const appSecret = process.env.TWITTER_API_SECRET;
+    const accessToken = process.env.TWITTER_ACCESS_TOKEN;
+    const accessSecret = process.env.TWITTER_ACCESS_SECRET;
+
+    const consumerKey = appKey || process.env.TWITTER_CONSUMER_KEY;
+    const consumerSecret = appSecret || process.env.TWITTER_CONSUMER_SECRET;
+
+    // Force check env vars
+    console.log("Checking keys:", {
+      hasConsumer: !!consumerKey,
+      hasAccess: !!accessToken
+    });
+
+    if (!consumerKey || !consumerSecret || !accessToken || !accessSecret) {
+      console.error("❌ Twitter Credentials MISSING in Environment");
+      return res.status(500).json({ error: "Missing Twitter Credentials in Production Env", env: process.env.NODE_ENV });
+    }
+
+    try {
+      const client = new TwitterApi({
+        appKey: consumerKey,
+        appSecret: consumerSecret,
+        accessToken,
+        accessSecret,
+      });
+
+      const sentTweets = [];
+
+      for (const text of outboundConfig.missionTweets) {
+        // Check if already posted recently? No, user said Force.
+        console.log(`Setting up tweet: ${text.substring(0, 20)}...`);
+        // Add delay
+        if (sentTweets.length > 0) {
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+
+        try {
+          const result = await client.v2.tweet(text);
+          console.log(`✅ Tweet Sent! ID: ${result.data.id}`);
+          sentTweets.push({ text, id: result.data.id });
+        } catch (tweetError: any) {
+          console.error(`❌ Tweet Failed: ${tweetError.message}`);
+          // If duplicate, continue
+          if (tweetError.code === 403) {
+            sentTweets.push({ text, error: "Duplicate/Forbidden" });
+          } else {
+            return res.status(500).json({ error: "Tweet execution failed", details: tweetError });
+          }
+        }
+      }
+
+      return res.json({ success: true, tweets: sentTweets });
+
+    } catch (e: any) {
+      console.error("❌ Mission 3 Critical Failure", e);
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
   console.log('âœ… Authentication initialized');
   // TEMPORARY: Direct admin login for testing (REMOVE IN PRODUCTION)
   app.get('/api/test/admin-login', async (req: any, res) => {

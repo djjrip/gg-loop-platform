@@ -78,17 +78,17 @@ export default function Home() {
               <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto mb-8 font-medium">
                 {isAuthenticated
                   ? `Welcome back, ${user?.firstName || 'Operator'}! Your rewards hub is ready.`
-                  : "A gaming identity platform for everyone. However you game, you belong here."}
+                  : "A gaming identity platform for everyone. Verify your skills, earn real rewards."}
               </p>
 
               {!isAuthenticated && (
                 <div className="flex flex-wrap gap-4 justify-center items-center">
-                  <a href="#pricing">
+                  <Link href="/login">
                     <button className="bg-gradient-to-r from-ggloop-orange to-ggloop-rose-gold hover:shadow-[0_0_30px_var(--ggloop-neon-glow)] rounded-lg px-8 py-4 font-bold text-white text-lg transition-all duration-300 flex items-center gap-2">
-                      <Rocket className="h-5 w-5" />
-                      EXPLORE THE LOOP
+                      <Shield className="h-5 w-5" />
+                      VERIFY RIOT ID
                     </button>
-                  </a>
+                  </Link>
                   <a href="https://discord.gg/Ny7ATHrh" target="_blank" rel="noopener noreferrer">
                     <button className="border-2 border-ggloop-orange text-ggloop-orange hover:bg-ggloop-orange/10 rounded-lg px-8 py-4 font-bold text-lg transition-all duration-300 flex items-center gap-2">
                       <Users className="h-5 w-5" />
@@ -377,7 +377,7 @@ export default function Home() {
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Supported Games</h2>
               <p className="text-gray-400 text-lg">
-                Building support for ranked play across Riot Games titles (Coming Soon)
+                Building support for ranked play across Riot Games titles.
               </p>
             </div>
 
@@ -408,32 +408,12 @@ export default function Home() {
             </div>
           </section>
 
-          {/* LEADERBOARDS */}
+          {/* LEADERBOARDS - REMOVED AS REQUESTED (COMING SOON) */}
+          {/*
           <section id="leaderboards" className="container mx-auto px-4 py-20 max-w-7xl">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Leaderboards</h2>
-              <p className="text-gray-400 text-lg">
-                Compete with players worldwide and climb the ranks
-              </p>
-            </div>
-
-            <div className="bg-ggloop-dark-shadow/60 border border-ggloop-orange/20 rounded-xl p-8">
-              <div className="text-center">
-                <Target className="h-16 w-16 text-ggloop-orange mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-white mb-4">Global Rankings Coming Soon</h3>
-                <p className="text-gray-400 max-w-2xl mx-auto">
-                  Join the community of early adopters. Leaderboards will feature ranked stats and exclusive rewards.
-                </p>
-                {isAuthenticated && (
-                  <Link href="/stats">
-                    <button className="mt-6 bg-gradient-to-r from-ggloop-orange to-ggloop-rose-gold hover:shadow-[0_0_30px_var(--ggloop-neon-glow)] rounded-lg px-8 py-3 font-bold text-white transition-all duration-300">
-                      View Your Stats
-                    </button>
-                  </Link>
-                )}
-              </div>
-            </div>
+            ...
           </section>
+          */}
 
           {/* ABOUT, MISSION & WHY - RESTORED CONTENT */}
           <section id="about" className="container mx-auto px-4 py-20 max-w-7xl border-t border-ggloop-orange/10">
