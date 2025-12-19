@@ -1116,3 +1116,19 @@ export const insertTrustScoreEventSchema = createInsertSchema(trustScoreEvents).
 export type InsertTrustScoreEvent = z.infer<typeof insertTrustScoreEventSchema>;
 export type TrustScoreEvent = typeof trustScoreEvents.$inferSelect;
 
+export const gameRequests = pgTable("game_requests", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id),
+  gameName: text("game_name").notNull(),
+  platform: text("platform").default("PC"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertGameRequestSchema = createInsertSchema(gameRequests).omit({
+  id: true,
+  createdAt: true
+});
+
+export type InsertGameRequest = z.infer<typeof insertGameRequestSchema>;
+export type GameRequest = typeof gameRequests.$inferSelect;

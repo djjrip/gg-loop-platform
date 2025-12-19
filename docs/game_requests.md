@@ -1,9 +1,16 @@
 # Game Request Strategy (Feedback Loop)
 
-**Objective:** Allow users to tell us what games to support next.
-**Constraint:** Keep it lean. No complex features.
+**Status:** IMPLEMENTED (Phase 3 Complete)
+**Date:** 2025-12-19
 
-## The Strategy: "Lean Database Intake"
+## 1. Technical Implementation
+*   **Table:** `game_requests` (id, user_id, game_name, platform, notes).
+*   **API:** `POST /api/requests/games`.
+*   **UI:** `/request-game` (Simple React Hook Form + Zod validation).
+*   **Access:** Authenticated users only.
+
+## 2. The Strategy: "Lean Database Intake"
+
 
 Instead of an external form (disconnected data) or a complex voting system (over-engineering), we will implement a **Simple Request Table**.
 

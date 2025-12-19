@@ -14,9 +14,9 @@ import {
   matchWinWebhookSchema, achievementWebhookSchema, tournamentWebhookSchema,
   insertReferralSchema, processedRiotMatches, referrals, affiliateApplications,
   charities, charityCampaigns, games, leaderboardEntries,
-  verificationProofs, fraudDetectionLogs, verificationQueue
+  verificationProofs, fraudDetectionLogs, verificationQueue,
+  gameRequests, insertGameRequestSchema
 } from "@shared/schema";
-import { and, eq, sql, inArray, desc, gte } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./auth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { z } from "zod";
@@ -121,6 +121,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log('ðŸ” Initializing authentication...');
   await setupAuth(app);
   await setupTwitchAuth(app);
+
+  // [PHASE 3] Game Request Feedback Loop
+  app.post("/api/requests/games", requireAuth, async (req, res) => {
+    try {
+      const data = insertGameRequestSchema.parse(req.body);
+      const request = await db.insert(gameRequests).values({
+        ...data,
+        userId: req.dbUser.id,
+      });
+      res.json({ success: true, message: "Request received" });
+    } catch (e: any) {
+      res.status(400).json({ error: e.message });
+    }
+  });
 
   // Register Trust Routes
   app.use("/api/trust", requireAuth, trustRouter);

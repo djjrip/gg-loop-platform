@@ -38,6 +38,7 @@ import AffiliateProgram from "@/pages/AffiliateProgram";
 import GGLoopCares from "@/pages/GGLoopCares";
 // import AWSRoadmap from "@/pages/AWSRoadmap"; // REMOVED PUBLIC ROUTE
 import Roadmap from "@/pages/Roadmap";
+import RequestGame from "@/pages/RequestGame";
 
 // Admin pages
 import AdminDashboard from "@/pages/AdminDashboardPage";
@@ -97,6 +98,7 @@ function Router() {
       <Route path="/referrals" component={Referrals} />
       <Route path="/affiliate-program" component={AffiliateProgram} />
       <Route path="/gg-loop-cares" component={GGLoopCares} />
+      <Route path="/request-game" component={RequestGame} />
       <Route path="/notifications" component={Notifications} />
       <Route path="/launch-dashboard" component={LaunchDashboard} />
       <Route path="/subscription/success" component={SubscriptionSuccess} />
