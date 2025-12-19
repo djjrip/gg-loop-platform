@@ -11,24 +11,17 @@ export const outboundConfig = {
     ],
 
     missionTweets: [
-        `Building GG LOOP in public.
-Verified gameplay → real rewards.
-No hype. No shortcuts.
-PLAY → VERIFY → EARN → LOOP.
-https://ggloop.io`,
+        `GG LOOP update:
+Core platform is live.
+Trust Score v1 is live.
+Desktop verification is next.
 
-        `Current status:
-• Core platform: live
-• Trust Score v1: live
-• Desktop verification: in progress
-• Early days, but direction is locked
+We’re early. We’re building in public.
+No hype — just fundamentals.
 
 Progress: ~35%
-Still building.`,
 
-        `Transparency matters.
-If something breaks, we’ll say it.
-If something ships, we’ll show it.
-GG LOOP is a long game.`
+https://ggloop.io
+#GGLOOP #BuildInPublic #GamingTech`
     ]
 };
