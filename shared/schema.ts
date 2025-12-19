@@ -1066,3 +1066,53 @@ export const insertNotificationCampaignSchema = createInsertSchema(notificationC
   totalSent: true,
   status: true
 });
+
+// ============================================================================
+// TRUST SCORING SYSTEM (Priority 2)
+// ============================================================================
+
+export const trustScores = pgTable("trust_scores", {
+  userId: varchar("user_id").primaryKey().references(() => users.id),
+  score: integer("score").notNull().default(0), // 0-100
+  tier: varchar("tier").notNull().default("UNVERIFIED"), // UNVERIFIED, DEVELOPING, TRUSTED, ELITE
+  lastCalculatedAt: timestamp("last_calculated_at").notNull().defaultNow(),
+  reasons: jsonb("reasons"), // Array of strings explaining the score
+  components: jsonb("components"), // Detailed breakdown { matchVerify: 10, desktop: 40, etc }
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_trust_scores_tier").on(table.tier),
+  index("idx_trust_scores_score").on(table.score),
+]);
+
+export const trustScoreEvents = pgTable("trust_score_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  eventType: varchar("event_type").notNull(), // MATCH_VERIFIED, FRAUD_PENALTY, DESKTOP_SYNC, etc.
+  scoreDelta: integer("score_delta").notNull(), // e.g. +5, -20
+  newScore: integer("new_score").notNull(),
+  reason: text("reason").notNull(),
+  source: varchar("source").default("system"), // system, admin, manual
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_trust_events_user").on(table.userId),
+  index("idx_trust_events_created").on(table.createdAt),
+]);
+
+export const insertTrustScoreSchema = createInsertSchema(trustScores).omit({
+  lastCalculatedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertTrustScore = z.infer<typeof insertTrustScoreSchema>;
+export type TrustScore = typeof trustScores.$inferSelect;
+
+export const insertTrustScoreEventSchema = createInsertSchema(trustScoreEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertTrustScoreEvent = z.infer<typeof insertTrustScoreEventSchema>;
+export type TrustScoreEvent = typeof trustScoreEvents.$inferSelect;
+

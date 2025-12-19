@@ -1,4 +1,5 @@
 ﻿import notificationRoutes from "./routes/notifications";
+import trustRouter from "./routes/trust";
 import partnerRoutes from "./routes/partner";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
@@ -29,6 +30,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import adminRouter from "./routes/admin";
 import * as verificationService from "./services/verificationService";
 import * as fraudDetectionService from "./services/fraudDetectionService";
+import { TrustScoreService } from "./services/trustScoreService";
 
 // Middleware that accepts BOTH guest sessions AND OAuth sessions
 const requireAuth = async (req: any, res: any, next: any) => {
@@ -119,6 +121,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log('ðŸ” Initializing authentication...');
   await setupAuth(app);
   await setupTwitchAuth(app);
+
+  // Register Trust Routes
+  app.use("/api/trust", requireAuth, trustRouter);
+
   console.log('âœ… Authentication initialized');
   // TEMPORARY: Direct admin login for testing (REMOVE IN PRODUCTION)
   app.get('/api/test/admin-login', async (req: any, res) => {
@@ -377,58 +383,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.dbUser.id;
 
-      // Get verified points from verificationProofs table
-      const verifiedProofsResult = await db
-        .select({ count: sql<number>`COUNT(*)` })
-        .from(verificationProofs)
-        .where(
-          and(
-            eq(verificationProofs.userId, userId),
-            eq(verificationProofs.status, 'verified')
-          )
-        );
+      // New Trust System Logic (Priority 2)
+      const trustState = await TrustScoreService.getTrustScore(userId);
+      const { score, tier, components } = trustState;
 
-      // Each verified proof = 100 points (placeholder logic until desktop app)
-      const verifiedPoints = Number(verifiedProofsResult[0]?.count || 0) * 100;
+      // Legacy compatibility (calculated from Trust Source of Truth)
+      const verifiedPoints = req.dbUser.totalPoints || 0;
+      const desktopVerified = !!components.desktop;
+      const fraudScore = Math.max(0, 100 - score); // Inverse of trust score
 
-      // Check desktop verification status (placeholder - will be real when desktop app exists)
-      // For now, check if user has any verified proofs with device metadata
-      const desktopVerifiedResult = await db
-        .select()
-        .from(verificationProofs)
-        .where(
-          and(
-            eq(verificationProofs.userId, userId),
-            eq(verificationProofs.status, 'verified')
-          )
-        )
-        .limit(1);
-
-      const desktopVerified = desktopVerifiedResult.length > 0 &&
-        desktopVerifiedResult[0].fileMetadata !== null;
-
-      // Get fraud score from fraudDetectionLogs table
-      const fraudLogsResult = await db
-        .select()
-        .from(fraudDetectionLogs)
-        .where(eq(fraudDetectionLogs.userId, userId))
-        .orderBy(desc(fraudDetectionLogs.createdAt))
-        .limit(1);
-
-      const fraudScore = fraudLogsResult.length > 0
-        ? fraudLogsResult[0].riskScore
-        : 0;
-
-      // Determine eligibility
-      const eligible = verifiedPoints >= 10000 &&
-        desktopVerified &&
-        fraudScore <= 30;
+      // Eligibility Rule: Must be at least DEVELOPING tier (Score 30+) AND Desktop Verified
+      // This enforces the "Truth" protocol: score must be earned.
+      const eligible = score >= 30 && desktopVerified;
 
       res.json({
         eligible,
         verifiedPoints,
         desktopVerified,
-        fraudScore
+        fraudScore,
+        trustScore: score,
+        trustTier: tier
       });
     } catch (error) {
       console.error('Error checking sponsor eligibility:', error);

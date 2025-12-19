@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GG LOOP - Play. Earn. Loop.</title>
+    <meta name="description" content="Turn your gaming into rewards. Join the revolution where every match matters.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 140, 66, 0.2);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ff8c42;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .status {
+            background: rgba(255, 140, 66, 0.1);
+            border: 1px solid #ff8c42;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #ff8c42;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 100px 0;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 64px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 32px;
+            color: #cccccc;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: #ff8c42;
+            color: #ffffff;
+            padding: 16px 48px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            background: #ff7a2e;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 140, 66, 0.3);
+        }
+
+        /* Vision Section */
+        .vision {
+            padding: 80px 0;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .vision h2 {
+            font-size: 42px;
+            text-align: center;
+            margin-bottom: 60px;
+            color: #ff8c42;
+        }
+
+        .vision-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .vision-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 140, 66, 0.2);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .vision-card:hover {
+            border-color: #ff8c42;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 140, 66, 0.2);
+        }
+
+        .vision-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .vision-card h3 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: #ff8c42;
+        }
+
+        .vision-card p {
+            color: #cccccc;
+            line-height: 1.8;
+        }
+
+        /* Roadmap */
+        .roadmap {
+            padding: 80px 0;
+        }
+
+        .roadmap h2 {
+            font-size: 42px;
+            text-align: center;
+            margin-bottom: 60px;
+            color: #ff8c42;
+        }
+
+        .roadmap-timeline {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .roadmap-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid #ff8c42;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        .roadmap-item h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #ff8c42;
+        }
+
+        .roadmap-item p {
+            color: #cccccc;
+        }
+
+        .roadmap-status {
+            display: inline-block;
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 140, 66, 0.2);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        footer p {
+            color: #888888;
+            font-size: 14px;
+        }
+
+        .founder {
+            margin-top: 20px;
+            color: #ff8c42;
+            font-weight: bold;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 42px;
+            }
+
+            .tagline {
+                font-size: 24px;
+            }
+
+            .vision-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">GG LOOP</div>
+                <div class="status">🚀 Platform Launching</div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>PLAY. EARN. LOOP.</h1>
+                <p class="tagline">Turn Your Gaming Into Rewards</p>
+                <a href="mailto:contact@ggloop.io" class="cta-button">Get Early Access</a>
+            </div>
+        </section>
+
+        <section class="vision">
+            <div class="container">
+                <h2>The Vision</h2>
+                <div class="vision-grid">
+                    <div class="vision-card">
+                        <div class="vision-icon">🎮</div>
+                        <h3>Play Your Games</h3>
+                        <p>Connect your League of Legends, Valorant, and other gaming accounts. Every match you play earns you points.</p>
+                    </div>
+                    <div class="vision-card">
+                        <div class="vision-icon">💎</div>
+                        <h3>Earn Real Rewards</h3>
+                        <p>Redeem points for gaming gear, gift cards, exclusive merch, and more. Your skills have value.</p>
+                    </div>
+                    <div class="vision-card">
+                        <div class="vision-icon">♾️</div>
+                        <h3>Loop Forever</h3>
+                        <p>The more you play, the more you earn. Build your gaming empire and turn your passion into profit.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="roadmap">
+            <div class="container">
+                <h2>What's Coming</h2>
+                <div class="roadmap-timeline">
+                    <div class="roadmap-item">
+                        <h3>Phase 1: Foundation</h3>
+                        <p>Core platform infrastructure, user authentication, and Riot Games integration for League of Legends and Valorant tracking.</p>
+                        <span class="roadmap-status">✓ Complete</span>
+                    </div>
+                    <div class="roadmap-item">
+                        <h3>Phase 2: Rewards System</h3>
+                        <p>Points earning mechanics, reward shop, and fulfillment pipeline. Turn your gameplay into tangible rewards.</p>
+                        <span class="roadmap-status">🔄 In Progress</span>
+                    </div>
+                    <div class="roadmap-item">
+                        <h3>Phase 3: Community</h3>
+                        <p>Leaderboards, referral system, creator tools, and social features. Build your gaming network.</p>
+                        <span class="roadmap-status">📋 Planned</span>
+                    </div>
+                    <div class="roadmap-item">
+                        <h3>Phase 4: Expansion</h3>
+                        <p>Additional games, premium subscriptions, partnerships, and advanced analytics. Scale the empire.</p>
+                        <span class="roadmap-status">📋 Planned</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 GG LOOP LLC. All rights reserved.</p>
+            <p class="founder">Founded by Jayson Quindao</p>
+            <p style="margin-top: 20px; font-size: 12px;">Platform currently in active development. Full launch coming soon.</p>
+        </div>
+    </footer>
+</body>
+</html>

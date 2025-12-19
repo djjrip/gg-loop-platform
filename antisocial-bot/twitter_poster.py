@@ -1,13 +1,41 @@
 #!/usr/bin/env python3
 """
-TWITTER AUTO-POSTER for Options Hunter
-Posts market analysis using pre-generated content library
+TWITTER AUTO-POSTER for GG LOOP LLC
+Secure, verified content only.
 """
 
 import os
 import json
 import sys
+import random
 from pathlib import Path
+from datetime import datetime
+
+# ==============================================================================
+# GUARDRAILS & CONFIG
+# ==============================================================================
+APPROVED_DOMAINS = ["ggloop.io", "github.com/jaysonquindao"]
+BANNED_TERMS = ["optionshunter", "3890.up.railway.app", "marketscanner", "free scanner"]
+
+TWEET_TEMPLATES = [
+    "GG LOOP LLC is building verified gameplay → real rewards. PLAY. EARN. LOOP. https://ggloop.io",
+    "We’re building the trust layer for gaming. Verified IDs, real progression, no fluff. https://ggloop.io",
+    "Creators + competitors: we’re making gameplay verification worth something. PLAY. EARN. LOOP. https://ggloop.io",
+    "Gaming needs trust, not more noise. We are building the infrastructure. https://ggloop.io"
+]
+
+def validate_content(text):
+    """Ensure content is safe and brand-aligned"""
+    text_lower = text.lower()
+    for term in BANNED_TERMS:
+        if term in text_lower:
+            print(f"⛔ SECURITY BLOCK: Attempted to post banned term: {term}")
+            return False
+    return True
+
+# ==============================================================================
+# POSTING LOGIC
+# ==============================================================================
 
 try:
     import tweepy
@@ -16,64 +44,32 @@ except ImportError:
     os.system("pip install tweepy")
     import tweepy
 
-from datetime import datetime
-
-# Twitter API credentials from GitHub Secrets
+# Twitter API credentials from GitHub Secrets / Env Vars
 TWITTER_API_KEY = os.getenv('TWITTER_API_KEY')
 TWITTER_API_SECRET = os.getenv('TWITTER_API_SECRET')
 TWITTER_ACCESS_TOKEN = os.getenv('TWITTER_ACCESS_TOKEN')
 TWITTER_ACCESS_SECRET = os.getenv('TWITTER_ACCESS_SECRET')
 
-def get_next_post():
-    """Get next post from content library"""
-    script_dir = Path(__file__).parent.parent
-    content_file = script_dir / 'CONTENT-LIBRARY-180-DAYS.json'
-    
-    # Load content library
-    with open(content_file, 'r') as f:
-        content = json.load(f)
-    
-    # Load/create queue tracker
-    queue_file = Path(__file__).parent / 'twitter-queue.json'
-    try:
-        with open(queue_file, 'r') as f:
-            queue = json.load(f)
-    except:
-        queue = {'current_post': 0, 'total_posted': 0}
-    
-    # Get current post
-    post_index = queue['current_post'] % len(content)
-    post = content[post_index]
-    
-    # Update queue
-    queue['current_post'] = post_index + 1
-    queue['total_posted'] += 1
-    queue['last_posted'] = datetime.now().isoformat()
-    
-    with open(queue_file, 'w') as f:
-        json.dump(queue, f, indent=2)
-    
-    return post['content']
-
 def post_to_twitter():
     """Post to Twitter using official API"""
     
+    # 1. CREDENTIAL CHECK
     if not all([TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET]):
-        print("❌ Twitter API credentials not set!")
-        sys.exit(1)
+        print("❌ Twitter API credentials not set! Aborting.")
+        # We exit successfully to prevent crash loops, but do nothing.
+        sys.exit(0)
     
-    # Get tweet content from library
-    try:
-        tweet_text = get_next_post()
-    except Exception as e:
-        print(f"❌ Error loading content: {e}")
-        sys.exit(1)
+    # 2. SELECT CONTENT
+    tweet_text = random.choice(TWEET_TEMPLATES)
     
+    # 3. GUARDRAIL CHECK
+    if not validate_content(tweet_text):
+        sys.exit(1)
+
     print("\n" + "="*60)
-    print("🐦 TWITTER AUTO-POSTER")
+    print("🐦 GG LOOP AUTO-POSTER")
     print("="*60)
-    print(f"📱 Account: @marketscanner_759")
-    print(f"💬 Text: {tweet_text[:80]}...")
+    print(f"💬 Text: {tweet_text}")
     print("="*60 + "\n")
     
     try:
@@ -90,15 +86,15 @@ def post_to_twitter():
         
         print(f"✅ Tweet posted successfully!")
         print(f"🔗 Tweet ID: {response.data['id']}")
-        print(f"📊 View: https://twitter.com/user/status/{response.data['id']}")
         
         return True
         
     except Exception as e:
         print(f"❌ Error posting to Twitter: {e}")
-        sys.exit(1)
+        # Exit 0 to avoid container restarts spamming logs
+        sys.exit(0)
 
 if __name__ == '__main__':
-    print("🐦 Twitter Auto-Poster Starting...")
+    print("🐦 GG LOOP Twitter Bot Starting...")
     print(f"⏰ Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
     post_to_twitter()
