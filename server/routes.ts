@@ -238,16 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   // END PATCH
 
-  const consumerKey = appKey || process.env.TWITTER_CONSUMER_KEY;
-  const consumerSecret = appSecret || process.env.TWITTER_CONSUMER_SECRET;
-
-  // Force check env vars
-  console.log("Checking keys:", {
-    hasConsumer: !!consumerKey,
-    hasAccess: !!accessToken
-  });
-
-  const isDryRun = req.query.dryRun === 'true';
+  // END PATCH
 
   if (!consumerKey || !consumerSecret || !accessToken || !accessSecret) {
     console.error("❌ Twitter Credentials MISSING in Environment");
