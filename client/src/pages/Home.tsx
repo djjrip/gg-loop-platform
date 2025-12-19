@@ -86,14 +86,14 @@ export default function Home() {
                   <Link href="/login">
                     <button className="bg-gradient-to-r from-ggloop-orange to-ggloop-rose-gold hover:shadow-[0_0_30px_var(--ggloop-neon-glow)] rounded-lg px-8 py-4 font-bold text-white text-lg transition-all duration-300 flex items-center gap-2">
                       <Shield className="h-5 w-5" />
-                      VERIFY RIOT ID
+                      START EARNING
                     </button>
                   </Link>
                   <a href="https://discord.gg/Ny7ATHrh" target="_blank" rel="noopener noreferrer">
                     <button className="border-2 border-ggloop-orange text-ggloop-orange hover:bg-ggloop-orange/10 rounded-lg px-8 py-4 font-bold text-lg transition-all duration-300 flex items-center gap-2">
                       <Users className="h-5 w-5" />
                       JOIN THE DISCORD
-                    </button>
+                    </button> //
                   </a>
                 </div>
               )}

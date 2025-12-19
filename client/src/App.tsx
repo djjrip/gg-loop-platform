@@ -97,6 +97,7 @@ function Router() {
       <Route path="/referrals" component={Referrals} />
       <Route path="/affiliate-program" component={AffiliateProgram} />
       <Route path="/gg-loop-cares" component={GGLoopCares} />
+      <Route path="/notifications" component={Notifications} />
       <Route path="/launch-dashboard" component={LaunchDashboard} />
       <Route path="/subscription/success" component={SubscriptionSuccess} />
       <Route path="/subscription/cancel" component={SubscriptionCancel} />

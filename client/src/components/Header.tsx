@@ -133,11 +133,6 @@ export default function Header() {
             </Link>
 
             {/* More Dropdown for overflow links */}
-            <Link href="/notifications">
-              <div className="relative mr-4 cursor-pointer">
-                <Bell className="h-5 w-5 text-gray-400 hover:text-white transition-colors" />
-              </div>
-            </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="text-sm font-medium px-3 py-2 flex items-center gap-1.5" data-testid="button-more-nav">
