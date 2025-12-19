@@ -11,8 +11,24 @@ export const outboundConfig = {
     ],
 
     missionTweets: [
-        "GG LOOP LLC is early, but the direction is clear: verified gameplay → real rewards.\nPLAY. EARN. LOOP.\nhttps://ggloop.io",
-        "Founder update: we’re focused on verification, trust scoring, and eligibility — not hype.\nStill building.\nhttps://ggloop.io",
-        "Nothing flashy. Just progress.\nSystems hardening. Culture matters.\nhttps://ggloop.io"
+        `Building GG LOOP in public.
+Verified gameplay → real rewards.
+No hype. No shortcuts.
+PLAY → VERIFY → EARN → LOOP.
+https://ggloop.io`,
+
+        `Current status:
+• Core platform: live
+• Trust Score v1: live
+• Desktop verification: in progress
+• Early days, but direction is locked
+
+Progress: ~35%
+Still building.`,
+
+        `Transparency matters.
+If something breaks, we’ll say it.
+If something ships, we’ll show it.
+GG LOOP is a long game.`
     ]
 };

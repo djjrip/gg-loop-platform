@@ -148,9 +148,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       hasAccess: !!accessToken
     });
 
+    const isDryRun = req.query.dryRun === 'true';
+
     if (!consumerKey || !consumerSecret || !accessToken || !accessSecret) {
       console.error("❌ Twitter Credentials MISSING in Environment");
       return res.status(500).json({ error: "Missing Twitter Credentials in Production Env", env: process.env.NODE_ENV });
+    }
+
+    if (isDryRun) {
+      return res.json({ success: true, message: "Keys Present. Dry Run Complete.", tweetCount: outboundConfig.missionTweets.length });
     }
 
     try {
