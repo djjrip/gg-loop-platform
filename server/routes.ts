@@ -6027,6 +6027,12 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
   // ------------------------------------------------------------------
   // BEDROCK AGENT INTEGRATION (Ops Triage)
   // ------------------------------------------------------------------
+
+  // Public PING route to verify deployment status immediately
+  app.get("/api/ops/ping", (req, res) => {
+    res.json({ ok: true, status: "Ops Router Active", timestamp: new Date().toISOString() });
+  });
+
   app.post("/api/ops/triage", adminMiddleware, async (req, res) => {
     try {
       // 1. Validate Input
