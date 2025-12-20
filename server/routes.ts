@@ -6317,6 +6317,11 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     }
   });
 
+  // API 404 Hardening: Ensure strict JSON response for unknown API routes
+  app.all('/api/*', (req, res) => {
+    res.status(404).json({ error: 'Not Found' });
+  });
+
   return httpServer;
 }
 
