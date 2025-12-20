@@ -15,7 +15,8 @@ import {
   insertReferralSchema, processedRiotMatches, referrals, affiliateApplications,
   charities, charityCampaigns, games, leaderboardEntries,
   verificationProofs, fraudDetectionLogs, verificationQueue,
-  gameRequests, insertGameRequestSchema
+  gameRequests, insertGameRequestSchema,
+  sql
 } from "@shared/schema";
 import { setupAuth, isAuthenticated } from "./auth";
 import { setupTwitchAuth } from "./twitchAuth";
