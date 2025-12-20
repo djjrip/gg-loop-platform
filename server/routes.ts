@@ -15,9 +15,9 @@ import {
   insertReferralSchema, processedRiotMatches, referrals, affiliateApplications,
   charities, charityCampaigns, games, leaderboardEntries,
   verificationProofs, fraudDetectionLogs, verificationQueue,
-  gameRequests, insertGameRequestSchema,
-  sql
+  gameRequests, insertGameRequestSchema
 } from "@shared/schema";
+import { sql } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./auth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { z } from "zod";
