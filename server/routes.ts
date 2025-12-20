@@ -6033,7 +6033,18 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     res.json({ ok: true, status: "Ops Router Active", timestamp: new Date().toISOString() });
   });
 
-  app.post("/api/ops/triage", adminMiddleware, async (req, res) => {
+  // Middleware wrapper to allow bypass for internal smoke tests
+  const bedrockAuthMiddleware = async (req: any, res: any, next: any) => {
+    const smokeHeader = req.headers['x-ggloop-internal-smoke'];
+    // Allow bypass if token matches and environment variable IS SET (fail safe)
+    if (smokeHeader && process.env.SMOKE_TEST_TOKEN && smokeHeader === process.env.SMOKE_TEST_TOKEN) {
+      console.warn(`[OPS] ⚠️ Smoke Test Bypass Active for ${req.ip}`);
+      return next();
+    }
+    return adminMiddleware(req, res, next);
+  };
+
+  app.post("/api/ops/triage", bedrockAuthMiddleware, async (req, res) => {
     try {
       // 1. Validate Input
       const schema = z.object({
@@ -6063,6 +6074,9 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       // but SDK requires a sessionId. Let's default to a random UUID if missing to ensure distinct sessions.
       const effectiveSessionId = sessionId || crypto.randomUUID();
 
+      console.log(`[BEDROCK_INVOKE_START] Session: ${effectiveSessionId}`);
+      const start = Date.now();
+
       const command = new InvokeAgentCommand({
         agentId,
         agentAliasId,
@@ -6074,26 +6088,34 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
       // 4. Invoke & Aggregate Stream
       // Bedrock Agent Runtime returns a stream of events.
-      const response = await bedrockClient.send(command);
+      try {
+        const response = await bedrockClient.send(command);
 
-      let fullText = "";
+        let fullText = "";
 
-      if (response.completion) {
-        for await (const chunk of response.completion) {
-          if (chunk.chunk && chunk.chunk.bytes) {
-            // Decode Uint8Array to string
-            const text = new TextDecoder("utf-8").decode(chunk.chunk.bytes);
-            fullText += text;
+        if (response.completion) {
+          for await (const chunk of response.completion) {
+            if (chunk.chunk && chunk.chunk.bytes) {
+              // Decode Uint8Array to string
+              const text = new TextDecoder("utf-8").decode(chunk.chunk.bytes);
+              fullText += text;
+            }
           }
         }
-      }
 
-      // 5. Return Response
-      res.json({
-        ok: true,
-        responseText: fullText,
-        sessionId: effectiveSessionId
-      });
+        const duration = Date.now() - start;
+        console.log(`[BEDROCK_INVOKE_OK] Duration: ${duration}ms, Bytes: ${fullText.length}`);
+
+        // 5. Return Response
+        res.json({
+          ok: true,
+          responseText: fullText,
+          sessionId: effectiveSessionId
+        });
+      } catch (innerError: any) {
+        console.error(`[BEDROCK_INVOKE_FAIL] ${innerError.message}`);
+        throw innerError; // Rethrow to outer catch
+      }
 
     } catch (error: any) {
       console.error("❌ Bedrock Invocation Failed:", error);
