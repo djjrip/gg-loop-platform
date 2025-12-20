@@ -6033,18 +6033,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     res.json({ ok: true, status: "Ops Router Active", timestamp: new Date().toISOString() });
   });
 
-  // Middleware wrapper to allow bypass for internal smoke tests
-  const bedrockAuthMiddleware = async (req: any, res: any, next: any) => {
-    const smokeHeader = req.headers['x-ggloop-internal-smoke'];
-    // Allow bypass if token matches and environment variable IS SET (fail safe)
-    if (smokeHeader && process.env.SMOKE_TEST_TOKEN && smokeHeader === process.env.SMOKE_TEST_TOKEN) {
-      console.warn(`[OPS] ⚠️ Smoke Test Bypass Active for ${req.ip}`);
-      return next();
-    }
-    return adminMiddleware(req, res, next);
-  };
-
-  app.post("/api/ops/triage", bedrockAuthMiddleware, async (req, res) => {
+  app.post("/api/ops/triage", adminMiddleware, async (req, res) => {
     try {
       // 1. Validate Input
       const schema = z.object({
