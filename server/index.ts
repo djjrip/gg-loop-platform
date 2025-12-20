@@ -45,6 +45,8 @@ process.on('unhandledRejection', async (reason) => {
   }, 1000);
 });
 import { registerRoutes } from "./routes";
+import { setupAuth } from "./auth";
+import { startTwitterAutomation } from "./services/twitter";
 import { notify, type AlertPayload } from './alerts';
 import { twitchErrorLogger } from "./middleware/twitchErrorLogger";
 import { serveStatic, log } from "./staticServer";
@@ -312,6 +314,7 @@ app.use((req, res, next) => {
       host: "0.0.0.0",
     }, () => {
       log(`serving on port ${port}`);
+      startTwitterAutomation();
       console.log(`🚀 Server started at ${new Date().toISOString()} - MemoryStore Active`);
 
       // Start streaming verification monitoring
