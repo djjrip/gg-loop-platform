@@ -54,6 +54,8 @@ import { storage } from './storage';
 console.log("Starting server... (DEPLOY: 2025-11-26 02:50 CST - AUTH REFACTOR + LOGGING)");
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Defensive middleware – strip stray Date objects from session to avoid Date serialization errors
 app.use((req, _res, next) => {
