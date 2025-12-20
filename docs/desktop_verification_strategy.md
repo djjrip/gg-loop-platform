@@ -1,38 +1,50 @@
-# GG LOOP Desktop verification Strategy
+# GG LOOP Desktop Verification Strategy: System Design
 
-**Status:** STRATEGY ONLY (No Code Yet)
+**Status:** ARCHITECTURE & STRATEGY (No Code)
 **Date:** 2025-12-19
+**Type:** Technical Foundation
 
-## 1. Core Functionality
-The desktop app serves one primary purpose: **High-Fidelity Human Verification.**
-Web APIs (OAuth) prove you *own* an account. The Desktop App proves you are *playing* on it right now, on a real machine.
+## 1. Executive Summary
+The GG LOOP Desktop App is a **High-Fidelity Trust Engine**. It is NOT a kernel-level anti-cheat, nor is it spyware. Its sole purpose is to verify **human presence** and **session consistency** to unlock higher-value rewards.
 
-### Key Signals:
-1.  **Process Presence:** Is the game (e.g., `LeagueClient.exe`) running?
-2.  **Session Heartbeat:** Is the process active for a human-like duration?
-3.  **Hardware Signature:** Is this a unique, physical machine (not a VM farm)?
+## 2. Core Architecture: "The Launcher"
+The app is a lightweight shell that handles:
+1.  **Auth Integration:** Secure handshake with `ggloop.io` via OAuth/JWT.
+2.  **Heartbeat:** Sending a signed pulse every 30-60s confirming "App is active".
+3.  **Update Engine:** Auto-updating itself and its adapters.
+4.  **Signal Aggregator:** Collecting data from adapters and encrypting it for transmission.
 
-## 2. Multi-Game Architecture
-We will not build a separate app for every game. We will build **One Launcher with Pluggable Adapters**.
+### 2.1 What It Does NOT Do
+*   **NO Kernel Drivers:** We operate strictly in user-space (ring 3).
+*   **NO Personal Scanning:** No reading browser history, emails, or unrelated files.
+*   **NO "Cheat Guarantee":** We verify *effort*, not strict competitive integrity (we leave that to Vanguard/VAC).
 
-*   **The Core:** Handle update, auth, heartbeat, and signal transmission to GG LOOP servers.
-*   **The Adapters:** Tiny logic blocks specific to each game.
-    *   *Adapter A (League):* Checks for `LeagueClient.exe`.
-    *   *Adapter B (Valorant):* Checks for `VALORANT.exe`.
-    *   *Adapter C (CS2):* Checks for `cs2.exe`.
+## 3. The Adapter System (Plug-in Model)
+To support many games without bloating the core, we use an **Adapter Pattern**.
 
-## 3. Boundaries (What We Will NOT Do)
-*   **No Kernel Access:** We are not building Vanguard or EasyAntiCheat. We operate in user-space.
-*   **No Personal Spying:** We do not read browser history, keystrokes (outside game focus), or personal files.
-*   **No Screen Recording:** We do not stream your desktop.
+### 3.1 Adapter Structure
+Each supported game has a dedicated "Adapter" (a small JS/DLL module) that knows how to check for that specific game.
 
-## 4. New Game Intake Process
-How do we decide which game to add next?
-1.  **Demand:** User requests (via Feedback Loop).
-2.  **Feasibility:** strictly strictly requires publicly visible process signals or local logs we can parse safely.
-3.  **Integrity:** Can we trust the signal? (High-risk games for botting may be deprioritized).
+*   **ProcessAdapter:** Checks if specific `.exe` is running (e.g., `LeagueClient.exe`).
+*   **LogAdapter:** Safe parsing of local log files (e.g., Riot LCU logs) for events like "GameStart", "GameEnd".
+*   **RichPresenceAdapter:** Reading Discord Rich Presence (if available/reliable).
 
-**Implementation Priority:**
-1.  League of Legends (MVP)
-2.  Valorant (Primary Shooter)
-3.  Community Vote Winner
+### 3.2 Deployment Strategy
+1.  **Core Launcher:** Installed once.
+2.  **Adapters:** Downloaded on-demand. If user plays League, they get the League Adapter.
+
+## 4. Priority Roadmap
+### Tier 1: Competitive Anchors
+*   **League of Legends:** LCU API + Process check.
+*   **Valorant:** Process check + Log parsing.
+*   **Counter-Strike 2:** Game State Integration (GSI) + Process check.
+
+### Tier 2: Community Requests (Phase 3 Signal)
+*   Driven by data from `/request-game`.
+*   Games with verifiable public APIs prioritized.
+
+## 5. Security & Trust
+*   **Transparencyst:** The app will have a "Debug View" showing users exactly what data is being sent.
+*   **Privacy:** Data is ephemeral where possible.
+*   **Signature:** All heartbeats are HMAC signed to prevent replay attacks.
+
