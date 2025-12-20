@@ -21,6 +21,7 @@
     "seed:production": "node scripts/seed-production.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.956.0",
     "@google-cloud/storage": "^7.17.3",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",

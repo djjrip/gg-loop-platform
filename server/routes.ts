@@ -31,6 +31,19 @@ import adminRouter from "./routes/admin";
 import * as verificationService from "./services/verificationService";
 import * as fraudDetectionService from "./services/fraudDetectionService";
 import { TrustScoreService } from "./services/trustScoreService";
+import { BedrockAgentRuntimeClient, InvokeAgentCommand } from "@aws-sdk/client-bedrock-agent-runtime";
+
+// Initialize Bedrock Client (Lazy or Singleton)
+// Region is required. If not set, SDK might throw or default to config file.
+// We expect AWS_REGION to be set in env (e.g., us-east-1)
+const bedrockClient = new BedrockAgentRuntimeClient({
+  region: process.env.AWS_REGION || "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || ""
+  }
+});
+
 
 // Middleware that accepts BOTH guest sessions AND OAuth sessions
 const requireAuth = async (req: any, res: any, next: any) => {
@@ -6007,8 +6020,85 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     }
   });
 
-  // Admin Routes (Founder Control Pack)
-  app.use("/api/admin", adminRouter);
+  // Admin routes
+  app.use("/api/admin", adminMiddleware, adminRouter);
+
+
+  // ------------------------------------------------------------------
+  // BEDROCK AGENT INTEGRATION (Ops Triage)
+  // ------------------------------------------------------------------
+  app.post("/api/ops/triage", adminMiddleware, async (req, res) => {
+    try {
+      // 1. Validate Input
+      const schema = z.object({
+        inputText: z.string().min(1).max(8000),
+        sessionId: z.string().optional(),
+        context: z.record(z.any()).optional() // For sessionState.sessionAttributes if needed later
+      });
+
+      const parseResult = schema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ ok: false, error: "Invalid input", details: parseResult.error });
+      }
+
+      const { inputText, sessionId, context } = parseResult.data;
+      const agentId = process.env.BEDROCK_AGENT_ID;
+      const agentAliasId = process.env.BEDROCK_AGENT_ALIAS_ID;
+
+      // 2. Validate Env Config
+      if (!agentId || !agentAliasId) {
+        console.error("❌ Bedrock Config Missing: BEDROCK_AGENT_ID or BEDROCK_AGENT_ALIAS_ID not set.");
+        return res.status(503).json({ ok: false, error: "Service configuration error" });
+      }
+
+      // 3. Prepare Command
+      // If no sessionId provided, Bedrock creates a new session. 
+      // However, we usually want to persist it. If client sends none, we might just let Bedrock handle it,
+      // but SDK requires a sessionId. Let's default to a random UUID if missing to ensure distinct sessions.
+      const effectiveSessionId = sessionId || crypto.randomUUID();
+
+      const command = new InvokeAgentCommand({
+        agentId,
+        agentAliasId,
+        sessionId: effectiveSessionId,
+        inputText,
+        enableTrace: false, // Turn on if debugging is needed
+        sessionState: context ? { sessionAttributes: context } : undefined
+      });
+
+      // 4. Invoke & Aggregate Stream
+      // Bedrock Agent Runtime returns a stream of events.
+      const response = await bedrockClient.send(command);
+
+      let fullText = "";
+
+      if (response.completion) {
+        for await (const chunk of response.completion) {
+          if (chunk.chunk && chunk.chunk.bytes) {
+            // Decode Uint8Array to string
+            const text = new TextDecoder("utf-8").decode(chunk.chunk.bytes);
+            fullText += text;
+          }
+        }
+      }
+
+      // 5. Return Response
+      res.json({
+        ok: true,
+        responseText: fullText,
+        sessionId: effectiveSessionId
+      });
+
+    } catch (error: any) {
+      console.error("❌ Bedrock Invocation Failed:", error);
+      res.status(500).json({
+        ok: false,
+        error: "Internal Error Invoking Agent",
+        // Only return secure error details, avoid leaking raw stack if sensitive
+        message: error.message
+      });
+    }
+  });
 
   // === LEVEL 11: CREATOR ECONOMY ROUTES ===
   const { getCreatorStats, getCreatorLeaderboard, getReferralDetails, checkPayoutEligibility } = await import('./creatorEconomy.js');
