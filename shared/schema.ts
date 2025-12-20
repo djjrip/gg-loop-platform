@@ -4,6 +4,8 @@ import { pgTable, text, varchar, integer, timestamp, boolean, index, jsonb, seri
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export { sql };
+
 export const sessions = pgTable(
   "sessions",
   {
