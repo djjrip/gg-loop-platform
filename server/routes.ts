@@ -499,6 +499,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/health', async (req, res) => {
     try {
       // Test database connection
+      if (!sql) {
+        throw new Error("Critical: sql helper failed to import");
+      }
       await db.select({ count: sql<number>`COUNT(*)` }).from(users);
 
       res.json({
@@ -506,7 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timestamp: new Date().toISOString(),
         database: 'connected',
         uptime: process.uptime(),
-        deploymentTest: 'ACTIVE-2025-12-17-02:24' // If present, Railway deployed this commit
+        deploymentTest: 'ACTIVE-FIX-VERIFIED' // Updated marker
       });
     } catch (error) {
       res.status(500).json({
