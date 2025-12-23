@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-12-21T14:09:33.374Z",
+  "status": "failure",
+  "message": "Missing Configuration",
+  "usage": {
+    "month": "2025-12",
+    "count": 0
+  },
+  "cap": 100,
+  "missing": [
+    "TWITTER_API_KEY",
+    "TWITTER_API_SECRET",
+    "TWITTER_ACCESS_TOKEN",
+    "TWITTER_ACCESS_SECRET"
+  ]
+}

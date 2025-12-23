@@ -148,12 +148,12 @@ export default function Header() {
                     Affiliate Program
                   </DropdownMenuItem>
                 </Link>
-                <a href="#leaderboards" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('leaderboards')?.scrollIntoView({ behavior: 'smooth' }); setMobileMenuOpen(false); } else { window.location.href = '/#leaderboards'; } }}>
+                {/* <a href="#leaderboards" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('leaderboards')?.scrollIntoView({ behavior: 'smooth' }); setMobileMenuOpen(false); } else { window.location.href = '/#leaderboards'; } }}>
                   <DropdownMenuItem data-testid="link-leaderboards-more">
                     <BarChart3 className="mr-2 h-4 w-4" />
                     Leaderboards
                   </DropdownMenuItem>
-                </a>
+                </a> */}
                 <Link href="/shop">
                   <DropdownMenuItem data-testid="link-shop-more">
                     <Gift className="mr-2 h-4 w-4" />
@@ -377,10 +377,10 @@ export default function Header() {
               <DollarSign className="h-3.5 w-3.5 text-primary" />
               Affiliate
             </Link>
-            <a href="#leaderboards" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('leaderboards')?.scrollIntoView({ behavior: 'smooth' }); } else { window.location.href = '/#leaderboards'; } }} className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards-mobile">
+            {/* <a href="#leaderboards" onClick={(e) => { if (window.location.pathname === '/') { e.preventDefault(); document.getElementById('leaderboards')?.scrollIntoView({ behavior: 'smooth' }); } else { window.location.href = '/#leaderboards'; } }} className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5" data-testid="link-leaderboards-mobile">
               <BarChart3 className="h-3.5 w-3.5 text-primary" />
               Leaderboards
-            </a>
+            </a> */}
             <Link
               href="/shop"
               className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"

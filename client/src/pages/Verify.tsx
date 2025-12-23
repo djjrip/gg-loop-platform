@@ -66,7 +66,7 @@ export default function MobileVerify() {
           </p>
 
           <Button className="w-full bg-ggloop-orange hover:bg-orange-600 text-white font-bold">
-            {tier === 'UNVERIFIED' ? 'Start Verification →' : 'View Detailed Report'}
+            {tier === 'UNVERIFIED' ? 'Start Verification \u2192' : 'View Detailed Report'}
           </Button>
         </CardContent>
       </Card>

@@ -23,6 +23,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import OnboardingModal from "@/components/OnboardingModal";
 import logo from "@assets/ChatGPT Image Nov 11, 2025, 06_17_23 PM_1763403383212.png";
+import { isTauri } from "@/lib/tauri";
+import { DesktopStatusWidget } from "@/components/DesktopStatusWidget";
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
@@ -47,6 +49,34 @@ export default function Home() {
     setShowOnboarding(false);
     localStorage.setItem("ggloop_onboarding_completed", "true");
   };
+
+  // DESKTOP MODE (STRICT SCOPE)
+  if (isTauri() && isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background text-foreground font-sans relative flex flex-col items-center justify-center p-4">
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.05),transparent_70%)]" />
+        </div>
+
+        <div className="z-10 w-full max-w-4xl">
+          <div className="flex justify-center mb-12">
+            <img src={logo} alt="GG LOOP" className="h-20 w-auto opacity-80" />
+          </div>
+
+          <DesktopStatusWidget />
+
+          <div className="mt-12 text-center space-y-2">
+            <p className="text-sm text-gray-500 font-mono tracking-wider">
+              SECURE DESKTOP ENVIRONMENT
+            </p>
+            <p className="text-xs text-gray-700">
+              Client v0.1.0 • Build 2025.12.20 • <span className="text-green-500">Online</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans relative overflow-hidden">
@@ -93,7 +123,7 @@ export default function Home() {
                     <button className="border-2 border-ggloop-orange text-ggloop-orange hover:bg-ggloop-orange/10 rounded-lg px-8 py-4 font-bold text-lg transition-all duration-300 flex items-center gap-2">
                       <Users className="h-5 w-5" />
                       JOIN THE DISCORD
-                    </button> //
+                    </button>
                   </a>
                 </div>
               )}
@@ -423,12 +453,12 @@ export default function Home() {
                   About <span className="text-ggloop-orange">GG LOOP</span>
                 </h2>
                 <p className="text-gray-400 text-lg leading-relaxed mb-8">
-                  GG LOOP is a culture-driven gaming rewards ecosystem built for everyday gamers. We blend sneaker culture, basketball flow, streetwear aesthetics, and personal identity into a platform where players earn real value for doing what they already love â€” gaming.
+                  GG LOOP is a culture-driven gaming rewards ecosystem built for everyday gamers. We blend sneaker culture, basketball flow, streetwear aesthetics, and personal identity into a platform where players earn real value for doing what they already love - gaming.
                 </p>
 
                 <h3 className="text-2xl font-bold text-white mb-4">Our Mission</h3>
                 <p className="text-gray-400 text-lg leading-relaxed">
-                  To build the most inclusive and culturally-rooted rewards platform that empowers gamers with real value, real community, and real-life support â€” from sneakers to groceries to wellness resources â€” all through a modern, subscription-first ecosystem that respects their time and grind.
+                  To build the most inclusive and culturally-rooted rewards platform that empowers gamers with real value, real community, and real-life support - from sneakers to groceries to wellness resources - all through a modern, subscription-first ecosystem that respects their time and grind.
                 </p>
               </div>
 
@@ -438,7 +468,7 @@ export default function Home() {
                   Why We're Building This
                 </h3>
                 <p className="text-gray-400 text-lg leading-relaxed mb-6">
-                  GG LOOP exists to uplift gamers who never get rewarded for the grind they put in. Itâ€™s built for the communities we grew up with â€” culture-first, identity-driven, and grounded in the reality that gaming is more than a hobby. Itâ€™s lifestyle, escape, art, and hustle.
+                  GG LOOP exists to uplift gamers who never get rewarded for the grind they put in. It's built for the communities we grew up with - culture-first, identity-driven, and grounded in the reality that gaming is more than a hobby. It's lifestyle, escape, art, and hustle.
                 </p>
                 <div className="flex items-center gap-2 text-sm text-ggloop-orange font-bold uppercase tracking-wider">
                   <Shield className="h-4 w-4" />

@@ -1,4 +1,5 @@
 ﻿import notificationRoutes from "./routes/notifications";
+import paypalRoutes from "./routes/paypal";
 import trustRouter from "./routes/trust";
 import partnerRoutes from "./routes/partner";
 import type { Express } from "express";
@@ -33,6 +34,8 @@ import * as verificationService from "./services/verificationService";
 import * as fraudDetectionService from "./services/fraudDetectionService";
 import { TrustScoreService } from "./services/trustScoreService";
 import { BedrockAgentRuntimeClient, InvokeAgentCommand } from "@aws-sdk/client-bedrock-agent-runtime";
+import { getTwitterStatus } from "./services/twitter";
+import { generatePresignedUploadUrl } from "./services/s3";
 
 // Initialize Bedrock Client (Lazy or Singleton)
 // Region is required. If not set, SDK might throw or default to config file.
@@ -153,6 +156,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Trust Routes
   app.use("/api/trust", requireAuth, trustRouter);
 
+  // [PHASE 3] PayPal Subscription Routes
+  app.use("/api/paypal", paypalRoutes);
+
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
   app.post("/api/admin/mission-tweets", async (req, res) => {
@@ -257,6 +263,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hint: "Check if keys are revoked or app permissions (Read/Write) are correct."
       });
     }
+  });
+
+  // [PHASE 4] Ops: Twitter Status (Internal Observable)
+  app.get('/api/ops/twitter-status', adminMiddleware, (req, res) => {
+    const status = getTwitterStatus();
+    res.json(status);
   });
 
   // [HARD VERIFY] Explicit Healthcheck Route to prove deployment
@@ -584,6 +596,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error submitting proof:', error);
       res.status(500).json({ error: 'Failed to submit proof' });
+    }
+  });
+
+  // [PHASE B] S3 Verification Upload URL
+  app.post("/api/verification/upload-url", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.dbUser.id;
+      const { filename, contentType } = req.body;
+
+      if (!filename) {
+        return res.status(400).json({ error: "Filename required" });
+      }
+
+      const extension = filename.split('.').pop() || 'dat';
+      const result = await generatePresignedUploadUrl(
+        userId,
+        extension,
+        contentType || 'application/octet-stream'
+      );
+
+      console.log(`[BP] S3 Upload URL generated for user ${userId}`);
+      res.json({ success: true, ...result });
+    } catch (error: any) {
+      console.error("[S3] Upload URL Gen Failed:", error);
+      res.status(500).json({ error: "Failed to generate upload URL" });
     }
   });
 

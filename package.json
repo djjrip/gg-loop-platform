@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "set NODE_ENV=development&& npx tsx server/index.ts",
     "build": "vite build",
+    "tauri": "tauri",
     "start": "npx tsx server/index.ts",
     "verify:dist": "node ./scripts/check-dist.cjs",
     "deploy:check": "npm run build && npm run verify:dist",
@@ -22,6 +23,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.956.0",
+    "@aws-sdk/client-s3": "^3.956.0",
+    "@aws-sdk/s3-request-presigner": "^3.956.0",
     "@google-cloud/storage": "^7.17.3",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",

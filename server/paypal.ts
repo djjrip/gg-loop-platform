@@ -8,11 +8,11 @@ import {
 const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = process.env;
 
 if (!PAYPAL_CLIENT_ID) {
-  console.warn("PAYPAL_CLIENT_ID not configured");
+  console.warn("[PayPal] Warning: PAYPAL_CLIENT_ID not configured");
 }
 
 if (!PAYPAL_CLIENT_SECRET) {
-  console.warn("PAYPAL_CLIENT_SECRET not configured");
+  console.warn("[PayPal] Warning: PAYPAL_CLIENT_SECRET not configured");
 }
 
 const client = PAYPAL_CLIENT_ID && PAYPAL_CLIENT_SECRET ? new Client({
@@ -56,17 +56,17 @@ export async function verifyPayPalSubscription(subscriptionId: string): Promise<
   const elitePlanId = process.env.PAYPAL_ELITE_PLAN_ID;
 
   if (isProduction && (!basicPlanId || !proPlanId || !elitePlanId)) {
-    console.error("CRITICAL: PayPal plan IDs not configured in production");
-    return { 
-      valid: false, 
-      error: "PayPal configuration incomplete. Contact support." 
+    console.error("[PayPal] CRITICAL: PayPal plan IDs not configured in production");
+    return {
+      valid: false,
+      error: "PayPal configuration incomplete. Contact support."
     };
   }
 
   try {
     const response = await subscriptionsController.getSubscription({ id: subscriptionId });
     const subscription = response.result;
-    
+
     const status = (subscription as any).status;
     const planId = (subscription as any).planId;
     const subscriberEmail = (subscription as any).subscriber?.email_address;
@@ -75,21 +75,21 @@ export async function verifyPayPalSubscription(subscriptionId: string): Promise<
     // In production, only configured IDs are accepted (no fallback)
     // In development, fallback to sandbox IDs for testing
     const planTierMap: Record<string, string> = {};
-    
+
     if (basicPlanId) planTierMap[basicPlanId] = "basic";
     else if (!isProduction) planTierMap["P-6A485619U8349492UNEK4RRA"] = "basic"; // Sandbox fallback
-    
+
     if (proPlanId) planTierMap[proPlanId] = "pro";
     else if (!isProduction) planTierMap["P-7PE45456B7870481SNEK4TRY"] = "pro"; // Sandbox fallback
-    
+
     if (elitePlanId) planTierMap[elitePlanId] = "elite";
     else if (!isProduction) planTierMap["P-369148416D044494CNEK4UDQ"] = "elite"; // Sandbox fallback
 
     const tier = planId ? planTierMap[planId] : undefined;
-    
+
     // Security: Reject if plan ID not recognized
     if (!tier) {
-      console.error(`Security: Unrecognized PayPal plan ID ${planId}`);
+      console.error(`[PayPal] Security: Unrecognized PayPal plan ID ${planId}`);
       return {
         valid: false,
         status,
@@ -116,7 +116,7 @@ export async function verifyPayPalSubscription(subscriptionId: string): Promise<
       error: `Subscription status is ${status}, expected ACTIVE or APPROVED`,
     };
   } catch (error: any) {
-    console.error("PayPal verification error:", error);
+    console.error("[PayPal] Verification error:", error);
     return {
       valid: false,
       error: error.message || "Failed to verify subscription with PayPal",
@@ -139,10 +139,10 @@ export async function cancelPayPalSubscription(subscriptionId: string, reason?: 
         reason: reason || "User requested cancellation",
       },
     });
-    
+
     return { success: true };
   } catch (error: any) {
-    console.error("PayPal cancellation error:", error);
+    console.error("[PayPal] Cancellation error:", error);
     return {
       success: false,
       error: error.message || "Failed to cancel PayPal subscription",
@@ -156,23 +156,23 @@ export async function verifyPayPalWebhook(
 ): Promise<{ valid: boolean; error?: string }> {
   // Security: Fail closed - reject webhooks if credentials not configured
   if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
-    console.error("CRITICAL: PayPal credentials not configured - rejecting webhook");
-    return { 
-      valid: false, 
-      error: "PayPal webhook verification unavailable: credentials not configured" 
+    console.error("[PayPal] CRITICAL: PayPal credentials not configured - rejecting webhook");
+    return {
+      valid: false,
+      error: "PayPal webhook verification unavailable: credentials not configured"
     };
   }
 
   try {
     // PayPal webhook verification requires specific headers
     const webhookId = process.env.PAYPAL_WEBHOOK_ID;
-    
+
     // Security: Fail closed - reject webhooks if webhook ID not configured
     if (!webhookId) {
-      console.error("CRITICAL: PAYPAL_WEBHOOK_ID not configured - rejecting webhook");
-      return { 
-        valid: false, 
-        error: "PayPal webhook verification unavailable: webhook ID not configured" 
+      console.error("[PayPal] CRITICAL: PAYPAL_WEBHOOK_ID not configured - rejecting webhook");
+      return {
+        valid: false,
+        error: "PayPal webhook verification unavailable: webhook ID not configured"
       };
     }
 
@@ -183,9 +183,9 @@ export async function verifyPayPalWebhook(
     const authAlgo = headers['paypal-auth-algo'];
 
     if (!transmissionId || !transmissionTime || !certUrl || !transmissionSig || !authAlgo) {
-      return { 
-        valid: false, 
-        error: "Missing required PayPal webhook headers" 
+      return {
+        valid: false,
+        error: "Missing required PayPal webhook headers"
       };
     }
 
@@ -231,27 +231,27 @@ export async function verifyPayPalWebhook(
     });
 
     if (!verifyResponse.ok) {
-      return { 
-        valid: false, 
-        error: `PayPal verification failed: ${verifyResponse.statusText}` 
+      return {
+        valid: false,
+        error: `PayPal verification failed: ${verifyResponse.statusText}`
       };
     }
 
     const verifyData = await verifyResponse.json();
-    
+
     if (verifyData.verification_status === 'SUCCESS') {
       return { valid: true };
     }
 
-    return { 
-      valid: false, 
-      error: `Verification status: ${verifyData.verification_status}` 
+    return {
+      valid: false,
+      error: `Verification status: ${verifyData.verification_status}`
     };
   } catch (error: any) {
-    console.error("PayPal webhook verification error:", error);
-    return { 
-      valid: false, 
-      error: error.message || "Webhook verification failed" 
+    console.error("[PayPal] Webhook verification error:", error);
+    return {
+      valid: false,
+      error: error.message || "Webhook verification failed"
     };
   }
 }

@@ -31,7 +31,7 @@ export default function UserManagement() {
     const [pointsAmount, setPointsAmount] = useState("");
     const [pointsReason, setPointsReason] = useState("");
 
-    const { data: users, isLoading } = useQuery({
+    const { data: users, isLoading, isError } = useQuery<any[]>({
         queryKey: ["/api/admin/users"],
     });
 
@@ -61,10 +61,12 @@ export default function UserManagement() {
         },
     });
 
-    const filteredUsers = users?.filter((user: any) =>
-        user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = users?.filter((user: any) => {
+        const term = searchTerm.toLowerCase();
+        const name = user.username?.toLowerCase() || '';
+        const email = user.email?.toLowerCase() || '';
+        return name.includes(term) || email.includes(term);
+    });
 
     const handleAdjustPoints = (e: React.FormEvent) => {
         e.preventDefault();
@@ -80,6 +82,17 @@ export default function UserManagement() {
         return (
             <div className="flex h-screen items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="flex h-screen items-center justify-center flex-col gap-4">
+                <div className="text-destructive font-bold">Failed to load users.</div>
+                <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] })}>
+                    Retry
+                </Button>
             </div>
         );
     }
@@ -183,6 +196,11 @@ export default function UserManagement() {
                             ))}
                         </TableBody>
                     </Table>
+                    {(!filteredUsers || filteredUsers.length === 0) && (
+                        <div className="text-center py-12 text-muted-foreground">
+                            {users?.length === 0 ? "No users found in database." : "No users match your search."}
+                        </div>
+                    )}
                 </div>
             </main>
         </div>

@@ -33,7 +33,7 @@ export default function About() {
                 GG LOOP is a gaming rewards platform built for the players who never felt seen. A place where your grind finally has value.
               </p>
               <p>
-                A platform created by a <span className="text-primary font-semibold">Filipino-American gamer</span> who grew up on basketball courts, sneakers, and long nights on ranked queues — a place where community was everything.
+                A platform created by a <span className="text-primary font-semibold">Filipino-American gamer</span> who grew up on basketball courts, sneakers, and long nights on ranked queues - a place where community was everything.
               </p>
               <p className="text-foreground font-medium">
                 GG LOOP exists to bridge gaming culture, esports mentality, and real-world rewards into one loop:<br />
@@ -57,7 +57,7 @@ export default function About() {
             </h2>
             <div className="max-w-3xl mx-auto space-y-4 text-lg">
               <p className="text-primary font-bold text-2xl">
-                To heal the inner gamer — the version of ourselves that just needed a win.
+                To heal the inner gamer - the version of ourselves that just needed a win.
               </p>
               <p className="text-foreground font-medium">
                 We create a system where every match, every moment of effort, every ranked climb means something. We want gamers to earn real-world value, build community and feel pride in their grind.
@@ -77,19 +77,19 @@ export default function About() {
                 <ul className="space-y-3 text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
-                    <span><span className="text-foreground font-semibold">Reward gamers fairly</span> — Your time and skill deserve recognition</span>
+                    <span><span className="text-foreground font-semibold">Reward gamers fairly</span> - Your time and skill deserve recognition</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
-                    <span><span className="text-foreground font-semibold">Make gaming financially accessible</span> — Turn your passion into tangible value</span>
+                    <span><span className="text-foreground font-semibold">Make gaming financially accessible</span> - Turn your passion into tangible value</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
-                    <span><span className="text-foreground font-semibold">Build a culture-driven ecosystem</span> — Grounded in streetwear, hoops, and identity</span>
+                    <span><span className="text-foreground font-semibold">Build a culture-driven ecosystem</span> - Grounded in streetwear, hoops, and identity</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
-                    <span><span className="text-foreground font-semibold">Give back to players and communities</span> — Support the gamers who support us</span>
+                    <span><span className="text-foreground font-semibold">Give back to players and communities</span> - Support the gamers who support us</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
@@ -110,23 +110,23 @@ export default function About() {
                 <ul className="space-y-3 text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
-                    <span><span className="text-primary font-semibold">Community First</span> — Built by gamers, for gamers</span>
+                    <span><span className="text-primary font-semibold">Community First</span> - Built by gamers, for gamers</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
-                    <span><span className="text-primary font-semibold">Transparency Always</span> — No hidden agendas or fine print</span>
+                    <span><span className="text-primary font-semibold">Transparency Always</span> - No hidden agendas or fine print</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
-                    <span><span className="text-primary font-semibold">Respect Humanity</span> — No addiction mechanics, ever</span>
+                    <span><span className="text-primary font-semibold">Respect Humanity</span> - No addiction mechanics, ever</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
-                    <span><span className="text-primary font-semibold">Real Value</span> — Actual rewards, not crypto promises</span>
+                    <span><span className="text-primary font-semibold">Real Value</span> - Actual rewards, not crypto promises</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
-                    <span><span className="text-primary font-semibold">Sustainable Growth</span> — Built for the long haul</span>
+                    <span><span className="text-primary font-semibold">Sustainable Growth</span> - Built for the long haul</span>
                   </li>
                 </ul>
               </CardContent>

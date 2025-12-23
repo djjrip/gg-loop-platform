@@ -12,7 +12,7 @@ export const secureFetch = async (endpoint: string, options: any = {}) => {
   // 1. Fraud Gating Check
   const fraudScore = localStorage.getItem("gg_fraud_score");
   if (fraudScore && parseInt(fraudScore) > 30) {
-    console.error("⛔ BLOCKED: Fraud Score too high.");
+    console.error("[SECURITY] BLOCKED: Fraud Score too high.");
     throw new Error("Security Violation: Action Blocked.");
   }
 

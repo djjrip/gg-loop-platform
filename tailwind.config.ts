@@ -1,5 +1,11 @@
 import type { Config } from "tailwindcss";
 
+// ══════════════════════════════════════════════════════════════
+// GLOBAL REALITY LOCK (IMMUTABLE)
+// Brand DNA: basketball flow, sneaker + streetwear culture, orange + black
+// ❌ DO NOT MODIFY 'ggloop' COLORS WITHOUT FOUNDER CONSENT.
+// ══════════════════════════════════════════════════════════════
+
 export default {
   darkMode: ["class"],
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],

@@ -18,7 +18,7 @@ export default function Footer() {
               A gaming rewards platform built for the players who never felt seen.
             </p>
             <p className="text-xs text-muted-foreground mt-3 italic">
-              Healing the inner gamer — one match at a time.
+              Healing the inner gamer - one match at a time.
             </p>
           </div>
 
@@ -90,7 +90,7 @@ export default function Footer() {
             all associated properties are trademarks or registered trademarks of Riot Games, Inc.
           </p>
           <p className="text-xs text-muted-foreground whitespace-nowrap">
-            © 2025 GG LOOP LLC. All rights reserved.
+            &copy; 2025 GG LOOP LLC. All rights reserved.
           </p>
         </div>
       </div>

@@ -303,9 +303,9 @@ export default function Settings() {
                   <div className="space-y-2">
                     <p className="font-semibold text-sm">Game Account Linking: Display Only</p>
                     <div className="text-xs text-muted-foreground space-y-1">
-                      <p>• Riot account linking is <strong>cosmetic only</strong></p>
-                      <p>• Does NOT affect points, rewards, or earning</p>
-                      <p>• Match stats display for your profile only</p>
+                      <p>- Riot account linking is <strong>cosmetic only</strong></p>
+                      <p>- Does NOT affect points, rewards, or earning</p>
+                      <p>- Match stats display for your profile only</p>
                     </div>
                     <div className="pt-2 mt-2 border-t border-orange-500/20">
                       <p className="text-xs font-medium text-orange-400">
@@ -394,7 +394,7 @@ export default function Settings() {
                   ⚡ Game linking is currently for profile display only
                 </p>
                 <p className="text-xs text-center text-muted-foreground mt-1">
-                  Earn rewards now through subscriptions + platform missions • Verified gameplay rewards coming with Desktop App 2025
+                  Earn rewards now through subscriptions + platform missions - Verified gameplay rewards coming with Desktop App 2025
                 </p>
               </div>
             </CardContent>

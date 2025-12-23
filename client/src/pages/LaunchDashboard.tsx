@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Circle, ExternalLink, Rocket } from "lucide-react";
+import { CheckCircle2, Circle, ExternalLink, Rocket, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 
 export default function LaunchChecklist() {
@@ -66,6 +66,12 @@ export default function LaunchChecklist() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12 max-w-5xl">
         <div className="mb-8">
+          <Link href="/stats">
+            <Button variant="ghost" className="mb-4 pl-0 hover:bg-transparent hover:text-primary gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
           <div className="flex items-center gap-3 mb-4">
             <Rocket className="h-10 w-10 text-primary" />
             <h1 className="text-4xl font-bold">Launch Checklist</h1>
@@ -99,8 +105,8 @@ export default function LaunchChecklist() {
                 section.status === 'complete'
                   ? 'border-2 border-green-600'
                   : section.status === 'action'
-                  ? 'border-2 border-primary'
-                  : ''
+                    ? 'border-2 border-primary'
+                    : ''
               }
             >
               <CardHeader>
