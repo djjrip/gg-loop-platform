@@ -166,3 +166,15 @@ export async function executeTwitterJob(dryRun = false) {
 
 // Removed self-execution block to support ESM
 
+export function getTwitterStatus() {
+    return {
+        enabled: process.env.ENABLE_AUTO_TWEET === 'true',
+        monthlyCap: MONTHLY_CAP,
+    };
+}
+
+export function startTwitterAutomation() {
+    // Placeholder - automation triggered via cron or manual call
+    console.log('[Twitter] Automation initialized');
+}
+
