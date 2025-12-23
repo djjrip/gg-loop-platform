@@ -303,6 +303,29 @@ export const riotAccounts = pgTable("riot_accounts", {
   gameCheck: sql`CHECK (game IN ('league', 'valorant', 'tft'))`,
 }));
 
+export const steamAccounts = pgTable("steam_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  steamId: varchar("steam_id").notNull().unique(), // SteamID64
+  profileUrl: text("profile_url"),
+  avatar: text("avatar"),
+  personaName: text("persona_name"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  idxSteamAccountsUser: index("idx_steam_accounts_user").on(table.userId),
+  idxSteamAccountsSteamId: index("idx_steam_accounts_steam_id").on(table.steamId),
+}));
+
+export const insertSteamAccountSchema = createInsertSchema(steamAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertSteamAccount = z.infer<typeof insertSteamAccountSchema>;
+export type SteamAccount = typeof steamAccounts.$inferSelect;
+
 export const processedRiotMatches = pgTable("processed_riot_matches", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   riotAccountId: varchar("riot_account_id").notNull().references(() => riotAccounts.id, { onDelete: 'cascade' }),
@@ -786,6 +809,28 @@ export const insertCharityCampaignSchema = createInsertSchema(charityCampaigns).
 
 export type InsertCharityCampaign = z.infer<typeof insertCharityCampaignSchema>;
 export type CharityCampaign = typeof charityCampaigns.$inferSelect;
+
+export type InsertCharityCampaign = z.infer<typeof insertCharityCampaignSchema>;
+export type CharityCampaign = typeof charityCampaigns.$inferSelect;
+
+export const xPostLogs = pgTable("x_post_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  content: text("content").notNull(),
+  tweetId: varchar("tweet_id"),
+  status: varchar("status").notNull(), // 'success', 'failed', 'skipped'
+  month: varchar("month").notNull(), // 'YYYY-MM'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_x_post_logs_month").on(table.month),
+]);
+
+export const insertXPostLogSchema = createInsertSchema(xPostLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertXPostLog = z.infer<typeof insertXPostLogSchema>;
+export type XPostLog = typeof xPostLogs.$inferSelect;
 
 // ============================================================================
 // Manual Fulfillment System + Founder Mission Control

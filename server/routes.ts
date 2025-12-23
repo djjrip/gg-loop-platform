@@ -2,6 +2,8 @@
 import paypalRoutes from "./routes/paypal";
 import trustRouter from "./routes/trust";
 import partnerRoutes from "./routes/partner";
+import riotAuthRouter from "./routes/riotAuth";
+import matchesRouter from "./routes/matches";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -21,6 +23,7 @@ import {
 import { sql } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./auth";
 import { setupTwitchAuth } from "./twitchAuth";
+import { setupSteamAuth } from "./routes/steamAuth";
 import { z } from "zod";
 import { verifyPayPalSubscription, cancelPayPalSubscription, verifyPayPalWebhook } from "./paypal";
 import { pointsEngine } from "./pointsEngine";
@@ -138,6 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log('ðŸ” Initializing authentication...');
   await setupAuth(app);
   await setupTwitchAuth(app);
+  setupSteamAuth(app);
 
   // [PHASE 3] Game Request Feedback Loop
   app.post("/api/requests/games", requireAuth, async (req, res) => {
@@ -158,6 +162,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // [PHASE 3] PayPal Subscription Routes
   app.use("/api/paypal", paypalRoutes);
+
+  // [LEVEL 2] Riot OAuth Routes
+  app.use("/api/riot", riotAuthRouter);
+  app.use("/api/matches", matchesRouter); // Endpoint 3: Match Sync
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets

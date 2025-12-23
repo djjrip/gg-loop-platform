@@ -13,6 +13,9 @@ export function validateRequiredEnv(): EnvCheck[] {
   const required = [
     { key: 'SESSION_SECRET', severity: 'warn', msg: 'SESSION_SECRET not set; using generated fallback.' },
     { key: 'RIOT_API_KEY', severity: 'error', msg: 'RIOT_API_KEY missing; Riot linking will fail.' },
+    { key: 'RIOT_CLIENT_ID', severity: 'error', msg: 'RIOT_CLIENT_ID missing; OAuth wont work.' },
+    { key: 'RIOT_CLIENT_SECRET', severity: 'error', msg: 'RIOT_CLIENT_SECRET missing; OAuth wont work.' },
+    { key: 'RIOT_REDIRECT_URI', severity: 'error', msg: 'RIOT_REDIRECT_URI missing; OAuth wont work.' },
   ];
 
   for (const r of required) {

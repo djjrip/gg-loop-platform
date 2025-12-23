@@ -1,5 +1,7 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { RiotIdentityCard } from "@/components/RiotIdentityCard";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +71,7 @@ interface PublicProfile {
 
 export default function Profile() {
   const { userId } = useParams<{ userId: string }>();
+  const { user: currentUser } = useAuth();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState<any>(null);
 
@@ -112,6 +115,11 @@ export default function Profile() {
       <Header />
 
       <main className="container mx-auto px-4 py-8 max-w-5xl">
+        {/* Riot Identity Card (Owner Only) */}
+        {currentUser?.id === profile.user.id && (
+          <RiotIdentityCard />
+        )}
+
         {/* Profile Header */}
         <Card className="p-8 mb-6">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -147,8 +155,8 @@ export default function Profile() {
                   <Badge
                     variant="default"
                     className={`${profile.user.subscriptionTier.toLowerCase() === 'elite'
-                        ? 'bg-gradient-to-r from-rose-500 to-pink-600'
-                        : 'bg-gradient-to-r from-purple-500 to-indigo-600'
+                      ? 'bg-gradient-to-r from-rose-500 to-pink-600'
+                      : 'bg-gradient-to-r from-purple-500 to-indigo-600'
                       } text-white border-0 px-3 py-1 text-sm font-bold shadow-lg uppercase`}
                     data-testid={`badge-subscription-${profile.user.subscriptionTier.toLowerCase()}`}
                   >

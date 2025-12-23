@@ -39,6 +39,7 @@ import GGLoopCares from "@/pages/GGLoopCares";
 // import AWSRoadmap from "@/pages/AWSRoadmap"; // REMOVED PUBLIC ROUTE
 import Roadmap from "@/pages/Roadmap";
 import RequestGame from "@/pages/RequestGame";
+import RiotCallback from "@/pages/RiotCallback";
 
 // Admin pages
 import AdminDashboard from "@/pages/AdminDashboardPage";
@@ -103,6 +104,7 @@ function Router() {
       <Route path="/launch-dashboard" component={LaunchDashboard} />
       <Route path="/subscription/success" component={SubscriptionSuccess} />
       <Route path="/subscription/cancel" component={SubscriptionCancel} />
+      <Route path="/riot/callback" component={RiotCallback} />
 
       {/* Admin Routes */}
       <Route path="/admin" component={AdminDashboard} />
