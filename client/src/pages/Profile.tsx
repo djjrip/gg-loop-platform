@@ -117,7 +117,32 @@ export default function Profile() {
       <main className="container mx-auto px-4 py-8 max-w-5xl">
         {/* Riot Identity Card (Owner Only) */}
         {currentUser?.id === profile.user.id && (
-          <RiotIdentityCard />
+          <>
+            <RiotIdentityCard />
+
+            {/* Steam Account Linking */}
+            <Card className="p-6 mb-6 border-blue-500/20 bg-gradient-to-br from-blue-950/20 to-background">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Steam Account</h3>
+                    <p className="text-sm text-muted-foreground">Link your Steam profile to verify game ownership</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => window.location.href = '/api/steam/auth/init'}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Link Steam
+                </Button>
+              </div>
+            </Card>
+          </>
         )}
 
         {/* Profile Header */}
