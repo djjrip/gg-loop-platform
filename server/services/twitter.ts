@@ -72,26 +72,71 @@ async function logPost(content: string, status: 'success' | 'failed' | 'skipped'
 }
 
 /**
- * Generates tweet content using Bedrock (Claude 3 Haiku)
+ * Gets current platform stats for dynamic tweet generation
+ */
+async function getPlatformStats(): Promise<{
+    totalUsers: number;
+    steamLinks: number;
+    activeSubscribers: number;
+    daysSinceLaunch: number;
+}> {
+    try {
+        // Import tables we need
+        const { users, steamAccounts, subscriptions } = await import("@shared/schema");
+
+        const [userCount] = await db.select({ count: count() }).from(users);
+        const [steamCount] = await db.select({ count: count() }).from(steamAccounts);
+        const [subCount] = await db.select({ count: count() }).from(subscriptions)
+            .where(eq(subscriptions.status, 'active'));
+
+        // Calculate days since launch (Nov 28, 2024)
+        const launchDate = new Date('2024-11-28');
+        const daysSinceLaunch = Math.floor((Date.now() - launchDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        return {
+            totalUsers: userCount?.count || 0,
+            steamLinks: steamCount?.count || 0,
+            activeSubscribers: subCount?.count || 0,
+            daysSinceLaunch
+        };
+    } catch (error) {
+        console.error("[Twitter] Failed to get platform stats:", error);
+        return { totalUsers: 0, steamLinks: 0, activeSubscribers: 0, daysSinceLaunch: 27 };
+    }
+}
+
+/**
+ * Generates tweet content using Bedrock (Claude 3 Haiku) with REAL platform data
  */
 async function generateTweetContent(): Promise<string> {
+    const stats = await getPlatformStats();
+
     const prompt = `
-    You are the social media voice of GG LOOP, a serious competitive gaming platform focused on "Play -> Earn -> Loop".
+    You are the founder of GG LOOP, a gaming platform that rewards players for their ranked gameplay.
+    
+    CURRENT PLATFORM STATUS (USE THESE REAL NUMBERS):
+    - Day ${stats.daysSinceLaunch} of building
+    - ${stats.totalUsers} total users
+    - ${stats.steamLinks} Steam accounts linked
+    - ${stats.activeSubscribers} active subscribers
+    - Features live: Steam linking, PayPal subscriptions, Reward shop
+    - Coming soon: Desktop verification app, Match verification
     
     TONE:
-    - Confident, professional, founder-led.
-    - No emojis. No hashtags. No hype.
-    - Focus on infrastructure, verifying matches, and the "Empire" theme.
+    - Authentic, honest, founder-led
+    - Building in public mindset
+    - No fake hype - acknowledge you're early
+    - Confident but humble
     
-    TOPICS (Pick one):
-    1. The importance of verified stats in gaming.
-    2. Building a sustainable economy for gamers (not crypto, real value).
-    3. The concept of "Proof of Skill".
-    4. Why manual verification builds trust.
+    RULES:
+    - Max 280 characters
+    - Include https://ggloop.io naturally
+    - No more than 2 hashtags
+    - Write as if you're a real founder sharing progress
+    - Reference actual stats when relevant
+    - Vary between: progress updates, insights, calls for testers, vision shares
     
-    OUTPUT:
-    - A single tweet text (max 280 chars).
-    - Plain text only.
+    Generate ONE unique tweet. Plain text only.
     `;
 
     try {
@@ -116,9 +161,11 @@ async function generateTweetContent(): Promise<string> {
 
     } catch (error) {
         console.error("Bedrock generation failed:", error);
-        return "Building the loop. Verifying the skill. Integrating the empire. #GGLOOP"; // Fallback
+        // Fallback with real stats
+        return `Day ${stats.daysSinceLaunch} building GG LOOP. ${stats.steamLinks} Steam accounts connected. Still early, still building. https://ggloop.io`;
     }
 }
+
 
 export async function executeTwitterJob(dryRun = false) {
     console.log(`[Twitter] Job Starting... (DryRun: ${dryRun})`);

@@ -11,10 +11,12 @@ jobs:
   post-tweet:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Tweet Post
+      - name: Trigger AI-Generated Tweet
         run: |
-          echo "Posting daily tweet to @ggloopllc..."
+          echo "Generating and posting AI tweet to @ggloopllc..."
           
+          # Call the mission-tweets endpoint which now uses Bedrock AI to generate
+          # dynamic content based on real platform stats
           RESPONSE=$(curl -s -X POST "https://ggloop.io/api/admin/mission-tweets" \
             -H "Content-Type: application/json")
           
@@ -22,10 +24,10 @@ jobs:
           
           # Check if tweet was posted
           if echo "$RESPONSE" | grep -q '"ok":true'; then
-            echo "✅ Tweet posted successfully!"
+            echo "✅ AI Tweet posted successfully!"
             TWEET_URL=$(echo "$RESPONSE" | grep -o '"url":"[^"]*"' | cut -d'"' -f4)
             echo "URL: $TWEET_URL"
           else
             echo "⚠️ Tweet may have failed. Check response above."
-            # Don't fail the action - just log it
           fi
+
