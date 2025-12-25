@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
+import logoImage from '../assets/logo.jpg';
 
 interface DashboardPageProps {
     onLogout: () => void;
 }
 
+// Activity status from anti-idle system
+type ActivityStatus = 'ACTIVE' | 'WARNING' | 'PAUSED' | 'UNKNOWN';
+
 // GG LOOP Brand Colors
 const BRAND = {
-    primary: '#C19A6B',      // Rose gold
+    primary: '#C19A6B',
     primaryGlow: 'rgba(193, 154, 107, 0.5)',
     dark: '#0d0907',
     darkAlt: '#1a120b',
@@ -15,81 +19,73 @@ const BRAND = {
     textMuted: '#a0a0a0',
     success: '#4ade80',
     warning: '#fbbf24',
+    danger: '#ef4444',
 };
-
-// Infinity Symbol SVG Component
-function InfinityLogo({ size = 48, glowing = false }: { size?: number; glowing?: boolean }) {
-    return (
-        <svg
-            width={size}
-            height={size}
-            viewBox="0 0 100 50"
-            fill="none"
-            style={{
-                filter: glowing ? 'drop-shadow(0 0 10px rgba(193, 154, 107, 0.8))' : undefined
-            }}
-        >
-            <path
-                d="M25 25C25 18.3726 19.6274 13 13 13C6.37258 13 1 18.3726 1 25C1 31.6274 6.37258 37 13 37C19.6274 37 25 31.6274 25 25ZM25 25C25 31.6274 30.3726 37 37 37L63 37C69.6274 37 75 31.6274 75 25C75 18.3726 69.6274 13 63 13L37 13C30.3726 13 25 18.3726 25 25Z"
-                stroke="url(#infinityGradient)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                fill="none"
-                transform="translate(12, 0)"
-            />
-            <defs>
-                <linearGradient id="infinityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#C19A6B" />
-                    <stop offset="50%" stopColor="#D4A373" />
-                    <stop offset="100%" stopColor="#C19A6B" />
-                </linearGradient>
-            </defs>
-        </svg>
-    );
-}
 
 export default function DashboardPage({ onLogout }: DashboardPageProps) {
     const [gameDetected, setGameDetected] = useState<any>(null);
     const [sessionTime, setSessionTime] = useState(0);
+    const [activeTime, setActiveTime] = useState(0); // Only counts when active
     const [totalPoints, setTotalPoints] = useState(0);
-    const [supportedGames, setSupportedGames] = useState<string[]>([]);
+    const [activityStatus, setActivityStatus] = useState<ActivityStatus>('ACTIVE');
+    const [idleWarnings, setIdleWarnings] = useState(0);
 
     useEffect(() => {
         // Listen for game detection events
-        window.ggloop.onGameDetected((game) => {
-            console.log('Game detected:', game);
-            setGameDetected(game);
-        });
+        if (window.ggloop?.onGameDetected) {
+            window.ggloop.onGameDetected((game: any) => {
+                console.log('Game detected:', game);
+                setGameDetected(game);
+                setSessionTime(0);
+                setActiveTime(0);
+            });
+        }
 
         // Listen for game close events
-        window.ggloop.onGameClosed((game) => {
-            console.log('Game closed:', game);
-            setGameDetected(null);
-            setSessionTime(0);
-        });
+        if (window.ggloop?.onGameClosed) {
+            window.ggloop.onGameClosed((game: any) => {
+                console.log('Game closed:', game);
+                setGameDetected(null);
+                setSessionTime(0);
+                setActiveTime(0);
+            });
+        }
+
+        // Listen for activity status changes
+        if (window.ggloop?.onActivityChange) {
+            window.ggloop.onActivityChange((status: any) => {
+                setActivityStatus(status.status);
+                setIdleWarnings(status.idleWarnings || 0);
+            });
+        }
 
         // Initial detection check
-        window.ggloop.detectGame()
-            .then(game => {
-                if (game) {
-                    setGameDetected(game);
-                }
-            })
-            .catch(error => {
-                console.error('Initial game detection error:', error);
-            });
+        if (window.ggloop?.detectGame) {
+            window.ggloop.detectGame()
+                .then((game: any) => {
+                    if (game) setGameDetected(game);
+                })
+                .catch((error: any) => {
+                    console.error('Initial game detection error:', error);
+                });
+        }
     }, []);
 
-    // Session timer
+    // Session timer - ONLY counts active time
     useEffect(() => {
         if (!gameDetected) return;
 
         const timer = setInterval(() => {
             setSessionTime(prev => prev + 1);
+
+            // ONLY increment active time if user is ACTIVE
+            if (activityStatus === 'ACTIVE') {
+                setActiveTime(prev => prev + 1);
+            }
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [gameDetected]);
+    }, [gameDetected, activityStatus]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -97,11 +93,32 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
+    // Points based on ACTIVE time only
     const getEstimatedPoints = () => {
-        if (sessionTime >= 3600) return 50;
-        if (sessionTime >= 1800) return 25;
-        if (sessionTime >= 900) return 10;
+        if (activityStatus === 'PAUSED') return 0;
+        if (activeTime >= 7200) return 50;
+        if (activeTime >= 3600) return 25;
+        if (activeTime >= 1800) return 15;
+        if (activeTime >= 900) return 10;
         return 5;
+    };
+
+    const getStatusColor = () => {
+        switch (activityStatus) {
+            case 'ACTIVE': return BRAND.success;
+            case 'WARNING': return BRAND.warning;
+            case 'PAUSED': return BRAND.danger;
+            default: return BRAND.textMuted;
+        }
+    };
+
+    const getStatusText = () => {
+        switch (activityStatus) {
+            case 'ACTIVE': return '✓ Playing';
+            case 'WARNING': return `⚠ Move mouse (${3 - idleWarnings} warnings left)`;
+            case 'PAUSED': return '⏸ PAUSED - No input detected';
+            default: return 'Checking...';
+        }
     };
 
     return (
@@ -121,7 +138,18 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                 borderBottom: `1px solid ${BRAND.border}`
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <InfinityLogo size={40} glowing={!!gameDetected} />
+                    <img
+                        src={logoImage}
+                        alt="GG LOOP"
+                        style={{
+                            width: '40px',
+                            height: '40px',
+                            objectFit: 'contain',
+                            filter: gameDetected && activityStatus === 'ACTIVE'
+                                ? 'drop-shadow(0 0 10px rgba(193, 154, 107, 0.8))'
+                                : 'none'
+                        }}
+                    />
                     <div>
                         <h1 style={{
                             fontSize: '1.5rem',
@@ -172,15 +200,47 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
             {/* Main Status Card */}
             <div style={{
                 background: `rgba(193, 154, 107, 0.03)`,
-                border: `1px solid ${BRAND.border}`,
+                border: `1px solid ${activityStatus === 'PAUSED' ? BRAND.danger : BRAND.border}`,
                 borderRadius: '16px',
                 padding: '2rem',
                 marginBottom: '2rem',
                 position: 'relative',
                 overflow: 'hidden'
             }}>
-                {/* Glowing background when game detected */}
+                {/* Activity Status Bar */}
                 {gameDetected && (
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        padding: '8px 16px',
+                        background: activityStatus === 'PAUSED'
+                            ? 'rgba(239, 68, 68, 0.2)'
+                            : activityStatus === 'WARNING'
+                                ? 'rgba(251, 191, 36, 0.2)'
+                                : 'rgba(74, 222, 128, 0.1)',
+                        borderBottom: `1px solid ${getStatusColor()}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px'
+                    }}>
+                        <span style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: getStatusColor(),
+                            animation: activityStatus === 'ACTIVE' ? 'pulse 2s infinite' : 'none'
+                        }} />
+                        <span style={{ color: getStatusColor(), fontSize: '0.875rem', fontWeight: '500' }}>
+                            {getStatusText()}
+                        </span>
+                    </div>
+                )}
+
+                {/* Glowing background when active */}
+                {gameDetected && activityStatus === 'ACTIVE' && (
                     <div style={{
                         position: 'absolute',
                         top: 0,
@@ -193,9 +253,22 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                     }} />
                 )}
 
-                <div style={{ position: 'relative', textAlign: 'center' }}>
+                <div style={{ position: 'relative', textAlign: 'center', paddingTop: gameDetected ? '2rem' : 0 }}>
                     <div style={{ marginBottom: '1.5rem' }}>
-                        <InfinityLogo size={80} glowing={!!gameDetected} />
+                        <img
+                            src={logoImage}
+                            alt="GG LOOP"
+                            style={{
+                                width: '100px',
+                                height: '100px',
+                                objectFit: 'contain',
+                                filter: gameDetected && activityStatus === 'ACTIVE'
+                                    ? 'drop-shadow(0 0 30px rgba(193, 154, 107, 0.6))'
+                                    : activityStatus === 'PAUSED'
+                                        ? 'grayscale(100%) opacity(0.5)'
+                                        : 'none'
+                            }}
+                        />
                     </div>
 
                     {gameDetected ? (
@@ -203,15 +276,17 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                             <div style={{
                                 display: 'inline-block',
                                 padding: '0.75rem 1.5rem',
-                                background: `linear-gradient(135deg, ${BRAND.primary}22 0%, #D4A37322 100%)`,
-                                border: `2px solid ${BRAND.primary}`,
+                                background: activityStatus === 'PAUSED'
+                                    ? 'rgba(239, 68, 68, 0.1)'
+                                    : `linear-gradient(135deg, ${BRAND.primary}22 0%, #D4A37322 100%)`,
+                                border: `2px solid ${activityStatus === 'PAUSED' ? BRAND.danger : BRAND.primary}`,
                                 borderRadius: '12px',
                                 marginBottom: '1rem',
-                                boxShadow: `0 0 20px ${BRAND.primaryGlow}`
+                                boxShadow: activityStatus !== 'PAUSED' ? `0 0 20px ${BRAND.primaryGlow}` : 'none'
                             }}>
                                 <span style={{ fontSize: '1.5rem', marginRight: '8px' }}>{gameDetected.icon}</span>
                                 <span style={{
-                                    color: BRAND.primary,
+                                    color: activityStatus === 'PAUSED' ? BRAND.danger : BRAND.primary,
                                     fontWeight: 'bold',
                                     fontSize: '1.25rem'
                                 }}>
@@ -219,34 +294,70 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                                 </span>
                             </div>
 
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <div style={{
-                                    fontSize: '3rem',
-                                    fontWeight: 'bold',
-                                    fontFamily: 'monospace',
-                                    color: BRAND.text
-                                }}>
-                                    {formatTime(sessionTime)}
+                            {/* Two timers: Total vs Active */}
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '1.5rem' }}>
+                                <div>
+                                    <div style={{
+                                        fontSize: '2rem',
+                                        fontWeight: 'bold',
+                                        fontFamily: 'monospace',
+                                        color: BRAND.textMuted
+                                    }}>
+                                        {formatTime(sessionTime)}
+                                    </div>
+                                    <div style={{ color: BRAND.textMuted, fontSize: '0.75rem' }}>
+                                        Total Time
+                                    </div>
                                 </div>
-                                <div style={{ color: BRAND.textMuted, fontSize: '0.875rem' }}>
-                                    Session Time
+
+                                <div>
+                                    <div style={{
+                                        fontSize: '2.5rem',
+                                        fontWeight: 'bold',
+                                        fontFamily: 'monospace',
+                                        color: activityStatus === 'PAUSED' ? BRAND.danger : BRAND.success
+                                    }}>
+                                        {formatTime(activeTime)}
+                                    </div>
+                                    <div style={{ color: activityStatus === 'PAUSED' ? BRAND.danger : BRAND.success, fontSize: '0.875rem', fontWeight: '500' }}>
+                                        {activityStatus === 'PAUSED' ? '⏸ PAUSED' : '✓ Active Play Time'}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div style={{
-                                padding: '1rem',
-                                background: `rgba(74, 222, 128, 0.1)`,
-                                border: `1px solid ${BRAND.success}`,
-                                borderRadius: '8px',
-                                display: 'inline-block'
-                            }}>
-                                <span style={{ color: BRAND.success, fontSize: '1.25rem', fontWeight: 'bold' }}>
-                                    +{getEstimatedPoints()} pts
-                                </span>
-                                <span style={{ color: BRAND.textMuted, fontSize: '0.875rem', marginLeft: '8px' }}>
-                                    estimated reward
-                                </span>
-                            </div>
+                            {/* Points Display */}
+                            {activityStatus === 'PAUSED' ? (
+                                <div style={{
+                                    padding: '1rem',
+                                    background: 'rgba(239, 68, 68, 0.1)',
+                                    border: `1px solid ${BRAND.danger}`,
+                                    borderRadius: '8px',
+                                    display: 'inline-block'
+                                }}>
+                                    <span style={{ color: BRAND.danger, fontSize: '1.1rem', fontWeight: 'bold' }}>
+                                        ⏸ POINTS PAUSED
+                                    </span>
+                                    <br />
+                                    <span style={{ color: BRAND.textMuted, fontSize: '0.875rem' }}>
+                                        Move mouse or press keys to resume
+                                    </span>
+                                </div>
+                            ) : (
+                                <div style={{
+                                    padding: '1rem',
+                                    background: `rgba(74, 222, 128, 0.1)`,
+                                    border: `1px solid ${BRAND.success}`,
+                                    borderRadius: '8px',
+                                    display: 'inline-block'
+                                }}>
+                                    <span style={{ color: BRAND.success, fontSize: '1.25rem', fontWeight: 'bold' }}>
+                                        +{getEstimatedPoints()} pts
+                                    </span>
+                                    <span style={{ color: BRAND.textMuted, fontSize: '0.875rem', marginLeft: '8px' }}>
+                                        for active play
+                                    </span>
+                                </div>
+                            )}
                         </>
                     ) : (
                         <>
@@ -271,15 +382,44 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                                 lineHeight: 1.6
                             }}>
                                 Launch a supported game to start earning points.
-                                Your gameplay is automatically verified.
+                                <strong> You must be actively playing</strong> - idle time doesn't count!
                             </p>
                         </>
                     )}
                 </div>
             </div>
 
-            {/* How It Works + Supported Games */}
+            {/* Info Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                {/* Anti-Idle Notice */}
+                <div style={{
+                    background: 'rgba(251, 191, 36, 0.05)',
+                    border: `1px solid ${BRAND.warning}`,
+                    borderRadius: '12px',
+                    padding: '1.5rem'
+                }}>
+                    <h2 style={{
+                        fontSize: '1rem',
+                        color: BRAND.warning,
+                        marginBottom: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}>
+                        <span>⚡</span> Active Play Required
+                    </h2>
+
+                    <div style={{ fontSize: '0.85rem', color: BRAND.textMuted, lineHeight: 1.6 }}>
+                        <p style={{ margin: '0 0 8px 0' }}>We verify you're actually playing:</p>
+                        <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                            <li>Mouse/keyboard activity tracked</li>
+                            <li>1 min idle = warning</li>
+                            <li>3 warnings = points paused</li>
+                            <li>Resume playing = resume earning</li>
+                        </ul>
+                    </div>
+                </div>
+
                 {/* Points System */}
                 <div style={{
                     background: `rgba(193, 154, 107, 0.03)`,
@@ -295,84 +435,27 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                         alignItems: 'center',
                         gap: '8px'
                     }}>
-                        <span>⭐</span> Points System
+                        <span>⭐</span> Points (Active Time Only)
                     </h2>
 
                     <div style={{ fontSize: '0.85rem', color: BRAND.textMuted }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${BRAND.border}` }}>
-                            <span>15+ min session</span>
-                            <span style={{ color: BRAND.primary }}>+5 pts</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${BRAND.border}` }}>
-                            <span>30+ min session</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${BRAND.border}` }}>
+                            <span>15+ min active</span>
                             <span style={{ color: BRAND.primary }}>+10 pts</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${BRAND.border}` }}>
-                            <span>60+ min session</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${BRAND.border}` }}>
+                            <span>30+ min active</span>
+                            <span style={{ color: BRAND.primary }}>+15 pts</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${BRAND.border}` }}>
+                            <span>60+ min active</span>
                             <span style={{ color: BRAND.primary }}>+25 pts</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
-                            <span>120+ min session</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                            <span>120+ min active</span>
                             <span style={{ color: BRAND.primary, fontWeight: 'bold' }}>+50 pts</span>
                         </div>
                     </div>
-                </div>
-
-                {/* Supported Games */}
-                <div style={{
-                    background: `rgba(193, 154, 107, 0.03)`,
-                    border: `1px solid ${BRAND.border}`,
-                    borderRadius: '12px',
-                    padding: '1.5rem'
-                }}>
-                    <h2 style={{
-                        fontSize: '1rem',
-                        color: BRAND.primary,
-                        marginBottom: '1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                    }}>
-                        <span>🎮</span> Supported Games
-                    </h2>
-
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '8px',
-                        fontSize: '0.8rem'
-                    }}>
-                        {[
-                            '🎯 Valorant',
-                            '⚔️ League',
-                            '🔫 CS2',
-                            '🧙 Dota 2',
-                            '🔥 Apex',
-                            '🏆 Fortnite',
-                            '🦸 Overwatch',
-                            '🎖️ PUBG',
-                            '🌌 Destiny 2',
-                        ].map(game => (
-                            <div key={game} style={{
-                                padding: '4px 8px',
-                                background: `rgba(193, 154, 107, 0.1)`,
-                                borderRadius: '4px',
-                                color: BRAND.textMuted,
-                                textAlign: 'center'
-                            }}>
-                                {game}
-                            </div>
-                        ))}
-                    </div>
-
-                    <p style={{
-                        fontSize: '0.75rem',
-                        color: BRAND.textMuted,
-                        marginTop: '12px',
-                        textAlign: 'center'
-                    }}>
-                        + many more Steam games!
-                    </p>
                 </div>
             </div>
 
