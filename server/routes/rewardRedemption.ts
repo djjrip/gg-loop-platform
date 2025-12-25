@@ -3,7 +3,7 @@ import { db } from "../db";
 import { rewards, userRewards, users } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { pointsEngine } from "../pointsEngine";
-import { sendRedemptionAlert } from "../services/email";
+import { alertFounderRedemption } from "../founderAlerts";
 import { z } from "zod";
 
 const rewardRedemptionRouter = Router();
@@ -121,8 +121,8 @@ rewardRedemptionRouter.post("/redeem", async (req: any, res) => {
                 .where(eq(rewards.id, rewardId));
         }
 
-        // 8. Send EMAIL ALERT to founder for fulfillment
-        sendRedemptionAlert({
+        // 8. Send MULTI-CHANNEL ALERTS (SendGrid + Discord + Console)
+        alertFounderRedemption({
             userId: userId,
             userEmail: user.email || 'Unknown',
             rewardTitle: reward.title,
@@ -135,10 +135,7 @@ rewardRedemptionRouter.post("/redeem", async (req: any, res) => {
             shippingState: shippingState,
             shippingZip: shippingZip,
             shippingCountry: shippingCountry,
-        }).catch(err => console.error("Failed to send redemption email:", err));
-
-        // 9. Console log for backup
-        console.log(`🎁 REDEMPTION: ${reward.title} by ${user.email} - CHECK EMAIL!`);
+        }).catch(err => console.error("Alert failed (but redemption succeeded):", err));
 
         // 9. Return success
         res.json({
