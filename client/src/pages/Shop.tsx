@@ -60,7 +60,7 @@ export default function Shop() {
   // Redemption mutation
   const redeemMutation = useMutation({
     mutationFn: async (rewardId: string) => {
-      const res = await apiRequest('POST', '/api/rewards/claim', { rewardId });
+      const res = await apiRequest('POST', '/api/rewards/redeem', { rewardId });
       return res.json();
     },
     onSuccess: (data) => {
