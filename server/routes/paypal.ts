@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyPayPalSubscription } from "../paypal";
+import { verifyPayPalSubscription, verifyPayPalWebhook } from "../paypal";
 import { db } from "../db";
 import { users, subscriptions, pointTransactions } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -190,4 +190,167 @@ router.post("/manual-sync", async (req, res) => {
     }
 });
 
+// 4. PayPal Webhook (Automated Lifecycle Events)
+router.post("/webhook", async (req, res) => {
+    try {
+        // Extract headers for signature verification
+        const headers: Record<string, string> = {};
+        for (const [key, value] of Object.entries(req.headers)) {
+            if (typeof value === 'string') {
+                headers[key.toLowerCase()] = value;
+            }
+        }
+
+        // Verify webhook signature
+        const verification = await verifyPayPalWebhook(headers, req.body);
+
+        if (!verification.valid) {
+            console.error(`[PayPal Webhook] Signature verification failed: ${verification.error}`);
+            return res.status(401).json({ error: "Invalid webhook signature" });
+        }
+
+        const event = req.body;
+        const eventType = event.event_type;
+        const resource = event.resource;
+
+        console.log(`[PayPal Webhook] Received event: ${eventType}`);
+
+        // Handle different event types
+        switch (eventType) {
+            case "BILLING.SUBSCRIPTION.ACTIVATED":
+                // Subscription became active (handles renewals too)
+                if (resource?.id) {
+                    const subscriptionId = resource.id;
+                    const [existingSub] = await db
+                        .select()
+                        .from(subscriptions)
+                        .where(eq(subscriptions.paypalSubscriptionId, subscriptionId));
+
+                    if (existingSub) {
+                        const now = new Date();
+                        const periodEnd = new Date();
+                        periodEnd.setDate(periodEnd.getDate() + 30);
+
+                        await db
+                            .update(subscriptions)
+                            .set({
+                                status: 'active',
+                                currentPeriodStart: now,
+                                currentPeriodEnd: periodEnd,
+                                updatedAt: now
+                            })
+                            .where(eq(subscriptions.paypalSubscriptionId, subscriptionId));
+
+                        console.log(`[PayPal Webhook] Subscription ${subscriptionId} renewed/activated`);
+                    }
+                }
+                break;
+
+            case "BILLING.SUBSCRIPTION.CANCELLED":
+            case "BILLING.SUBSCRIPTION.EXPIRED":
+                // Subscription ended
+                if (resource?.id) {
+                    const subscriptionId = resource.id;
+                    await db
+                        .update(subscriptions)
+                        .set({
+                            status: 'cancelled',
+                            updatedAt: new Date()
+                        })
+                        .where(eq(subscriptions.paypalSubscriptionId, subscriptionId));
+
+                    console.log(`[PayPal Webhook] Subscription ${subscriptionId} cancelled/expired`);
+                }
+                break;
+
+            case "BILLING.SUBSCRIPTION.SUSPENDED":
+                // Payment failed, subscription suspended
+                if (resource?.id) {
+                    const subscriptionId = resource.id;
+                    await db
+                        .update(subscriptions)
+                        .set({
+                            status: 'suspended',
+                            updatedAt: new Date()
+                        })
+                        .where(eq(subscriptions.paypalSubscriptionId, subscriptionId));
+
+                    console.log(`[PayPal Webhook] Subscription ${subscriptionId} suspended`);
+                }
+                break;
+
+            case "PAYMENT.SALE.COMPLETED":
+                // Successful payment - Award monthly points on renewal
+                console.log(`[PayPal Webhook] Payment completed - processing monthly points`);
+
+                // Extract subscription ID from billing agreement
+                const billingAgreementId = resource?.billing_agreement_id;
+                if (billingAgreementId) {
+                    const [existingSub] = await db
+                        .select()
+                        .from(subscriptions)
+                        .where(eq(subscriptions.paypalSubscriptionId, billingAgreementId));
+
+                    if (existingSub && existingSub.status === 'active') {
+                        // Determine points based on tier
+                        const tierPoints: Record<string, number> = {
+                            basic: 3000,
+                            pro: 10000,
+                            elite: 25000
+                        };
+                        const points = tierPoints[existingSub.tier] || 0;
+
+                        if (points > 0) {
+                            // Check if we already awarded points for this transaction (idempotency)
+                            const transactionId = resource?.id;
+
+                            await pointsEngine.awardPoints(
+                                existingSub.userId,
+                                points,
+                                'MONTHLY_ALLOWANCE',
+                                transactionId || billingAgreementId,
+                                'subscription',
+                                `Monthly renewal points for ${existingSub.tier} tier`
+                            );
+
+                            console.log(`[PayPal Webhook] Awarded ${points} points to user ${existingSub.userId} for ${existingSub.tier} renewal`);
+                        }
+
+                        // Update subscription period
+                        const now = new Date();
+                        const periodEnd = new Date();
+                        periodEnd.setDate(periodEnd.getDate() + 30);
+
+                        await db
+                            .update(subscriptions)
+                            .set({
+                                currentPeriodStart: now,
+                                currentPeriodEnd: periodEnd,
+                                updatedAt: now
+                            })
+                            .where(eq(subscriptions.paypalSubscriptionId, billingAgreementId));
+                    }
+                }
+                break;
+
+            case "PAYMENT.SALE.DENIED":
+                // Payment failed
+                console.log(`[PayPal Webhook] Payment denied for subscription`);
+                break;
+
+            default:
+                console.log(`[PayPal Webhook] Unhandled event type: ${eventType}`);
+        }
+
+        // Always return 200 to acknowledge receipt
+        res.status(200).json({ received: true, eventType });
+
+    } catch (error: any) {
+        console.error("[PayPal Webhook] Error processing webhook:", error);
+        // Return 200 to prevent PayPal from retrying (we log the error)
+        res.status(200).json({ received: true, error: "Processing error logged" });
+    }
+});
+
 export default router;
+
