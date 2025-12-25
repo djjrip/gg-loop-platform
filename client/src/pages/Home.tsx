@@ -486,7 +486,7 @@ export default function Home() {
                 Ready to get rewarded for winning?
               </h2>
               <p className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
-                Join thousands of gamers turning their competitive gameplay into real-world prizes.
+                Join early users earning real rewards for their competitive gameplay.
               </p>
               {!isAuthenticated && (
                 <Link href="/subscription">
