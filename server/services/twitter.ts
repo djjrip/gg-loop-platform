@@ -112,7 +112,7 @@ async function generateTweetContent(): Promise<string> {
     const stats = await getPlatformStats();
 
     const prompt = `
-    You are the founder of GG LOOP, a gaming platform that rewards players for their ranked gameplay.
+    You are the founder of GG LOOP, a gaming platform that rewards players for their gameplay.
     
     CURRENT PLATFORM STATUS (USE THESE REAL NUMBERS):
     - Day ${stats.daysSinceLaunch} of building
