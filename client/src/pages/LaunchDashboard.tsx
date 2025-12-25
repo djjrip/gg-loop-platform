@@ -7,17 +7,17 @@ import { Link } from "wouter";
 export default function LaunchChecklist() {
   const sections = [
     {
-      title: "Platform Ready (100%)",
+      title: "Platform Ready (Core Features)",
       status: "complete",
       items: [
-        { done: true, text: "Subscription system (Basic/Pro/Elite tiers)", detail: "Stripe integration live" },
+        { done: true, text: "Subscription system (Basic/Pro/Elite tiers)", detail: "Stripe integration configured" },
         { done: true, text: "Points engine with caps & multipliers", detail: "Tier-based monthly point caps" },
-        { done: true, text: "Rewards catalog with 18+ items", detail: "Gift cards, gear, experiences" },
-        { done: true, text: "Riot API integration", detail: "League/VALORANT verification" },
-        { done: true, text: "Sponsored challenges system", detail: "Ready for brand campaigns" },
-        { done: true, text: "Admin dashboard", detail: "Sponsor analytics + management" },
+        { done: true, text: "Rewards catalog with 8 items", detail: "Gift cards, gaming gear (manual fulfillment)" },
+        { done: true, text: "Riot API integration", detail: "League/VALORANT account linking" },
+        { done: true, text: "Steam account linking", detail: "Profile verification" },
+        { done: true, text: "Admin dashboard", detail: "Founder operations hub" },
         { done: true, text: "Public profiles & trophy case", detail: "Shareable achievements" },
-        { done: true, text: "Twitch OAuth linking", detail: "Show linked status on profiles" },
+        { done: true, text: "OAuth login (Discord/Twitch/Google)", detail: "Multi-provider auth" },
       ],
     },
     {
@@ -80,15 +80,15 @@ export default function LaunchChecklist() {
             Everything you need to go live TODAY and validate GG Loop in 6 weeks.
           </p>
 
-          <Card className="border-2 border-green-600 bg-green-50 dark:bg-green-950/20">
+          <Card className="border-2 border-primary bg-primary/5">
             <CardContent className="pt-6">
               <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
+                <Rocket className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="font-bold text-lg mb-2">Platform is 100% Ready</h3>
+                  <h3 className="font-bold text-lg mb-2">Building in Public</h3>
                   <p className="text-sm text-muted-foreground">
-                    All core features built and working. Rewards catalog loaded. Stripe live.
-                    You can start inviting users RIGHT NOW.
+                    Core features working. Shop has 8 rewards. Steam/Riot linking live.
+                    Manual fulfillment process. Growing week by week.
                   </p>
                 </div>
               </div>
