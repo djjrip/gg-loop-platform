@@ -4,6 +4,7 @@ import trustRouter from "./routes/trust";
 import partnerRoutes from "./routes/partner";
 import riotAuthRouter from "./routes/riotAuth";
 import matchSyncRouter from "./routes/matchSync";
+import rewardRedemptionRouter from "./routes/rewardRedemption";
 import matchesRouter from "./routes/matches";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
@@ -168,6 +169,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/riot", riotAuthRouter);
   app.use("/api/riot", requireAuth, matchSyncRouter); // Match sync with gameplay points
   app.use("/api/matches", matchesRouter); // Endpoint 3: Match Sync
+
+  // [PHASE 3] Reward Redemption Routes
+  app.use("/api/rewards", requireAuth, rewardRedemptionRouter);
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
