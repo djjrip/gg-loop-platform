@@ -5,6 +5,7 @@ import partnerRoutes from "./routes/partner";
 import riotAuthRouter from "./routes/riotAuth";
 import matchSyncRouter from "./routes/matchSync";
 import rewardRedemptionRouter from "./routes/rewardRedemption";
+import { desktopApiRouter } from "./routes/desktopApi";
 import matchesRouter from "./routes/matches";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
@@ -183,6 +184,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   // Protected routes (redeem, my-redemptions) - require auth
   app.use("/api/rewards", requireAuth, rewardRedemptionRouter);
+
+  // [DESKTOP APP] Desktop verification endpoints
+  app.use("/api/desktop", desktopApiRouter);
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
