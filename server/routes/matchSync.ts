@@ -84,12 +84,12 @@ matchSyncRouter.post("/sync-matches", async (req: any, res) => {
         // 6. Filter out already-processed matches
         const newWins = [];
         for (const win of recentWins) {
-            // Check if this match was already processed
+            // Check if this match was already processed for this riot account
             const [existing] = await db.select()
                 .from(processedRiotMatches)
                 .where(and(
                     eq(processedRiotMatches.matchId, win.matchId),
-                    eq(processedRiotMatches.userId, userId)
+                    eq(processedRiotMatches.riotAccountId, riotAccount.id)
                 ));
 
             if (!existing) {
@@ -117,14 +117,11 @@ matchSyncRouter.post("/sync-matches", async (req: any, res) => {
 
                 // Mark match as processed
                 await db.insert(processedRiotMatches).values({
+                    riotAccountId: riotAccount.id,
                     matchId: win.matchId,
-                    matchType: 'lol_ranked',
-                    puuid: riotAccount.puuid,
-                    userId: userId,
-                    matchResult: 'win',
+                    gameEndedAt: new Date(win.gameEndTimestamp),
+                    isWin: true,
                     pointsAwarded: basePoints,
-                    verificationMethod: 'riot_api',
-                    verifiedAt: new Date(),
                 }).onConflictDoNothing();
 
                 pointsAwarded.push({
