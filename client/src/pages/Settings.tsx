@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { CheckCircle2, AlertCircle, Link2, Gamepad2, Trophy, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertCircle, Link2, Gamepad2, Trophy, AlertTriangle, RefreshCw, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 type RiotAccountStatus = {
@@ -80,6 +80,36 @@ export default function Settings() {
       toast({
         title: "Failed to link account",
         description: error.message || "Please check your Riot ID and region",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Sync matches mutation - triggers gameplay verification and point awards
+  const syncMatchesMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/riot/sync-matches");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/riot/account/league"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      if (data.newWinsFound > 0) {
+        toast({
+          title: `🎉 Found ${data.newWinsFound} new wins!`,
+          description: `Earned ${data.totalPointsEarned} points. Keep playing!`,
+        });
+      } else {
+        toast({
+          title: "No new wins found",
+          description: "Play some matches and sync again later!",
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Sync failed",
+        description: error.message || "Try again later",
         variant: "destructive",
       });
     },
@@ -168,6 +198,32 @@ export default function Settings() {
                         )}
                       </div>
                     )}
+                  </div>
+
+                  {/* SYNC MATCHES BUTTON - THE CRITICAL FEATURE */}
+                  <div className="p-4 border-2 rounded-lg bg-green-500/10 border-green-500/30">
+                    <p className="text-sm font-medium mb-2 text-green-400">🎮 Earn Points from Matches</p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Sync your recent matches to earn points for wins. Available once per hour.
+                    </p>
+                    <Button
+                      onClick={() => syncMatchesMutation.mutate()}
+                      disabled={syncMatchesMutation.isPending}
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      data-testid="button-sync-matches"
+                    >
+                      {syncMatchesMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Syncing matches...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Sync Matches & Earn Points
+                        </>
+                      )}
+                    </Button>
                   </div>
 
                   <div className="p-4 border rounded-lg bg-blue-500/10 border-blue-500/20">
