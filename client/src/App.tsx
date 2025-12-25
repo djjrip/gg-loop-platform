@@ -31,6 +31,7 @@ import Stats from "@/pages/Stats";
 import Settings from "@/pages/Settings";
 import MyRewards from "@/pages/MyRewards";
 import Referrals from "@/pages/Referrals";
+import Redemptions from "@/pages/Redemptions";
 import LaunchDashboard from "@/pages/LaunchDashboard";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import SubscriptionCancel from "@/pages/SubscriptionCancel";
@@ -96,6 +97,7 @@ function Router() {
       <Route path="/stats" component={Stats} />
       <Route path="/settings" component={Settings} />
       <Route path="/my-rewards" component={MyRewards} />
+      <Route path="/redemptions" component={Redemptions} />
       <Route path="/referrals" component={Referrals} />
       <Route path="/affiliate-program" component={AffiliateProgram} />
       <Route path="/gg-loop-cares" component={GGLoopCares} />
