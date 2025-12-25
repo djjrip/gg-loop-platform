@@ -140,6 +140,73 @@ export async function sendWelcomeEmail(email: string, username: string): Promise
   });
 }
 
+/**
+ * Send instant alert to founder when someone redeems a reward
+ */
+export async function sendRedemptionAlert(redemptionData: {
+  userId: string;
+  userEmail: string;
+  rewardTitle: string;
+  pointsSpent: number;
+  realValue: number;
+  category: string;
+  redemptionId: string;
+  shippingAddress?: string;
+  shippingCity?: string;
+  shippingState?: string;
+  shippingZip?: string;
+  shippingCountry?: string;
+}): Promise<boolean> {
+  const FOUNDER_EMAIL = process.env.ADMIN_EMAIL || "jaysonquindao1@gmail.com";
+
+  const htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #0a0a0a; color: #fff;">
+      <h1 style="color: #d4895c;">🎁 NEW REWARD REDEMPTION!</h1>
+      
+      <div style="background: #1a1a1a; border-left: 4px solid #d4895c; padding: 15px; margin: 20px 0;">
+        <strong style="font-size: 18px;">${redemptionData.rewardTitle}</strong>
+        <br><br>
+        <strong>Points:</strong> ${redemptionData.pointsSpent.toLocaleString()}<br>
+        <strong>Value:</strong> $${(redemptionData.realValue / 100).toFixed(2)}<br>
+        <strong>Category:</strong> ${redemptionData.category}
+      </div>
+      
+      <h3 style="color: #d4895c;">👤 User Info</h3>
+      <p>
+        <strong>Email:</strong> ${redemptionData.userEmail}<br>
+        <strong>User ID:</strong> ${redemptionData.userId}<br>
+        <strong>Redemption ID:</strong> ${redemptionData.redemptionId}
+      </p>
+      
+      ${redemptionData.shippingAddress ? `
+      <h3 style="color: #d4895c;">📦 Shipping Address</h3>
+      <p>
+        ${redemptionData.shippingAddress}<br>
+        ${redemptionData.shippingCity || ''}, ${redemptionData.shippingState || ''} ${redemptionData.shippingZip || ''}<br>
+        ${redemptionData.shippingCountry || 'US'}
+      </p>
+      ` : '<p><em>No shipping address provided (digital reward)</em></p>'}
+      
+      <div style="background: #1a1a1a; padding: 15px; margin-top: 20px; border-radius: 8px;">
+        <strong style="color: #d4895c;">⚡ Action Required:</strong><br>
+        Please fulfill this redemption manually and update the status in the admin panel.
+      </div>
+      
+      <p style="font-size: 12px; color: #666; margin-top: 30px;">
+        Sent from GG LOOP Reward System • ${new Date().toISOString()}
+      </p>
+    </div>
+  `;
+
+  console.log(`[Email] Sending redemption alert to ${FOUNDER_EMAIL}...`);
+
+  return sendEmail({
+    to: FOUNDER_EMAIL,
+    subject: `🎁 NEW REDEMPTION: ${redemptionData.rewardTitle} ($${(redemptionData.realValue / 100).toFixed(2)})`,
+    htmlBody
+  });
+}
+
 export function getEmailStatus() {
   return {
     configured: !!process.env.SES_VERIFIED_EMAIL,

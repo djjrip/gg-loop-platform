@@ -3,6 +3,7 @@ import { db } from "../db";
 import { rewards, userRewards, users } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { pointsEngine } from "../pointsEngine";
+import { sendRedemptionAlert } from "../services/email";
 import { z } from "zod";
 
 const rewardRedemptionRouter = Router();
@@ -120,26 +121,24 @@ rewardRedemptionRouter.post("/redeem", async (req: any, res) => {
                 .where(eq(rewards.id, rewardId));
         }
 
-        // 8. Admin notification (console log for now, can add email later)
-        console.log(`
-========================================
-🎁 NEW REWARD REDEMPTION!
-========================================
-User ID: ${userId}
-User Email: ${user.email || 'Unknown'}
-Reward: ${reward.title}
-Points Spent: ${reward.pointsCost}
-Real Value: $${(reward.realValue / 100).toFixed(2)}
-Category: ${reward.category}
-Redemption ID: ${redemption.id}
-Status: PENDING (Manual fulfillment required)
+        // 8. Send EMAIL ALERT to founder for fulfillment
+        sendRedemptionAlert({
+            userId: userId,
+            userEmail: user.email || 'Unknown',
+            rewardTitle: reward.title,
+            pointsSpent: reward.pointsCost,
+            realValue: reward.realValue,
+            category: reward.category,
+            redemptionId: redemption.id,
+            shippingAddress: shippingAddress,
+            shippingCity: shippingCity,
+            shippingState: shippingState,
+            shippingZip: shippingZip,
+            shippingCountry: shippingCountry,
+        }).catch(err => console.error("Failed to send redemption email:", err));
 
-Shipping Info:
-${shippingAddress || 'Not provided'}
-${shippingCity || ''}, ${shippingState || ''} ${shippingZip || ''}
-${shippingCountry}
-========================================
-    `);
+        // 9. Console log for backup
+        console.log(`🎁 REDEMPTION: ${reward.title} by ${user.email} - CHECK EMAIL!`);
 
         // 9. Return success
         res.json({
