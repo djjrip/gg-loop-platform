@@ -62,6 +62,7 @@ export const users = pgTable("users", {
 }));
 
 export const referrals = pgTable("referrals", {
+
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   referrerId: varchar("referrer_id").notNull().references(() => users.id),
   referredUserId: varchar("referred_user_id").notNull().references(() => users.id),
