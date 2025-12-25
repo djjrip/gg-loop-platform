@@ -477,7 +477,7 @@ export default function SubscriptionPage() {
                         </Badge>
                       </CardTitle>
                       <CardDescription>
-                        Experience GG Loop features. Payment integration coming soon.
+                        Try Basic tier free for 7 days. No credit card required.
                       </CardDescription>
                     </div>
                   </div>
@@ -563,7 +563,7 @@ export default function SubscriptionPage() {
                         Free Trial Active
                       </CardTitle>
                       <CardDescription>
-                        Payment integration coming soon. Your progress is saved!
+                        Ready to upgrade? Choose a tier below to unlock full features.
                       </CardDescription>
                     </div>
                     <Badge variant="default">
@@ -599,7 +599,7 @@ export default function SubscriptionPage() {
                       })}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Payment integration coming soon. Your trial progress is saved - you'll be able to subscribe when we launch!
+                      Choose a subscription tier below to continue with full access after your trial ends.
                     </p>
                   </div>
                 </CardContent>
