@@ -253,6 +253,12 @@ export default function Header() {
                       My Rewards
                     </DropdownMenuItem>
                   </Link>
+                  <Link href="/redemptions">
+                    <DropdownMenuItem data-testid="link-redemptions">
+                      <Package className="mr-2 h-4 w-4" />
+                      Redemptions
+                    </DropdownMenuItem>
+                  </Link>
                   <Link href="/subscription">
                     <DropdownMenuItem data-testid="link-subscription">
                       <CreditCard className="mr-2 h-4 w-4" />
@@ -441,6 +447,14 @@ export default function Header() {
                 >
                   <Gift className="h-3.5 w-3.5 text-primary" />
                   My Rewards
+                </Link>
+                <Link
+                  href="/redemptions"
+                  className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
+                  data-testid="link-redemptions-mobile"
+                >
+                  <Package className="h-3.5 w-3.5 text-primary" />
+                  Redemptions
                 </Link>
                 <Link
                   href="/settings"
