@@ -1,0 +1,31 @@
+name: Daily Twitter Auto-Post
+
+on:
+  schedule:
+    # Run at 4PM UTC (10AM CST) every day
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+    # Allow manual trigger for testing
+
+jobs:
+  post-tweet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Tweet Post
+        run: |
+          echo "Posting daily tweet to @ggloopllc..."
+          
+          RESPONSE=$(curl -s -X POST "https://ggloop.io/api/admin/mission-tweets" \
+            -H "Content-Type: application/json")
+          
+          echo "Response: $RESPONSE"
+          
+          # Check if tweet was posted
+          if echo "$RESPONSE" | grep -q '"ok":true'; then
+            echo "✅ Tweet posted successfully!"
+            TWEET_URL=$(echo "$RESPONSE" | grep -o '"url":"[^"]*"' | cut -d'"' -f4)
+            echo "URL: $TWEET_URL"
+          else
+            echo "⚠️ Tweet may have failed. Check response above."
+            # Don't fail the action - just log it
+          fi
