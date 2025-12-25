@@ -12,7 +12,7 @@ export default function LaunchChecklist() {
       items: [
         { done: true, text: "Subscription system (Basic/Pro/Elite tiers)", detail: "Stripe integration configured" },
         { done: true, text: "Points engine with caps & multipliers", detail: "Tier-based monthly point caps" },
-        { done: true, text: "Rewards catalog with 8 items", detail: "Gift cards, gaming gear (manual fulfillment)" },
+        { done: true, text: "Rewards catalog with 8 categories", detail: "Groceries, gas, gaming, sneakers, brands, cash out" },
         { done: true, text: "Riot API integration", detail: "League/VALORANT account linking" },
         { done: true, text: "Steam account linking", detail: "Profile verification" },
         { done: true, text: "Admin dashboard", detail: "Founder operations hub" },
