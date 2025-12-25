@@ -3,6 +3,8 @@
  * Seeds GG LOOP shop with starter rewards catalog
  * 
  * Usage: npx tsx server/seed-shop.ts
+ * 
+ * PRODUCTION: $env:DATABASE_URL="postgresql://..." && npx tsx server/seed-shop.ts
  */
 
 import { db } from './db';
@@ -12,80 +14,136 @@ async function seedShop() {
     console.log('🛍️ Seeding GG LOOP Shop...');
 
     const catalog = [
-        {
-            title: 'GG LOOP Starter Pack',
-            description: 'Official GG LOOP sticker pack + lanyard. Rep the brand.',
-            pointsCost: 500,
-            category: 'merch',
-            stockAvailable: 100,
-            fulfillmentType: 'physical',
-            imageUrl: null,
-            isActive: true,
-        },
-        {
-            title: 'GG LOOP Premium Tee',
-            description: 'Limited edition black tee with rose-gold logo. Sizes S-XXL.',
-            pointsCost: 2500,
-            category: 'merch',
-            stockAvailable: 50,
-            fulfillmentType: 'physical',
-            imageUrl: null,
-            isActive: true,
-        },
+        // === GIFT CARDS (Most Popular) ===
         {
             title: '$10 Steam Gift Card',
             description: 'Instant delivery. Redeem on Steam for games, DLC, and more.',
             pointsCost: 1000,
-            category: 'gift_card',
-            stockAvailable: 999,
+            realValue: 1000, // $10 in cents
+            category: 'gift-cards',
+            tier: 2,
+            stock: 99,
+            inStock: true,
             fulfillmentType: 'digital',
             imageUrl: null,
-            isActive: true,
+            sku: 'STEAM-10',
         },
         {
             title: '$25 Amazon Gift Card',
             description: 'Digital code delivered instantly. Use on anything on Amazon.',
             pointsCost: 2500,
-            category: 'gift_card',
-            stockAvailable: 999,
+            realValue: 2500, // $25 in cents
+            category: 'gift-cards',
+            tier: 3,
+            stock: 99,
+            inStock: true,
             fulfillmentType: 'digital',
             imageUrl: null,
-            isActive: true,
+            sku: 'AMAZON-25',
         },
         {
-            title: 'Exclusive Discord Role',
-            description: 'VIP role in GG LOOP Discord. Access to exclusive channels.',
-            pointsCost: 150,
-            category: 'digital',
-            stockAvailable: 999,
-            fulfillmentType: 'automatic',
+            title: '$50 PlayStation Store',
+            description: 'PS Store credit for games, DLC, and subscriptions.',
+            pointsCost: 5000,
+            realValue: 5000, // $50 in cents
+            category: 'gift-cards',
+            tier: 3,
+            stock: 99,
+            inStock: true,
+            fulfillmentType: 'digital',
             imageUrl: null,
-            isActive: true,
+            sku: 'PSN-50',
         },
         {
-            title: 'Custom Profile Badge',
-            description: 'Choose your own custom badge text. Shows on your profile.',
-            pointsCost: 750,
-            category: 'digital',
-            stockAvailable: 999,
-            fulfillmentType: 'automatic',
+            title: '$100 Gaming Gift Card Bundle',
+            description: 'Choice of Steam, PlayStation, Xbox, or Nintendo eShop.',
+            pointsCost: 10000,
+            realValue: 10000, // $100 in cents
+            category: 'gift-cards',
+            tier: 4,
+            stock: 25,
+            inStock: true,
+            fulfillmentType: 'digital',
             imageUrl: null,
-            isActive: true,
+            sku: 'BUNDLE-100',
+        },
+
+        // === GAMING GEAR ===
+        {
+            title: 'GG LOOP Mouse Pad XL',
+            description: 'Extended gaming mouse pad with GG LOOP branding. 900x400mm.',
+            pointsCost: 1500,
+            realValue: 2500, // $25 value
+            category: 'gaming-gear',
+            tier: 2,
+            stock: 50,
+            inStock: true,
+            fulfillmentType: 'physical',
+            imageUrl: null,
+            sku: 'MOUSEPAD-XL',
+        },
+        {
+            title: 'RGB Gaming Headset Stand',
+            description: 'Premium headset holder with USB hub and RGB lighting.',
+            pointsCost: 3500,
+            realValue: 4500, // $45 value
+            category: 'gaming-gear',
+            tier: 3,
+            stock: 30,
+            inStock: true,
+            fulfillmentType: 'physical',
+            imageUrl: null,
+            sku: 'HEADSET-STAND',
+        },
+
+        // === SUBSCRIPTIONS ===
+        {
+            title: 'Discord Nitro (1 Month)',
+            description: 'HD video, animated emojis, profile customization, and more.',
+            pointsCost: 1000,
+            realValue: 999, // $9.99
+            category: 'subscriptions',
+            tier: 2,
+            stock: 99,
+            inStock: true,
+            fulfillmentType: 'digital',
+            imageUrl: null,
+            sku: 'NITRO-1M',
+        },
+        {
+            title: 'Xbox Game Pass Ultimate (1 Month)',
+            description: 'Access to 100+ games on Xbox and PC, plus EA Play.',
+            pointsCost: 1500,
+            realValue: 1499, // $14.99
+            category: 'subscriptions',
+            tier: 2,
+            stock: 50,
+            inStock: true,
+            fulfillmentType: 'digital',
+            imageUrl: null,
+            sku: 'GAMEPASS-1M',
         },
     ];
 
     try {
+        let seeded = 0;
         for (const item of catalog) {
-            await db.insert(rewards).values(item);
-            console.log(`   ✅ Added: ${item.title} (${item.pointsCost} pts)`);
+            try {
+                await db.insert(rewards).values(item).onConflictDoNothing();
+                console.log(`   ✅ Added: ${item.title} (${item.pointsCost} pts)`);
+                seeded++;
+            } catch (err: any) {
+                // Skip duplicates
+                if (err.code === '23505') {
+                    console.log(`   ⏭️  Skipped (exists): ${item.title}`);
+                } else {
+                    throw err;
+                }
+            }
         }
 
-        console.log(`\n🎉 Shop seeded with ${catalog.length} items!`);
-        console.log('\n💡 Revenue activation checklist:');
-        console.log('   1. ✅ Shop catalog ready');
-        console.log('   2. ⏳ Set PAYPAL_MODE=live in Railway');
-        console.log('   3. ⏳ Test redemption flow');
-        console.log('   4. 🚀 Announce shop opening to users');
+        console.log(`\n🎉 Shop seeded with ${seeded} items!`);
+        console.log('\n✨ Visit: ggloop.io/shop');
 
     } catch (error) {
         console.error('❌ Error seeding shop:', error);
@@ -95,7 +153,7 @@ async function seedShop() {
 
 seedShop()
     .then(() => {
-        console.log('\n✨ Shop is LIVE at ggloop.io/shop');
+        console.log('✅ Seeding complete!');
         process.exit(0);
     })
     .catch((error) => {
