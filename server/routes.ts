@@ -907,14 +907,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
 
-      // Filter to only active rewards
-      const activeRewards = catalog.rewards.filter((r: any) => r.active && r.stock > 0);
+      // Filter to only active rewards and transform field names to match frontend
+      const activeRewards = catalog.rewards
+        .filter((r: any) => r.active && r.stock > 0)
+        .map((r: any) => ({
+          id: r.id,
+          title: r.name,
+          description: r.description,
+          pointsCost: r.costInPoints,
+          imageUrl: r.imageUrl,
+          category: r.category === 'peripherals' ? 'gaming-gear' :
+            r.category === 'gift_cards' ? 'gift-cards' :
+              r.category === 'game_currency' ? 'gift-cards' :
+                r.category === 'cash_payout' ? 'gift-cards' : r.category,
+          tier: r.costInPoints >= 15000 ? 4 : r.costInPoints >= 10000 ? 3 : r.costInPoints >= 5000 ? 2 : 1,
+          inStock: r.stock > 0,
+          fulfillmentType: r.type
+        }));
 
-      res.json({
-        rewards: activeRewards,
-        categories: catalog.categories,
-        metadata: catalog.metadata
-      });
+      res.json(activeRewards);
     } catch (error) {
       console.error('Error fetching rewards:', error);
       res.status(500).json({ error: 'Failed to fetch rewards' });
