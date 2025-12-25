@@ -171,6 +171,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/matches", matchesRouter); // Endpoint 3: Match Sync
 
   // [PHASE 3] Reward Redemption Routes
+  // Public routes (GET catalog) - anyone can browse the shop
+  app.get("/api/rewards", async (req: any, res, next) => {
+    // Forward to the router's GET / handler
+    req.url = "/";
+    rewardRedemptionRouter(req, res, next);
+  });
+  app.get("/api/rewards/catalog", async (req: any, res, next) => {
+    req.url = "/catalog";
+    rewardRedemptionRouter(req, res, next);
+  });
+  // Protected routes (redeem, my-redemptions) - require auth
   app.use("/api/rewards", requireAuth, rewardRedemptionRouter);
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets

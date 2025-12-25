@@ -18,6 +18,25 @@ const redeemRewardSchema = z.object({
 });
 
 /**
+ * GET /api/rewards
+ * 
+ * Returns available rewards for the shop (PUBLIC - no auth required).
+ * This is called by Shop.tsx to display the catalog.
+ */
+rewardRedemptionRouter.get("/", async (req: any, res) => {
+    try {
+        const availableRewards = await db.select()
+            .from(rewards)
+            .where(eq(rewards.inStock, true));
+
+        res.json(availableRewards);
+    } catch (error) {
+        console.error("Get rewards catalog error:", error);
+        res.status(500).json({ error: "Failed to get rewards catalog" });
+    }
+});
+
+/**
  * POST /api/rewards/redeem
  * 
  * Redeems a reward for the logged-in user.
