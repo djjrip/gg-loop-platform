@@ -407,33 +407,33 @@ export default function Home() {
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Supported Games</h2>
               <p className="text-gray-400 text-lg">
-                Building support for ranked play across Riot Games titles.
+                Coming soon — pending Riot API production approval.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-card border-primary/30 p-6 hover:border-primary transition-colors">
+              <Card className="bg-card border-yellow-500/30 p-6 hover:border-yellow-500/50 transition-colors">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-white">League of Legends</h3>
-                  <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                  <div className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-xs font-bold">Coming Soon</div>
                 </div>
-                <p className="text-gray-400 text-sm">Competitive Community</p>
+                <p className="text-gray-400 text-sm">Riot API integration pending</p>
               </Card>
 
-              <Card className="bg-card border-primary/30 p-6 hover:border-primary transition-colors">
+              <Card className="bg-card border-yellow-500/30 p-6 hover:border-yellow-500/50 transition-colors">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-white">VALORANT</h3>
-                  <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                  <div className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-xs font-bold">Coming Soon</div>
                 </div>
-                <p className="text-gray-400 text-sm">Competitive Community</p>
+                <p className="text-gray-400 text-sm">Riot API integration pending</p>
               </Card>
 
-              <Card className="bg-card border-primary/30 p-6 hover:border-primary transition-colors">
+              <Card className="bg-card border-yellow-500/30 p-6 hover:border-yellow-500/50 transition-colors">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-white">Teamfight Tactics</h3>
-                  <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                  <div className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-xs font-bold">Coming Soon</div>
                 </div>
-                <p className="text-gray-400 text-sm">Competitive Community</p>
+                <p className="text-gray-400 text-sm">Riot API integration pending</p>
               </Card>
             </div>
           </section>
