@@ -1,9 +1,13 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { detectGame, monitorGames } = require('./gameDetection');
+const sessionSync = require('./sessionSync');
 
 let mainWindow;
 let gameMonitorCleanup = null;
+
+// Make mainWindow globally accessible for sessionSync notifications
+global.mainWindow = null;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -21,6 +25,9 @@ function createWindow() {
         title: 'GG Loop Desktop - Gameplay Verification'
     });
 
+    // Make accessible globally for sessionSync
+    global.mainWindow = mainWindow;
+
     // Load app
     if (process.env.NODE_ENV === 'development') {
         mainWindow.loadURL('http://localhost:5173');
@@ -31,10 +38,14 @@ function createWindow() {
 
     mainWindow.on('closed', () => {
         mainWindow = null;
+        global.mainWindow = null;
     });
 
     // Start game monitoring
     startGameMonitoring();
+
+    // Sync any pending sessions from previous runs
+    sessionSync.syncPendingSessions();
 }
 
 function startGameMonitoring() {
@@ -44,15 +55,32 @@ function startGameMonitoring() {
 
     gameMonitorCleanup = monitorGames(
         (game) => {
-            // Game detected
+            // Game detected - start session tracking
+            console.log('[Electron] Game detected:', game.name);
+            sessionSync.startSession(game);
+
             if (mainWindow) {
                 mainWindow.webContents.send('game-detected', game);
             }
         },
-        (game) => {
-            // Game closed
+        async (game) => {
+            // Game closed - end session and sync to backend
+            console.log('[Electron] Game closed:', game.name);
+
+            // End session and sync points
+            const result = await sessionSync.endSession();
+            console.log('[Electron] Session sync result:', result);
+
             if (mainWindow) {
                 mainWindow.webContents.send('game-closed', game);
+
+                // Send sync result to UI
+                if (result && result.success) {
+                    mainWindow.webContents.send('points-awarded', {
+                        points: result.pointsAwarded,
+                        game: game.name
+                    });
+                }
             }
         },
         5000 // Poll every 5 seconds
@@ -65,17 +93,18 @@ ipcMain.handle('detect-game', async () => {
 });
 
 ipcMain.handle('get-auth-token', async () => {
-    // TODO: Implement secure token storage (electron-store)
-    return null;
+    const Store = require('electron-store');
+    const store = new Store({ name: 'gg-loop-session', encryptionKey: 'gg-loop-secure-key' });
+    return store.get('authToken', null);
 });
 
 ipcMain.handle('set-auth-token', async (event, token) => {
-    // TODO: Implement secure token storage
+    sessionSync.setAuthToken(token);
     return true;
 });
 
 ipcMain.handle('clear-auth', async () => {
-    // TODO: Implement secure token removal
+    sessionSync.clearAuth();
     return true;
 });
 
@@ -85,6 +114,14 @@ ipcMain.handle('get-system-info', async () => {
         arch: process.arch,
         version: app.getVersion()
     };
+});
+
+ipcMain.handle('get-session-info', async () => {
+    return sessionSync.getCurrentSession();
+});
+
+ipcMain.handle('sync-pending', async () => {
+    return await sessionSync.syncPendingSessions();
 });
 
 app.whenReady().then(() => {

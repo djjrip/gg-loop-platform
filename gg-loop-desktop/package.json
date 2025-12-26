@@ -1,6 +1,6 @@
 {
     "name": "gg-loop-desktop",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "GG Loop Desktop Verification App - PLAY → EARN → LOOP",
     "main": "electron.js",
     "scripts": {
@@ -12,7 +12,8 @@
     "license": "UNLICENSED",
     "dependencies": {
         "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "react-dom": "^18.2.0",
+        "electron-store": "^8.1.0"
     },
     "devDependencies": {
         "@types/react": "^18.2.0",
@@ -36,7 +37,11 @@
             "dist/**/*",
             "electron.js",
             "preload.js",
-            "gameDetection.js"
+            "gameDetection.js",
+            "activityDetection.js",
+            "inputCapture.js",
+            "sessionSync.js",
+            "api.ts"
         ],
         "win": {
             "target": "portable"

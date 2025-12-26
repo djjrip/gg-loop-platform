@@ -9,3 +9,9 @@ build/
 .idea/
 coverage/
 .turbo/
+
+# Desktop app binaries (too large for git)
+gg-loop-desktop/dist-electron/
+gg-loop-desktop/node_modules/
+*.exe
+*.dll

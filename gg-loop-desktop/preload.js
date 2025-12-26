@@ -17,6 +17,10 @@ contextBridge.exposeInMainWorld('ggloop', {
     // System info
     getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
 
+    // Session management
+    getSessionInfo: () => ipcRenderer.invoke('get-session-info'),
+    syncPending: () => ipcRenderer.invoke('sync-pending'),
+
     // Listeners
     onGameDetected: (callback) => {
         ipcRenderer.on('game-detected', (event, game) => callback(game));
@@ -26,5 +30,11 @@ contextBridge.exposeInMainWorld('ggloop', {
     },
     onMatchEnd: (callback) => {
         ipcRenderer.on('match-end', (event, matchData) => callback(matchData));
+    },
+    onActivityChange: (callback) => {
+        ipcRenderer.on('activity-change', (event, status) => callback(status));
+    },
+    onPointsAwarded: (callback) => {
+        ipcRenderer.on('points-awarded', (event, data) => callback(data));
     }
 });
