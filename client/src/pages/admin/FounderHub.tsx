@@ -70,7 +70,7 @@ export default function FounderHub() {
           <Link href="/admin/analytics">
             <Button variant="outline" className="border-white/10 hover:bg-white/5">Analytics</Button>
           </Link>
-          <a href="https://discord.gg/ujEJbNSfzh" target="_blank" rel="noopener noreferrer">
+          <a href="https://discord.gg/X6GXg2At2D" target="_blank" rel="noopener noreferrer">
             <Button className="bg-[#5865F2] hover:bg-[#4752C4] text-white border-0">Discord Community</Button>
           </a>
         </div>
@@ -196,11 +196,11 @@ export default function FounderHub() {
               <div className="bg-black/40 border border-white/5 rounded-xl p-6 mb-4">
                 <h4 className="text-white font-bold mb-2">Discord Invite (Permanent)</h4>
                 <div className="flex gap-2">
-                  <Input value="https://discord.gg/ujEJbNSfzh" readOnly className="bg-black border-white/10 text-gray-400 font-mono text-sm" />
-                  <Button size="icon" variant="ghost" onClick={() => handleCopyLink("https://discord.gg/ujEJbNSfzh")}>
+                  <Input value="https://discord.gg/X6GXg2At2D" readOnly className="bg-black border-white/10 text-gray-400 font-mono text-sm" />
+                  <Button size="icon" variant="ghost" onClick={() => handleCopyLink("https://discord.gg/X6GXg2At2D")}>
                     <Copy className="h-4 w-4" />
                   </Button>
-                  <a href="https://discord.gg/ujEJbNSfzh" target="_blank" rel="noopener noreferrer">
+                  <a href="https://discord.gg/X6GXg2At2D" target="_blank" rel="noopener noreferrer">
                     <Button size="icon" variant="ghost">
                       <ExternalLink className="h-4 w-4" />
                     </Button>

@@ -59,7 +59,7 @@ const FOOTER_TEMPLATE = (series: string) => `
 ---
 
 **Join the GG Loop Community:**
-- Discord: [discord.gg/ggloop](https://discord.gg/ggloop)
+- Discord: [discord.gg/X6GXg2At2D](https://discord.gg/X6GXg2At2D)
 - Platform: [ggloop.io](https://ggloop.io)
 - Twitter: [@ggloop](https://twitter.com/ggloop)
 
@@ -75,10 +75,10 @@ async function main() {
   Object.entries(SERIES).forEach(([key, series]) => {
     console.log(`${key}. ${series.name} (${series.cadence})`);
   });
-  
+
   const seriesChoice = await question('\nEnter series number (1-4): ');
   const selectedSeries = SERIES[seriesChoice as keyof typeof SERIES];
-  
+
   if (!selectedSeries) {
     console.log('Invalid series selection. Exiting.');
     rl.close();
@@ -106,7 +106,7 @@ ${hasAffiliateLinks.toLowerCase() === 'y' ? AFFILIATE_DISCLOSURE + '\n\n---\n' :
 
   // Get content sections
   console.log('\n📝 Now let\'s build the content. Press Enter after each section.\n');
-  
+
   const hook = await question('Opening hook (2-3 sentences): ');
   const problem = await question('\nThe Problem (what challenge/struggle): ');
   const solution = await question('\nThe Solution (what you did/built/learned): ');
@@ -165,7 +165,7 @@ ${FOOTER_TEMPLATE(selectedSeries.name)}
   const today = new Date().toISOString().split('T')[0];
   const calendarEntry = `${today} | ${selectedSeries.name} | ${title}\n`;
   const calendarPath = path.join(process.cwd(), 'substack_content_calendar.txt');
-  
+
   fs.appendFileSync(calendarPath, calendarEntry, 'utf-8');
   console.log(`📅 Added to content calendar: ${calendarPath}\n`);
 

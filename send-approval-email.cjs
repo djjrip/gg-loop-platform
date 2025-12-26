@@ -6,8 +6,8 @@ const fs = require('fs');
 const path = require('path');
 
 if (!process.env.SENDGRID_API_KEY || process.env.SENDGRID_API_KEY.trim() === "") {
-    console.error("FATAL: SENDGRID_API_KEY missing in environment.");
-    process.exit(1);
+  console.error("FATAL: SENDGRID_API_KEY missing in environment.");
+  process.exit(1);
 }
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -16,18 +16,18 @@ const bannerPath = path.join('C:', 'Users', 'Jayson Quindao', '.gemini', 'antigr
 
 let bannerBase64 = '';
 try {
-    const buffer = fs.readFileSync(bannerPath);
-    bannerBase64 = buffer.toString('base64');
-    console.log('✅ Banner loaded');
+  const buffer = fs.readFileSync(bannerPath);
+  bannerBase64 = buffer.toString('base64');
+  console.log('✅ Banner loaded');
 } catch (error) {
-    console.error('⚠️  Banner not found');
+  console.error('⚠️  Banner not found');
 }
 
 const msg = {
-    to: "jaysonquindao1@gmail.com",
-    from: "info@ggloop.io",
-    subject: "GG LOOP Early Access — We're Live 🎮🔥",
-    html: `
+  to: "jaysonquindao1@gmail.com",
+  from: "info@ggloop.io",
+  subject: "GG LOOP Early Access — We're Live 🎮🔥",
+  html: `
     <!DOCTYPE html>
     <html>
     <head>
@@ -136,7 +136,7 @@ const msg = {
             </p>
             <div style="text-align: center; margin: 0 0 20px 0;">
               <!-- Discord -->
-              <a href="https://discord.gg/Ny7ATHrh" style="display: inline-block; margin: 0 8px 12px 8px; text-decoration: none;">
+              <a href="https://discord.gg/X6GXg2At2D" style="display: inline-block; margin: 0 8px 12px 8px; text-decoration: none;">
                 <div style="background: #1a1a1a; border: 1px solid #5865F2; border-radius: 8px; padding: 12px 20px; display: inline-block; min-width: 120px;">
                   <span style="color: #5865F2; font-size: 14px; font-weight: bold;">💬 Discord</span>
                 </div>
@@ -195,39 +195,39 @@ const msg = {
 };
 
 if (bannerBase64) {
-    msg.attachments = [
-        {
-            content: bannerBase64,
-            filename: 'banner.png',
-            type: 'image/png',
-            disposition: 'inline',
-            content_id: 'email-banner',
-        },
-        {
-            content: bannerBase64,
-            filename: 'banner-footer.png',
-            type: 'image/png',
-            disposition: 'inline',
-            content_id: 'email-banner-footer',
-        },
-    ];
+  msg.attachments = [
+    {
+      content: bannerBase64,
+      filename: 'banner.png',
+      type: 'image/png',
+      disposition: 'inline',
+      content_id: 'email-banner',
+    },
+    {
+      content: bannerBase64,
+      filename: 'banner-footer.png',
+      type: 'image/png',
+      disposition: 'inline',
+      content_id: 'email-banner-footer',
+    },
+  ];
 }
 
 console.log('\n📧 Sending FINAL Email Preview...\n');
 sgMail
-    .send(msg)
-    .then(() => {
-        console.log('✅ FINAL EMAIL SENT FOR APPROVAL!');
-        console.log('');
-        console.log('SOCIAL LINKS INCLUDED:');
-        console.log('✓ Discord: https://discord.gg/Ny7ATHrh');
-        console.log('✓ Twitter: @ggloopllc');
-        console.log('✓ LinkedIn: /company/ggloop/');
-        console.log('✓ TikTok: @ggloop');
-        console.log('✓ Instagram: @ggloop.io');
-        console.log('✓ Unsubscribe link');
-        console.log('✓ Legal footer\n');
-    })
-    .catch((error) => {
-        console.error('❌ Error:', error.response ? error.response.body : error);
-    });
+  .send(msg)
+  .then(() => {
+    console.log('✅ FINAL EMAIL SENT FOR APPROVAL!');
+    console.log('');
+    console.log('SOCIAL LINKS INCLUDED:');
+    console.log('✓ Discord: https://discord.gg/X6GXg2At2D');
+    console.log('✓ Twitter: @ggloopllc');
+    console.log('✓ LinkedIn: /company/ggloop/');
+    console.log('✓ TikTok: @ggloop');
+    console.log('✓ Instagram: @ggloop.io');
+    console.log('✓ Unsubscribe link');
+    console.log('✓ Legal footer\n');
+  })
+  .catch((error) => {
+    console.error('❌ Error:', error.response ? error.response.body : error);
+  });

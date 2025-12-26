@@ -6,8 +6,8 @@ const fs = require('fs');
 const path = require('path');
 
 if (!process.env.SENDGRID_API_KEY || process.env.SENDGRID_API_KEY.trim() === "") {
-    console.error("FATAL: SENDGRID_API_KEY missing in environment.");
-    process.exit(1);
+  console.error("FATAL: SENDGRID_API_KEY missing in environment.");
+  process.exit(1);
 }
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -16,18 +16,18 @@ const bannerPath = path.join('C:', 'Users', 'Jayson Quindao', '.gemini', 'antigr
 
 let bannerBase64 = '';
 try {
-    const buffer = fs.readFileSync(bannerPath);
-    bannerBase64 = buffer.toString('base64');
-    console.log('✅ Banner loaded');
+  const buffer = fs.readFileSync(bannerPath);
+  bannerBase64 = buffer.toString('base64');
+  console.log('✅ Banner loaded');
 } catch (error) {
-    console.error('⚠️  Banner not found');
+  console.error('⚠️  Banner not found');
 }
 
 const msg = {
-    to: "jaysonquindao1@gmail.com",
-    from: "info@ggloop.io",
-    subject: "GG LOOP Early Access — We're Live 🎮🔥",
-    html: `
+  to: "jaysonquindao1@gmail.com",
+  from: "info@ggloop.io",
+  subject: "GG LOOP Early Access — We're Live 🎮🔥",
+  html: `
     <!DOCTYPE html>
     <html>
     <head>
@@ -143,7 +143,7 @@ const msg = {
               </a>
               
               <!-- Discord -->
-              <a href="https://discord.gg/ggloop" style="display: inline-block; margin: 0 10px; text-decoration: none;">
+              <a href="https://discord.gg/X6GXg2At2D" style="display: inline-block; margin: 0 10px; text-decoration: none;">
                 <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 12px 16px; display: inline-block;">
                   <span style="color: #FF6B35; font-size: 14px; font-weight: bold;">💬 Discord</span>
                 </div>
@@ -196,33 +196,33 @@ const msg = {
 };
 
 if (bannerBase64) {
-    msg.attachments = [
-        {
-            content: bannerBase64,
-            filename: 'banner.png',
-            type: 'image/png',
-            disposition: 'inline',
-            content_id: 'email-banner',
-        },
-        {
-            content: bannerBase64,
-            filename: 'banner-footer.png',
-            type: 'image/png',
-            disposition: 'inline',
-            content_id: 'email-banner-footer',
-        },
-    ];
+  msg.attachments = [
+    {
+      content: bannerBase64,
+      filename: 'banner.png',
+      type: 'image/png',
+      disposition: 'inline',
+      content_id: 'email-banner',
+    },
+    {
+      content: bannerBase64,
+      filename: 'banner-footer.png',
+      type: 'image/png',
+      disposition: 'inline',
+      content_id: 'email-banner-footer',
+    },
+  ];
 }
 
 console.log('\n📧 Sending Email with Social Links...\n');
 sgMail
-    .send(msg)
-    .then(() => {
-        console.log('✅ EMAIL WITH SOCIAL FOOTER SENT!');
-        console.log('✓ Includes: TikTok, Discord, LinkedIn, Twitter, Instagram');
-        console.log('✓ Legal footer with unsubscribe link');
-        console.log('✓ Privacy policy & terms links\n');
-    })
-    .catch((error) => {
-        console.error('❌ Error:', error.response ? error.response.body : error);
-    });
+  .send(msg)
+  .then(() => {
+    console.log('✅ EMAIL WITH SOCIAL FOOTER SENT!');
+    console.log('✓ Includes: TikTok, Discord, LinkedIn, Twitter, Instagram');
+    console.log('✓ Legal footer with unsubscribe link');
+    console.log('✓ Privacy policy & terms links\n');
+  })
+  .catch((error) => {
+    console.error('❌ Error:', error.response ? error.response.body : error);
+  });

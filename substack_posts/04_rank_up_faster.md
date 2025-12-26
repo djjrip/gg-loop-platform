@@ -225,7 +225,7 @@ I'll respond to everyone.
 ---
 
 **Join the GG Loop Community:**
-- Discord: [discord.gg/ggloop](https://discord.gg/ggloop) (VOD reviews, coaching, community)
+- Discord: [discord.gg/X6GXg2At2D](https://discord.gg/X6GXg2At2D) (VOD reviews, coaching, community)
 - Platform: [ggloop.io](https://ggloop.io) (track stats, earn rewards)
 - Twitter: [@ggloop](https://twitter.com/ggloop)
 

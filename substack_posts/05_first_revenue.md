@@ -357,7 +357,7 @@ Drop a comment. I'll respond to everyone.
 ---
 
 **Join the GG Loop Journey:**
-- Discord: [discord.gg/ggloop](https://discord.gg/ggloop)
+- Discord: [discord.gg/X6GXg2At2D](https://discord.gg/X6GXg2At2D)
 - Platform: [ggloop.io](https://ggloop.io)
 - Twitter: [@ggloop](https://twitter.com/ggloop)
 - Partnerships: partnerships@ggloop.io

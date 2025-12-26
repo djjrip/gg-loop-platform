@@ -195,7 +195,7 @@ Let's build something real.
 
 **Questions? Feedback?**  
 Drop a comment or hit me up:  
-- Discord: [discord.gg/ggloop](https://discord.gg/ggloop)  
+- Discord: [discord.gg/X6GXg2At2D](https://discord.gg/X6GXg2At2D)  
 - Twitter: [@ggloop](https://twitter.com/ggloop)  
 - Email: info@ggloop.io
 

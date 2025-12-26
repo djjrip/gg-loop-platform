@@ -88,7 +88,7 @@ That's how we built the fulfillment system in 5 hours.
 
 If you're building something similar, join the Discord and let's talk shop.
 
-discord.gg/ggloop
+discord.gg/X6GXg2At2D
 ```
 
 ---

@@ -119,7 +119,7 @@ export default function Home() {
                       START EARNING
                     </button>
                   </Link>
-                  <a href="https://discord.gg/ujEJbNSfzh" target="_blank" rel="noopener noreferrer">
+                  <a href="https://discord.gg/X6GXg2At2D" target="_blank" rel="noopener noreferrer">
                     <button className="border-2 border-ggloop-orange text-ggloop-orange hover:bg-ggloop-orange/10 rounded-lg px-8 py-4 font-bold text-lg transition-all duration-300 flex items-center gap-2">
                       <Users className="h-5 w-5" />
                       JOIN THE DISCORD

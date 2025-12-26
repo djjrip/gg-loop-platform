@@ -369,7 +369,7 @@ Drop a comment and let me know.
 ---
 
 **Join the GG Loop Community:**
-- Discord: [discord.gg/ggloop](https://discord.gg/ggloop)
+- Discord: [discord.gg/X6GXg2At2D](https://discord.gg/X6GXg2At2D)
 - Platform: [ggloop.io](https://ggloop.io)
 - Twitter: [@ggloop](https://twitter.com/ggloop)
 

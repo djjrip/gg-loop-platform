@@ -299,7 +299,7 @@ Report bugs and issues on [GitHub Issues](https://github.com/yourusername/gg-loo
 
 ### **Contact**
 - **Email:** support@ggloop.io
-- **Discord:** [Join our server](https://discord.gg/ggloop)
+- **Discord:** [Join our server](https://discord.gg/X6GXg2At2D)
 - **Twitter:** [@ggloop](https://twitter.com/ggloop)
 
 ---

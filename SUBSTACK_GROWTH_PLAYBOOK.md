@@ -314,7 +314,7 @@ You've been here a week. If you're vibing with the content, join the Discord.
 
 2,000+ gamers, founders, and optimizers hanging out.
 
-discord.gg/ggloop
+discord.gg/X6GXg2At2D
 
 - Jayson
 ```

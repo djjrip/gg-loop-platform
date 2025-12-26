@@ -60,7 +60,7 @@ npm run dev
 - Discord Dev: https://discord.com/developers
 
 **Social:**
-- Discord: https://discord.gg/Ny7ATHrh
+- Discord: https://discord.gg/X6GXg2At2D
 - Twitter: @ggloopllc
 - TikTok: @gg.loop
 - LinkedIn: /company/ggloop

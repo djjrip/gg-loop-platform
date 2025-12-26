@@ -180,7 +180,7 @@ const msg = {
               Join the Community
             </p>
             <div style="text-align: center;">
-              <a href="https://discord.gg/Ny7ATHrh" style="display: inline-block; margin: 0 6px 10px 6px; background: #1a1a1a; border: 1px solid #5865F2; border-radius: 6px; padding: 10px 18px; text-decoration: none; min-width: 100px;">
+              <a href="https://discord.gg/X6GXg2At2D" style="display: inline-block; margin: 0 6px 10px 6px; background: #1a1a1a; border: 1px solid #5865F2; border-radius: 6px; padding: 10px 18px; text-decoration: none; min-width: 100px;">
                 <span style="color: #5865F2; font-size: 13px; font-weight: bold;">💬 Discord</span>
               </a>
               <a href="https://twitter.com/ggloopllc" style="display: inline-block; margin: 0 6px 10px 6px; background: #1a1a1a; border: 1px solid #1DA1F2; border-radius: 6px; padding: 10px 18px; text-decoration: none; min-width: 100px;">

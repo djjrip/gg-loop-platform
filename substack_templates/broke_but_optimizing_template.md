@@ -87,7 +87,7 @@ That's how I saved $600+ on flights to Manila.
 
 If you've got budget travel tips, share them in the Discord. For the culture.
 
-discord.gg/ggloop
+discord.gg/X6GXg2At2D
 ```
 
 ---
@@ -175,7 +175,7 @@ That's how I saved $840 on flights to Manila.
 
 If you've got budget travel tips, drop them in the Discord. Let's help each other get home.
 
-discord.gg/ggloop
+discord.gg/X6GXg2At2D
 ```
 
 ---
