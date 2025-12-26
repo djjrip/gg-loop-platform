@@ -40,6 +40,7 @@ import AffiliateProgram from "@/pages/AffiliateProgram";
 import GGLoopCares from "@/pages/GGLoopCares";
 // import AWSRoadmap from "@/pages/AWSRoadmap"; // REMOVED PUBLIC ROUTE
 import Roadmap from "@/pages/Roadmap";
+import Trust from "@/pages/Trust";
 import RequestGame from "@/pages/RequestGame";
 import RiotCallback from "@/pages/RiotCallback";
 
@@ -133,6 +134,7 @@ function Router() {
       <Route path="/admin/anticheat" component={AdminAntiCheat} />
       <Route path="/admin/analytics" component={AdminAnalytics} />
       <Route path="/admin/game-requests" component={GameRequestsAnalytics} />
+      <Route path="/trust" component={Trust} />
       <Route path="/vision" component={PitchDeck} />
 
       {/* 404 */}
