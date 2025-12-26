@@ -259,7 +259,7 @@ export default function Home() {
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-start gap-2">
                       <Check className="h-4 w-4 text-ggloop-orange shrink-0 mt-0.5" />
-                      <span className="text-gray-300">10 GG Coins per match win</span>
+                      <span className="text-gray-300">Match verification rewards (coming soon)</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="h-4 w-4 text-ggloop-orange shrink-0 mt-0.5" />

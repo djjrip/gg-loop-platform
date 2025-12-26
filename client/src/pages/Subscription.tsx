@@ -174,7 +174,7 @@ export default function SubscriptionPage() {
       icon: Coins,
       description: "Earn GG Coins to unlock trial access",
       features: [
-        { text: "10 GG Coins per match win", included: true },
+        { text: "Match verification rewards (coming soon)", included: true },
         { text: "50 GG Coins per 7-day login streak", included: true },
         { text: "100 coin monthly cap", included: true },
         { text: "Unlock 7-day Basic tier trial with 500 coins", included: true },
