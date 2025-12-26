@@ -160,6 +160,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // [ADMIN] Get all game requests for analytics
+  app.get("/api/admin/game-requests", requireAuth, async (req, res) => {
+    // Only allow admins (you can add proper role check)
+    if (!req.dbUser?.isFounder) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    try {
+      const requests = await db.select().from(gameRequests).orderBy(gameRequests.createdAt);
+      res.json(requests);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   // Register Trust Routes
   app.use("/api/trust", requireAuth, trustRouter);
 

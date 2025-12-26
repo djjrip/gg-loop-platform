@@ -59,6 +59,7 @@ import CreatorDashboard from "@/pages/CreatorDashboard";
 import CreatorLeaderboard from "@/pages/CreatorLeaderboard";
 import AdminAntiCheat from "@/pages/AdminAntiCheat";
 import AdminAnalytics from "@/pages/AdminAnalytics";
+import GameRequestsAnalytics from "@/pages/admin/GameRequestsAnalytics";
 import PitchDeck from "@/pages/PitchDeck";
 
 // 404
@@ -131,6 +132,7 @@ function Router() {
       {/* Level 12: Anti-Cheat Lite */}
       <Route path="/admin/anticheat" component={AdminAntiCheat} />
       <Route path="/admin/analytics" component={AdminAnalytics} />
+      <Route path="/admin/game-requests" component={GameRequestsAnalytics} />
       <Route path="/vision" component={PitchDeck} />
 
       {/* 404 */}
