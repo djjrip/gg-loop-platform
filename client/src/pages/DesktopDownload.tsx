@@ -7,9 +7,9 @@ export default function DesktopDownload() {
 
     const handleDownload = () => {
         setDownloading(true);
-        // Open GitHub releases page for download
-        window.open('https://github.com/djjrip/gg-loop-platform/releases', '_blank');
-        setTimeout(() => setDownloading(false), 2000);
+        // Direct download from AWS S3
+        window.location.href = 'https://ggloop-downloads.s3.us-east-1.amazonaws.com/GG-Loop-Desktop-v1.0.0-Windows.zip';
+        setTimeout(() => setDownloading(false), 3000);
     };
 
     return (
