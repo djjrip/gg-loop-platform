@@ -8,10 +8,28 @@ import { eq } from "drizzle-orm";
 const riotAuthRouter = Router();
 
 // ===========================================
+// COMPLIANCE: Riot API Access Control
+// Set RIOT_API_ENABLED=false to disable Riot OAuth (for TOS compliance)
+// Only enable when you have production API approval
+// ===========================================
+const RIOT_API_ENABLED = process.env.RIOT_API_ENABLED === 'true';
+const COMPLIANCE_MESSAGE = "Riot account linking is temporarily disabled while we finalize production API approval. Please use Discord or other login methods in the meantime. Follow @ggloopllc for updates!";
+
+// ===========================================
 // MICRO-STEP B: Endpoint 1 - Init OAuth
 // ===========================================
 riotAuthRouter.post("/oauth/init", (req, res) => {
     try {
+        // COMPLIANCE CHECK: Block if Riot API is disabled
+        if (!RIOT_API_ENABLED) {
+            console.log("[Riot OAuth] Blocked - RIOT_API_ENABLED is false (TOS compliance mode)");
+            return res.status(503).json({
+                error: "Riot linking temporarily unavailable",
+                message: COMPLIANCE_MESSAGE,
+                compliance: true
+            });
+        }
+
         const clientId = process.env.RIOT_CLIENT_ID;
         const redirectUri = process.env.RIOT_REDIRECT_URI;
 
@@ -48,6 +66,16 @@ riotAuthRouter.post("/oauth/init", (req, res) => {
 // ===========================================
 riotAuthRouter.post("/oauth/callback", async (req, res) => {
     try {
+        // COMPLIANCE CHECK: Block if Riot API is disabled
+        if (!RIOT_API_ENABLED) {
+            console.log("[Riot OAuth Callback] Blocked - RIOT_API_ENABLED is false");
+            return res.status(503).json({
+                error: "Riot linking temporarily unavailable",
+                message: COMPLIANCE_MESSAGE,
+                compliance: true
+            });
+        }
+
         const { code, state } = req.body;
         const sessionState = (req.session as any)?.riotOAuthState;
 
@@ -174,15 +202,24 @@ riotAuthRouter.post("/oauth/callback", async (req, res) => {
 // ===========================================
 riotAuthRouter.get("/status", async (req, res) => {
     try {
+        // Return compliance mode status if disabled
+        if (!RIOT_API_ENABLED) {
+            return res.json({
+                linked: false,
+                complianceMode: true,
+                message: COMPLIANCE_MESSAGE
+            });
+        }
+
         const user = (req as any).user;
         if (!user || !user.id) {
-            return res.json({ linked: false });
+            return res.json({ linked: false, complianceMode: false });
         }
 
         const [account] = await db.select().from(riotAccounts).where(eq(riotAccounts.userId, user.id));
 
         if (!account) {
-            return res.json({ linked: false });
+            return res.json({ linked: false, complianceMode: false });
         }
 
         res.json({

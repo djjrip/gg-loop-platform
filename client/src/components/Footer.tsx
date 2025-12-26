@@ -39,7 +39,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://tiktok.me/jaysonbq"
+                  href="https://www.tiktok.com/@jaysonbq"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 hover-elevate px-2 py-1 rounded-md"
