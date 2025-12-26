@@ -146,7 +146,7 @@ export default function Roadmap() {
                                 Join Early Access
                             </Button>
                         </Link>
-                        <a href="https://discord.gg/Ny7ATHrh" target="_blank" rel="noopener noreferrer">
+                        <a href="https://discord.gg/ujEJbNSfzh" target="_blank" rel="noopener noreferrer">
                             <Button variant="outline" className="border-ggloop-orange text-ggloop-orange px-8 py-6 text-lg font-bold rounded-full hover:bg-ggloop-orange/10">
                                 Join Discord
                             </Button>

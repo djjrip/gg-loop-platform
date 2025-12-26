@@ -295,7 +295,7 @@ export default function CreatorTools() {
                   Get Started
                 </Button>
               </a>
-              <a href="https://discord.gg/Ny7ATHrh" target="_blank" rel="noopener noreferrer">
+              <a href="https://discord.gg/ujEJbNSfzh" target="_blank" rel="noopener noreferrer">
                 <Button variant="outline" size="lg" data-testid="button-join-community">
                   Join Our Community
                 </Button>

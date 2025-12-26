@@ -46,7 +46,7 @@ export const config = {
         'twitter.com',
         'tiktok.com',
         'linkedin.com',
-        'discord.gg/Ny7ATHrh',
+        'discord.gg/ujEJbNSfzh',
     ],
 
     // Role names
