@@ -7,6 +7,7 @@ import matchSyncRouter from "./routes/matchSync";
 import rewardRedemptionRouter from "./routes/rewardRedemption";
 import { desktopApiRouter } from "./routes/desktopApi";
 import matchesRouter from "./routes/matches";
+import ghostBotRouter from "./routes/ghost-bot";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -176,6 +177,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register Trust Routes
   app.use("/api/trust", requireAuth, trustRouter);
+
+  // Ghost Bot API - Cursor Integration
+  app.use("/api/ghost-bot", ghostBotRouter);
 
   // [PHASE 3] PayPal Subscription Routes
   app.use("/api/paypal", paypalRoutes);

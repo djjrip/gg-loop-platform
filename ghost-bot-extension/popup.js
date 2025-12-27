@@ -1,12 +1,48 @@
-// Ghost Bot Extension - Conversational AI Chat
+// Ghost Bot Extension - Conversational AI Chat with Cursor Integration
 
 let conversationHistory = [];
 let currentTab = null;
+let cursorIntegration = null;
+
+// Load Cursor Integration
+let CursorIntegration;
+try {
+  // Try to load as module
+  const module = await import('./cursor-integration.js');
+  CursorIntegration = module.CursorIntegration || module.default;
+} catch (e) {
+  // Fallback: define inline
+  CursorIntegration = class {
+    async reportToCursor() {}
+    startMonitoring() {}
+  };
+}
 
 // Initialize
 async function init() {
   await loadCurrentTab();
   setupEventListeners();
+  
+  // Initialize Cursor integration (if available)
+  try {
+    if (typeof CursorIntegration !== 'undefined') {
+      cursorIntegration = new CursorIntegration();
+      if (cursorIntegration.startMonitoring) {
+        cursorIntegration.startMonitoring();
+      }
+      
+      // Report to Cursor that Ghost Bot is ready
+      if (cursorIntegration.reportToCursor) {
+        await cursorIntegration.reportToCursor({
+          type: 'ghost_bot_ready',
+          message: 'Ghost Bot extension loaded and ready',
+          tab: currentTab
+        });
+      }
+    }
+  } catch (error) {
+    console.log('Cursor integration not available:', error);
+  }
 }
 
 // Load current tab info
@@ -134,6 +170,17 @@ async function sendMessage() {
     // Add ghost response
     addMessage(response.text, false, response.actions || []);
     conversationHistory.push({ role: 'assistant', content: response.text });
+    
+    // Report to Cursor
+    if (cursorIntegration) {
+      await cursorIntegration.reportToCursor({
+        type: 'conversation',
+        userMessage: message,
+        ghostResponse: response.text,
+        actions: response.actions || [],
+        tab: currentTab
+      });
+    }
     
     // Update tab info if needed
     if (response.tabInfo) {

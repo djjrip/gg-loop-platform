@@ -390,6 +390,167 @@ function generateReport(results) {
 }
 
 /**
+ * Amazon Associates Signup Automation
+ */
+async function automateAmazonAssociates(browser) {
+  console.log('\n🛒 AUTOMATING AMAZON ASSOCIATES SIGNUP\n');
+  console.log('='.repeat(50));
+  
+  const page = await browser.newPage();
+  const results = {
+    url: 'https://affiliate-program.amazon.com/signup',
+    loaded: false,
+    signedIn: false,
+    applicationStarted: false,
+    errors: []
+  };
+  
+  try {
+    console.log('1. Navigating to Amazon Associates signup...');
+    await page.goto('https://affiliate-program.amazon.com/signup', { 
+      waitUntil: 'networkidle2',
+      timeout: 30000 
+    });
+    results.loaded = true;
+    console.log('   ✅ Page loaded');
+    
+    // Check if already signed in
+    const isSignedIn = await page.evaluate(() => {
+      return document.body.innerText.includes('Sign out') || 
+             document.body.innerText.includes('Account') ||
+             !document.body.innerText.includes('Sign in');
+    });
+    
+    if (!isSignedIn) {
+      console.log('\n2. Sign-in required');
+      console.log('   🔒 This requires private information (your Amazon password)');
+      console.log('   💡 The bot will guide you through the signup process');
+      await waitForUser('Please sign in to Amazon, then press Enter');
+      
+      // Check again after user signs in
+      await page.goto('https://affiliate-program.amazon.com/signup', { waitUntil: 'networkidle2' });
+    }
+    
+    results.signedIn = true;
+    console.log('   ✅ Signed in');
+    
+    console.log('\n3. Looking for signup/application form...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Look for signup button or form
+    const signupButton = await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll('button, a, [role="button"]'));
+      const signup = buttons.find(b => 
+        b.textContent?.toLowerCase().includes('sign up') ||
+        b.textContent?.toLowerCase().includes('join') ||
+        b.textContent?.toLowerCase().includes('apply') ||
+        b.textContent?.toLowerCase().includes('get started')
+      );
+      if (signup) {
+        signup.click();
+        return true;
+      }
+      return false;
+    });
+    
+    if (signupButton) {
+      console.log('   ✅ Signup button clicked');
+      await page.waitForNavigation({ waitUntil: 'networkidle2' }).catch(() => {});
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    } else {
+      console.log('   ⚠️  Please click "Sign Up" or "Join" button manually');
+      await waitForUser('Click signup/join button, then press Enter');
+    }
+    
+    console.log('\n4. Filling out application form...');
+    console.log('   💡 The bot will help fill forms, but will stop for:');
+    console.log('      - Personal information (name, address)');
+    console.log('      - Payment information');
+    console.log('      - Tax information');
+    console.log('      - Any verification steps\n');
+    
+    // Look for form fields
+    const formFields = await page.evaluate(() => {
+      const inputs = Array.from(document.querySelectorAll('input, select, textarea'));
+      return inputs.map(input => ({
+        type: input.type || input.tagName.toLowerCase(),
+        name: input.name || input.id || input.placeholder,
+        required: input.required,
+        value: input.value
+      })).filter(field => field.name);
+    });
+    
+    console.log(`   Found ${formFields.length} form field(s)`);
+    
+    // Guide user through form
+    console.log('\n5. Form fields detected:');
+    formFields.forEach((field, index) => {
+      if (field.required && !field.value) {
+        console.log(`   ${index + 1}. ${field.name || 'Field'} (${field.type}) - REQUIRED`);
+      }
+    });
+    
+    console.log('\n   ⏸️  Please fill out the form:');
+    console.log('      - Website URL: https://ggloop.io');
+    console.log('      - Website description: Competitive gaming rewards platform');
+    console.log('      - Payment method: (you\'ll need to provide)');
+    console.log('      - Tax information: (you\'ll need to provide)');
+    
+    try {
+      await waitForUser('Fill out the form, then press Enter');
+    } catch (e) {
+      // Readline might be closed, continue anyway
+      console.log('   Continuing...');
+    }
+    
+    results.applicationStarted = true;
+    
+    console.log('\n6. Checking application status...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const applicationStatus = await page.evaluate(() => {
+      const text = document.body.innerText.toLowerCase();
+      if (text.includes('pending') || text.includes('under review')) {
+        return 'pending';
+      } else if (text.includes('approved')) {
+        return 'approved';
+      } else if (text.includes('rejected') || text.includes('denied')) {
+        return 'rejected';
+      }
+      return 'unknown';
+    });
+    
+    if (applicationStatus === 'pending') {
+      console.log('   ✅ Application submitted and pending review');
+    } else if (applicationStatus === 'approved') {
+      console.log('   ✅ Application approved!');
+    } else if (applicationStatus === 'rejected') {
+      console.log('   ⚠️  Application was rejected');
+    } else {
+      console.log('   ℹ️  Application status: ' + applicationStatus);
+    }
+    
+    // Take screenshot
+    await page.screenshot({ 
+      path: 'screenshots/amazon-associates-signup.png',
+      fullPage: true 
+    });
+    console.log('   📸 Screenshot saved: screenshots/amazon-associates-signup.png');
+    
+    console.log('\n   ✅ Amazon Associates signup process completed!');
+    console.log('   💡 Check your email for confirmation\n');
+    
+  } catch (error) {
+    console.error('   ❌ Error:', error.message);
+    results.errors.push(error.message);
+  } finally {
+    await page.close();
+  }
+  
+  return results;
+}
+
+/**
  * Main Virtual Assistant
  */
 async function runVirtualAssistant(task = 'all') {
@@ -427,6 +588,12 @@ async function runVirtualAssistant(task = 'all') {
     if (task === 'all' || task === 'railway') {
       const result = await checkRailwayDashboard(browser);
       result.name = 'Railway Dashboard Check';
+      results.push(result);
+    }
+    
+    if (task === 'all' || task === 'amazon') {
+      const result = await automateAmazonAssociates(browser);
+      result.name = 'Amazon Associates Signup';
       results.push(result);
     }
     

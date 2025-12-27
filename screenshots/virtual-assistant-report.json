@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-12-27T11:12:25.819Z",
+  "results": [
+    {
+      "url": "https://affiliate-program.amazon.com/signup",
+      "loaded": true,
+      "signedIn": false,
+      "applicationStarted": false,
+      "errors": [
+        "readline was closed"
+      ],
+      "name": "Amazon Associates Signup"
+    }
+  ]
+}
