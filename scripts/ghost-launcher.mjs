@@ -288,54 +288,193 @@ function showMenu() {
 }
 
 /**
- * Ask question to AI (simulated - in real use, this would call the AI)
+ * Ask question to AI - Intelligent handler for ANY question
  */
-async function askAI(question) {
-  // This is where you'd integrate with the AI
-  // For now, we'll parse common questions and return commands
-  
+async function askAI(question, currentPage = null) {
   const lowerQuestion = question.toLowerCase();
+  const commands = [];
   
-  // Amazon Associates signup
-  if (lowerQuestion.includes('amazon') && lowerQuestion.includes('website')) {
-    return [{
-      action: 'fill',
-      selector: 'input[name*="website"], input[name*="url"]',
-      value: 'https://ggloop.io'
-    }];
+  // Get page context if available
+  let pageInfo = null;
+  if (currentPage) {
+    try {
+      pageInfo = await currentPage.evaluate(() => {
+        const inputs = Array.from(document.querySelectorAll('input, select, textarea'));
+        return {
+          url: window.location.href,
+          title: document.title,
+          inputs: inputs.map(input => ({
+            type: input.type || input.tagName.toLowerCase(),
+            name: input.name || input.id || input.placeholder || '',
+            value: input.value,
+            required: input.required,
+            isPrivate: input.type === 'password' || 
+                      (input.name?.toLowerCase().includes('password')) ||
+                      (input.name?.toLowerCase().includes('ssn')) ||
+                      (input.name?.toLowerCase().includes('credit')) ||
+                      (input.name?.toLowerCase().includes('cvv'))
+          }))
+        };
+      });
+    } catch (e) {
+      // Ignore
+    }
   }
   
-  if (lowerQuestion.includes('amazon') && lowerQuestion.includes('business')) {
-    return [{
-      action: 'fill',
-      selector: 'input[name*="business"], input[name*="company"]',
-      value: 'GG LOOP LLC'
-    }];
+  // Smart field detection and filling
+  const fillableFields = {
+    // Website/URL fields
+    website: { value: 'https://ggloop.io', selectors: ['website', 'url', 'site', 'domain'] },
+    url: { value: 'https://ggloop.io', selectors: ['url', 'website', 'site'] },
+    domain: { value: 'ggloop.io', selectors: ['domain', 'website'] },
+    
+    // Business info
+    business: { value: 'GG LOOP LLC', selectors: ['business', 'company', 'organization', 'org'] },
+    company: { value: 'GG LOOP LLC', selectors: ['company', 'business', 'organization'] },
+    'business name': { value: 'GG LOOP LLC', selectors: ['business', 'company', 'name'] },
+    
+    // Contact info
+    email: { value: 'jaysonquindao@ggloop.io', selectors: ['email', 'e-mail', 'mail'] },
+    'business email': { value: 'jaysonquindao@ggloop.io', selectors: ['email', 'business'] },
+    
+    // Description
+    description: { value: 'Competitive gaming rewards platform where players earn points and redeem for rewards', selectors: ['description', 'about', 'summary'] },
+    'website description': { value: 'Competitive gaming rewards platform where players earn points and redeem for rewards', selectors: ['description', 'about'] },
+    
+    // Address (if needed)
+    address: { value: '', selectors: ['address', 'street'] },
+    city: { value: '', selectors: ['city'] },
+    state: { value: '', selectors: ['state', 'province'] },
+    zip: { value: '', selectors: ['zip', 'postal', 'code'] },
+  };
+  
+  // Check if question asks to fill specific fields
+  for (const [fieldName, fieldData] of Object.entries(fillableFields)) {
+    if (lowerQuestion.includes(fieldName) || 
+        fieldData.selectors.some(sel => lowerQuestion.includes(sel))) {
+      
+      // Find matching input on page
+      if (pageInfo) {
+        const matchingInput = pageInfo.inputs.find(input => {
+          const inputName = input.name.toLowerCase();
+          return fieldData.selectors.some(sel => inputName.includes(sel)) &&
+                 !input.isPrivate &&
+                 !input.value;
+        });
+        
+        if (matchingInput && fieldData.value) {
+          commands.push({
+            action: 'fill',
+            selector: `input[name*="${matchingInput.name}"], input[id*="${matchingInput.name}"]`,
+            value: fieldData.value
+          });
+        }
+      } else {
+        // Generic selector
+        const selector = fieldData.selectors.map(sel => 
+          `input[name*="${sel}"], input[id*="${sel}"], input[placeholder*="${sel}"]`
+        ).join(', ');
+        
+        if (fieldData.value) {
+          commands.push({
+            action: 'fill',
+            selector: selector,
+            value: fieldData.value
+          });
+        }
+      }
+    }
   }
   
-  if (lowerQuestion.includes('amazon') && lowerQuestion.includes('email')) {
-    return [{
-      action: 'fill',
-      selector: 'input[type="email"], input[name*="email"]',
-      value: 'jaysonquindao@ggloop.io'
-    }];
+  // Navigation commands
+  if (lowerQuestion.includes('navigate') || lowerQuestion.includes('go to') || lowerQuestion.includes('open')) {
+    if (lowerQuestion.includes('amazon')) {
+      commands.push({
+        action: 'navigate',
+        url: 'https://affiliate-program.amazon.com/signup'
+      });
+    } else if (lowerQuestion.includes('paypal')) {
+      commands.push({
+        action: 'navigate',
+        url: 'https://developer.paypal.com/dashboard'
+      });
+    } else if (lowerQuestion.includes('railway')) {
+      commands.push({
+        action: 'navigate',
+        url: 'https://railway.app'
+      });
+    }
   }
   
-  // Generic form filling
-  if (lowerQuestion.includes('fill') && lowerQuestion.includes('email')) {
-    return [{
-      action: 'fill',
-      selector: 'input[type="email"]',
-      value: 'jaysonquindao@ggloop.io'
-    }];
+  // Click commands
+  if (lowerQuestion.includes('click') || lowerQuestion.includes('press') || lowerQuestion.includes('submit')) {
+    let selector = 'button[type="submit"], button:contains("submit"), input[type="submit"]';
+    
+    if (lowerQuestion.includes('sign up') || lowerQuestion.includes('signup')) {
+      selector = 'button:contains("sign up"), a:contains("sign up"), button:contains("join")';
+    } else if (lowerQuestion.includes('continue') || lowerQuestion.includes('next')) {
+      selector = 'button:contains("continue"), button:contains("next")';
+    }
+    
+    commands.push({
+      action: 'click',
+      selector: selector
+    });
   }
   
-  // Default: return helpful message
-  return {
-    message: `I understand you want to: ${question}. Please provide more specific instructions like:
-    - "fill website field with https://ggloop.io"
-    - "click the submit button"
-    - "navigate to amazon signup"`
+  // Auto-fill all non-private fields if asked
+  if (lowerQuestion.includes('fill all') || lowerQuestion.includes('fill everything') || lowerQuestion.includes('auto fill')) {
+    if (pageInfo) {
+      for (const input of pageInfo.inputs) {
+        if (!input.isPrivate && !input.value) {
+          // Try to match with fillable fields
+          for (const [fieldName, fieldData] of Object.entries(fillableFields)) {
+            if (fieldData.selectors.some(sel => input.name.toLowerCase().includes(sel)) && fieldData.value) {
+              commands.push({
+                action: 'fill',
+                selector: `input[name*="${input.name}"], input[id*="${input.name}"]`,
+                value: fieldData.value
+              });
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // If no specific commands, try to be helpful
+  if (commands.length === 0) {
+    // Generic help - try to fill common fields
+    if (pageInfo) {
+      for (const input of pageInfo.inputs) {
+        if (!input.isPrivate && !input.value) {
+          if (input.name.toLowerCase().includes('email')) {
+            commands.push({
+              action: 'fill',
+              selector: `input[name*="${input.name}"], input[id*="${input.name}"]`,
+              value: 'jaysonquindao@ggloop.io'
+            });
+          } else if (input.name.toLowerCase().includes('website') || input.name.toLowerCase().includes('url')) {
+            commands.push({
+              action: 'fill',
+              selector: `input[name*="${input.name}"], input[id*="${input.name}"]`,
+              value: 'https://ggloop.io'
+            });
+          } else if (input.name.toLowerCase().includes('business') || input.name.toLowerCase().includes('company')) {
+            commands.push({
+              action: 'fill',
+              selector: `input[name*="${input.name}"], input[id*="${input.name}"]`,
+              value: 'GG LOOP LLC'
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  return commands.length > 0 ? commands : {
+    message: `I'll help you with: ${question}. I can fill website, business name, email, and other non-private fields. Try asking: "fill website field" or "fill all non-private fields"`
   };
 }
 
@@ -345,6 +484,10 @@ async function askAI(question) {
 async function runLauncher() {
   console.log('👻 GHOST BOT LAUNCHER\n');
   console.log('Your virtual ghost assistant - toggle on/off, ask questions, get help!\n');
+  
+  // Auto-start on launch
+  console.log('🚀 Auto-starting Ghost Bot...\n');
+  await launcher.start();
   
   showMenu();
   
@@ -390,13 +533,17 @@ async function runLauncher() {
         console.log(`\n   💬 Your question: ${question}`);
         console.log('   🤖 Processing with AI...');
         
-        const aiResponse = await askAI(question);
+        const currentPage = await launcher.getActivePage();
+        const aiResponse = await askAI(question, currentPage);
         
         if (aiResponse.message) {
           console.log(`   💡 ${aiResponse.message}\n`);
         } else {
-          console.log('   ✅ AI provided commands, executing...');
-          await launcher.processAIResponse(aiResponse);
+          console.log(`   ✅ AI provided ${aiResponse.length} command(s), executing...`);
+          for (const cmd of aiResponse) {
+            await launcher.processAIResponse(cmd);
+            await new Promise(resolve => setTimeout(resolve, 500)); // Small delay between commands
+          }
           console.log('   ✅ Done!\n');
         }
         break;
