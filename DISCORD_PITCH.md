@@ -115,6 +115,7 @@ Anyone else building match verification systems? What edge cases should I watch 
 ❌ De-anonymizing players beyond visible info  
 ❌ Exposing historic Riot IDs  
 ❌ Pay-to-win mechanics  
+❌ Crypto related projects
 
 ---
 
