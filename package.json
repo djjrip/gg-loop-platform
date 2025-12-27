@@ -21,7 +21,12 @@
     "seed:rewards": "npx tsx server/seed-rewards.ts",
     "seed:production": "node scripts/seed-production.mjs",
     "automate:affiliates": "npx tsx server/automation/browserAutomation.ts",
-    "automate:business": "npx tsx server/businessAutomation.ts"
+    "automate:business": "npx tsx server/businessAutomation.ts",
+    "setup:railway": "node scripts/auto-setup-railway.js",
+    "verify:setup": "node scripts/verify-setup.js",
+    "automate:all": "node scripts/complete-automation.js",
+    "workflow:setup": "node scripts/manual-workflow-automator.js",
+    "workflow:daily": "node scripts/daily-workflow.js"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.956.0",
