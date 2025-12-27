@@ -27,7 +27,11 @@
     "automate:all": "node scripts/complete-automation.js",
     "workflow:setup": "node scripts/manual-workflow-automator.js",
     "workflow:daily": "node scripts/daily-workflow.js",
-    "bot:browser": "node scripts/browser-bot.js"
+    "bot:browser": "node scripts/browser-bot.js",
+    "virtual:assistant": "node scripts/virtual-assistant.mjs",
+    "virtual:test-subscription": "node scripts/virtual-assistant.mjs subscription",
+    "virtual:check-paypal": "node scripts/virtual-assistant.mjs paypal",
+    "virtual:check-railway": "node scripts/virtual-assistant.mjs railway"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.956.0",
