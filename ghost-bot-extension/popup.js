@@ -239,26 +239,55 @@ async function getAIResponse(userMessage) {
     };
   }
   
-  if (lowerMessage.includes('analyze') || lowerMessage.includes('what\'s on this page') || lowerMessage.includes('what is this page')) {
+  if (lowerMessage.includes('analyze') || lowerMessage.includes('what\'s on this page') || lowerMessage.includes('what is this page') || lowerMessage.includes('check') || lowerMessage.includes('see') || lowerMessage.includes('browser') || lowerMessage.includes('current tab')) {
+    // Force analyze the page
+    try {
+      if (currentTab) {
+        pageInfo = await chrome.tabs.sendMessage(currentTab.id, { action: 'analyze' });
+      }
+    } catch (error) {
+      // Content script might not be loaded, try to inject it
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: currentTab.id },
+          files: ['content.js']
+        });
+        await new Promise(resolve => setTimeout(resolve, 500));
+        pageInfo = await chrome.tabs.sendMessage(currentTab.id, { action: 'analyze' });
+      } catch (e) {
+        // Still failed
+      }
+    }
+    
     if (pageInfo) {
       const fieldCount = pageInfo.fields?.length || 0;
       const privateFields = pageInfo.fields?.filter(f => f.isPrivate).length || 0;
       const fillableFields = fieldCount - privateFields;
       
+      // Get more page details
+      const pageDetails = await chrome.tabs.sendMessage(currentTab.id, { action: 'getPageDetails' }).catch(() => null);
+      
+      let detailsText = '';
+      if (pageDetails) {
+        detailsText = `<br>📝 <strong>Page Content:</strong> ${pageDetails.textPreview || 'Loaded'}<br>`;
+      }
+      
       return {
-        text: `Let me check this page for you...<br><br>
-        📄 <strong>Page:</strong> ${pageInfo.title || 'Untitled'}<br>
-        🔗 <strong>URL:</strong> ${pageInfo.url?.substring(0, 50)}...<br><br>
+        text: `Let me check your current browser tab...<br><br>
+        📄 <strong>Page:</strong> ${pageInfo.title || currentTab.title || 'Untitled'}<br>
+        🔗 <strong>URL:</strong> ${pageInfo.url || currentTab.url || 'Unknown'}<br>${detailsText}
         📋 <strong>Found ${fieldCount} form field(s):</strong><br>
         • ${fillableFields} fillable fields<br>
         • ${privateFields} private fields (passwords, etc.)<br><br>
-        I can help fill the non-private fields for you! Just ask me to fill them.`,
+        ${fieldCount > 0 ? 'I can help fill the non-private fields for you! Just ask me to fill them.' : 'No form fields found on this page.'}`,
         actions: [],
         tabInfo: `${fieldCount} fields found`
       };
     } else {
       return {
-        text: `I can't analyze this page right now. Make sure you're on a webpage with forms, and try asking me again!`,
+        text: `I can see you're on: <strong>${currentTab.title || 'this page'}</strong><br>
+        URL: ${currentTab.url?.substring(0, 60)}...<br><br>
+        I'm having trouble analyzing the page content. Try refreshing the page and asking me again!`,
         actions: []
       };
     }
@@ -326,14 +355,30 @@ async function getAIResponse(userMessage) {
     }
   }
   
-  // Default conversational response
+  // Try to understand the question better
+  if (lowerMessage.includes('question') || lowerMessage.includes('answer')) {
+    return {
+      text: `I'm sorry I didn't answer your question properly! 😅<br><br>
+      Can you ask it again? I'm here to help!<br><br>
+      I can:<br>
+      • Analyze your current browser tab<br>
+      • Fill forms automatically<br>
+      • Click buttons<br>
+      • Have a conversation with you<br><br>
+      What would you like me to do?`,
+      actions: []
+    };
+  }
+  
+  // Default conversational response - be more helpful
   return {
-    text: `I understand you're asking about "${userMessage}". I can help you with:<br><br>
-    • Filling forms (just say "fill website field" or "fill all fields")<br>
-    • Analyzing pages (say "what's on this page")<br>
-    • Clicking buttons (say "click submit")<br>
-    • Or just chat with me! 👻<br><br>
-    What would you like me to do?`,
+    text: `I understand you're asking: "${userMessage}"<br><br>
+    Let me help! I can:<br>
+    • <strong>Check your current browser tab</strong> - Just say "check my browser" or "what's on this page"<br>
+    • <strong>Fill forms</strong> - Say "fill website field" or "fill all fields"<br>
+    • <strong>Click buttons</strong> - Say "click submit" or "click continue"<br>
+    • <strong>Analyze pages</strong> - Say "analyze this page"<br><br>
+    What would you like me to do right now?`,
     actions: []
   };
 }

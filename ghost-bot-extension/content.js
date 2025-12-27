@@ -7,11 +7,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true; // Keep channel open for async response
   }
   
+  if (request.action === 'getPageDetails') {
+    getPageDetails().then(sendResponse);
+    return true;
+  }
+  
   if (request.action === 'ask') {
     handleQuestion(request.question).then(sendResponse);
     return true;
   }
 });
+
+// Get detailed page information
+async function getPageDetails() {
+  const text = document.body.innerText.substring(0, 500);
+  const headings = Array.from(document.querySelectorAll('h1, h2, h3')).map(h => h.textContent).slice(0, 5);
+  const links = Array.from(document.querySelectorAll('a')).slice(0, 10).map(a => ({
+    text: a.textContent?.substring(0, 30),
+    href: a.href
+  }));
+  
+  return {
+    textPreview: text,
+    headings: headings,
+    links: links,
+    hasForms: document.querySelectorAll('form, input, textarea').length > 0
+  };
+}
 
 // Analyze current page
 async function analyzePage() {
