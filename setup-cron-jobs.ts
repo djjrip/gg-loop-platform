@@ -49,6 +49,18 @@ const CRON_JOBS = [
         command: 'npx tsx server/businessAutomation.ts',
         description: 'Auto-approves redemptions, monitors health, sends daily reports',
     },
+    {
+        name: 'Master Automation Orchestrator',
+        schedule: '0 * * * *', // Every hour
+        command: 'npx tsx server/masterAutomation.ts',
+        description: 'Coordinates all automation systems, runs health checks, sends reports',
+    },
+    {
+        name: 'Automated Reward Fulfillment',
+        schedule: '*/15 * * * *', // Every 15 minutes
+        command: 'npx tsx server/automation/rewardFulfillment.ts',
+        description: 'Automatically fulfills rewards using affiliate links',
+    },
 ];
 
 console.log('🤖 AUTONOMOUS CRON JOBS SETUP\n');
