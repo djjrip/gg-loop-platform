@@ -1,73 +1,123 @@
-#!/usr/bin/env node
-/**
- * AUTOMATED REWARD SEEDING
- * Seeds rewards to production with zero manual input
- */
+// Auto-seed production rewards
+// Tries multiple methods to get DATABASE_URL and seed rewards
 
-import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const COLORS = {
-    green: '\x1b[32m',
-    red: '\x1b[31m',
-    yellow: '\x1b[33m',
-    cyan: '\x1b[36m',
-    reset: '\x1b[0m'
-};
+const execAsync = promisify(exec);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-function log(msg, color = 'reset') {
-    console.log(`${COLORS[color]}${msg}${COLORS.reset}`);
+console.log('🌱 AUTO-SEEDING PRODUCTION REWARDS');
+console.log('='.repeat(50));
+console.log('');
+
+// Method 1: Try Railway CLI
+async function tryRailwayCLI() {
+  try {
+    console.log('📡 Method 1: Trying Railway CLI...');
+    const { stdout, stderr } = await execAsync('railway run npm run seed:rewards', {
+      cwd: path.join(__dirname, '..'),
+      timeout: 60000
+    });
+    console.log('✅ SUCCESS via Railway CLI!');
+    console.log(stdout);
+    return true;
+  } catch (error) {
+    console.log('❌ Railway CLI failed:', error.message);
+    return false;
+  }
 }
 
-async function seedRewards() {
-    log('\n🎁 AUTOMATED REWARD SEEDING', 'cyan');
-    log('='.repeat(60), 'cyan');
-
-    // Check if DATABASE_URL is set
-    if (!process.env.DATABASE_URL) {
-        log('\n❌ DATABASE_URL not set', 'red');
-        log('Set it with: $env:DATABASE_URL="postgresql://..."', 'yellow');
-        log('Get it from: railway.app → PostgreSQL → Variables', 'yellow');
-        process.exit(1);
+// Method 2: Try environment variable
+async function tryEnvVar() {
+  try {
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) {
+      console.log('❌ DATABASE_URL not found in environment');
+      return false;
     }
 
-    log('\n✅ DATABASE_URL found', 'green');
-    log(`📍 Database: ${process.env.DATABASE_URL.split('@')[1]?.split('/')[0] || 'unknown'}`, 'cyan');
+    console.log('📡 Method 2: Using DATABASE_URL from environment...');
+    const { stdout, stderr } = await execAsync('npm run seed:rewards', {
+      cwd: path.join(__dirname, '..'),
+      env: { ...process.env, DATABASE_URL: dbUrl },
+      timeout: 60000
+    });
+    console.log('✅ SUCCESS via environment variable!');
+    console.log(stdout);
+    return true;
+  } catch (error) {
+    console.log('❌ Environment variable method failed:', error.message);
+    return false;
+  }
+}
 
-    // Run seed script
-    log('\n🌱 Seeding rewards...', 'yellow');
-
-    try {
-        const output = execSync('npm run seed:rewards', {
-            encoding: 'utf8',
-            stdio: 'pipe'
-        });
-
-        if (output.includes('✅') || output.includes('success')) {
-            log('\n✅ REWARDS SEEDED SUCCESSFULLY!', 'green');
-            log('🛍️  Shop is now live with 12 rewards', 'green');
-            log('🌐 Visit: https://ggloop.io/shop', 'cyan');
-            return true;
-        } else {
-            log('\n⚠️  Seeding completed but status unclear', 'yellow');
-            log('Check manually: https://ggloop.io/shop', 'yellow');
-            return false;
-        }
-    } catch (error) {
-        log('\n❌ SEEDING FAILED', 'red');
-        log(`Error: ${error.message}`, 'red');
-        return false;
+// Method 3: Try .env file
+async function tryEnvFile() {
+  try {
+    const envPath = path.join(__dirname, '..', '.env');
+    if (!fs.existsSync(envPath)) {
+      console.log('❌ .env file not found');
+      return false;
     }
+
+    const envContent = fs.readFileSync(envPath, 'utf-8');
+    const dbUrlMatch = envContent.match(/DATABASE_URL=(.+)/);
+    if (!dbUrlMatch) {
+      console.log('❌ DATABASE_URL not found in .env file');
+      return false;
+    }
+
+    const dbUrl = dbUrlMatch[1].trim();
+    console.log('📡 Method 3: Using DATABASE_URL from .env file...');
+    const { stdout, stderr } = await execAsync('npm run seed:rewards', {
+      cwd: path.join(__dirname, '..'),
+      env: { ...process.env, DATABASE_URL: dbUrl },
+      timeout: 60000
+    });
+    console.log('✅ SUCCESS via .env file!');
+    console.log(stdout);
+    return true;
+  } catch (error) {
+    console.log('❌ .env file method failed:', error.message);
+    return false;
+  }
 }
 
-// Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-    seedRewards()
-        .then(success => process.exit(success ? 0 : 1))
-        .catch(error => {
-            log(`\n❌ Fatal error: ${error.message}`, 'red');
-            process.exit(1);
-        });
+// Main execution
+async function main() {
+  console.log('🚀 Starting automated seed process...\n');
+
+  // Try methods in order
+  const methods = [
+    { name: 'Railway CLI', fn: tryRailwayCLI },
+    { name: 'Environment Variable', fn: tryEnvVar },
+    { name: '.env File', fn: tryEnvFile }
+  ];
+
+  for (const method of methods) {
+    console.log(`\n📋 Trying: ${method.name}`);
+    const success = await method.fn();
+    if (success) {
+      console.log(`\n✅ REWARDS SEEDED SUCCESSFULLY!`);
+      console.log('🎉 Shop is now live with 12 rewards!');
+      console.log('🌐 Visit: https://ggloop.io/shop');
+      return;
+    }
+  }
+
+  // If all methods fail, provide manual instructions
+  console.log('\n❌ All automated methods failed.');
+  console.log('\n📋 MANUAL INSTRUCTIONS:');
+  console.log('1. Get DATABASE_URL from Railway dashboard');
+  console.log('2. Run: $env:DATABASE_URL="..."; npm run seed:rewards');
+  console.log('\nOr use Railway CLI:');
+  console.log('   railway run npm run seed:rewards');
 }
 
-export { seedRewards };
+main().catch(console.error);
