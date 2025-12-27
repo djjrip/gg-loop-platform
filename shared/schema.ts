@@ -55,6 +55,9 @@ export const users = pgTable("users", {
   longestStreak: integer("longest_streak").notNull().default(0),
   xpLevel: integer("xp_level").notNull().default(1),
   xpPoints: integer("xp_points").notNull().default(0),
+  subscriptionStatus: varchar("subscription_status").default("inactive"), // inactive, trialing, active, canceled
+  subscriptionTier: varchar("subscription_tier"), // basic, pro, elite
+  trialEndsAt: timestamp("trial_ends_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
