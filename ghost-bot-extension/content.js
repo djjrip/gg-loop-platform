@@ -1,4 +1,16 @@
 // Ghost Bot Extension - Content Script
+// High-level automation with visual feedback
+
+// Load visual feedback
+let visualFeedback = null;
+try {
+  // Inject visual feedback if available
+  if (typeof VisualFeedback !== 'undefined') {
+    visualFeedback = new VisualFeedback();
+  }
+} catch (e) {
+  // Visual feedback not available, continue without it
+}
 
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -184,15 +196,17 @@ async function handleQuestion(question) {
       });
       
       if (matchingInput) {
-        const filled = fillField('', fieldData.value);
-        if (filled) {
-          // Try to fill the actual matching input
-          matchingInput.focus();
-          matchingInput.value = fieldData.value;
-          matchingInput.dispatchEvent(new Event('input', { bubbles: true }));
-          matchingInput.dispatchEvent(new Event('change', { bubbles: true }));
-          commands.push(`✅ Filled ${matchingInput.name || matchingInput.id || 'field'} with ${fieldData.value}`);
+        // Show visual feedback
+        if (visualFeedback) {
+          visualFeedback.highlightField(`input[name*="${matchingInput.name}"], input[id*="${matchingInput.id}"]`);
         }
+        
+        matchingInput.focus();
+        matchingInput.value = fieldData.value;
+        matchingInput.dispatchEvent(new Event('input', { bubbles: true }));
+        matchingInput.dispatchEvent(new Event('change', { bubbles: true }));
+        matchingInput.dispatchEvent(new Event('blur', { bubbles: true }));
+        commands.push(`✅ Filled ${matchingInput.name || matchingInput.id || 'field'} with ${fieldData.value}`);
       }
     }
   }

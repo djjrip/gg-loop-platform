@@ -307,9 +307,123 @@ async function sendMessage() {
   }
 }
 
+// AI Intent Understanding - High-level understanding
+function understandIntent(message) {
+  const lower = message.toLowerCase();
+  
+  // Multi-step workflows
+  if (lower.includes('complete') || lower.includes('do') || lower.includes('set up')) {
+    if (lower.includes('amazon') || lower.includes('affiliate')) {
+      return {
+        type: 'workflow',
+        workflow: 'amazon_signup',
+        steps: ['navigate', 'fill_website', 'fill_business', 'fill_email', 'click_continue']
+      };
+    }
+    if (lower.includes('railway') || lower.includes('variable')) {
+      return {
+        type: 'workflow',
+        workflow: 'railway_setup',
+        steps: ['navigate', 'login', 'set_variables']
+      };
+    }
+  }
+  
+  // Single actions
+  if (lower.includes('fill') && lower.includes('all')) {
+    return { type: 'action', action: 'fill_all_safe' };
+  }
+  
+  if (lower.includes('fill') && (lower.includes('website') || lower.includes('url'))) {
+    return { type: 'action', action: 'fill_field', field: 'website', value: 'https://ggloop.io' };
+  }
+  
+  if (lower.includes('fill') && (lower.includes('business') || lower.includes('company'))) {
+    return { type: 'action', action: 'fill_field', field: 'business', value: 'GG LOOP LLC' };
+  }
+  
+  if (lower.includes('fill') && lower.includes('email')) {
+    return { type: 'action', action: 'fill_field', field: 'email', value: 'jaysonquindao@ggloop.io' };
+  }
+  
+  if (lower.includes('click') || lower.includes('submit') || lower.includes('continue')) {
+    return { type: 'action', action: 'click_button' };
+  }
+  
+  if (lower.includes('analyze') || lower.includes('check') || lower.includes('what')) {
+    return { type: 'action', action: 'analyze_page' };
+  }
+  
+  return { type: 'conversation' };
+}
+
+// Execute workflow
+async function executeWorkflow(workflow) {
+  const results = [];
+  
+  for (const step of workflow.steps) {
+    try {
+      let result = null;
+      
+      switch (step) {
+        case 'navigate':
+          if (workflow.workflow === 'amazon_signup') {
+            await chrome.tabs.update(currentTab.id, { url: 'https://affiliate-program.amazon.com/signup' });
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            result = { success: true, message: 'Navigated to Amazon signup' };
+          }
+          break;
+        
+        case 'fill_website':
+          result = await chrome.tabs.sendMessage(currentTab.id, {
+            action: 'fill',
+            field: 'website',
+            value: 'https://ggloop.io'
+          });
+          break;
+        
+        case 'fill_business':
+          result = await chrome.tabs.sendMessage(currentTab.id, {
+            action: 'fill',
+            field: 'business',
+            value: 'GG LOOP LLC'
+          });
+          break;
+        
+        case 'fill_email':
+          result = await chrome.tabs.sendMessage(currentTab.id, {
+            action: 'fill',
+            field: 'email',
+            value: 'jaysonquindao@ggloop.io'
+          });
+          break;
+        
+        case 'click_continue':
+          result = await chrome.tabs.sendMessage(currentTab.id, {
+            action: 'click',
+            selector: 'continue'
+          });
+          break;
+      }
+      
+      if (result) {
+        results.push({ step, result });
+        await new Promise(resolve => setTimeout(resolve, 500)); // Small delay between steps
+      }
+    } catch (error) {
+      results.push({ step, error: error.message });
+    }
+  }
+  
+  return results;
+}
+
 // Get AI response (conversational)
 async function getAIResponse(userMessage) {
   const lowerMessage = userMessage.toLowerCase();
+  
+  // Understand intent
+  const intent = understandIntent(userMessage);
   
   // Analyze page first
   let pageInfo = null;
@@ -319,6 +433,74 @@ async function getAIResponse(userMessage) {
     }
   } catch (error) {
     // Page might not have content script loaded
+  }
+  
+  // Handle workflows
+  if (intent.type === 'workflow') {
+    addMessage(`Starting ${intent.workflow} workflow...`, false);
+    
+    const results = await executeWorkflow(intent);
+    const successCount = results.filter(r => r.result?.success).length;
+    
+    return {
+      text: `✅ Workflow complete!<br><br>
+      Completed ${successCount}/${results.length} steps:<br>
+      ${results.map(r => `• ${r.step}: ${r.result?.success ? '✅' : '❌'}`).join('<br>')}<br><br>
+      ${successCount === results.length ? 'All steps completed successfully!' : 'Some steps may need your attention.'}`,
+      actions: results.map(r => r.step)
+    };
+  }
+  
+  // Handle single actions
+  if (intent.type === 'action') {
+    try {
+      let result = null;
+      
+      switch (intent.action) {
+        case 'fill_all_safe':
+          result = await chrome.tabs.sendMessage(currentTab.id, { action: 'fill_all_safe' });
+          break;
+        
+        case 'fill_field':
+          result = await chrome.tabs.sendMessage(currentTab.id, {
+            action: 'fill',
+            field: intent.field,
+            value: intent.value
+          });
+          break;
+        
+        case 'click_button':
+          result = await chrome.tabs.sendMessage(currentTab.id, {
+            action: 'click',
+            selector: 'submit'
+          });
+          break;
+        
+        case 'analyze_page':
+          pageInfo = await chrome.tabs.sendMessage(currentTab.id, { action: 'analyze' });
+          const fieldCount = pageInfo?.fields?.length || 0;
+          return {
+            text: `📄 <strong>Page Analysis:</strong><br>
+            Title: ${pageInfo?.title || 'Unknown'}<br>
+            URL: ${pageInfo?.url?.substring(0, 50)}...<br>
+            Form Fields: ${fieldCount}<br><br>
+            I can help fill these fields! Just ask me.`,
+            actions: []
+          };
+      }
+      
+      if (result?.success) {
+        return {
+          text: `✅ Done! ${intent.action} completed successfully.`,
+          actions: [intent.action]
+        };
+      }
+    } catch (error) {
+      return {
+        text: `❌ Error: ${error.message}. Try refreshing the page.`,
+        actions: []
+      };
+    }
   }
   
   // Conversational responses
