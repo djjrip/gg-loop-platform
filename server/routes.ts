@@ -37,6 +37,8 @@ import { calculateReferralReward, FREE_TRIAL_DURATION_DAYS } from "./lib/referra
 import crypto from 'crypto';
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import adminRouter from "./routes/admin";
+import revenueAnalyticsRouter from "./routes/revenueAnalytics";
+import adminFulfillmentRouter from "./routes/adminFulfillment";
 import * as verificationService from "./services/verificationService";
 import * as fraudDetectionService from "./services/fraudDetectionService";
 import { TrustScoreService } from "./services/trustScoreService";
@@ -6172,6 +6174,8 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
   // Admin routes
   app.use("/api/admin", adminMiddleware, adminRouter);
+  app.use("/api/admin/revenue", revenueAnalyticsRouter);
+  app.use("/api/admin/fulfillment", adminFulfillmentRouter);
 
 
   // ------------------------------------------------------------------

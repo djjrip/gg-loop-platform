@@ -24,6 +24,10 @@ import { notify } from './alerts';
 import { db } from './db';
 import { users, subscriptions, rewardClaims, pointTransactions } from '@shared/schema';
 import { eq, and, gte, sql } from 'drizzle-orm';
+import { autoFulfillRewards } from './automation/rewardFulfillment';
+import { sendDailyReport } from './automation/dailyReports';
+import { runEmailMarketing } from './services/emailMarketing';
+import { runReferralAutomation } from './services/referralSystem';
 
 interface AutomationReport {
   timestamp: string;
@@ -77,6 +81,36 @@ export async function runMasterAutomation(): Promise<AutomationReport> {
     console.error('❌ Business automation failed:', error.message);
   }
 
+  // 1.5. REWARD FULFILLMENT
+  try {
+    console.log('🎁 Running automated reward fulfillment...');
+    const fulfillment = await autoFulfillRewards();
+    console.log(`✅ Reward fulfillment: ${fulfillment.fulfilled} fulfilled, ${fulfillment.skipped} need manual review\n`);
+  } catch (error: any) {
+    report.errors.push(`Reward fulfillment: ${error.message}`);
+    console.error('❌ Reward fulfillment failed:', error.message);
+  }
+
+  // 1.6. EMAIL MARKETING
+  try {
+    console.log('📧 Running email marketing...');
+    await runEmailMarketing();
+    console.log('✅ Email marketing complete\n');
+  } catch (error: any) {
+    report.errors.push(`Email marketing: ${error.message}`);
+    console.error('❌ Email marketing failed:', error.message);
+  }
+
+  // 1.7. REFERRAL AUTOMATION
+  try {
+    console.log('🎁 Running referral automation...');
+    await runReferralAutomation();
+    console.log('✅ Referral automation complete\n');
+  } catch (error: any) {
+    report.errors.push(`Referral automation: ${error.message}`);
+    console.error('❌ Referral automation failed:', error.message);
+  }
+
   // 2. MARKETING AUTOMATION (Twitter)
   try {
     console.log('📱 Running marketing automation...');
@@ -120,7 +154,20 @@ export async function runMasterAutomation(): Promise<AutomationReport> {
     console.error('❌ System health check failed:', error.message);
   }
 
-  // 5. SEND SUMMARY (if errors or critical issues)
+  // 5. DAILY REPORT (once per day at midnight)
+  const now = new Date();
+  if (now.getHours() === 0 && now.getMinutes() < 5) {
+    try {
+      console.log('📊 Sending daily report...');
+      await sendDailyReport();
+      console.log('✅ Daily report sent\n');
+    } catch (error: any) {
+      report.errors.push(`Daily report: ${error.message}`);
+      console.error('❌ Daily report failed:', error.message);
+    }
+  }
+
+  // 6. SEND SUMMARY (if errors or critical issues)
   if (report.errors.length > 0 || report.system.health === 'critical') {
     await sendAutomationReport(report);
   }
