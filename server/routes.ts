@@ -455,11 +455,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin: Get all users
   app.get('/api/admin/users', adminMiddleware, async (req: any, res) => {
     try {
+      console.log('[ADMIN] Fetching all users...');
       const allUsers = await db.select().from(users).orderBy(desc(users.createdAt));
+      console.log(`[ADMIN] Successfully fetched ${allUsers.length} users`);
       res.json(allUsers);
-    } catch (error) {
-      console.error("Error fetching all users:", error);
-      res.status(500).json({ message: "Failed to fetch users" });
+    } catch (error: any) {
+      console.error("[ADMIN] Error fetching all users:", error);
+      console.error("[ADMIN] Error stack:", error?.stack);
+      console.error("[ADMIN] Error message:", error?.message);
+      res.status(500).json({
+        message: "Failed to fetch users",
+        error: process.env.NODE_ENV !== 'production' ? error?.message : undefined
+      });
     }
   });
 
