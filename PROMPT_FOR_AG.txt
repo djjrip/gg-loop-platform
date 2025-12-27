@@ -1,0 +1,41 @@
+AG - I need you to verify and fix any unauthentic data in my codebase. This is a REAL business (GG LOOP LLC) and every number must be REAL from the database.
+
+CRITICAL RULES:
+- NEVER use hardcoded numbers (revenue, user counts, etc.)
+- ALWAYS query the database for all data
+- NEVER create mock/test/example data
+- If no data exists, return 0 or empty array (NOT fake data)
+- ALWAYS use environment variables for sensitive data
+
+YOUR TASKS (in order):
+1. Search entire codebase for fake/mock/test data and replace with real database queries
+2. Test browser automation (server/automation/browserAutomation.ts) - verify it uses env vars, not hardcoded data
+3. Set up business automation cron job on Railway (server/businessAutomation.ts runs every hour)
+4. Audit all reports/dashboards - verify they use real database queries
+
+READ THESE FILES FIRST:
+- AG_MASTER_INSTRUCTIONS.md (your master guide - read this first!)
+- AUTHENTICITY_GUARDRAILS.md (rules for authentic data)
+- AUTHENTICITY_AUDIT.md (what Cursor already fixed)
+
+WHAT TO CHECK:
+- server/routes.ts (already fixed brand data, but verify)
+- server/revenueOptimizer.ts (already fixed LTV, but verify)
+- server/businessAutomation.ts (verify all queries are real)
+- server/analytics.ts (check for fake metrics)
+- Any dashboard/report files
+
+HOW TO FIX:
+If you see: const revenue = 1250; // ❌ WRONG
+Replace with: const [revenue] = await db.select({ total: sql`SUM(amount)` }).from(pointTransactions); // ✅ CORRECT
+
+REPORT BACK:
+- What fake data you found (if any)
+- What you fixed
+- What's working
+- What needs Cursor's help
+
+Remember: This is a REAL business. Every number must be REAL. No fake data. No examples. 100% authentic.
+
+Start by reading AG_MASTER_INSTRUCTIONS.md - it has everything you need.
+

@@ -37,8 +37,30 @@ export async function analyzeAndOptimize(): Promise<OptimizationInsights> {
 
     const conversionRate = (paidUsers.count / totalUsers.count) * 100;
 
-    // 2. Calculate average lifetime value
-    const avgLTV = paidUsers.count > 0 ? (paidUsers.count * 19.99 * 6) : 0; // Assume 6 month avg
+    // 2. Calculate average lifetime value from REAL subscription data
+    // Get actual subscription history to calculate real LTV
+    const subscriptionHistory = await db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.status, 'active'));
+    
+    // Tier pricing (REAL pricing from your business model - from Subscription.tsx)
+    const tierPricing: Record<string, number> = {
+        'basic': 5,    // $5/month (GG Loop Basic)
+        'pro': 12,      // $12/month (GG Loop Pro)
+        'elite': 25     // $25/month (GG Loop Elite)
+    };
+    
+    // Calculate real LTV from actual subscription durations and tiers
+    // If no subscription history, use 0 (not an assumption)
+    const avgLTV = subscriptionHistory.length > 0 
+        ? (subscriptionHistory.reduce((sum, sub) => {
+            // Calculate months active from createdAt to now (real calculation)
+            const monthsActive = Math.max(1, Math.floor((Date.now() - new Date(sub.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 30)));
+            const monthlyPrice = tierPricing[sub.tier] || 0;
+            return sum + (monthlyPrice * monthsActive);
+          }, 0) / subscriptionHistory.length)
+        : 0; // Real calculation from database, or 0 if no data
 
     // 3. Calculate churn rate
     const [churnedUsers] = await db

@@ -19,7 +19,9 @@
     "check-rewards": "node scripts/check-rewards.js",
     "db:push": "drizzle-kit push",
     "seed:rewards": "npx tsx server/seed-rewards.ts",
-    "seed:production": "node scripts/seed-production.mjs"
+    "seed:production": "node scripts/seed-production.mjs",
+    "automate:affiliates": "npx tsx server/automation/browserAutomation.ts",
+    "automate:business": "npx tsx server/businessAutomation.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.956.0",
@@ -153,6 +155,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.20",
     "cross-env": "^10.1.0",
+    "puppeteer": "^24.34.0",
     "rimraf": "^6.1.2",
     "supertest": "^6.3.4",
     "tailwindcss": "^3.4.17",

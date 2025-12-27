@@ -1,0 +1,138 @@
+AG - I need you to verify and fix any unauthentic data in my codebase. This is a REAL business (GG LOOP LLC) and every number must be REAL from the database.
+
+═══════════════════════════════════════════════════════════════
+CRITICAL RULES - NON-NEGOTIABLE:
+═══════════════════════════════════════════════════════════════
+
+❌ NEVER DO THIS:
+- Hardcode numbers: const revenue = 1250;
+- Use mock/test data: const users = [{ id: 'test' }];
+- Create example data in production code
+- Show fake metrics to users
+
+✅ ALWAYS DO THIS:
+- Query database: const [revenue] = await db.select({ total: sql`SUM(amount)` }).from(pointTransactions);
+- Use real data from database tables
+- Return 0 or empty array if no data exists (NOT fake data)
+- Use environment variables for all sensitive data
+
+═══════════════════════════════════════════════════════════════
+YOUR TASKS (IN ORDER):
+═══════════════════════════════════════════════════════════════
+
+TASK 1: Authenticity Audit (30 min)
+- Search entire codebase for fake/mock/test data
+- Look for: hardcoded numbers, mock arrays, "example" comments, placeholder data
+- Files to check: server/routes.ts, server/revenueOptimizer.ts, server/businessAutomation.ts, server/analytics.ts, any dashboard/report files
+- Fix: Replace all fake data with real database queries
+- Test: Verify it works with real database
+
+TASK 2: Test Browser Automation (1 hour)
+- File: server/automation/browserAutomation.ts
+- Install: npm install puppeteer
+- Set env vars: export BUSINESS_EMAIL=your-email@ggloop.io, export BUSINESS_NAME="GG LOOP LLC"
+- Test: npx tsx server/automation/browserAutomation.ts amazon
+- Verify: Uses env vars (not hardcoded), shows browser, pauses for CAPTCHA, no fake data
+
+TASK 3: Set Up Cron Job (15 min)
+- File: server/businessAutomation.ts (already built by Cursor)
+- Railway Cron Job:
+  Name: Business Automation Engine
+  Schedule: 0 * * * *  (every hour)
+  Command: npx tsx server/businessAutomation.ts
+- Before deploying: Verify all queries use real database, test locally first
+
+TASK 4: Audit Reports & Dashboards
+- Check: Admin dashboard, business health reports, revenue reports, user analytics, email templates
+- For each: Verify numbers come from database queries (not hardcoded)
+- Fix: Replace hardcoded numbers with real queries
+
+═══════════════════════════════════════════════════════════════
+HOW TO FIX FAKE DATA:
+═══════════════════════════════════════════════════════════════
+
+If you see this (WRONG):
+const revenue = 1250;
+const users = 156;
+const data = [{ id: 'test', name: 'Example' }];
+
+Replace with this (CORRECT):
+const [revenue] = await db.select({ total: sql<number>`SUM(amount)` }).from(pointTransactions).where(gte(createdAt, today));
+const [users] = await db.select({ count: sql<number>`count(*)` }).from(users);
+const data = await db.select().from(rewardClaims).where(eq(status, 'pending'));
+
+If no data exists, return 0 or empty array - NEVER return fake data.
+
+═══════════════════════════════════════════════════════════════
+AUTHENTICITY CHECKLIST (Check all before deploying):
+═══════════════════════════════════════════════════════════════
+
+[ ] All revenue numbers come from pointTransactions table
+[ ] All user counts come from users table
+[ ] All redemption data comes from rewardClaims table
+[ ] All calculations use real database queries
+[ ] No hardcoded example numbers
+[ ] No mock/test data in production code
+[ ] Empty states show 0 or "No data", not fake numbers
+[ ] All metrics are calculated, not assumed
+[ ] Environment variables used for all sensitive data
+[ ] Tested with real database (not fake data)
+
+If you can't check all boxes, DON'T DEPLOY. Fix it first.
+
+═══════════════════════════════════════════════════════════════
+REPORT BACK (Use this format):
+═══════════════════════════════════════════════════════════════
+
+✅ AUTHENTICITY CHECK:
+- Found X instances of fake data
+- Fixed: [list what you fixed]
+- Verified: [list what's authentic]
+
+✅ BROWSER AUTOMATION:
+- Status: [working / needs fixes]
+- Issues: [list any problems]
+- Ready: [yes / no]
+
+✅ CRON JOB:
+- Status: [deployed / needs help]
+- Working: [yes / no]
+
+❓ NEEDS CURSOR:
+- [List anything you can't fix]
+
+═══════════════════════════════════════════════════════════════
+FILES TO READ (In your codebase):
+═══════════════════════════════════════════════════════════════
+
+1. AUTHENTICITY_GUARDRAILS.md - Rules for authentic data
+2. AUTHENTICITY_AUDIT.md - What Cursor already fixed
+3. FOR_AG_AUTOMATION_STATUS.md - Current status
+4. server/businessAutomation.ts - Example of authentic code
+5. server/automation/browserAutomation.ts - Browser automation example
+
+═══════════════════════════════════════════════════════════════
+REMEMBER:
+═══════════════════════════════════════════════════════════════
+
+This is GG LOOP LLC - a REAL business with REAL users and REAL revenue.
+
+Every number must come from the REAL database.
+
+No fake data. No examples. No mock numbers.
+
+100% authentic. Always.
+
+If you're not sure if something is authentic:
+1. Check if it queries the database
+2. If not, it's probably fake - fix it
+3. When in doubt, ask Cursor
+
+Your job: Verify everything is authentic, fix any fake data, test automation, set up cron jobs, report back honestly.
+
+NOT: Create fake data, use example numbers, hide problems, deploy unauthentic code.
+
+═══════════════════════════════════════════════════════════════
+
+Now go verify everything is authentic and report back. 🚀
+

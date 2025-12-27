@@ -43,6 +43,12 @@ const CRON_JOBS = [
         command: 'npx tsx server/marketing/discordAnnouncer.ts',
         description: 'Announces milestones to Discord',
     },
+    {
+        name: 'Business Automation Engine',
+        schedule: '0 * * * *', // Every hour
+        command: 'npx tsx server/businessAutomation.ts',
+        description: 'Auto-approves redemptions, monitors health, sends daily reports',
+    },
 ];
 
 console.log('🤖 AUTONOMOUS CRON JOBS SETUP\n');
