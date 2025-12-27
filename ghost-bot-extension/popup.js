@@ -403,16 +403,25 @@ async function getAIResponse(userMessage) {
   }
   
   // Fill fields conversationally
-  if (lowerMessage.includes('fill') || lowerMessage.includes('enter') || lowerMessage.includes('put')) {
-    if (!pageInfo || !pageInfo.fields || pageInfo.fields.length === 0) {
-      return {
-        text: `I don't see any form fields on this page. Are you on a page with a form? If so, try refreshing and asking me again!`,
-        actions: []
-      };
-    }
-    
-    // Execute fill action
+  if (lowerMessage.includes('fill') || lowerMessage.includes('enter') || lowerMessage.includes('put') || lowerMessage.includes('input')) {
+    // Always try to fill, even if we don't have pageInfo yet
     try {
+      // First, make sure we have page info
+      if (!pageInfo && currentTab) {
+        try {
+          pageInfo = await chrome.tabs.sendMessage(currentTab.id, { action: 'analyze' });
+        } catch (e) {
+          // Try to inject content script
+          await chrome.scripting.executeScript({
+            target: { tabId: currentTab.id },
+            files: ['content.js']
+          });
+          await new Promise(resolve => setTimeout(resolve, 500));
+          pageInfo = await chrome.tabs.sendMessage(currentTab.id, { action: 'analyze' });
+        }
+      }
+      
+      // Execute fill action
       const result = await chrome.tabs.sendMessage(currentTab.id, {
         action: 'ask',
         question: userMessage
@@ -423,15 +432,27 @@ async function getAIResponse(userMessage) {
           text: `Done! ✅ I filled ${result.commands.length} field(s) for you:<br><br>${result.commands.map(c => `• ${c}`).join('<br>')}<br><br>Is there anything else you'd like me to help with?`,
           actions: result.commands
         };
-      } else {
-        return {
-          text: `I tried to fill the fields, but I'm not sure which ones you meant. Can you be more specific? For example, you could say "fill the website field" or "fill all the fields you can".`,
-          actions: []
-        };
+      } else if (lowerMessage.includes('fill all') || lowerMessage.includes('fill everything')) {
+        // Try fill_all_safe as fallback
+        const fillResult = await chrome.tabs.sendMessage(currentTab.id, {
+          action: 'fill_all_safe'
+        });
+        
+        if (fillResult.success && fillResult.filled && fillResult.filled.length > 0) {
+          return {
+            text: `Done! ✅ I filled ${fillResult.filled.length} field(s):<br><br>${fillResult.filled.map(f => `• ${f}`).join('<br>')}<br><br>Is there anything else?`,
+            actions: fillResult.filled
+          };
+        }
       }
+      
+      return {
+        text: `I tried to fill the fields, but I'm not sure which ones you meant. Can you be more specific? For example:<br>• "fill website field"<br>• "fill all fields you can"<br>• "fill business name"`,
+        actions: []
+      };
     } catch (error) {
       return {
-        text: `Hmm, I had trouble filling those fields. Can you tell me which specific fields you want me to fill?`,
+        text: `I had trouble accessing the page. Try refreshing the page and asking me again!`,
         actions: []
       };
     }

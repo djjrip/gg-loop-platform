@@ -16,6 +16,64 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     handleQuestion(request.question).then(sendResponse);
     return true;
   }
+  
+  if (request.action === 'fill') {
+    const { field, value } = request;
+    const filled = fillField(field, value);
+    sendResponse({ success: filled });
+    return true;
+  }
+  
+  if (request.action === 'fill_all_safe') {
+    const fillableFields = {
+      website: { value: 'https://ggloop.io', selectors: ['website', 'url', 'site'] },
+      business: { value: 'GG LOOP LLC', selectors: ['business', 'company'] },
+      email: { value: 'jaysonquindao@ggloop.io', selectors: ['email', 'mail'] },
+    };
+    
+    const inputs = Array.from(document.querySelectorAll('input, textarea'));
+    const filled = [];
+    
+    for (const input of inputs) {
+      if (input.type === 'password' || input.type === 'hidden' || input.value) continue;
+      
+      const inputName = (input.name || input.id || '').toLowerCase();
+      for (const [fieldName, fieldData] of Object.entries(fillableFields)) {
+        if (fieldData.selectors.some(sel => inputName.includes(sel))) {
+          input.value = fieldData.value;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          filled.push(fieldName);
+          break;
+        }
+      }
+    }
+    
+    sendResponse({ success: true, filled });
+    return true;
+  }
+  
+  if (request.action === 'click') {
+    const { selector } = request;
+    let button = document.querySelector(selector);
+    
+    if (!button) {
+      // Try to find by text
+      const buttons = Array.from(document.querySelectorAll('button, a, input[type="button"], input[type="submit"]'));
+      button = buttons.find(b => {
+        const text = b.textContent?.toLowerCase() || '';
+        return text.includes(selector.toLowerCase());
+      });
+    }
+    
+    if (button) {
+      button.click();
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false, error: 'Button not found' });
+    }
+    return true;
+  }
 });
 
 // Get detailed page information
@@ -58,6 +116,42 @@ async function analyzePage() {
   };
 }
 
+// Fill a specific field
+function fillField(selector, value) {
+  try {
+    const input = document.querySelector(selector);
+    if (!input) {
+      // Try alternative selectors
+      const inputs = Array.from(document.querySelectorAll('input, textarea, select'));
+      const matching = inputs.find(inp => {
+        const name = (inp.name || inp.id || inp.placeholder || '').toLowerCase();
+        const sel = selector.toLowerCase();
+        return name.includes(sel) || sel.includes(name);
+      });
+      
+      if (matching) {
+        matching.value = value;
+        matching.dispatchEvent(new Event('input', { bubbles: true }));
+        matching.dispatchEvent(new Event('change', { bubbles: true }));
+        matching.focus();
+        matching.blur();
+        return true;
+      }
+      return false;
+    }
+    
+    input.focus();
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    input.dispatchEvent(new Event('blur', { bubbles: true }));
+    return true;
+  } catch (error) {
+    console.error('Error filling field:', error);
+    return false;
+  }
+}
+
 // Handle question from user
 async function handleQuestion(question) {
   const lowerQuestion = question.toLowerCase();
@@ -68,11 +162,12 @@ async function handleQuestion(question) {
   
   // Smart field detection and filling
   const fillableFields = {
-    website: { value: 'https://ggloop.io', selectors: ['website', 'url', 'site', 'domain'] },
-    url: { value: 'https://ggloop.io', selectors: ['url', 'website', 'site'] },
-    business: { value: 'GG LOOP LLC', selectors: ['business', 'company', 'organization'] },
-    email: { value: 'jaysonquindao@ggloop.io', selectors: ['email', 'e-mail', 'mail'] },
-    description: { value: 'Competitive gaming rewards platform where players earn points and redeem for rewards', selectors: ['description', 'about'] },
+    website: { value: 'https://ggloop.io', selectors: ['website', 'url', 'site', 'domain', 'web'] },
+    url: { value: 'https://ggloop.io', selectors: ['url', 'website', 'site', 'domain'] },
+    business: { value: 'GG LOOP LLC', selectors: ['business', 'company', 'organization', 'org', 'firm'] },
+    'business name': { value: 'GG LOOP LLC', selectors: ['business', 'company', 'name'] },
+    email: { value: 'jaysonquindao@ggloop.io', selectors: ['email', 'e-mail', 'mail', 'e mail'] },
+    description: { value: 'Competitive gaming rewards platform where players earn points and redeem for rewards', selectors: ['description', 'about', 'summary', 'describe'] },
   };
   
   // Fill fields based on question
@@ -80,59 +175,78 @@ async function handleQuestion(question) {
     if (lowerQuestion.includes(fieldName) || 
         fieldData.selectors.some(sel => lowerQuestion.includes(sel))) {
       
-      const matchingInput = pageInfo.fields.find(input => {
-        const inputName = input.name.toLowerCase();
-        return fieldData.selectors.some(sel => inputName.includes(sel)) &&
-               !input.isPrivate &&
-               !input.value;
+      // Find matching input
+      const inputs = Array.from(document.querySelectorAll('input, textarea, select'));
+      const matchingInput = inputs.find(input => {
+        if (input.type === 'password' || input.type === 'hidden') return false;
+        const inputName = (input.name || input.id || input.placeholder || '').toLowerCase();
+        return fieldData.selectors.some(sel => inputName.includes(sel)) && !input.value;
       });
       
       if (matchingInput) {
-        const input = document.querySelector(`input[name*="${matchingInput.name}"], input[id*="${matchingInput.name}"]`);
-        if (input) {
-          input.value = fieldData.value;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-          commands.push(`Filled ${matchingInput.name} with ${fieldData.value}`);
+        const filled = fillField('', fieldData.value);
+        if (filled) {
+          // Try to fill the actual matching input
+          matchingInput.focus();
+          matchingInput.value = fieldData.value;
+          matchingInput.dispatchEvent(new Event('input', { bubbles: true }));
+          matchingInput.dispatchEvent(new Event('change', { bubbles: true }));
+          commands.push(`✅ Filled ${matchingInput.name || matchingInput.id || 'field'} with ${fieldData.value}`);
         }
       }
     }
   }
   
   // Auto-fill all non-private fields
-  if (lowerQuestion.includes('fill all') || lowerQuestion.includes('fill everything')) {
-    for (const field of pageInfo.fields) {
-      if (!field.isPrivate && !field.value) {
-        for (const [fieldName, fieldData] of Object.entries(fillableFields)) {
-          if (fieldData.selectors.some(sel => field.name.toLowerCase().includes(sel))) {
-            const input = document.querySelector(`input[name*="${field.name}"], input[id*="${field.name}"]`);
-            if (input) {
-              input.value = fieldData.value;
-              input.dispatchEvent(new Event('input', { bubbles: true }));
-              input.dispatchEvent(new Event('change', { bubbles: true }));
-              commands.push(`Filled ${field.name}`);
-            }
-            break;
-          }
+  if (lowerQuestion.includes('fill all') || lowerQuestion.includes('fill everything') || lowerQuestion.includes('fill what you can')) {
+    const inputs = Array.from(document.querySelectorAll('input, textarea, select'));
+    let filledCount = 0;
+    
+    for (const input of inputs) {
+      if (input.type === 'password' || input.type === 'hidden' || input.value) continue;
+      
+      const inputName = (input.name || input.id || input.placeholder || '').toLowerCase();
+      
+      // Try to match with fillable fields
+      for (const [fieldName, fieldData] of Object.entries(fillableFields)) {
+        if (fieldData.selectors.some(sel => inputName.includes(sel))) {
+          input.focus();
+          input.value = fieldData.value;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          commands.push(`✅ Filled ${input.name || input.id || 'field'}`);
+          filledCount++;
+          break;
         }
       }
+    }
+    
+    if (filledCount === 0) {
+      commands.push('No fillable fields found');
     }
   }
   
   // Click buttons
-  if (lowerQuestion.includes('click') || lowerQuestion.includes('press')) {
-    let selector = 'button[type="submit"]';
+  if (lowerQuestion.includes('click') || lowerQuestion.includes('press') || lowerQuestion.includes('submit')) {
+    let button = null;
     
     if (lowerQuestion.includes('submit')) {
-      selector = 'button[type="submit"], input[type="submit"]';
+      button = document.querySelector('button[type="submit"], input[type="submit"], button:contains("submit"), button:contains("Submit")');
     } else if (lowerQuestion.includes('continue') || lowerQuestion.includes('next')) {
-      selector = 'button:contains("continue"), button:contains("next")';
+      const buttons = Array.from(document.querySelectorAll('button, a, input[type="button"]'));
+      button = buttons.find(b => {
+        const text = b.textContent?.toLowerCase() || '';
+        return text.includes('continue') || text.includes('next');
+      });
+    } else {
+      button = document.querySelector('button[type="submit"]');
     }
     
-    const button = document.querySelector(selector);
     if (button) {
       button.click();
-      commands.push('Clicked button');
+      commands.push('✅ Clicked button');
+    } else {
+      commands.push('❌ Button not found');
     }
   }
   
@@ -142,4 +256,56 @@ async function handleQuestion(question) {
     commands: commands
   };
 }
+
+// Handle direct fill action
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'fill') {
+    const { field, value } = request;
+    const filled = fillField(field, value);
+    sendResponse({ success: filled });
+    return true;
+  }
+  
+  if (request.action === 'fill_all_safe') {
+    const pageInfo = analyzePage();
+    const fillableFields = {
+      website: { value: 'https://ggloop.io', selectors: ['website', 'url', 'site'] },
+      business: { value: 'GG LOOP LLC', selectors: ['business', 'company'] },
+      email: { value: 'jaysonquindao@ggloop.io', selectors: ['email', 'mail'] },
+    };
+    
+    const inputs = Array.from(document.querySelectorAll('input, textarea'));
+    const filled = [];
+    
+    for (const input of inputs) {
+      if (input.type === 'password' || input.type === 'hidden' || input.value) continue;
+      
+      const inputName = (input.name || input.id || '').toLowerCase();
+      for (const [fieldName, fieldData] of Object.entries(fillableFields)) {
+        if (fieldData.selectors.some(sel => inputName.includes(sel))) {
+          input.value = fieldData.value;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          filled.push(fieldName);
+          break;
+        }
+      }
+    }
+    
+    sendResponse({ success: true, filled });
+    return true;
+  }
+  
+  if (request.action === 'click') {
+    const { selector } = request;
+    const button = document.querySelector(selector);
+    if (button) {
+      button.click();
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false, error: 'Button not found' });
+    }
+    return true;
+  }
+});
 
