@@ -174,13 +174,35 @@ async function handleQuestion(question) {
   
   // Smart field detection and filling
   const fillableFields = {
-    website: { value: 'https://ggloop.io', selectors: ['website', 'url', 'site', 'domain', 'web'] },
-    url: { value: 'https://ggloop.io', selectors: ['url', 'website', 'site', 'domain'] },
+    website: { value: 'https://ggloop.io', selectors: ['website', 'url', 'site', 'domain', 'web', 'enter your website'] },
+    url: { value: 'https://ggloop.io', selectors: ['url', 'website', 'site', 'domain', 'enter your website'] },
     business: { value: 'GG LOOP LLC', selectors: ['business', 'company', 'organization', 'org', 'firm'] },
     'business name': { value: 'GG LOOP LLC', selectors: ['business', 'company', 'name'] },
     email: { value: 'jaysonquindao@ggloop.io', selectors: ['email', 'e-mail', 'mail', 'e mail'] },
     description: { value: 'Competitive gaming rewards platform where players earn points and redeem for rewards', selectors: ['description', 'about', 'summary', 'describe'] },
   };
+  
+  // Special handling for Amazon Associates form
+  if (window.location.href.includes('amazon.com') || window.location.href.includes('affiliate-program.amazon.com')) {
+    // Find website input fields more aggressively for Amazon
+    const allInputs = Array.from(document.querySelectorAll('input[type="text"], input[type="url"], textarea'));
+    for (const input of allInputs) {
+      const label = input.closest('div')?.querySelector('label')?.textContent?.toLowerCase() || '';
+      const placeholder = input.placeholder?.toLowerCase() || '';
+      const name = (input.name || input.id || '').toLowerCase();
+      
+      // Check if this is a website field
+      if ((label.includes('website') || label.includes('url') || placeholder.includes('website') || name.includes('website')) && !input.value) {
+        if (lowerQuestion.includes('fill') || lowerQuestion.includes('website') || lowerQuestion.includes('url')) {
+          input.focus();
+          input.value = 'https://ggloop.io';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          commands.push(`✅ Filled website field with https://ggloop.io`);
+        }
+      }
+    }
+  }
   
   // Fill fields based on question
   for (const [fieldName, fieldData] of Object.entries(fillableFields)) {

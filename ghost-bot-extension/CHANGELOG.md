@@ -1,6 +1,19 @@
 # Ghost Bot - Changelog
 
-## Version 1.0.2 (Current)
+## Version 1.0.3 (Current)
+**Date:** 2025-01-27
+
+### 🎯 Amazon Associates Support
+- **Smart Amazon Form Detection**: Automatically detects Amazon Associates signup forms
+- **Website Field Auto-Fill**: Fills website fields on Amazon Associates pages
+- **Better Field Matching**: Improved detection of website/URL fields
+
+### 💬 How to Use
+Just type in Ghost Bot: **"fill website"** or **"fill what you can"**
+
+---
+
+## Version 1.0.2
 **Date:** 2025-01-27
 
 ### 🔧 Improvements
