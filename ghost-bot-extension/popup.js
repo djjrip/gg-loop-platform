@@ -41,8 +41,22 @@ async function checkCursorConnection() {
   }
 }
 
+// Load version from manifest
+async function loadVersion() {
+  try {
+    const manifest = chrome.runtime.getManifest();
+    const versionEl = document.getElementById('version');
+    if (versionEl && manifest.version) {
+      versionEl.textContent = `v${manifest.version}`;
+    }
+  } catch (e) {
+    console.error('Failed to load version:', e);
+  }
+}
+
 // Initialize
 async function init() {
+  await loadVersion(); // Load version first
   await loadCurrentTab();
   setupEventListeners();
   
