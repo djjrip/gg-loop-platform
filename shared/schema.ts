@@ -154,6 +154,10 @@ export const rewards = pgTable("rewards", {
   sku: varchar("sku"),
   fulfillmentType: varchar("fulfillment_type").notNull().default("manual"),
   inStock: boolean("in_stock").notNull().default(true),
+  // Affiliate integration for passive income
+  affiliateUrl: text("affiliate_url"), // Where admin buys the gift card (with affiliate link)
+  affiliateCommission: integer("affiliate_commission"), // Expected commission in cents (e.g., 50 = $0.50)
+  affiliateProgram: varchar("affiliate_program"), // e.g., "amazon-associates", "raise", "cardcash"
 });
 
 export const userRewards = pgTable("user_rewards", {
