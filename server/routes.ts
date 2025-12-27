@@ -23,7 +23,7 @@ import {
   verificationProofs, fraudDetectionLogs, verificationQueue,
   gameRequests, insertGameRequestSchema
 } from "@shared/schema";
-import { sql } from "drizzle-orm";
+import { sql, desc, eq, and, gte, ne } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./auth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { setupSteamAuth } from "./routes/steamAuth";

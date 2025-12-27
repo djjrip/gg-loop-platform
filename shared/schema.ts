@@ -58,6 +58,16 @@ export const users = pgTable("users", {
   subscriptionStatus: varchar("subscription_status").default("inactive"), // inactive, trialing, active, canceled
   subscriptionTier: varchar("subscription_tier"), // basic, pro, elite
   trialEndsAt: timestamp("trial_ends_at"),
+  // Stripe integration columns (production)
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  // Push notification columns (production)
+  pushToken: text("push_token"),
+  pushEnabled: boolean("push_enabled").default(false),
+  pushTokenUpdatedAt: timestamp("push_token_updated_at"),
+  // Additional streak columns (production)
+  streakCurrent: integer("streak_current").default(0),
+  streakBest: integer("streak_best").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
