@@ -190,7 +190,12 @@ export const subscriptions = pgTable("subscriptions", {
   canceledAt: timestamp("canceled_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+}, (table) => [
+  index("idx_subscriptions_status").on(table.status),
+  index("idx_subscriptions_paypal_id").on(table.paypalSubscriptionId),
+  index("idx_subscriptions_user_id").on(table.userId),
+  index("idx_subscriptions_tier").on(table.tier),
+]);
 
 export const pointTransactions = pgTable("point_transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
