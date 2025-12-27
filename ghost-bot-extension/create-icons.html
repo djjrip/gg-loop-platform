@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create Ghost Icons</title>
+</head>
+<body>
+  <canvas id="canvas16" width="16" height="16"></canvas>
+  <canvas id="canvas48" width="48" height="48"></canvas>
+  <canvas id="canvas128" width="128" height="128"></canvas>
+  
+  <script>
+    function createGhostIcon(canvasId, size) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      
+      // Background (transparent)
+      ctx.clearRect(0, 0, size, size);
+      
+      // Draw ghost shape
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      
+      // Ghost body (rounded rectangle with bottom wavy)
+      const bodyHeight = size * 0.7;
+      const bodyWidth = size * 0.6;
+      const x = (size - bodyWidth) / 2;
+      const y = size * 0.1;
+      
+      // Top rounded rectangle
+      ctx.roundRect(x, y, bodyWidth, bodyHeight, size * 0.15);
+      ctx.fill();
+      
+      // Bottom wavy part (simplified as rounded bumps)
+      const waveHeight = size * 0.2;
+      const waveWidth = bodyWidth / 3;
+      
+      // Left bump
+      ctx.beginPath();
+      ctx.arc(x, y + bodyHeight, waveWidth / 2, Math.PI, 0, false);
+      ctx.fill();
+      
+      // Middle bump (covered by body)
+      // Right bump
+      ctx.beginPath();
+      ctx.arc(x + bodyWidth, y + bodyHeight, waveWidth / 2, Math.PI, 0, false);
+      ctx.fill();
+      
+      // Eyes
+      ctx.fillStyle = '#667eea';
+      const eyeSize = size * 0.08;
+      const eyeY = y + bodyHeight * 0.3;
+      
+      // Left eye
+      ctx.beginPath();
+      ctx.arc(x + bodyWidth * 0.3, eyeY, eyeSize, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Right eye
+      ctx.beginPath();
+      ctx.arc(x + bodyWidth * 0.7, eyeY, eyeSize, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Download
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ghost-${size}.png`;
+        a.click();
+      });
+    }
+    
+    // Create all icons
+    createGhostIcon('canvas16', 16);
+    setTimeout(() => createGhostIcon('canvas48', 48), 100);
+    setTimeout(() => createGhostIcon('canvas128', 128), 200);
+  </script>
+</body>
+</html>
+
