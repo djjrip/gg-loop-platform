@@ -23,25 +23,121 @@ async function init() {
   await loadCurrentTab();
   setupEventListeners();
   
-  // Initialize Cursor integration (if available)
+  // Report to Cursor that Ghost Bot is ready (REAL-TIME)
   try {
-    if (typeof CursorIntegration !== 'undefined') {
-      cursorIntegration = new CursorIntegration();
-      if (cursorIntegration.startMonitoring) {
-        cursorIntegration.startMonitoring();
+    await fetch('http://localhost:8080/api/ghost-bot/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'ghost_bot_ready',
+        message: 'Ghost Bot extension loaded and ready',
+        tab: {
+          url: currentTab?.url,
+          title: currentTab?.title,
+          id: currentTab?.id
+        },
+        timestamp: new Date().toISOString()
+      })
+    }).catch(() => {
+      // Server might not be running, that's okay
+    });
+  } catch (e) {
+    // Ignore connection errors
+  }
+  
+  // Start monitoring for tasks from Cursor
+  startCursorTaskMonitor();
+}
+
+// Monitor for tasks from Cursor
+function startCursorTaskMonitor() {
+  setInterval(async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/ghost-bot/tasks').catch(() => null);
+      if (response && response.ok) {
+        const data = await response.json();
+        if (data.tasks && data.tasks.length > 0) {
+          // Execute tasks from Cursor
+          for (const task of data.tasks) {
+            await executeCursorTask(task);
+          }
+        }
       }
-      
-      // Report to Cursor that Ghost Bot is ready
-      if (cursorIntegration.reportToCursor) {
-        await cursorIntegration.reportToCursor({
-          type: 'ghost_bot_ready',
-          message: 'Ghost Bot extension loaded and ready',
-          tab: currentTab
-        });
-      }
+    } catch (e) {
+      // Ignore errors
     }
+  }, 2000); // Check every 2 seconds
+}
+
+// Execute task from Cursor
+async function executeCursorTask(task) {
+  try {
+    if (!currentTab) {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      currentTab = tab;
+    }
+    
+    let result = null;
+    
+    switch (task.action) {
+      case 'fill_field':
+        result = await chrome.tabs.sendMessage(currentTab.id, {
+          action: 'fill',
+          field: task.field,
+          value: task.value
+        });
+        break;
+      
+      case 'fill_all_safe':
+        result = await chrome.tabs.sendMessage(currentTab.id, {
+          action: 'fill_all_safe'
+        });
+        break;
+      
+      case 'click':
+        result = await chrome.tabs.sendMessage(currentTab.id, {
+          action: 'click',
+          selector: task.selector
+        });
+        break;
+      
+      case 'navigate':
+        await chrome.tabs.update(currentTab.id, { url: task.url });
+        result = { success: true, message: `Navigated to ${task.url}` };
+        break;
+    }
+    
+    // Mark task as completed
+    await fetch(`http://localhost:8080/api/ghost-bot/tasks/${task.id}/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ result })
+    }).catch(() => {});
+    
+    // Report to Cursor
+    await fetch('http://localhost:8080/api/ghost-bot/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'task_completed',
+        task: task,
+        result: result,
+        timestamp: new Date().toISOString()
+      })
+    }).catch(() => {});
+    
   } catch (error) {
-    console.log('Cursor integration not available:', error);
+    // Report error to Cursor
+    await fetch('http://localhost:8080/api/ghost-bot/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'task_failed',
+        task: task,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      })
+    }).catch(() => {});
   }
 }
 
@@ -171,15 +267,28 @@ async function sendMessage() {
     addMessage(response.text, false, response.actions || []);
     conversationHistory.push({ role: 'assistant', content: response.text });
     
-    // Report to Cursor
-    if (cursorIntegration) {
-      await cursorIntegration.reportToCursor({
-        type: 'conversation',
-        userMessage: message,
-        ghostResponse: response.text,
-        actions: response.actions || [],
-        tab: currentTab
+    // Report to Cursor (REAL-TIME)
+    try {
+      await fetch('http://localhost:8080/api/ghost-bot/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'conversation',
+          userMessage: message,
+          ghostResponse: response.text,
+          actions: response.actions || [],
+          tab: {
+            url: currentTab?.url,
+            title: currentTab?.title,
+            id: currentTab?.id
+          },
+          timestamp: new Date().toISOString()
+        })
+      }).catch(() => {
+        // Server might not be running, that's okay
       });
+    } catch (e) {
+      // Ignore connection errors
     }
     
     // Update tab info if needed

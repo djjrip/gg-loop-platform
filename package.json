@@ -35,7 +35,8 @@
     "virtual:amazon-signup": "node scripts/virtual-assistant.mjs amazon",
     "ghost:start": "node scripts/ghost-bot.mjs monitor",
     "ghost:amazon": "node scripts/ghost-bot.mjs amazon",
-    "ghost:launch": "node scripts/ghost-launcher.mjs"
+    "ghost:launch": "node scripts/ghost-launcher.mjs",
+    "cursor:monitor": "node scripts/cursor-ghost-monitor.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.956.0",
