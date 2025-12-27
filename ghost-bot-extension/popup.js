@@ -18,35 +18,64 @@ try {
   };
 }
 
+// Check Cursor connection
+async function checkCursorConnection() {
+  const statusEl = document.getElementById('cursorStatus');
+  if (!statusEl) return;
+  
+  try {
+    const response = await fetch('http://localhost:8080/health').catch(() => null);
+    if (response && response.ok) {
+      statusEl.textContent = '🔗 Connected to Cursor';
+      statusEl.style.color = '#4ade80';
+      return true;
+    } else {
+      statusEl.textContent = '⚠️ Cursor not connected (server not running)';
+      statusEl.style.color = '#fbbf24';
+      return false;
+    }
+  } catch (e) {
+    statusEl.textContent = '⚠️ Cursor not connected';
+    statusEl.style.color = '#fbbf24';
+    return false;
+  }
+}
+
 // Initialize
 async function init() {
   await loadCurrentTab();
   setupEventListeners();
   
+  // Check Cursor connection
+  const connected = await checkCursorConnection();
+  
   // Report to Cursor that Ghost Bot is ready (REAL-TIME)
-  try {
-    await fetch('http://localhost:8080/api/ghost-bot/status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'ghost_bot_ready',
-        message: 'Ghost Bot extension loaded and ready',
-        tab: {
-          url: currentTab?.url,
-          title: currentTab?.title,
-          id: currentTab?.id
-        },
-        timestamp: new Date().toISOString()
-      })
-    }).catch(() => {
-      // Server might not be running, that's okay
-    });
-  } catch (e) {
-    // Ignore connection errors
+  if (connected) {
+    try {
+      await fetch('http://localhost:8080/api/ghost-bot/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'ghost_bot_ready',
+          message: 'Ghost Bot extension loaded and ready',
+          tab: {
+            url: currentTab?.url,
+            title: currentTab?.title,
+            id: currentTab?.id
+          },
+          timestamp: new Date().toISOString()
+        })
+      });
+    } catch (e) {
+      // Ignore connection errors
+    }
+    
+    // Start monitoring for tasks from Cursor
+    startCursorTaskMonitor();
   }
   
-  // Start monitoring for tasks from Cursor
-  startCursorTaskMonitor();
+  // Check connection every 10 seconds
+  setInterval(checkCursorConnection, 10000);
 }
 
 // Monitor for tasks from Cursor
