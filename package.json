@@ -26,7 +26,8 @@
     "verify:setup": "node scripts/verify-setup.js",
     "automate:all": "node scripts/complete-automation.js",
     "workflow:setup": "node scripts/manual-workflow-automator.js",
-    "workflow:daily": "node scripts/daily-workflow.js"
+    "workflow:daily": "node scripts/daily-workflow.js",
+    "bot:browser": "node scripts/browser-bot.js"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.956.0",
