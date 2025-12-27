@@ -828,9 +828,6 @@ export const insertCharityCampaignSchema = createInsertSchema(charityCampaigns).
 export type InsertCharityCampaign = z.infer<typeof insertCharityCampaignSchema>;
 export type CharityCampaign = typeof charityCampaigns.$inferSelect;
 
-export type InsertCharityCampaign = z.infer<typeof insertCharityCampaignSchema>;
-export type CharityCampaign = typeof charityCampaigns.$inferSelect;
-
 export const xPostLogs = pgTable("x_post_logs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   content: text("content").notNull(),

@@ -14,7 +14,11 @@ let client: any;
 if (usePostgres && databaseUrl) {
     // Production: PostgreSQL (Railway)
     console.log('🐘 Using PostgreSQL database');
-    const queryClient = postgres(databaseUrl);
+    const queryClient = postgres(databaseUrl, {
+      max: 20,
+      idle_timeout: 20,
+      connect_timeout: 10,
+    });
     db = drizzlePostgres(queryClient, { schema });
     client = queryClient;
 } else {

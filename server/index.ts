@@ -289,7 +289,6 @@ app.use((req, res, next) => {
         notify({ severity, source: 'global-error', message, details: { status, stack: err?.stack } }).catch(() => { });
       }
       res.status(status).json({ message });
-      throw err;
     });
 
     // importantly only setup vite in development and after
