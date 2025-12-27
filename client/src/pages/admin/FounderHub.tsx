@@ -3,7 +3,8 @@ import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Trophy, Gift, TrendingUp, ShieldCheck, Activity, Package, Star,
-  Search, Users, Mail, FileText, Copy, ExternalLink, MessageSquare, Terminal, Send
+  Search, Users, Mail, FileText, Copy, ExternalLink, MessageSquare, Terminal, Send,
+  Heart, AlertTriangle, CheckCircle2, XCircle, Clock, Zap
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import { format } from "date-fns";
 
 export default function FounderHub() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("fulfillment");
+  const [activeTab, setActiveTab] = useState("health");
 
   // Fetch REAL pending claims
   const { data: pendingClaims } = useQuery<RewardClaim[]>({
@@ -39,6 +40,27 @@ export default function FounderHub() {
     queryKey: ["/api/users/leaderboard"],
     queryFn: async () => {
       const res = await fetch("/api/users/leaderboard");
+      if (!res.ok) return [];
+      return res.json();
+    }
+  });
+
+  // Platform health check
+  const { data: healthData, isLoading: healthLoading } = useQuery({
+    queryKey: ["/api/health"],
+    queryFn: async () => {
+      const res = await fetch("/api/health");
+      if (!res.ok) throw new Error("Health check failed");
+      return res.json();
+    },
+    refetchInterval: 30000 // Refresh every 30 seconds
+  });
+
+  // Check rewards count
+  const { data: rewards } = useQuery({
+    queryKey: ["/api/rewards"],
+    queryFn: async () => {
+      const res = await fetch("/api/rewards");
       if (!res.ok) return [];
       return res.json();
     }
@@ -79,6 +101,12 @@ export default function FounderHub() {
       {/* NAVIGATION TABS */}
       <div className="flex bg-zinc-900/50 p-1 rounded-lg border border-white/10 mb-8 overflow-x-auto">
         <button
+          onClick={() => setActiveTab("health")}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-6 rounded-md transition-all whitespace-nowrap ${activeTab === "health" ? "bg-zinc-800 text-white shadow-sm" : "text-gray-500 hover:text-gray-300"}`}
+        >
+          <Heart className="h-4 w-4" /> Platform Health
+        </button>
+        <button
           onClick={() => setActiveTab("fulfillment")}
           className={`flex-1 flex items-center justify-center gap-2 py-3 px-6 rounded-md transition-all whitespace-nowrap ${activeTab === "fulfillment" ? "bg-zinc-800 text-white shadow-sm" : "text-gray-500 hover:text-gray-300"}`}
         >
@@ -97,17 +125,115 @@ export default function FounderHub() {
         >
           <Mail className="h-4 w-4" /> Outreach & Growth
         </button>
-        <button
-          onClick={() => setActiveTab("notes")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-6 rounded-md transition-all whitespace-nowrap ${activeTab === "notes" ? "bg-zinc-800 text-white shadow-sm" : "text-gray-500 hover:text-gray-300"}`}
-        >
-          <FileText className="h-4 w-4" /> Founder Notes
-        </button>
       </div>
 
       {/* CONTENT AREA */}
       <Card className="bg-zinc-900 border-white/10 min-h-[500px]">
         <CardContent className="p-8">
+
+          {/* PLATFORM HEALTH TAB */}
+          {activeTab === "health" && (
+            <div className="space-y-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-white mb-2">Platform Health Dashboard</h2>
+                <p className="text-gray-400">Real-time status and daily CEO checklist</p>
+              </div>
+
+              {/* Status Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className={`bg-black/40 border rounded-xl p-4 ${healthData?.status === 'healthy' ? 'border-green-500/30' : 'border-red-500/30'}`}>
+                  <div className="flex items-center gap-3 mb-2">
+                    {healthData?.status === 'healthy' ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-red-500" />}
+                    <span className="text-gray-400">Server Status</span>
+                  </div>
+                  <p className="text-xl font-bold text-white capitalize">{healthLoading ? 'Checking...' : healthData?.status || 'Unknown'}</p>
+                </div>
+
+                <div className={`bg-black/40 border rounded-xl p-4 ${healthData?.database === 'connected' ? 'border-green-500/30' : 'border-red-500/30'}`}>
+                  <div className="flex items-center gap-3 mb-2">
+                    {healthData?.database === 'connected' ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-red-500" />}
+                    <span className="text-gray-400">Database</span>
+                  </div>
+                  <p className="text-xl font-bold text-white capitalize">{healthData?.database || 'Unknown'}</p>
+                </div>
+
+                <div className="bg-black/40 border border-blue-500/30 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Clock className="h-5 w-5 text-blue-400" />
+                    <span className="text-gray-400">Uptime</span>
+                  </div>
+                  <p className="text-xl font-bold text-white">{healthData?.uptime ? Math.floor(healthData.uptime / 60) + ' min' : 'Unknown'}</p>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-black/40 border border-white/5 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Gift className="h-5 w-5 text-ggloop-orange" />
+                    <span className="text-gray-400">Shop Rewards</span>
+                  </div>
+                  <p className="text-xl font-bold text-white">{rewards?.length || 0} items in shop</p>
+                </div>
+
+                <div className="bg-black/40 border border-white/5 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Package className="h-5 w-5 text-purple-400" />
+                    <span className="text-gray-400">Pending Fulfillment</span>
+                  </div>
+                  <p className="text-xl font-bold text-white">{pendingClaims?.length || 0} claims waiting</p>
+                </div>
+              </div>
+
+              {/* Pain Points */}
+              <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-red-400" />
+                  Current Pain Points
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-300">🔴 Riot API Production Key</span>
+                    <Badge className="bg-red-500/20 text-red-300">Waiting on Riot approval</Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-300">🔴 Desktop App Code Signing</span>
+                    <Badge className="bg-red-500/20 text-red-300">Need certificate ~$500/yr</Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-300">🟡 Reward Images Missing</span>
+                    <Badge className="bg-yellow-500/20 text-yellow-300">Add via Admin Rewards</Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="bg-black/40 border border-white/5 rounded-xl p-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-yellow-400" />
+                  Quick Actions
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <a href="/admin/users" className="bg-zinc-800 hover:bg-zinc-700 rounded-lg p-3 text-center transition-colors">
+                    <Users className="h-5 w-5 mx-auto mb-2 text-blue-400" />
+                    <span className="text-sm text-gray-300">Users</span>
+                  </a>
+                  <a href="/admin/rewards" className="bg-zinc-800 hover:bg-zinc-700 rounded-lg p-3 text-center transition-colors">
+                    <Gift className="h-5 w-5 mx-auto mb-2 text-green-400" />
+                    <span className="text-sm text-gray-300">Rewards</span>
+                  </a>
+                  <a href="/admin/fulfillment" className="bg-zinc-800 hover:bg-zinc-700 rounded-lg p-3 text-center transition-colors">
+                    <Package className="h-5 w-5 mx-auto mb-2 text-purple-400" />
+                    <span className="text-sm text-gray-300">Fulfillment</span>
+                  </a>
+                  <a href="/admin/analytics" className="bg-zinc-800 hover:bg-zinc-700 rounded-lg p-3 text-center transition-colors">
+                    <TrendingUp className="h-5 w-5 mx-auto mb-2 text-ggloop-orange" />
+                    <span className="text-sm text-gray-300">Analytics</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* FULFILLMENT TAB */}
           {activeTab === "fulfillment" && (
@@ -210,15 +336,7 @@ export default function FounderHub() {
             </div>
           )}
 
-          {/* NOTES TAB */}
-          {activeTab === "notes" && (
-            <div className="h-full flex items-center justify-center text-gray-500 py-24">
-              <div className="text-center">
-                <FileText className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                <p>Meeting notes feature coming in Phase 4.</p>
-              </div>
-            </div>
-          )}
+
 
         </CardContent>
       </Card>
