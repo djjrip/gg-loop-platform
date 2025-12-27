@@ -305,13 +305,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'fill_all_safe') {
     const pageInfo = analyzePage();
     const fillableFields = {
-      website: { value: 'https://ggloop.io', selectors: ['website', 'url', 'site'] },
+      website: { value: 'https://ggloop.io', selectors: ['website', 'url', 'site', 'enter your website'] },
       business: { value: 'GG LOOP LLC', selectors: ['business', 'company'] },
       email: { value: 'jaysonquindao@ggloop.io', selectors: ['email', 'mail'] },
     };
     
     const inputs = Array.from(document.querySelectorAll('input, textarea'));
     const filled = [];
+    
+    // Special handling for Amazon Associates
+    if (window.location.href.includes('amazon.com') || window.location.href.includes('affiliate-program.amazon.com')) {
+      const websiteInputs = Array.from(document.querySelectorAll('input[type="text"], input[type="url"]'));
+      for (const input of websiteInputs) {
+        const label = input.closest('div')?.querySelector('label')?.textContent?.toLowerCase() || '';
+        const placeholder = input.placeholder?.toLowerCase() || '';
+        const name = (input.name || input.id || '').toLowerCase();
+        if ((label.includes('website') || placeholder.includes('website') || name.includes('website')) && !input.value) {
+          input.value = 'https://ggloop.io';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          filled.push('website');
+        }
+      }
+    }
     
     for (const input of inputs) {
       if (input.type === 'password' || input.type === 'hidden' || input.value) continue;
