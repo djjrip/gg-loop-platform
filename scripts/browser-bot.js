@@ -22,6 +22,7 @@ const rl = readline.createInterface({
 
 // Configuration
 const CONFIG = {
+  RAILWAY_TOKEN: process.env.RAILWAY_TOKEN || '7ea4fcf8-372c-47ad-bd23-5e57e8ab00fc', // Your token is here!
   PAYPAL_CLIENT_ID: 'AW4YgjL5NXw5TgdDZrQ5vV2Zi0rjqjop913D1xEgRrkhRvGgxyjYrgtQdoR1RF_9V7g6nVaQWKc3Ndpu',
   PAYPAL_CLIENT_SECRET: 'EPYCdf_WuwRPUFeLX2RvfVbxBdB2CufcS5HvEWN1RCRPF6zwJL4tGVm4VmhGqzRjV01FhEQ_KLbUjqjL',
   ADMIN_EMAIL: 'jaysonquindao@ggloop.io',
@@ -414,22 +415,28 @@ async function runBrowserBot() {
   });
   
   try {
-    // Step 1: Create Railway token
+    // Step 1: Check if token exists
     console.log('='.repeat(50));
-    const createToken = await ask('\n🚂 Create Railway token? (y/n): ');
-    if (createToken.toLowerCase() === 'y') {
-      const token = await createRailwayToken(browser);
-      if (token) {
-        console.log(`\n💾 Token saved: ${token.substring(0, 20)}...`);
-        console.log(`\n   Use it: $env:RAILWAY_TOKEN="${token}"`);
+    if (CONFIG.RAILWAY_TOKEN && CONFIG.RAILWAY_TOKEN.length > 20) {
+      console.log(`\n✅ Railway token found: ${CONFIG.RAILWAY_TOKEN.substring(0, 20)}...`);
+      console.log('   Using existing token - skipping token creation\n');
+    } else {
+      const createToken = await ask('\n🚂 Create Railway token? (y/n): ');
+      if (createToken.toLowerCase() === 'y') {
+        const token = await createRailwayToken(browser);
+        if (token) {
+          CONFIG.RAILWAY_TOKEN = token;
+          console.log(`\n💾 Token saved: ${token.substring(0, 20)}...`);
+          console.log(`\n   Use it: $env:RAILWAY_TOKEN="${token}"`);
+        }
       }
     }
     
-    // Step 2: Setup Railway variables
+    // Step 2: Setup Railway variables (using token)
     console.log('\n' + '='.repeat(50));
     const setupVars = await ask('\n🚂 Setup Railway variables? (y/n): ');
     if (setupVars.toLowerCase() === 'y') {
-      await setupRailwayVariables(browser);
+      await setupRailwayVariables(browser, CONFIG.RAILWAY_TOKEN);
     }
     
     // Step 3: Verify PayPal
