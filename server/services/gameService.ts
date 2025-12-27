@@ -232,18 +232,11 @@ export class GameService {
    * Fetch leaderboard from provider
    */
   private async fetchLeaderboardFromProvider(period: 'daily' | 'weekly' | 'monthly' | 'allTime'): Promise<LeaderboardEntry[]> {
-    // Implementation depends on provider
-    // For now, return mock data
-    return [
-      {
-        rank: 1,
-        playerId: 'player1',
-        playerName: 'ProPlayer',
-        pointsEarned: 5000,
-        wins: 150,
-        winRate: 0.65,
-      },
-    ];
+    // AUTHENTICITY: Return empty array when no external provider data available
+    // Do NOT return fake/mock data - only real data from database or external API
+    // The calling code should query the database for leaderboard data
+    console.log(`[GameService] fetchLeaderboardFromProvider: No external provider data for ${this.gameConfig.provider}. Use database query instead.`);
+    return [];
   }
 
   private async fetchRiotStats(playerId: string): Promise<PlayerStats> {
