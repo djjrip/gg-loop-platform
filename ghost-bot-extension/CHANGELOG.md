@@ -1,6 +1,20 @@
 # Ghost Bot - Changelog
 
-## Version 1.0.1 (Current)
+## Version 1.0.2 (Current)
+**Date:** 2025-01-27
+
+### 🔧 Improvements
+- **Better Reload Instructions**: Added clear instructions for reloading the extension
+- **Reload Helper Script**: Created PowerShell script to help with reload process
+- **Version Display**: Version now loads dynamically from manifest
+
+### 📝 Notes
+- Chrome extensions require manual reload after file changes
+- Use the reload helper script or follow instructions in RELOAD_INSTRUCTIONS.md
+
+---
+
+## Version 1.0.1
 **Date:** 2025-01-27
 
 ### ✨ New Features

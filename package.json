@@ -36,6 +36,7 @@
     "ghost:start": "node scripts/ghost-bot.mjs monitor",
     "ghost:amazon": "node scripts/ghost-bot.mjs amazon",
     "ghost:launch": "node scripts/ghost-launcher.mjs",
+    "ghost:reload": "powershell -ExecutionPolicy Bypass -File ghost-bot-extension/reload-extension.ps1",
     "cursor:monitor": "node scripts/cursor-ghost-monitor.mjs"
   },
   "dependencies": {
