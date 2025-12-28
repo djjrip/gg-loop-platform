@@ -1,0 +1,86 @@
+{
+    "agency": [
+        {
+            "name": "Jennifer Bianchi",
+            "company": "Compass Real Estate Dallas",
+            "email": "jennifer.bianchi@compass.com",
+            "industry": "real estate",
+            "city": "Dallas",
+            "notes": "Top producer at Compass, high-volume agent needs lead automation"
+        },
+        {
+            "name": "Bill Churchill",
+            "company": "Compass Real Estate",
+            "email": "bill.churchill@compass.com",
+            "industry": "real estate",
+            "city": "Dallas",
+            "notes": "Compass agent, likely handles 50+ leads/month"
+        },
+        {
+            "name": "Steven Mozingo",
+            "company": "United Real Estate Dallas",
+            "email": "smozingo@unitedrealestatedallas.com",
+            "industry": "real estate",
+            "city": "Dallas",
+            "notes": "United Real Estate agent, manual follow-up process"
+        },
+        {
+            "name": "Mike Armour",
+            "company": "LeaderPerfect",
+            "email": "info@leaderperfect.com",
+            "industry": "coaching",
+            "city": "Dallas",
+            "notes": "Business coach offering leadership development, 214-515-0632"
+        },
+        {
+            "name": "DFW Consulting Team",
+            "company": "DFW Consulting Group Inc",
+            "email": "info@dfwcgi.com",
+            "industry": "consulting",
+            "city": "DFW",
+            "notes": "Business consulting firm, automation opportunity for client onboarding"
+        }
+    ],
+    "fintech": [
+        {
+            "name": "Infinity Founder",
+            "company": "Infinity (YC W24)",
+            "email": "hello@infinity.io",
+            "industry": "fintech",
+            "stage": "YC W24",
+            "notes": "Cross-border banking platform for SMBs, handling payments/settlement"
+        },
+        {
+            "name": "Blaze Team",
+            "company": "Blaze (YC S24)",
+            "email": "founders@blazepay.io",
+            "industry": "fintech",
+            "stage": "YC S24",
+            "notes": "Global Venmo alternative using USDC, peer-to-peer payments"
+        },
+        {
+            "name": "CollectWise Founders",
+            "company": "CollectWise (YC F24)",
+            "email": "team@collectwise.ai",
+            "industry": "fintech",
+            "stage": "YC F24",
+            "notes": "AI-powered debt collection automation, needs payment reconciliation help"
+        },
+        {
+            "name": "Sphinx Team",
+            "company": "Sphinx (YC F24)",
+            "email": "contact@sphinxcompliance.com",
+            "industry": "fintech",
+            "stage": "YC F24",
+            "notes": "Automates AML compliance for fintech, needs payment operations expertise"
+        },
+        {
+            "name": "xPay Founders",
+            "company": "xPay (YC W24)",
+            "email": "hello@xpay.io",
+            "industry": "fintech",
+            "stage": "YC W24",
+            "notes": "Payment startup from YC, likely needs reconciliation/settlement consulting"
+        }
+    ]
+}

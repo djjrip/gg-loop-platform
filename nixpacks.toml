@@ -9,3 +9,7 @@ cmds = ["npm run build"]
 
 [start]
 cmd = "npm start"
+
+[variables]
+# Ensure VITE_ variables are available during build
+VITE_PAYPAL_CLIENT_ID = "$VITE_PAYPAL_CLIENT_ID"

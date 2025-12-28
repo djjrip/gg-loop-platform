@@ -19,12 +19,12 @@
     "check-rewards": "node scripts/check-rewards.js",
     "db:push": "drizzle-kit push",
     "seed:rewards": "npx tsx server/seed-rewards.ts",
-    "seed:production": "node scripts/seed-production.mjs",
+    "seed:production": "node scripts/auto-seed-rewards.mjs",
     "automate:affiliates": "npx tsx server/automation/browserAutomation.ts",
     "automate:business": "npx tsx server/businessAutomation.ts",
     "setup:railway": "node scripts/auto-setup-railway.js",
     "verify:setup": "node scripts/verify-setup.js",
-    "automate:all": "node scripts/complete-automation.js",
+    "automate:all": "node scripts/complete-automation.mjs",
     "workflow:setup": "node scripts/manual-workflow-automator.js",
     "workflow:daily": "node scripts/daily-workflow.js",
     "bot:browser": "node scripts/browser-bot.js",
@@ -37,9 +37,7 @@
     "ghost:amazon": "node scripts/ghost-bot.mjs amazon",
     "ghost:launch": "node scripts/ghost-launcher.mjs",
     "ghost:reload": "node scripts/auto-reload-ghost-bot.mjs",
-    "cursor:monitor": "node scripts/cursor-ghost-monitor.mjs",
-    "seed:production": "node scripts/auto-seed-rewards.mjs",
-    "automate:all": "node scripts/complete-automation.mjs"
+    "cursor:monitor": "node scripts/cursor-ghost-monitor.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.956.0",
@@ -121,6 +119,7 @@
     "node-cron": "^4.2.1",
     "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
+    "nodemailer": "^7.0.12",
     "openid-client": "^6.8.1",
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",

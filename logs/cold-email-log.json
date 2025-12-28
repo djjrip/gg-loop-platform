@@ -1,0 +1,155 @@
+{
+  "sent": [],
+  "failed": [
+    {
+      "name": "Jennifer Bianchi",
+      "company": "Compass Real Estate Dallas",
+      "email": "jennifer.bianchi@compass.com",
+      "industry": "real estate",
+      "city": "Dallas",
+      "notes": "Top producer at Compass, high-volume agent needs lead automation",
+      "date": "2025-12-28T22:15:49.415Z",
+      "error": "Missing credentials for \"PLAIN\""
+    },
+    {
+      "name": "Jennifer Bianchi",
+      "company": "Compass Real Estate Dallas",
+      "email": "jennifer.bianchi@compass.com",
+      "industry": "real estate",
+      "city": "Dallas",
+      "notes": "Top producer at Compass, high-volume agent needs lead automation",
+      "date": "2025-12-28T22:16:20.470Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 46e09a7af769-7cc667ead3asm19550639a34.20 - gsmtp"
+    },
+    {
+      "name": "Bill Churchill",
+      "company": "Compass Real Estate",
+      "email": "bill.churchill@compass.com",
+      "industry": "real estate",
+      "city": "Dallas",
+      "notes": "Compass agent, likely handles 50+ leads/month",
+      "date": "2025-12-28T22:16:20.470Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 586e51a60fabf-3fdaac129c7sm16422419fac.21 - gsmtp"
+    },
+    {
+      "name": "Steven Mozingo",
+      "company": "United Real Estate Dallas",
+      "email": "smozingo@unitedrealestatedallas.com",
+      "industry": "real estate",
+      "city": "Dallas",
+      "notes": "United Real Estate agent, manual follow-up process",
+      "date": "2025-12-28T22:16:20.470Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 46e09a7af769-7cc667f9201sm19493449a34.26 - gsmtp"
+    },
+    {
+      "name": "Mike Armour",
+      "company": "LeaderPerfect",
+      "email": "info@leaderperfect.com",
+      "industry": "coaching",
+      "city": "Dallas",
+      "notes": "Business coach offering leadership development, 214-515-0632",
+      "date": "2025-12-28T22:16:20.470Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 006d021491bc7-65d0f46c775sm16820335eaf.5 - gsmtp"
+    },
+    {
+      "name": "DFW Consulting Team",
+      "company": "DFW Consulting Group Inc",
+      "email": "info@dfwcgi.com",
+      "industry": "consulting",
+      "city": "DFW",
+      "notes": "Business consulting firm, automation opportunity for client onboarding",
+      "date": "2025-12-28T22:16:20.470Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 586e51a60fabf-3fdaa4e0d18sm16784117fac.0 - gsmtp"
+    },
+    {
+      "name": "Jennifer Bianchi",
+      "company": "Compass Real Estate Dallas",
+      "email": "jennifer.bianchi@compass.com",
+      "industry": "real estate",
+      "city": "Dallas",
+      "notes": "Top producer at Compass, high-volume agent needs lead automation",
+      "date": "2025-12-28T22:20:37.068Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 006d021491bc7-65d0f3f8812sm17410241eaf.1 - gsmtp"
+    },
+    {
+      "name": "Bill Churchill",
+      "company": "Compass Real Estate",
+      "email": "bill.churchill@compass.com",
+      "industry": "real estate",
+      "city": "Dallas",
+      "notes": "Compass agent, likely handles 50+ leads/month",
+      "date": "2025-12-28T22:20:37.068Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 46e09a7af769-7cc66728296sm19667762a34.4 - gsmtp"
+    },
+    {
+      "name": "Jennifer Bianchi",
+      "company": "Compass Real Estate Dallas",
+      "email": "jennifer.bianchi@compass.com",
+      "industry": "real estate",
+      "city": "Dallas",
+      "notes": "Top producer at Compass, high-volume agent needs lead automation",
+      "date": "2025-12-28T22:21:34.032Z",
+      "error": "Missing credentials for \"PLAIN\""
+    },
+    {
+      "name": "Bill Churchill",
+      "company": "Compass Real Estate",
+      "email": "bill.churchill@compass.com",
+      "industry": "real estate",
+      "city": "Dallas",
+      "notes": "Compass agent, likely handles 50+ leads/month",
+      "date": "2025-12-28T22:21:34.032Z",
+      "error": "Missing credentials for \"PLAIN\""
+    },
+    {
+      "name": "Jennifer Bianchi",
+      "company": "Compass Real Estate Dallas",
+      "email": "jennifer.bianchi@compass.com",
+      "industry": "real estate",
+      "city": "Dallas",
+      "notes": "Top producer at Compass, high-volume agent needs lead automation",
+      "date": "2025-12-28T22:22:09.489Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5614622812f47-457b3cc114fsm13955117b6e.11 - gsmtp"
+    },
+    {
+      "name": "Bill Churchill",
+      "company": "Compass Real Estate",
+      "email": "bill.churchill@compass.com",
+      "industry": "real estate",
+      "city": "Dallas",
+      "notes": "Compass agent, likely handles 50+ leads/month",
+      "date": "2025-12-28T22:22:09.489Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 46e09a7af769-7cc6673bdb6sm19614467a34.11 - gsmtp"
+    },
+    {
+      "name": "Steven Mozingo",
+      "company": "United Real Estate Dallas",
+      "email": "smozingo@unitedrealestatedallas.com",
+      "industry": "real estate",
+      "city": "Dallas",
+      "notes": "United Real Estate agent, manual follow-up process",
+      "date": "2025-12-28T22:22:09.489Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5614622812f47-4598c356623sm8440946b6e.2 - gsmtp"
+    },
+    {
+      "name": "Mike Armour",
+      "company": "LeaderPerfect",
+      "email": "info@leaderperfect.com",
+      "industry": "coaching",
+      "city": "Dallas",
+      "notes": "Business coach offering leadership development, 214-515-0632",
+      "date": "2025-12-28T22:22:09.489Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5614622812f47-457b3ba4416sm13500415b6e.1 - gsmtp"
+    },
+    {
+      "name": "DFW Consulting Team",
+      "company": "DFW Consulting Group Inc",
+      "email": "info@dfwcgi.com",
+      "industry": "consulting",
+      "city": "DFW",
+      "notes": "Business consulting firm, automation opportunity for client onboarding",
+      "date": "2025-12-28T22:22:09.489Z",
+      "error": "Invalid login: 535-5.7.8 Username and Password not accepted. For more information, go to\n535 5.7.8  https://support.google.com/mail/?p=BadCredentials 5614622812f47-457b3ba4416sm13501222b6e.1 - gsmtp"
+    }
+  ]
+}
