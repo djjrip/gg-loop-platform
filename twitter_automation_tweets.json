@@ -1,0 +1,119 @@
+{
+    "tweet_templates": [
+        {
+            "category": "morning_motivation",
+            "tweets": [
+                "GM gamers ☀️\n\nToday's mission:\n- Build\n- Ship\n- Grind\n\nggloop.io",
+                "Good morning to everyone who's:\n\n- Grinding ranked\n- Building startups\n- Betting on themselves\n\nLet's get it 💪",
+                "☀️ New day, new grind\n\nWhat are you working on today?\n\nI'm scaling @ggloop",
+                "GM from the Filipino-American founder building in public\n\nggloop.io is growing\n\nLet's go 🚀"
+            ]
+        },
+        {
+            "category": "product_features",
+            "tweets": [
+                "GG Loop tracks gameplay across 17+ games\n\nNo API needed\nNo rate limits\nNo restrictions\n\nJust real verification\n\nggloop.io",
+                "Built a desktop app that:\n\n✅ Detects 17+ games\n✅ Tracks active playtime\n✅ Awards verified points\n✅ No idle farming\n\nggloop.io",
+                "Why GG Loop > other gaming rewards platforms:\n\n1. Desktop verification (not just API)\n2. Multi-game support\n3. Anti-cheat built-in\n4. White-label ready\n\nggloop.io",
+                "The verification tech behind @ggloop:\n\n- Process monitoring\n- Activity detection\n- Input tracking\n- Anti-idle system\n\nAll local. All secure.\n\nDM if you want to license it"
+            ]
+        },
+        {
+            "category": "white_label_pitch",
+            "tweets": [
+                "Esports orgs:\n\nWant a rewards platform for your community?\n\n✅ Fully white-labeled\n✅ Setup in 2 weeks\n✅ $5K-$10K\n\nDM \"interested\"\n\nLive demo: ggloop.io",
+                "Built @ggloop for gamers\n\nNow white-labeling it for orgs\n\nIf you run:\n- Esports team\n- Gaming Discord\n- Tournament platform\n\nYou need this\n\nDM me",
+                "Your esports org could have its own rewards platform\n\nBranded\nHosted\nManaged\n\nReady in 2 weeks\n\nggloop.io/business",
+                "Gaming communities: stop using generic point bots\n\nGet a real platform\n\nWhite-label GG Loop:\n- Desktop verification\n- Real rewards\n- Your branding\n\nDM for demo"
+            ]
+        },
+        {
+            "category": "founder_story",
+            "tweets": [
+                "Building a gaming startup while in bankruptcy\n\nFilipino-American founder\nNo VC backing\nJust code\n\nThis is @ggloop",
+                "Thing about building in public:\n\nPeople connect with real stories\n\nNot polished marketing\n\nThat's why I share:\n- The bankruptcy\n- The grind\n- The wins\n\nggloop.io",
+                "From basketball court to coding\n\nFrom broke to building\n\nThis is the journey\n\n@ggloop",
+                "5 months ago: bankruptcy filing\n\nToday: live gaming platform\n\nNext month: first $10K MRR\n\nThe comeback is real\n\nggloop.io"
+            ]
+        },
+        {
+            "category": "tech_insights",
+            "tweets": [
+                "Tech stack for @ggloop:\n\n- React + Vite (frontend)\n- Express + TypeScript (backend)\n- PostgreSQL + Drizzle (DB)\n- Electron (desktop app)\n- Railway (hosting)\n\nAll in 3 months\n\nNo team. Just me.",
+                "Desktop game verification without API access:\n\n1. Monitor running processes\n2. Detect game executables\n3. Track input activity\n4. Verify no idle farming\n\nThis is how @ggloop works\n\nNo Riot API needed",
+                "Why I chose Railway over AWS for @ggloop:\n\n- Faster deployment\n- Better DX\n- Auto DB backups\n- $5-20/month\n\nAWS would be $\n\nggloop.io runs on Railway",
+                "OAuth integration lessons:\n\n✅ Riot Sign-On\n✅ Twitch\n✅ Google\n\nEach took 1-2 days\n\nDocumentation matters\n\nBuilding @ggloop"
+            ]
+        },
+        {
+            "category": "engagement",
+            "tweets": [
+                "What game are you grinding this week?\n\n🎮 Game\n⏱️ Hours\n🏆 Rank\n\nBest reply gets featured",
+                "Poll: What would you redeem points for?\n\n🎁 Gift cards\n💰 Cash\n🎮 Gaming gear\n💎 Exclusive rewards\n\nReply below",
+                "Gamers: what's your biggest grind right now?\n\nRanked? Challenges? Battlepass?\n\nLet me know 👇",
+                "If you could earn rewards for ANY game, which one?\n\nReply with your top 3\n\nBuilding @ggloop"
+            ]
+        },
+        {
+            "category": "industry_insights",
+            "tweets": [
+                "The gaming industry is $200B\n\nGamers spend 1000s of hours\n\nBut get zero value back\n\n@ggloop changes this\n\nggloop.io",
+                "Esports viewership: 500M+ people\n\nBut rewards infrastructure?\n\nBasically doesn't exist\n\nThis is the gap @ggloop fills",
+                "Gaming is the biggest entertainment industry\n\nYet gamers are the least rewarded\n\nThat's broken\n\n@ggloop is the fix\n\nggloop.io",
+                "Fun fact:\n\nGamers spend more time gaming than working\n\nBut only get paid for one\n\n@ggloop is fixing that"
+            ]
+        },
+        {
+            "category": "social_proof",
+            "tweets": [
+                "ggloop.io is live\n\n✅ 500+ users\n✅ 99.9% uptime\n✅ Desktop app v1.0\n✅ Multi-game support\n\nJoin the movement",
+                "Built @ggloop from $0 to production in 90 days\n\nNo team\nNo funding\nJust me\n\nYou can too",
+                "Platform updates:\n\n✅ Shop live with rewards\n✅ Desktop app downloadable\n✅ OAuth working\n✅ Admin dashboard functional\n\nggloop.io",
+                "Week in review:\n\n📊 Platform uptime: 99.9%\n👥 New users: [X]\n💻 Desktop downloads: [X]\n💰 Revenue: $[X]\n\nBuilding @ggloop in public"
+            ]
+        },
+        {
+            "category": "value_props",
+            "tweets": [
+                "GG Loop in 4 words:\n\nPlay. Earn. Loop. Repeat.\n\nggloop.io",
+                "Why gamers love @ggloop:\n\n1. Works with their favorite games\n2. Real rewards (not crypto)\n3. Fair verification\n4. No BS\n\nggloop.io",
+                "Traditional jobs: Trade time for money\n\n@ggloop: Earn while doing what you love\n\nGaming shouldn't be unpaid work\n\nggloop.io",
+                "The value prop:\n\nYou're already gaming\nWhy not get rewarded?\n\n@ggloop makes it happen\n\nNo catch. No BS.\n\nggloop.io"
+            ]
+        },
+        {
+            "category": "daily_updates",
+            "tweets": [
+                "Today's progress:\n\n✅ 3 demo calls\n✅ 1 new white-label lead\n✅ Platform updates shipped\n\nBuilding @ggloop one day at a time",
+                "Daily reminder:\n\nYou can build a business with:\n- $0 funding\n- No team\n- Just code\n\nProof: @ggloop\n\nggloop.io",
+                "Status update:\n\n🔨 Building\n📈 Growing\n💪 Grinding\n\n@ggloop is live and scaling",
+                "End of day recap:\n\n- Sales calls: [X]\n- Leads generated: [X]\n- Code shipped: [X]\n- Revenue: $[X]\n\nggloop.io"
+            ]
+        }
+    ],
+    "setup_instructions": {
+        "buffer": {
+            "url": "https://buffer.com/",
+            "plan": "Essentials - $6/month",
+            "steps": [
+                "1. Sign up at buffer.com",
+                "2. Connect Twitter account",
+                "3. Go to 'Queue' settings",
+                "4. Set posting times: 8am, 10am, 12pm, 2pm, 4pm, 6pm, 8pm, 10pm",
+                "5. Add tweets from this file",
+                "6. Enable 'Auto-shuffle queue'",
+                "7. Turn on auto-posting"
+            ]
+        },
+        "typefully": {
+            "url": "https://typefully.com/",
+            "plan": "Creator - $12.50/month",
+            "features": [
+                "AI-powered scheduling",
+                "Cross-posting to LinkedIn",
+                "Auto-plug (promote links)",
+                "Thread composer"
+            ]
+        }
+    }
+}

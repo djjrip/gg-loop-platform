@@ -23,6 +23,7 @@ import Shop from "@/pages/Shop";
 import CreatorTools from "@/pages/CreatorTools";
 import Subscription from "@/pages/Subscription";
 import DesktopDownload from "@/pages/DesktopDownload";
+import Business from "@/pages/Business";
 
 // User pages
 import Login from "@/pages/Login";
@@ -93,6 +94,7 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/roadmap" component={Roadmap} />
       <Route path="/download" component={DesktopDownload} />
+      <Route path="/business" component={Business} />
 
       {/* User Routes */}
       <Route path="/login" component={Login} />
