@@ -1,346 +1,261 @@
-# 🎮 GG LOOP PLATFORM
+# 🎮 GG LOOP
 
-**The Ultimate Gaming Rewards Platform**
+**Real Rewards for Real Gamers. No Crypto. No BS.**
 
-[![Status](https://img.shields.io/badge/status-95%25%20Operational-brightgreen)]()
-[![Build](https://img.shields.io/badge/build-passing-success)]()
-[![Security](https://img.shields.io/badge/security-100%25-success)]()
-[![AWS Ready](https://img.shields.io/badge/AWS-ready-orange)]()
-
----
-
-## 🚀 Quick Start
-
-### **Production Site**
-👉 **https://ggloop.io**
-
-### **Key Pages**
-- 🏠 **Homepage:** https://ggloop.io
-- 🛍️ **Shop:** https://ggloop.io/shop
-- 👤 **Profile:** https://ggloop.io/profile
-- 👑 **Admin:** https://ggloop.io/admin
-- ☁️ **AWS Roadmap:** https://ggloop.io/aws-roadmap
+[![deployed](https://img.shields.io/badge/deployed-online-success)](https://ggloop.io)
+[![platform](https://img.shields.io/badge/platform-web%20%2B%20desktop-blue)](https://ggloop.io)
+[![built](https://img.shields.io/badge/built-in%20public-orange)](https://github.com/djjrip/gg-loop-platform)
 
 ---
 
-## 📊 Platform Status
+## What is GG LOOP?
 
-**Current State:** 🟢 **95% Operational**
+A rewards platform where gamers earn verified points for actual gameplay, then redeem for gift cards and gear.
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Frontend | ✅ Live | React 18 + TypeScript |
-| Backend | ✅ Live | Express + PostgreSQL |
-| Database | ✅ Connected | Neon PostgreSQL |
-| Auth | ✅ Working | Google, Discord, Twitch |
-| Payments | ✅ Active | PayPal Integration |
-| Shop | ⏸️ Ready | Needs rewards seeded |
-| Admin | ✅ Full | Complete controls |
-| AWS Roadmap | ✅ Live | Meeting ready |
+**Not another crypto scam.** Just straightforward: Play → Verify → Earn → Loop.
+
+- 🎯 **Desktop app** tracks your gameplay (Valorant, League, CS2, etc.)
+- ⚡ **Anti-idle system** only counts active play
+- 💰 **Real rewards** - Steam, Amazon, PlayStation gift cards
+- 🏆 **No blockchain**, no tokens, no fake promises
 
 ---
 
-## 💰 Revenue Status
+## Live Platform
 
-**Status:** 🟡 **Ready for Activation**
+**Production:** [ggloop.io](https://ggloop.io)
 
-### **What's Working**
-- ✅ Payment processing (PayPal)
-- ✅ Subscription management
-- ✅ Points system
-- ✅ Redemption workflow
-- ✅ Admin controls
-
-### **What's Needed**
-- ⏸️ Seed 12 rewards to production (6 minutes)
-
-### **Revenue Projections**
-- **Week 1:** $10-75
-- **Month 1:** $50-300
-- **Month 3:** $200-1,500
+- 8 rewards available in shop
+- Affiliate tracking built-in
+- PostgreSQL database
+- Deployed on Railway
 
 ---
 
-## 🛠️ Local Development
+## Tech Stack
 
-### **Prerequisites**
-- Node.js 20+
-- PostgreSQL (or use Neon)
-- npm or yarn
+### Backend
+- **Runtime:** Node.js + TypeScript
+- **Framework:** Express.js
+- **Database:** PostgreSQL (Drizzle ORM)
+- **Auth:** Riot Sign-On, Google OAuth, Twitch OAuth
+- **Services:** PayPal subscriptions, email marketing
 
-### **Installation**
+### Frontend
+- **Framework:** React + Vite
+- **Styling:** Tailwind CSS
+- **State:** TanStack Query
+- **Icons:** Lucide React
+
+### Desktop App
+- **Framework:** Electron
+- **Game Detection:** Process monitoring (17+ games)
+- **Anti-Cheat:** Activity verification, rate limiting
+
+---
+
+## Features
+
+### For Players
+✅ Track gameplay automatically  
+✅ Earn points for active play time  
+✅ Redeem for real gift cards  
+✅ Trust score system (anti-smurf)  
+✅ Leaderboards & achievements  
+
+### For Admins
+✅ Revenue analytics dashboard  
+✅ Automated fulfillment (< $50)  
+✅ Daily business reports  
+✅ Email marketing system  
+✅ Referral tracking  
+
+---
+
+## Local Development
+
+### Prerequisites
+- Node.js 18+
+- PostgreSQL
+- Riot Games API key (dev key works)
+
+### Setup
 ```bash
-# Clone repository
-git clone https://github.com/yourusername/gg-loop-platform.git
+# Clone repo
+git clone https://github.com/djjrip/gg-loop-platform.git
 cd gg-loop-platform
 
 # Install dependencies
 npm install
 
-# Set up environment variables
+# Set environment variables
 cp .env.example .env
 # Edit .env with your credentials
 
-# Run database migrations
-npm run db:push
-
-# Start development server
+# Start dev server
 npm run dev
 ```
 
-### **Environment Variables**
-```env
+### Required Environment Variables
+```bash
 DATABASE_URL=postgresql://...
-SESSION_SECRET=your-secret-here
+SESSION_SECRET=$(openssl rand -hex 32)
+ADMIN_EMAILS=your@email.com
+
+# OAuth (optional for local dev)
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
-DISCORD_CLIENT_ID=...
-DISCORD_CLIENT_SECRET=...
 TWITCH_CLIENT_ID=...
 TWITCH_CLIENT_SECRET=...
-PAYPAL_CLIENT_ID=...
-PAYPAL_CLIENT_SECRET=...
-ADMIN_EMAILS=your@email.com
+RIOT_API_KEY=...
 ```
 
 ---
 
-## 📦 Deployment
+## Desktop App
 
-### **One-Click Deploy**
-```powershell
-.\DEPLOY_PRODUCTION.ps1
-```
+The desktop app verifies gameplay locally without needing API access.
 
-### **Manual Deploy**
+### Supported Games
+Valorant • League of Legends • CS2 • Dota 2 • Apex Legends • Fortnite • Overwatch 2 • and 10+ more
+
+### How It Works
+1. Detects game processes running on your PC
+2. Tracks mouse/keyboard activity
+3. Awards points for verified active play
+4. No API calls - 100% local verification
+
+### Build Desktop App
 ```bash
-# Build
+cd gg-loop-desktop
+npm install
 npm run build
-
-# Push to Railway
-git push origin main
-```
-
-### **Railway Configuration**
-1. Connect GitHub repository
-2. Add PostgreSQL service
-3. Set environment variables
-4. Deploy automatically on push
-
----
-
-## 🧪 Testing
-
-### **Run Integration Tests**
-```bash
-# Test production
-node scripts/integration-tests.mjs
-
-# Test local
-node scripts/integration-tests.mjs --local
-```
-
-### **Health Check**
-```bash
-node scripts/health-check.mjs
-```
-
-### **Manual Testing**
-```bash
-# Build verification
-npm run build
-
-# Type checking
-npm run check
 ```
 
 ---
 
-## 📋 Key Features
+## API Endpoints
 
-### **For Users**
-- 🎮 Connect gaming accounts (Riot, Twitch)
-- 🏆 Earn points through gameplay
-- 🎁 Redeem rewards (gift cards, subscriptions)
-- 📊 Track stats and leaderboards
-- 👥 Referral system
+### Public
+- `GET /api/health` - Platform health status
+- `GET /api/rewards` - Available shop rewards
+- `POST /api/auth/google` - Google OAuth
+- `POST /api/auth/riot` - Riot Sign-On
 
-### **For Admins**
-- 👥 User management
-- 💰 Revenue tracking
-- 🎁 Reward fulfillment
-- 📊 Analytics dashboard
-- 🔍 Audit logs
-- ⚙️ System controls
+### Admin (requires auth)
+- `GET /api/admin/users` - User management
+- `GET /api/admin/revenue/overview` - Revenue analytics
+- `GET /api/admin/fulfillment/pending` - Pending redemptions
+- `POST /api/admin/fulfillment/fulfill` - Mark as fulfilled
 
 ---
 
-## 🔒 Security
+## Business Model
 
-**Security Score:** 💯 **100%**
+### Revenue Streams
+1. **Affiliate Commissions** - $0.50-$4.00 per redemption
+2. **Subscriptions** - $5-25/month (basic/pro/elite tiers)
+3. **Future:** Brand partnerships, sponsored tournaments
 
-- ✅ No hardcoded secrets
-- ✅ Environment variables
-- ✅ HTTPS enforced
-- ✅ OAuth authentication
-- ✅ SQL injection prevention
-- ✅ XSS protection
-- ✅ CSRF tokens
-- ✅ Session security
-- ✅ Admin verification
-- ✅ Input validation
+### Current Status
+- Platform: Live
+- Users: Early access
+- Revenue: Affiliate links active
+- Funding: Bootstrapped
 
 ---
 
-## 📚 Documentation
+## Project Structure
 
-### **Essential Guides**
-- 📊 **[Operational Status](./OPERATIONAL_STATUS.md)** - Complete platform status
-- 📋 **[Production Checklist](./PRODUCTION_CHECKLIST.md)** - Deployment guide
-- 💰 **[Fulfillment Guide](./FULFILLMENT_ALTERNATIVES.md)** - Reward fulfillment
-- ☁️ **[AWS Meeting Guide](./AWS_MEETING_GUIDE.md)** - Partnership prep
-- 🔐 **[Security Audit](./OPERATIONAL_STATUS.md#security)** - Security details
-
-### **Developer Docs**
-- 🏗️ **[Architecture](./docs/architecture.md)** - System design
-- 🔌 **[API Reference](./docs/api.md)** - Endpoint documentation
-- 🗄️ **[Database Schema](./db/schema.ts)** - Data models
-- 🎨 **[UI Components](./client/src/components/)** - Component library
-
----
-
-## 🚀 Deployment Checklist
-
-### **Pre-Deployment**
-- [ ] Environment variables configured
-- [ ] Database connected
-- [ ] Build passes locally
-- [ ] Tests pass
-- [ ] Security audit complete
-
-### **Deployment**
-- [ ] Code pushed to GitHub
-- [ ] Railway build successful
-- [ ] Health check passes
-- [ ] All pages accessible
-
-### **Post-Deployment**
-- [ ] Seed rewards to production
-- [ ] Test redemption flow
-- [ ] Verify payments
-- [ ] Monitor errors
-
----
-
-## 💡 Quick Commands
-
-```bash
-# Development
-npm run dev              # Start dev server
-npm run build            # Build for production
-npm run check            # Type check
-
-# Database
-npm run db:push          # Push schema changes
-npm run seed:rewards     # Seed rewards (local)
-
-# Testing
-node scripts/integration-tests.mjs  # Run tests
-node scripts/health-check.mjs       # Health check
-
-# Deployment
-.\DEPLOY_PRODUCTION.ps1  # One-click deploy (Windows)
-git push origin main     # Manual deploy
+```
+gg-loop-platform/
+├── client/                 # React frontend
+│   ├── src/
+│   │   ├── pages/         # Routes (Home, Shop, Admin, etc.)
+│   │   └── components/    # Reusable UI components
+├── server/                # Express backend
+│   ├── routes/            # API endpoints
+│   ├── services/          # Business logic
+│   ├── automation/        # Cron jobs, fulfillment
+│   └── middleware/        # Auth, admin checks
+├── shared/                # Shared types + schema
+│   └── schema.ts          # Drizzle ORM schema
+├── gg-loop-desktop/       # Electron app
+└── scripts/               # Deployment, setup scripts
 ```
 
 ---
 
-## 🎯 Roadmap
+## Contributing
 
-### **Immediate (This Week)**
-- [x] Fix build system
-- [x] Deploy AWS roadmap page
-- [x] Add revenue tracking
-- [ ] Seed production rewards
-- [ ] Test redemption flow
+We're building in public, but this is a solo founder project. Contributions are welcome for:
 
-### **Short Term (This Month)**
-- [ ] AWS partnership secured
-- [ ] Production PayPal configured
-- [ ] Raise.com integration
-- [ ] First 100 users
-- [ ] $500+ revenue
+- Bug fixes
+- Performance improvements
+- Documentation
 
-### **Long Term (3 Months)**
-- [ ] 500+ active users
-- [ ] $1,500+ monthly revenue
-- [ ] Mobile app launch
-- [ ] Additional game integrations
-- [ ] Influencer partnerships
+**NOT accepting:**
+- Major feature changes without discussion
+- Cryptocurrency/blockchain integrations
+- Predatory mechanics
 
 ---
 
-## 🤝 Contributing
+## Philosophy
 
-We welcome contributions! Please follow these guidelines:
+### What GG LOOP is:
+✅ Fair rewards for time invested  
+✅ Transparent pricing and mechanics  
+✅ Real value, not hype  
+✅ Built for gamers, by a gamer  
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests
-5. Submit a pull request
-
----
-
-## 📞 Support
-
-### **Issues**
-Report bugs and issues on [GitHub Issues](https://github.com/yourusername/gg-loop-platform/issues)
-
-### **Contact**
-- **Email:** support@ggloop.io
-- **Discord:** [Join our server](https://discord.gg/X6GXg2At2D)
-- **Twitter:** [@ggloop](https://twitter.com/ggloop)
+### What GG LOOP is NOT:
+❌ A crypto/NFT platform  
+❌ Get-rich-quick scheme  
+❌ Pay-to-win mechanics  
+❌ Exploitative business model  
 
 ---
 
-## 📄 License
+## Roadmap
 
-This project is proprietary and confidential.
+- [x] Desktop app with game detection
+- [x] Points system + shop
+- [x] Admin fulfillment dashboard
+- [x] Revenue analytics
+- [ ] Riot API production key
+- [ ] Steam account linking
+- [ ] Tournaments & challenges
+- [ ] Mobile app (PWA)
 
 ---
 
-## 🎉 Acknowledgments
+## License
+
+MIT License - See [LICENSE](LICENSE) for details.
+
+---
+
+## Contact
+
+**Founder:** Jayson Quindao  
+**Email:** jaysonquindao@ggloop.io  
+**Platform:** [ggloop.io](https://ggloop.io)  
+**Twitter:** [@ggloop](https://twitter.com/search?q=%23ggloop)
+
+---
+
+## Acknowledgments
 
 Built with:
-- React 18
-- TypeScript
-- Express.js
-- PostgreSQL
+- Railway (deployment)
 - Drizzle ORM
-- PayPal SDK
+- TanStack Query
 - Riot Games API
-- Twitch API
+- Many late nights and energy drinks
 
-Hosted on:
-- Railway (Application)
-- Neon (Database)
-- Cloudflare (CDN)
+**Filipino-American founder building anti-BS gaming infrastructure.**
 
 ---
 
-## 📈 Stats
-
-- **Lines of Code:** 50,000+
-- **Components:** 100+
-- **API Endpoints:** 150+
-- **Database Tables:** 20+
-- **Test Coverage:** 85%+
-
----
-
-**Made with ❤️ by the GG Loop Team**
-
-**Status:** 🚀 Ready for Launch  
-**Version:** 1.0.0  
-**Last Updated:** December 6, 2025
+_Last updated: December 28, 2025_

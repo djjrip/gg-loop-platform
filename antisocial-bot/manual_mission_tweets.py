@@ -1,13 +1,16 @@
 
+
 import tweepy
 import time
 import sys
+import os
 
-# Credentials from temp_hunter_2/EMPIRE-MEMORY.md
-API_KEY = "gQaG7RAfWo0HlsM7qrxO2xdaE"
-API_SECRET = "8OOXeH2G5MtV9JIWuZz7N3xLbsJQ3CiRBM5uDpGUwInHNTiXjx"
-ACCESS_TOKEN = "1861611995009908736-R2nvW3Sop5wjb7b3fxqtWjhjF5SOnJ"
-ACCESS_SECRET = "D87VfkF86NZXqQpTKXe2mGd7w8aF3KjHaFGzCdK8cPPq6"
+# Twitter API credentials - Set via environment variables
+# Get credentials from: https://developer.twitter.com/en/portal/dashboard
+API_KEY = os.getenv('TWITTER_API_KEY')
+API_SECRET = os.getenv('TWITTER_API_SECRET')
+ACCESS_TOKEN = os.getenv('TWITTER_ACCESS_TOKEN')
+ACCESS_SECRET = os.getenv('TWITTER_ACCESS_SECRET')
 
 # The 3 Specific Mission Tweets
 TWEETS = [

@@ -16,8 +16,13 @@ app = Flask(__name__)
 CORS(app)
 
 # REAL Tradier Production API
-TRADIER_API_KEY = os.getenv('TRADIER_API_KEY', 'GpVYl2LnBJbamiBCH8ucAadF7lps')
+TRADIER_API_KEY = os.getenv('TRADIER_API_KEY')  # Set via environment variable
 TRADIER_BASE = 'https://api.tradier.com/v1'
+
+# Validate API key on startup
+if not TRADIER_API_KEY:
+    print("⚠️  WARNING: TRADIER_API_KEY not set. Set it via environment variable.")
+    print("   export TRADIER_API_KEY='your_key_here'")
 
 def tradier_request(endpoint, params=None):
     """Make request to Tradier API with retry"""
