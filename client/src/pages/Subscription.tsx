@@ -754,15 +754,24 @@ export default function SubscriptionPage() {
                           </Link>
                         </div>
                       ) : !isAuthenticated ? (
-                        <Link href="/login">
-                          <Button
-                            className="w-full"
-                            variant={isElite ? "default" : "outline"}
-                            data-testid={`button-login-${tier.id}`}
-                          >
-                            Join Waitlist
-                          </Button>
-                        </Link>
+                        paypalPlanIds[tier.id as keyof typeof paypalPlanIds] ? (
+                          <div className="w-full">
+                            <PayPalSubscriptionButton
+                              planId={paypalPlanIds[tier.id as keyof typeof paypalPlanIds]}
+                              tier={tier.name}
+                            />
+                          </div>
+                        ) : (
+                          <Link href="/login">
+                            <Button
+                              className="w-full"
+                              variant={isElite ? "default" : "outline"}
+                              data-testid={`button-login-${tier.id}`}
+                            >
+                              Get Started
+                            </Button>
+                          </Link>
+                        )
                       ) : isCurrentTier ? (
                         <Button
                           className="w-full"
