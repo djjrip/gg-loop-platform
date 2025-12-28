@@ -24,6 +24,7 @@ import CreatorTools from "@/pages/CreatorTools";
 import Subscription from "@/pages/Subscription";
 import DesktopDownload from "@/pages/DesktopDownload";
 import Business from "@/pages/Business";
+import DeveloperAPI from "@/pages/DeveloperAPI";
 
 // User pages
 import Login from "@/pages/Login";
@@ -95,6 +96,7 @@ function Router() {
       <Route path="/roadmap" component={Roadmap} />
       <Route path="/download" component={DesktopDownload} />
       <Route path="/business" component={Business} />
+      <Route path="/developer" component={DeveloperAPI} />
 
       {/* User Routes */}
       <Route path="/login" component={Login} />
