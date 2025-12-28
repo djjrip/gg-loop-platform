@@ -21,6 +21,10 @@ contextBridge.exposeInMainWorld('ggloop', {
     getSessionInfo: () => ipcRenderer.invoke('get-session-info'),
     syncPending: () => ipcRenderer.invoke('sync-pending'),
 
+    // Auto-updater
+    checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+    installUpdate: () => ipcRenderer.invoke('install-update'),
+
     // Listeners
     onGameDetected: (callback) => {
         ipcRenderer.on('game-detected', (event, game) => callback(game));
@@ -36,5 +40,16 @@ contextBridge.exposeInMainWorld('ggloop', {
     },
     onPointsAwarded: (callback) => {
         ipcRenderer.on('points-awarded', (event, data) => callback(data));
+    },
+
+    // Update notifications
+    onUpdateAvailable: (callback) => {
+        ipcRenderer.on('update-available', (event, info) => callback(info));
+    },
+    onDownloadProgress: (callback) => {
+        ipcRenderer.on('download-progress', (event, progress) => callback(progress));
+    },
+    onUpdateReady: (callback) => {
+        ipcRenderer.on('update-ready', (event, info) => callback(info));
     }
 });
