@@ -1,12 +1,18 @@
+```javascript
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import path from "path";
+import tailwindcss from "@tailwindcss/vite";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+// import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+import devBanner from "@replit/vite-plugin-dev-banner";
 
 export default defineConfig({
   plugins: [
     react(),
-    runtimeErrorOverlay(),
+    tailwindcss(),
+    ...(process.env.NODE_ENV !== "production" ? [runtimeErrorOverlay(), devBanner({ displayStackFrames: false })] : []),
   ],
   define: {
     "process.env.BUILD_TIMESTAMP": JSON.stringify(new Date().toISOString()),
@@ -18,15 +24,15 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      "@": path.resolve(process.cwd(), "client", "src"),
+      "@shared": path.resolve(process.cwd(), "shared"),
+      "@assets": path.resolve(process.cwd(), "attached_assets"),
     },
   },
-  root: path.resolve(import.meta.dirname, "client"),
-  publicDir: path.resolve(import.meta.dirname, "public"),
+  root: path.resolve(process.cwd(), "client"),
+  publicDir: path.resolve(process.cwd(), "public"),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(process.cwd(), "dist/public"),
     emptyOutDir: true,
   },
   server: {
