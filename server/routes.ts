@@ -12,6 +12,7 @@ import growthRouter from "./routes/growth";
 import affiliateRouter from "./routes/affiliate";
 import retentionRouter from "./routes/retention";
 import adminMetricsRouter from "./routes/admin-metrics";
+import optimizerRouter from "./routes/optimizer";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -223,6 +224,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // [ADMIN METRICS] Operational dashboard for Revenue Command Center
   app.use("/api/admin", adminMetricsRouter);
+
+  // [OPTIMIZER] Dynamic revenue optimization & intelligent routing
+  app.use("/api/optimizer", optimizerRouter);
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
