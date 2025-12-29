@@ -5,7 +5,7 @@ nixPkgs = ["nodejs_20", "python3", "gcc", "gnumake"]
 cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["export VITE_PAYPAL_CLIENT_ID=\"$VITE_PAYPAL_CLIENT_ID\" && npm run build"]
 
 [start]
 cmd = "npm start"
