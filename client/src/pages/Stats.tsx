@@ -12,6 +12,7 @@ import OnlineUsersCounter from "@/components/OnlineUsersCounter";
 import MatchSyncStatus from "@/components/MatchSyncStatus";
 import GlobalActivityFeed from "@/components/GlobalActivityFeed";
 import AnimatedCounter from "@/components/AnimatedCounter";
+import { ReferralWidget } from "@/components/ReferralWidget";
 
 interface RiotMatch {
   id: string;
@@ -370,6 +371,9 @@ export default function Stats() {
                 </Link>
               </CardContent>
             </Card>
+
+            {/* Referral Widget - Viral Growth */}
+            <ReferralWidget />
 
             {/* Global Activity Feed */}
             <GlobalActivityFeed />
