@@ -8,7 +8,7 @@ import {
     processReferralSignup,
     getReferralStats,
     REFERRAL_REWARDS
-} from './referral-system';
+} from './referral-system.js';
 import {
     getLiveActivityFeed,
     getLiveStats
