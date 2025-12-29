@@ -12,15 +12,15 @@ import {
 import {
     getLiveActivityFeed,
     getLiveStats
-} from './live-activity';
+} from './live-activity.js';
 import {
     updateLoginStreak,
     getNextMilestone
-} from './streak-system';
+} from './streak-system.js';
 import {
     getActiveChallenges,
     dailyChallengeJob
-} from './daily-challenges';
+} from './daily-challenges.js';
 
 const router = Router();
 
