@@ -291,13 +291,16 @@ app.use((req, res, next) => {
       res.status(status).json({ message });
     });
 
-    // importantly only setup vite in development and after
-    // setting up all the other routes so the catch-all route
+    // Setup vite in development, serve static files in production
+    // Important that this comes last, so that the API routes take precedence
+    // and the wildcard route in serveStatic (which falls through to index.html) 
     // doesn't interfere with the other routes
     if (app.get("env") === "development") {
-      // Dynamic import to avoid loading vite in production
-      const { setupVite } = await import("./vite");
-      await setupVite(app, server);
+      (async () => {
+        // Dynamic import to avoid loading vite in production
+        const { setupVite } = await import("./vite");
+        await setupVite(app, server);
+      })();
     } else {
       serveStatic(app);
     }
@@ -311,7 +314,7 @@ app.use((req, res, next) => {
     server.listen({
       port,
       host: "0.0.0.0",
-    }, () => {
+    }, async () => {
       log(`serving on port ${port}`);
       startTwitterAutomation();
 
