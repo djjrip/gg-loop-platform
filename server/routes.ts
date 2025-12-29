@@ -545,23 +545,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select()
         .from(subscriptions)
         .where(eq(subscriptions.status, 'active'));
-      
+
       // Tier pricing (REAL pricing from your business model)
       const tierPricing: Record<string, number> = {
         'basic': 5,    // $5/month
         'pro': 12,      // $12/month
         'elite': 25     // $25/month
       };
-      
+
       // Calculate REAL monthly revenue from actual subscriptions
       const monthlyRevenue = subscriptionRevenue.reduce((sum, sub) => {
         const monthlyPrice = tierPricing[sub.tier] || 0;
         return sum + monthlyPrice;
       }, 0);
-      
+
       const totalRevenue = monthlyRevenue; // Real revenue from database
       const conversionRate = totalUsers > 0 ? (activeSubscriptions / totalUsers) * 100 : 0;
-      
+
       // Calculate REAL average order value from actual redemptions
       // Join rewardClaims with rewardTypes to get real values
       const redemptionsWithValues = await db
@@ -572,16 +572,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(rewardClaims)
         .innerJoin(rewardTypes, eq(rewardClaims.rewardTypeId, rewardTypes.id))
         .where(eq(rewardClaims.status, 'fulfilled'));
-      
+
       const totalRedemptionValue = redemptionsWithValues.reduce((sum, redemption) => {
         // realValue is in cents, convert to dollars
         return sum + (redemption.realValue / 100);
       }, 0);
-      
-      const averageOrderValue = redemptionsWithValues.length > 0 
-        ? totalRedemptionValue / redemptionsWithValues.length 
+
+      const averageOrderValue = redemptionsWithValues.length > 0
+        ? totalRedemptionValue / redemptionsWithValues.length
         : 0; // Real average from database, or 0 if no data
-      
+
       // Projected monthly based on growth trend (calculated, not hardcoded)
       // Get subscriptions from last 30 days to calculate growth
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -592,12 +592,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           eq(subscriptions.status, 'active'),
           gte(subscriptions.createdAt, thirtyDaysAgo)
         ));
-      
+
       const recentRevenue = recentSubscriptions.reduce((sum, sub) => {
         const monthlyPrice = tierPricing[sub.tier] || 0;
         return sum + monthlyPrice;
       }, 0);
-      
+
       // Project based on actual growth rate (not hardcoded 1.5x)
       const growthRate = monthlyRevenue > 0 ? (recentRevenue / monthlyRevenue) : 0;
       const projectedMonthly = monthlyRevenue * (1 + growthRate); // Real projection based on growth
@@ -643,8 +643,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Operations Monitoring Endpoints
+  // Revenue snapshot for command center
+  app.get('/api/admin/revenue/snapshot', adminMiddleware, async (req: any, res) => {
+    try {
+      const { revenueTracker } = await import("./monitoring/revenueTracker");
+      const snapshot = await revenueTracker.getSnapshot();
+      res.json(snapshot);
+    } catch (error) {
+      console.error('Error fetching revenue snapshot:', error);
+      res.status(500).json({ error: 'Failed to fetch revenue snapshot' });
+    }
+  });
 
+  // Daily revenue history for charts
+  app.get('/api/admin/revenue/daily', adminMiddleware, async (req: any, res) => {
+    try {
+      const { revenueTracker } = await import("./monitoring/revenueTracker");
+      const days = Number(req.query.days) || 30;
+      const daily = await revenueTracker.getDailyRevenue(days);
+      res.json(daily);
+    } catch (error) {
+      console.error('Error fetching daily revenue:', error);
+      res.status(500).json({ error: 'Failed to fetch daily revenue' });
+    }
+  });
 
+  // Twitter mentions for command center
+  app.get('/api/admin/twitter/mentions', adminMiddleware, async (req: any, res) => {
+    try {
+      const { twitterMonitor } = await import("./services/twitterMonitor");
+      const mentions = await twitterMonitor.fetchMentions();
+      res.json(mentions);
+    } catch (error: any) {
+      console.error('Error fetching Twitter mentions:', error);
+      // Return empty array if Twitter not configured
+      if (error.message?.includes('credentials')) {
+        return res.json([]);
+      }
+      res.status(500).json({ error: 'Failed to fetch Twitter mentions' });
+    }
+  });
+
+  // Twitter engagement metrics
+  app.get('/api/admin/twitter/engagement', adminMiddleware, async (req: any, res) => {
+    try {
+      const { twitterMonitor } = await import("./services/twitterMonitor");
+      const metrics = await twitterMonitor.getEngagementMetrics();
+      res.json(metrics);
+    } catch (error: any) {
+      console.error('Error fetching engagement metrics:', error);
+      res.status(500).json({ error: 'Failed to fetch engagement metrics' });
+    }
+  });
+
+  // Serve command center dashboard
+  app.get('/admin/command-center', adminMiddleware, async (req: any, res) => {
+    try {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const dashboardPath = path.resolve(process.cwd(), 'scripts', 'command-center.html');
+      const html = await fs.readFile(dashboardPath, 'utf-8');
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      console.error('Error serving command center:', error);
+      res.status(500).send('Command center not available');
+    }
+  });
 
   // Sponsor Eligibility Check
   app.get('/api/sponsors/eligibility', requireAuth, async (req: any, res) => {

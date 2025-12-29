@@ -314,6 +314,19 @@ app.use((req, res, next) => {
     }, () => {
       log(`serving on port ${port}`);
       startTwitterAutomation();
+
+      // Start monitoring systems
+      try {
+        const { startTwitterMonitoring } = await import("./services/twitterMonitor");
+        const { startRevenueTracking } = await import("./monitoring/revenueTracker");
+
+        startTwitterMonitoring();
+        startRevenueTracking();
+        console.log('✅ Monitoring systems initialized');
+      } catch (err) {
+        console.log(' ℹ️ Monitoring systems skipped (optional dependencies)');
+      }
+
       console.log(`🚀 Server started at ${new Date().toISOString()} - MemoryStore Active`);
 
       // Start streaming verification monitoring

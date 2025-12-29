@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GG LOOP Operations Command Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .header {
+            border-bottom: 2px solid #00ff88;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+
+        .timestamp {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .metric {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 5px;
+        }
+
+        .metric.urgent {
+            color: #ff4444;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .mention {
+            background: #252525;
+            border-left: 3px solid #444;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .mention.urgent {
+            border-left-color: #ff4444;
+            background: #2a1a1a;
+        }
+
+        .mention.high {
+            border-left-color: #ffaa00;
+        }
+
+        .mention-author {
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 5px;
+        }
+
+        .mention-text {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .mention-meta {
+            display: flex;
+            gap: 10px;
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge.support { background: #ff4444; color: white; }
+        .badge.sales { background: #00ff88; color: black; }
+        .badge.investor { background: #ffaa00; color: black; }
+        .badge.feedback { background: #4488ff; color: white; }
+        .badge.spam { background: #444; color: #888; }
+
+        .refresh-btn {
+            background: #00ff88;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .refresh-btn:hover {
+            background: #00dd77;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #00ff88;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚡ GG LOOP Operations Command Center</h1>
+        <div class="timestamp" id="timestamp">Loading...</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">💰 Revenue Metrics</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Monthly Recurring Revenue</div>
+                <div class="metric" id="mrr">$0</div>
+                <div class="metric-label">MRR</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Active Subscribers</div>
+                <div class="metric" id="active-subs">0</div>
+                <div class="metric-label">Paying customers</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Conversion Rate</div>
+                <div class="metric" id="conversion">0%</div>
+                <div class="metric-label">Visitors → Paid</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Today's Activity</div>
+                <div class="metric" id="new-today">0</div>
+                <div class="metric-label"><span id="churned-today">0</span> churned</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🐦 Twitter Engagement</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Unresponded Mentions</div>
+                <div class="metric urgent" id="unresponded">0</div>
+                <div class="metric-label">Needs attention</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Total Mentions (24h)</div>
+                <div class="metric" id="total-mentions">0</div>
+                <div class="metric-label">@ggloopllc</div>
+            </div>
+        </div>
+
+        <div id="mentions-feed">
+            <h3 style="margin: 20px 0 10px 0; color: #aaa;">Recent Mentions</h3>
+            <div id="mentions-list">
+                <p style="color: #666;">Loading mentions...</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
+
+    <script>
+        function updateTimestamp() {
+            document.getElementById('timestamp').textContent = 
+                'Last updated: ' + new Date().toLocaleString();
+        }
+
+        async function loadData() {
+            updateTimestamp();
+
+            // Load revenue metrics
+            try {
+                const revenueRes = await fetch('/api/admin/revenue/snapshot');
+                const revenue = await revenueRes.json();
+
+                document.getElementById('mrr').textContent = '$' + revenue.mrr;
+                document.getElementById('active-subs').textContent = revenue.activeSubscribers;
+                document.getElementById('conversion').textContent = revenue.conversionRate.toFixed(2) + '%';
+                document.getElementById('new-today').textContent = revenue.newToday;
+                document.getElementById('churned-today').textContent = revenue.churnedToday;
+            } catch (error) {
+                console.error('Failed to load revenue:', error);
+            }
+
+            // Load Twitter mentions
+            try {
+                const twitterRes = await fetch('/api/admin/twitter/mentions');
+                const mentions = await twitterRes.json();
+
+                document.getElementById('total-mentions').textContent = mentions.length;
+                document.getElementById('unresponded').textContent = 
+                    mentions.filter(m => m.status === 'new' && m.priority !== 'low').length;
+
+                // Render mentions
+                const mentionsList = document.getElementById('mentions-list');
+                if (mentions.length === 0) {
+                    mentionsList.innerHTML = '<p style="color: #666;">No recent mentions</p>';
+                } else {
+                    mentionsList.innerHTML = mentions.map(m => `
+                        <div class="mention ${m.priority}">
+                            <div class="mention-author">@${m.authorUsername}</div>
+                            <div class="mention-text">${m.text}</div>
+                            <div class="mention-meta">
+                                <span class="badge ${m.category}">${m.category}</span>
+                                <span>${m.priority} priority</span>
+                                <span>${new Date(m.createdAt).toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Failed to load Twitter mentions:', error);
+            }
+        }
+
+        // Load data on page load
+        loadData();
+
+        // Auto-refresh every 60 seconds
+        setInterval(loadData, 60000);
+    </script>
+</body>
+</html>
