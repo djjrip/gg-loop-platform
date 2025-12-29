@@ -8,6 +8,7 @@ import rewardRedemptionRouter from "./routes/rewardRedemption";
 import { desktopApiRouter } from "./routes/desktopApi";
 import matchesRouter from "./routes/matches";
 import ghostBotRouter from "./routes/ghost-bot";
+import growthRouter from "./routes/growth";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -207,6 +208,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // [DESKTOP APP] Desktop verification endpoints
   app.use("/api/desktop", desktopApiRouter);
+
+  // [GROWTH SYSTEMS] Viral mechanics, activity feed, streaks, challenges
+  app.use("/api/growth", growthRouter);
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
