@@ -11,6 +11,7 @@ import ghostBotRouter from "./routes/ghost-bot";
 import growthRouter from "./routes/growth";
 import affiliateRouter from "./routes/affiliate";
 import retentionRouter from "./routes/retention";
+import adminMetricsRouter from "./routes/admin-metrics";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -219,6 +220,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // [RETENTION] Churn prevention, smart recommendations, engagement triggers
   app.use("/api/retention", retentionRouter);
+
+  // [ADMIN METRICS] Operational dashboard for Revenue Command Center
+  app.use("/api/admin", adminMetricsRouter);
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
