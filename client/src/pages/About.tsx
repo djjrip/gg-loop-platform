@@ -146,123 +146,124 @@ export default function About() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Gamepad2 className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle>1. Play</CardTitle>
-              <CardDescription>
-                Download the desktop app and play games normally - we auto-track your sessions in League, Valorant, CS2, and 15+ other games
-              </CardDescription>
-            </CardHeader>
-          </Card>
+            <Card>
+              <CardHeader>
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                  <Gamepad2 className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>1. Play</CardTitle>
+                <CardDescription>
+                  Download the desktop app and play games normally - we auto-track your sessions in League, Valorant, CS2, and 15+ other games
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <TrendingUp className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle>2. Earn</CardTitle>
-              <CardDescription>
-                Get monthly point allocations based on your tier, plus bonus points for wins and achievements
-              </CardDescription>
-            </CardHeader>
-          </Card>
+            <Card>
+              <CardHeader>
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>2. Earn</CardTitle>
+                <CardDescription>
+                  Get monthly point allocations based on your tier, plus bonus points for wins and achievements
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Trophy className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle>3. Loop</CardTitle>
-              <CardDescription>
-                Redeem points for gaming gear, gift cards, subscriptions, and exclusive rewards
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </section>
+            <Card>
+              <CardHeader>
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                  <Trophy className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>3. Loop</CardTitle>
+                <CardDescription>
+                  Redeem points for gaming gear, gift cards, subscriptions, and exclusive rewards
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </section>
 
-      {/* Transparency */}
-      <section className="bg-muted/50 rounded-xl p-8 space-y-6">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold mb-4" data-testid="heading-transparency">
-            Our Commitment to Transparency
+        {/* Transparency */}
+        <section className="bg-muted/50 rounded-xl p-8 space-y-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold mb-4" data-testid="heading-transparency">
+              Our Commitment to Transparency
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              We believe in being upfront about how our platform works and how we make it sustainable.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 text-sm">
+            <div className="space-y-3">
+              <h3 className="font-semibold text-base">What We Do</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                  <span>Provide fixed monthly point allocations based on your subscription tier</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                  <span>Track your gaming performance across supported titles</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                  <span>Offer a curated rewards catalog with real gaming gear</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                  <span>Create opportunities for bonus points through challenges and content creation</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-semibold text-base">What We Don't Do</h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-destructive mt-1.5 shrink-0"></div>
+                  <span>Sell or trade points as cryptocurrency or cash equivalents</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-destructive mt-1.5 shrink-0"></div>
+                  <span>Guarantee unlimited point earnings or "get rich quick" schemes</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-destructive mt-1.5 shrink-0"></div>
+                  <span>Promise unrealistic returns on subscription investment</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-destructive mt-1.5 shrink-0"></div>
+                  <span>Share or sell your personal data or gaming statistics</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="text-center space-y-6">
+          <h2 className="text-3xl font-bold" data-testid="heading-get-started">
+            Ready to Start Your Loop?
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            We believe in being upfront about how our platform works and how we make it sustainable.
+            Join GG Loop today and start turning your gaming sessions into tangible rewards. Every match matters, every win counts.
           </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6 text-sm">
-          <div className="space-y-3">
-            <h3 className="font-semibold text-base">What We Do</h3>
-            <ul className="space-y-2 text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
-                <span>Provide fixed monthly point allocations based on your subscription tier</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
-                <span>Track your gaming performance across supported titles</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
-                <span>Offer a curated rewards catalog with real gaming gear</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
-                <span>Create opportunities for bonus points through challenges and content creation</span>
-              </li>
-            </ul>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <Link href="/subscription">
+              <Button size="lg" data-testid="button-view-plans">
+                View Plans
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button size="lg" variant="outline" data-testid="button-start-free">
+                Sign In
+              </Button>
+            </Link>
           </div>
-
-          <div className="space-y-3">
-            <h3 className="font-semibold text-base">What We Don't Do</h3>
-            <ul className="space-y-2 text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-destructive mt-1.5 shrink-0"></div>
-                <span>Sell or trade points as cryptocurrency or cash equivalents</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-destructive mt-1.5 shrink-0"></div>
-                <span>Guarantee unlimited point earnings or "get rich quick" schemes</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-destructive mt-1.5 shrink-0"></div>
-                <span>Promise unrealistic returns on subscription investment</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-destructive mt-1.5 shrink-0"></div>
-                <span>Share or sell your personal data or gaming statistics</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="text-center space-y-6">
-        <h2 className="text-3xl font-bold" data-testid="heading-get-started">
-          Ready to Start Your Loop?
-        </h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Join GG Loop today and start turning your gaming sessions into tangible rewards. Every match matters, every win counts.
-        </p>
-        <div className="flex gap-4 justify-center flex-wrap">
-          <Link href="/subscription">
-            <Button size="lg" data-testid="button-view-plans">
-              View Plans
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button size="lg" variant="outline" data-testid="button-start-free">
-              Sign In
-            </Button>
-          </Link>
-        </div>
-      </section>
-    </main>
-    </div >
+        </section>
+      </main>
+    </div>
   );
 }
