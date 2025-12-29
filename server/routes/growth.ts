@@ -8,19 +8,19 @@ import {
     processReferralSignup,
     getReferralStats,
     REFERRAL_REWARDS
-} from './referral-system.js';
+} from './referral-system';
 import {
     getLiveActivityFeed,
     getLiveStats
-} from './live-activity.js';
+} from './live-activity';
 import {
     updateLoginStreak,
     getNextMilestone
-} from './streak-system.js';
+} from './streak-system';
 import {
     getActiveChallenges,
     dailyChallengeJob
-} from './daily-challenges.js';
+} from './daily-challenges';
 
 const router = Router();
 
