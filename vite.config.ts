@@ -10,6 +10,11 @@ export default defineConfig({
   ],
   define: {
     "process.env.BUILD_TIMESTAMP": JSON.stringify(new Date().toISOString()),
+    // CRITICAL: Explicitly define VITE_ vars for Railway builds
+    // Railway sometimes doesn't expose build-time vars properly
+    "import.meta.env.VITE_PAYPAL_CLIENT_ID": JSON.stringify(
+      process.env.VITE_PAYPAL_CLIENT_ID || ""
+    ),
   },
   resolve: {
     alias: {
