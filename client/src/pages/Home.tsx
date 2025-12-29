@@ -25,6 +25,7 @@ import OnboardingModal from "@/components/OnboardingModal";
 import logo from "@assets/ChatGPT Image Nov 11, 2025, 06_17_23 PM_1763403383212.png";
 import { isTauri } from "@/lib/tauri";
 import { DesktopStatusWidget } from "@/components/DesktopStatusWidget";
+import { LiveActivityTicker } from "@/components/LiveActivityTicker";
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
@@ -163,9 +164,14 @@ export default function Home() {
             </div>
           </section>
 
+          {/* Live Activity Feed - Social Proof */}
+          <section className="container mx-auto px-4 mb-8 max-w-7xl">
+            <LiveActivityTicker />
+          </section>
+
           {/* AUTHENTICATED DASHBOARD */}
           {isAuthenticated && user && (
-            <section className="container mx-auto px-4 mb-16 max-w-7xl">
+            <section className="container mx-auto px-4 mb-16 max-w-7xl">\
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="bg-ggloop-dark-shadow/80 border-ggloop-orange/30 p-6 hover:border-ggloop-orange/60 transition-colors">
                   <div className="flex items-start justify-between mb-4">
