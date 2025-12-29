@@ -19,8 +19,8 @@ import catalogRouter from "./routes/catalog";
 import acquisitionRouter from "./routes/acquisition";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage.js";
-import { db } from "./database.js";
+import { storage } from "./storage";
+import { db } from "./database";
 import {
   users, userGames, riotAccounts, sponsors, insertSponsorSchema, challenges,
   challengeCompletions, insertChallengeSchema, insertChallengeCompletionSchema,
