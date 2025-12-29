@@ -16,6 +16,7 @@ import optimizerRouter from "./routes/optimizer";
 import contentRouter from "./routes/content";
 import autoPostRouter from "./routes/auto-post";
 import catalogRouter from "./routes/catalog";
+import acquisitionRouter from "./routes/acquisition";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -239,6 +240,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // [CATALOG OPTIMIZER] Auto-updates shop with best affiliate deals
   app.use("/api/catalog", catalogRouter);
+
+  // [USER ACQUISITION] Automated outreach to bring real users
+  app.use("/api/acquisition", acquisitionRouter);
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
