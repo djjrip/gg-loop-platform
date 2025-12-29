@@ -22,12 +22,17 @@ export default function PayPalSubscriptionButton({ planId, tier }: PayPalSubscri
   const { toast } = useToast();
 
   useEffect(() => {
-    // NUCLEAR OPTION: Hardcoded fallback if env var fails
-    // Client ID is public (not secret), safe to hardcode
-    const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID ||
-      "AW4YgjL5NXw5TgdDZrQ5vV2Zi0rjqjop913D1xEgRrkhRvGgxyjYrgtQdoR1RF_9V7g6nVaQWKc3Ndpu";
+    // FINAL FIX: Railway sets env var to literal "$VITE_PAYPAL_CLIENT_ID"
+    // Detect this and use hardcoded fallback. Client ID is public, safe to hardcode.
+    const envId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+    const isPlaceholder = !envId || envId === "$VITE_PAYPAL_CLIENT_ID" || envId === "undefined";
+    const clientId = isPlaceholder
+      ? "AW4YgjL5NXw5TgdDZrQ5vV2Zi0rjqjop913D1xEgRrkhRvGgxyjYrgtQdoR1RF_9V7g6nVaQWKc3Ndpu"
+      : envId;
 
-    if (!clientId) {
+    console.log('[PayPal Debug]', { envId, isPlaceholder, usingFallback: isPlaceholder });
+
+    if (!clientId || clientId === "$VITE_PAYPAL_CLIENT_ID") {
       setError("PayPal not configured");
       setLoading(false);
       console.error("VITE_PAYPAL_CLIENT_ID not set");
