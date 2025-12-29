@@ -46,21 +46,37 @@ export default function Roadmap() {
                             <ul className="space-y-4 text-gray-300">
                                 <li className="flex items-start gap-3">
                                     <Check className="h-5 w-5 text-green-500 mt-1" />
-                                    <span>**Player Profiles:** Basic stat tracking and identity.</span>
+                                    <span><strong>Player Profiles:</strong> Basic stat tracking and identity.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
                                     <Check className="h-5 w-5 text-green-500 mt-1" />
-                                    <span>**"Choose Your Sponsor" Beta:** Players can select a brand affinity.</span>
+                                    <span><strong>Manual Rewards:</strong> Real humans fulfilling real rewards. No bots.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <Check className="h-5 w-5 text-green-500 mt-1" />
+                                    <span><strong>Desktop Verification:</strong> Auto-track 15+ games via desktop app.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <Check className="h-5 w-5 text-green-500 mt-1" />
+                                    <span><strong>Viral Referrals:</strong> Compound rewards - both users earn on signup, first game, and redemptions.</span>
                                 </li>
                             </ul>
                             <ul className="space-y-4 text-gray-300">
                                 <li className="flex items-start gap-3">
                                     <Check className="h-5 w-5 text-green-500 mt-1" />
-                                    <span>**Manual Rewards:** Real humans fulfilling real rewards. No bots.</span>
+                                    <span><strong>Live Activity Feed:</strong> Real-time social proof showing platform activity.</span>
                                 </li>
                                 <li className="flex items-start gap-3">
                                     <Check className="h-5 w-5 text-green-500 mt-1" />
-                                    <span>**Community Core:** A verified Discord ecosystem.</span>
+                                    <span><strong>Streak Multipliers:</strong> Up to 5x points for daily login consistency.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <Check className="h-5 w-5 text-green-500 mt-1" />
+                                    <span><strong>Daily Challenges:</strong> Auto-generated challenges with time bonuses.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <Check className="h-5 w-5 text-green-500 mt-1" />
+                                    <span><strong>Community Core:</strong> Verified Discord + automated growth systems.</span>
                                 </li>
                             </ul>
                         </div>
