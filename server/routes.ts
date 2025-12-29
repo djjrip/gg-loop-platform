@@ -10,6 +10,7 @@ import matchesRouter from "./routes/matches";
 import ghostBotRouter from "./routes/ghost-bot";
 import growthRouter from "./routes/growth";
 import affiliateRouter from "./routes/affiliate";
+import retentionRouter from "./routes/retention";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -215,6 +216,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // [AFFILIATE REVENUE] Amazon + Impact.com commission tracking
   app.use("/api/affiliate", affiliateRouter);
+
+  // [RETENTION] Churn prevention, smart recommendations, engagement triggers
+  app.use("/api/retention", retentionRouter);
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
