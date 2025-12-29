@@ -14,6 +14,7 @@ import retentionRouter from "./routes/retention";
 import adminMetricsRouter from "./routes/admin-metrics";
 import optimizerRouter from "./routes/optimizer";
 import contentRouter from "./routes/content";
+import autoPostRouter from "./routes/auto-post";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -231,6 +232,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // [CONTENT ENGINE] Autonomous viral content generation
   app.use("/api/content", contentRouter);
+
+  // [AUTO-POSTER] Automated social media posting
+  app.use("/api/auto-post", autoPostRouter);
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
