@@ -13,6 +13,7 @@ import affiliateRouter from "./routes/affiliate";
 import retentionRouter from "./routes/retention";
 import adminMetricsRouter from "./routes/admin-metrics";
 import optimizerRouter from "./routes/optimizer";
+import contentRouter from "./routes/content";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -227,6 +228,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // [OPTIMIZER] Dynamic revenue optimization & intelligent routing
   app.use("/api/optimizer", optimizerRouter);
+
+  // [CONTENT ENGINE] Autonomous viral content generation
+  app.use("/api/content", contentRouter);
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
