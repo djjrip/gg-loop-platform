@@ -1,18 +1,12 @@
-```javascript
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import path, { dirname } from "path";
-import { fileURLToPath } from "url";
-// import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
-import devBanner from "@replit/vite-plugin-dev-banner";
+import path from "path";
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    ...(process.env.NODE_ENV !== "production" ? [runtimeErrorOverlay(), devBanner({ displayStackFrames: false })] : []),
   ],
   define: {
     "process.env.BUILD_TIMESTAMP": JSON.stringify(new Date().toISOString()),
@@ -38,7 +32,7 @@ export default defineConfig({
   server: {
     fs: {
       strict: true,
-      deny: ["**/.*"],
+      deny: ["./**/.*"],
     },
   },
 });
