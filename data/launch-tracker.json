@@ -1,0 +1,61 @@
+{
+    "launch": {
+        "date": null,
+        "tweetId": null,
+        "githubReleaseUrl": null,
+        "status": "ready"
+    },
+    "metrics": {
+        "day1": {
+            "tweetImpressions": 0,
+            "tweetReplies": 0,
+            "tweetLikes": 0,
+            "dmCount": 0,
+            "signups": 0,
+            "downloads": 0,
+            "activeUsers": 0
+        },
+        "week1": {
+            "totalSignups": 0,
+            "totalDownloads": 0,
+            "totalActiveUsers": 0,
+            "totalGamesPlayed": 0,
+            "totalRedemptions": 0,
+            "totalRevenue": 0
+        }
+    },
+    "goals": {
+        "week1": {
+            "signups": 10,
+            "downloads": 5,
+            "activeUsers": 2,
+            "redemptions": 1
+        },
+        "month1": {
+            "signups": 100,
+            "activeUsers": 25,
+            "redemptions": 10,
+            "revenue": 100
+        }
+    },
+    "milestones": {
+        "firstTweet": false,
+        "firstReply": false,
+        "firstSignup": false,
+        "firstDownload": false,
+        "firstGamePlayed": false,
+        "firstRedemption": false,
+        "first100Users": false
+    },
+    "competitors": [
+        {
+            "name": "886 Studios (Taiwan)",
+            "contact": "Johnnym (Discord)",
+            "status": "contacted_us",
+            "threat_level": "unknown",
+            "notes": "Reached out Dec 29. Similar product. Waiting for details."
+        }
+    ],
+    "press": [],
+    "partners": []
+}

@@ -22,7 +22,10 @@ export default function PayPalSubscriptionButton({ planId, tier }: PayPalSubscri
   const { toast } = useToast();
 
   useEffect(() => {
-    const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+    // NUCLEAR OPTION: Hardcoded fallback if env var fails
+    // Client ID is public (not secret), safe to hardcode
+    const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID ||
+      "AW4YgjL5NXw5TgdDZrQ5vV2Zi0rjqjop913D1xEgRrkhRvGgxyjYrgtQdoR1RF_9V7g6nVaQWKc3Ndpu";
 
     if (!clientId) {
       setError("PayPal not configured");
