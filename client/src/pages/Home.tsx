@@ -86,6 +86,26 @@ export default function Home() {
       </div>
 
       <div className="relative z-10">
+        {/* Launch Announcement Banner */}
+        <div className="bg-gradient-to-r from-green-600 to-emerald-700 text-white py-2 px-4 text-center relative z-50">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-sm md:text-base">
+            <span className="flex items-center gap-2 font-semibold">
+              <Rocket className="h-4 w-4" />
+              Desktop App v1.1.0 Now Live
+            </span>
+            <span className="hidden md:inline text-green-200">•</span>
+            <span>Download now and start earning - first 100 users get 2x points</span>
+            <a
+              href="https://github.com/djjrip/gg-loop-platform/releases/latest"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white text-green-600 px-4 py-1 rounded font-bold hover:bg-green-50 transition text-sm"
+            >
+              Download
+            </a>
+          </div>
+        </div>
+
         <Header />
         <OnboardingModal isOpen={showOnboarding} onClose={handleOnboardingClose} />
 
