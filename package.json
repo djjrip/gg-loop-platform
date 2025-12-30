@@ -39,6 +39,7 @@
     "ghost:launch": "node scripts/ghost-launcher.mjs",
     "ghost:reload": "node scripts/auto-reload-ghost-bot.mjs",
     "cursor:monitor": "node scripts/cursor-ghost-monitor.mjs",
+    "docs": "echo Documentation location: C:\\Users\\Jayson Quindao\\Desktop\\GG LOOP\\Detailed CHATGPT reports",
     "check:aws": "bash scripts/check-aws.sh",
     "deploy:aws": "bash scripts/deploy-aws.sh",
     "deploy:bedrock": "bash scripts/deploy-bedrock.sh"
