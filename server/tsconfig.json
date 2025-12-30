@@ -17,8 +17,8 @@
         "skipLibCheck": true,
         "strict": true,
         "resolveJsonModule": true,
-        "outDir": "../dist/server",
-        "rootDir": ".",
+        "outDir": "../dist",
+        "rootDir": "..",
         "baseUrl": ".",
         "paths": {
             "@shared/*": [
