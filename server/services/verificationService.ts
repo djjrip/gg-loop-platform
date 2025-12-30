@@ -3,7 +3,7 @@
  * Core service for handling gameplay verification, proof validation, and fraud detection integration
  */
 
-import { db } from '../db';
+import { db } from '../database';
 import { verificationProofs, fraudDetectionLogs, verificationQueue, matchSubmissions, users } from '../../shared/schema';
 import { verificationConfig } from '../config/verificationConfig';
 import { eq, and, desc, sql } from 'drizzle-orm';

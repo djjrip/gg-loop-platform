@@ -1,4 +1,4 @@
-﻿import { db } from "./db";
+import { db } from "./database";
 import { users, pointTransactions, referrals, fraudDetectionLogs } from "../shared/schema";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 
@@ -65,7 +65,7 @@ export async function checkPayoutEligibility(userId: number) {
   const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
   if (!user) return { eligible: false, reason: "User not found" };
   if (user.banned) return { eligible: false, reason: "Account is banned" };
-  if ((user.fraudScore || 0) > 30) return { eligible: false, reason: "Fraud score too high (must be ≤30)" };
+  if ((user.fraudScore || 0) > 30) return { eligible: false, reason: "Fraud score too high (must be =30)" };
   const stats = await getCreatorStats(userId);
   const minPayout = stats.tier.payoutMin;
   if (stats.earnings.estimated < minPayout) return { eligible: false, reason: `Minimum payout for ${stats.tier.name} is $${minPayout}`, currentEarnings: stats.earnings.estimated, minimumRequired: minPayout };

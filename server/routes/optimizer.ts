@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import { optimizeAffiliateSource, calculateDynamicPoints, getRecommendationForUser } from '../revenue-optimizer';
-import { db } from '../db';
+import { db } from '../database';
 import { rewards } from '../../shared/schema';
 
 const router = Router();

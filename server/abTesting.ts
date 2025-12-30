@@ -4,7 +4,7 @@
  * Zero manual work required
  */
 
-import { db } from './db';
+import { db } from './database';
 import { users } from '@db/schema';
 import { eq, sql } from 'drizzle-orm';
 

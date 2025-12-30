@@ -13,7 +13,7 @@
  * - Only alerts when something needs YOUR decision
  */
 
-import { db } from './db';
+import { db } from './database';
 import { storage } from './storage';
 import { 
   rewardClaims, 

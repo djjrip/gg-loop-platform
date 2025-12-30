@@ -10,7 +10,7 @@
  * Usage: $env:DATABASE_URL="postgresql://..." && npx tsx server/add-affiliates.ts
  */
 
-import { db } from './db';
+import { db } from './database';
 import { rewards } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 

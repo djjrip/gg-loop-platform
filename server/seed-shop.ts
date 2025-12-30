@@ -7,7 +7,7 @@
  * PRODUCTION: $env:DATABASE_URL="postgresql://..." && npx tsx server/seed-shop.ts
  */
 
-import { db } from './db';
+import { db } from './database';
 import { rewards } from '@shared/schema';
 
 async function seedShop() {

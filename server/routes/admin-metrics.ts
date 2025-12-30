@@ -5,7 +5,7 @@
  */
 
 import { Router } from 'express';
-import { db } from '../db';
+import { db } from '../database';
 import { users, userRewards, subscriptions, rewardClaims } from '../../shared/schema';
 import { eq, and, gte, sql, desc } from 'drizzle-orm';
 import { getAffiliateRevenue } from '../affiliate-revenue';

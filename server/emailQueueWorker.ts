@@ -6,7 +6,7 @@
  * Or: Add to Railway as cron job
  */
 
-import { db } from './db';
+import { db } from './database';
 import { users } from '@shared/schema';
 import { sql } from 'drizzle-orm';
 import { sendEmail } from './services/email';

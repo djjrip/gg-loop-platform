@@ -166,6 +166,32 @@ const GAME_PROCESSES = {
         category: 'fps',
         steamAppId: null
     },
+
+    // === VIBE CODING TOOLS ===
+    vscode: {
+        name: 'Visual Studio Code',
+        studio: 'Microsoft',
+        processes: ['Code.exe'],
+        icon: '💻',
+        category: 'coding',
+        steamAppId: null
+    },
+    cursor: {
+        name: 'Cursor AI',
+        studio: 'Anysphere',
+        processes: ['Cursor.exe'],
+        icon: '🤖',
+        category: 'coding',
+        steamAppId: null
+    },
+    windsurf: {
+        name: 'Windsurf',
+        studio: 'Codeium',
+        processes: ['Windsurf.exe'],
+        icon: '🏄',
+        category: 'coding',
+        steamAppId: null
+    },
 };
 
 /**

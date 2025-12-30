@@ -177,16 +177,29 @@ export default function Profile() {
                   </Badge>
                 )}
                 {profile.user.subscriptionTier && (
-                  <Badge
-                    variant="default"
-                    className={`${profile.user.subscriptionTier.toLowerCase() === 'elite'
-                      ? 'bg-gradient-to-r from-rose-500 to-pink-600'
-                      : 'bg-gradient-to-r from-purple-500 to-indigo-600'
-                      } text-white border-0 px-3 py-1 text-sm font-bold shadow-lg uppercase`}
-                    data-testid={`badge-subscription-${profile.user.subscriptionTier.toLowerCase()}`}
-                  >
-                    {profile.user.subscriptionTier}
-                  </Badge>
+                  <>
+                    {/* Special Verified Builder Badge for Builder Tier */}
+                    {profile.user.subscriptionTier.toLowerCase() === 'builder' ? (
+                      <Badge
+                        variant="default"
+                        className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white border-0 px-3 py-1 text-sm font-bold shadow-lg uppercase flex items-center gap-1"
+                        data-testid="badge-subscription-builder"
+                      >
+                        <span className="mr-1">✨</span> VERIFIED BUILDER
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="default"
+                        className={`${profile.user.subscriptionTier.toLowerCase() === 'elite'
+                          ? 'bg-gradient-to-r from-rose-500 to-pink-600'
+                          : 'bg-gradient-to-r from-purple-500 to-indigo-600'
+                          } text-white border-0 px-3 py-1 text-sm font-bold shadow-lg uppercase`}
+                        data-testid={`badge-subscription-${profile.user.subscriptionTier.toLowerCase()}`}
+                      >
+                        {profile.user.subscriptionTier}
+                      </Badge>
+                    )}
+                  </>
                 )}
                 {profile.claimedBadges && profile.claimedBadges.length > 0 && profile.claimedBadges.map((claimedBadge) => (
                   <Badge

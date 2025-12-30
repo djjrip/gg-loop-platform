@@ -1,4 +1,4 @@
-﻿import NodeCache from "node-cache";
+import NodeCache from "node-cache";
 
 // ========================================
 // LEVEL 13 PHASE 2: CACHING LAYER

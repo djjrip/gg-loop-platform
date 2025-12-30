@@ -1,6 +1,6 @@
 export interface AchievementDefinition {
   id: string;
-  game: 'league' | 'valorant' | 'tft';
+  game: 'league' | 'valorant' | 'tft' | 'coding';
   title: string;
   description: string;
   points: number;
@@ -9,12 +9,14 @@ export interface AchievementDefinition {
 }
 
 export interface AchievementCondition {
-  type: 'win_count' | 'win_streak' | 'total_matches' | 'rank_achieved' | 'kda' | 'placement';
+  type: 'win_count' | 'win_streak' | 'total_matches' | 'rank_achieved' | 'kda' | 'placement' | 'total_sessions' | 'total_hours';
   threshold?: number;
   streak?: number;
   rank?: string;
   kda?: number;
   placement?: number;
+  sessions?: number;
+  hours?: number;
 }
 
 export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
@@ -266,12 +268,42 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     rarity: 'legendary',
     condition: { type: 'total_matches', threshold: 100 }
   },
+
+
+  // ===== VIBE CODING =====
+  {
+    id: 'coding_hello_world',
+    game: 'coding',
+    title: 'Hello World',
+    description: 'Complete your first Vibe Coding session',
+    points: 100,
+    rarity: 'common',
+    condition: { type: 'total_sessions', sessions: 1 }
+  },
+  {
+    id: 'coding_flow_state',
+    game: 'coding',
+    title: 'Flow State',
+    description: 'Log 10 hours of coding time',
+    points: 500,
+    rarity: 'rare',
+    condition: { type: 'total_hours', hours: 10 }
+  },
+  {
+    id: 'coding_100x_dev',
+    game: 'coding',
+    title: '10x Developer',
+    description: 'Log 100 hours of coding time',
+    points: 2500,
+    rarity: 'legendary',
+    condition: { type: 'total_hours', hours: 100 }
+  }
 ];
 
 export function getAchievementDefinition(achievementId: string): AchievementDefinition | undefined {
   return ACHIEVEMENT_DEFINITIONS.find(def => def.id === achievementId);
 }
 
-export function getGameAchievements(game: 'league' | 'valorant' | 'tft'): AchievementDefinition[] {
+export function getGameAchievements(game: 'league' | 'valorant' | 'tft' | 'coding'): AchievementDefinition[] {
   return ACHIEVEMENT_DEFINITIONS.filter(def => def.game === game);
 }

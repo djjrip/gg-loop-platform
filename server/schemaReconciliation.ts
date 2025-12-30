@@ -7,7 +7,7 @@
  * Run this BEFORE deploying to production.
  */
 
-import { db } from './db';
+import { db } from './database';
 import { sql } from 'drizzle-orm';
 
 export async function reconcileSubscriptionSchema() {

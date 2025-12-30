@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db } from "./database";
 import { pointTransactions, users } from "@shared/schema";
 import { eq, and, sql, lt, inArray } from "drizzle-orm";
 

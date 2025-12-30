@@ -4,7 +4,7 @@
  */
 
 import { Router } from 'express';
-import { db } from '../db';
+import { db } from '../database';
 import { eq } from 'drizzle-orm';
 
 const router = Router();

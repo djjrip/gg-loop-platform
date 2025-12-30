@@ -1,4 +1,4 @@
-﻿import { db } from "./db";
+import { db } from "./database";
 import { users, pointTransactions, referrals, fraudDetectionLogs } from "../shared/schema";
 import { eq, desc, sql, and, gte, lte, count } from "drizzle-orm";
 import { getCached, CacheKeys } from "./cache";

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { TrustScoreService } from "../services/trustScoreService";
-import { db } from "../db";
+import { db } from "../database";
 import { trustScoreEvents } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 

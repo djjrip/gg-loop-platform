@@ -1,5 +1,5 @@
 import { steamAccounts } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../database";
 import { eq } from "drizzle-orm";
 
 const STEAM_API_KEY = process.env.STEAM_API_KEY;

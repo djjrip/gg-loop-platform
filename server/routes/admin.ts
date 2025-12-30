@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { storage } from "../storage";
-import { db } from "../db";
+import { db } from "../database";
 import { users, auditLog, type User, rewardClaims, rewardTypes, insertRewardTypeSchema, updateRewardClaimSchema } from "@shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { FulfillmentService } from "../services/fulfillmentService";

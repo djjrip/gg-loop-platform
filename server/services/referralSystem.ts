@@ -6,7 +6,7 @@
  * Generate referral links
  */
 
-import { db } from '../db';
+import { db } from '../database';
 import { users, subscriptions, pointTransactions } from '@shared/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { pointsEngine } from '../pointsEngine';

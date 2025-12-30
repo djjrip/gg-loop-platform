@@ -1,5 +1,5 @@
 import { TwitterApi } from 'twitter-api-v2';
-import { db } from "../db";
+import { db } from "../database";
 import { desc } from "drizzle-orm";
 
 interface TwitterMention {

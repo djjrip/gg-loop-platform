@@ -11,7 +11,7 @@
  * Usage: node server/referralContest.js (run monthly via cron)
  */
 
-import { db } from './db';
+import { db } from './database';
 import { users, pointsTransactions } from '@shared/schema';
 import { sql, desc, gte } from 'drizzle-orm';
 import { sendEmail } from './services/email';

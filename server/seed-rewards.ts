@@ -1,4 +1,4 @@
-import { db } from './db';
+import { db } from './database';
 import { rewards } from '../shared/schema';
 import { sql } from 'drizzle-orm';
 

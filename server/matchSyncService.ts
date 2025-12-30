@@ -1,4 +1,4 @@
-import { db } from './db';
+import { db } from './database';
 import { riotAccounts, processedRiotMatches } from '@shared/schema';
 import { getRiotAPI } from './lib/riot';
 import { eq, and } from 'drizzle-orm';

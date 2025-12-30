@@ -8,7 +8,7 @@
  * - Smart recommendations = Higher-value redemptions
  */
 
-import { db } from '../db';
+import { db } from '../database';
 import { users, userRewards, rewards } from '../../shared/schema';
 import { eq, and, gte, sql, desc } from 'drizzle-orm';
 

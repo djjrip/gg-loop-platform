@@ -9,7 +9,7 @@
  * GET /api/admin/analytics/referrals - Top referrers
  */
 
-import { db } from '../db';
+import { db } from '../database';
 import { users, pointsTransactions } from '@shared/schema';
 import { sql, eq, and, gte } from 'drizzle-orm';
 

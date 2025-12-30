@@ -1,4 +1,4 @@
-﻿import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, ShieldCheck, Package, TrendingUp, DollarSign, Megaphone, Heart, ChevronDown, MoreHorizontal, Bell, Download } from "lucide-react";
+﻿import { Trophy, Menu, LogOut, Moon, Sun, Sparkles, Rocket, Gamepad2, Settings as SettingsIcon, Users, CreditCard, Gift, Coins, BarChart3, Activity, Shield, ShieldCheck, Package, TrendingUp, DollarSign, Megaphone, Heart, ChevronDown, MoreHorizontal, Bell, Download, Code2 } from "lucide-react";
 import logoImage from "@assets/ChatGPT Image Nov 11, 2025, 06_17_23 PM_1763403383212.png";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -94,6 +94,14 @@ export default function Header() {
             >
               <Users className="h-3.5 w-3.5 text-primary" />
               Partners
+            </Link>
+            <Link
+              href="/vibe-coding"
+              className="text-sm font-medium hover-elevate px-3 py-2 rounded-md flex items-center gap-1.5"
+              data-testid="link-vibe-coding"
+            >
+              <Code2 className="h-3.5 w-3.5 text-primary" />
+              Vibe Coding
             </Link>
             <Link
               href="/roadmap"

@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db } from "./database";
 import { games, rewards } from "@shared/schema";
 
 async function seed() {

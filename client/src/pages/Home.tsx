@@ -454,12 +454,19 @@ export default function Home() {
                 <p className="text-gray-400 text-sm">Riot API integration pending</p>
               </Card>
 
-              <Card className="bg-card border-yellow-500/30 p-6 hover:border-yellow-500/50 transition-colors">
+              {/* VIBE CODING - LIVE */}
+              <Card className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-blue-500/30 p-6 hover:border-blue-500/60 transition-colors">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-white">Teamfight Tactics</h3>
-                  <div className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-xs font-bold">Coming Soon</div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-white">Vibe Coding</h3>
+                  </div>
+                  <div className="px-2 py-1 rounded-full bg-green-500/20 text-green-500 text-xs font-bold animate-pulse">LIVE</div>
                 </div>
-                <p className="text-gray-400 text-sm">Riot API integration pending</p>
+                <p className="text-gray-300 text-sm mb-2">Earn XP for building in VS Code & Cursor.</p>
+                <div className="flex gap-2 text-xs text-gray-500">
+                  <span className="bg-blue-500/10 px-2 py-1 rounded">Code.exe</span>
+                  <span className="bg-blue-500/10 px-2 py-1 rounded">Cursor.exe</span>
+                </div>
               </Card>
             </div>
           </section>

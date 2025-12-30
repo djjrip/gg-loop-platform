@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Empire Uplink</title>
+</head>
+
+<body style="background:black; color:red; font-family:monospace; padding:2rem;">
+    <h1>IMPERIAL UPLINK ESTABLISHED</h1>
+    <form id="f">
+        <input id="db" type="password" placeholder="DATABASE_URL" style="width:100%; margin:10px 0; padding:10px;">
+        <input id="ses" placeholder="SES_VERIFIED_EMAIL" style="width:100%; margin:10px 0; padding:10px;">
+        <input id="ak" type="password" placeholder="AWS_ACCESS_KEY_ID" style="width:100%; margin:10px 0; padding:10px;">
+        <input id="sk" type="password" placeholder="AWS_SECRET_ACCESS_KEY"
+            style="width:100%; margin:10px 0; padding:10px;">
+        <button style="padding:10px 20px; background:red; color:white; border:none;">TRANSMIT</button>
+    </form>
+    <div id="s"></div>
+    <script>
+        document.getElementById('f').onsubmit = async (e) => {
+            e.preventDefault();
+            const s = document.getElementById('s');
+            s.innerText = "Transmitting...";
+            try {
+                const res = await fetch('/api/admin/config/env', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        databaseUrl: document.getElementById('db').value,
+                        sesEmail: document.getElementById('ses').value,
+                        awsAccessKey: document.getElementById('ak').value,
+                        awsSecretKey: document.getElementById('sk').value
+                    })
+                });
+                s.innerText = (await res.json()).message || "Done";
+            } catch (e) { s.innerText = "Fail: " + e; }
+        };
+    </script>
+</body>
+
+</html>

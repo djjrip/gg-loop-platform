@@ -4,7 +4,7 @@
  * Shows platform is growing, rewards early believers
  */
 
-import { db } from '../db';
+import { db } from '../database';
 import { users } from '@db/schema';
 import { sql, eq } from 'drizzle-orm';
 

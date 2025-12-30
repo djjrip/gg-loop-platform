@@ -6,7 +6,7 @@
  * Strategy: Let them taste 2x points for a week, then they're hooked
  */
 
-import { db } from '../db';
+import { db } from '../database';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 

@@ -9,7 +9,7 @@
  * Usage: npm run migrate:founders
  */
 
-import { db } from "../db";
+import { db } from "../database";
 import { users } from "@shared/schema";
 import { assignFounderStatus, getFounderStats } from "../founderService";
 import { asc } from "drizzle-orm";

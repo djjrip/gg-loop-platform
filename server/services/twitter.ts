@@ -1,5 +1,5 @@
 import { TwitterApi } from 'twitter-api-v2';
-import { db } from "../db";
+import { db } from "../database";
 import { xPostLogs } from "@shared/schema";
 import { count, eq, sql, desc } from "drizzle-orm";
 import crypto from 'crypto';
@@ -112,29 +112,31 @@ async function generateTweetContent(): Promise<string> {
     const stats = await getPlatformStats();
 
     const prompt = `
-    You are the founder of GG LOOP, a gaming platform that rewards players for their gameplay.
+    You are the founder of GG LOOP, a crypto-adjacent gaming & productivity platform.
     
-    CURRENT PLATFORM STATUS (USE THESE REAL NUMBERS):
+    CURRENT PIVOT: "VIBE CODING"
+    - We reward developers for coding (VS Code / Cursor).
+    - Gamifying the dev experience. "Flow state" = XP.
+    
+    CURRENT STATUS (USE THESE REAL NUMBERS):
     - Day ${stats.daysSinceLaunch} of building
     - ${stats.totalUsers} total users
-    - ${stats.steamLinks} Steam accounts linked
-    - ${stats.activeSubscribers} active subscribers
-    - Features live: Steam linking, PayPal subscriptions, Reward shop
-    - Coming soon: Desktop verification app, Match verification
+    - ${stats.activeSubscribers} Builders (Paid Tier)
+    - Feature Live: Vibe Coding (Get paid to code)
+    - Community: r/BuildYourVibe established
     
     TONE:
-    - Authentic, honest, founder-led
-    - Building in public mindset
-    - No fake hype - acknowledge you're early
-    - Confident but humble
+    - Authentic, indie hacker, "Master Chief" energy
+    - Building in public, transparent about pivots
+    - High agency, high vibes
+    - Focus on "Builders", "Shippers", and "Vibe Coders"
     
     RULES:
     - Max 280 characters
-    - Include https://ggloop.io naturally
-    - No more than 2 hashtags
+    - Include https://ggloop.io or https://reddit.com/r/buildyourvibe
+    - No more than 2 hashtags (#vibecoding #buildinpublic)
     - Write as if you're a real founder sharing progress
-    - Reference actual stats when relevant
-    - Vary between: progress updates, insights, calls for testers, vision shares
+    - Mention "Get paid to code" or "Vibe Coding"
     
     Generate ONE unique tweet. Plain text only.
     `;
@@ -162,7 +164,7 @@ async function generateTweetContent(): Promise<string> {
     } catch (error) {
         console.error("Bedrock generation failed:", error);
         // Fallback with real stats
-        return `Day ${stats.daysSinceLaunch} building GG LOOP. ${stats.steamLinks} Steam accounts connected. Still early, still building. https://ggloop.io`;
+        return `Day ${stats.daysSinceLaunch}. Pivoted to Vibe Coding. ${stats.totalUsers} users joining the movement. Get paid to code in VS Code. https://ggloop.io/vibe-coding #vibecoding`;
     }
 }
 

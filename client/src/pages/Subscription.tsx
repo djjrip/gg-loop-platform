@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Trophy, Zap, Star, Flame, Gift, Sparkles, Coins, AlertCircle, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { Check, X, Trophy, Zap, Star, Flame, Gift, Sparkles, Coins, AlertCircle, ChevronDown, ChevronUp, Clock, Code } from "lucide-react";
 import type { Subscription } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -162,6 +162,7 @@ export default function SubscriptionPage() {
 
   const paypalPlanIds = {
     basic: "P-6A485619U8349492UNEK4RRA",
+    builder: "P-7PE45456B7870481SNEK4TRY", // Uses Pro Plan ID ($12) for now
     pro: "P-7PE45456B7870481SNEK4TRY",
     elite: "P-369148416D044494CNEK4UDQ",
   };
@@ -200,6 +201,22 @@ export default function SubscriptionPage() {
         { text: "Achievement tracking", included: true },
         { text: "Bonus challenge eligibility", included: false },
         { text: "Priority support", included: false },
+      ],
+    },
+    {
+      id: "builder",
+      name: "Builder",
+      price: 12,
+      icon: Code,
+      description: "For Vibe Coders. 2x XP for Building.",
+      pointsHighlight: "10,000 monthly points",
+      badge: "New",
+      features: [
+        { text: "Everything in Basic", included: true },
+        { text: "2x XP Multiplier for VS Code / Cursor Sessions", included: true, highlight: true },
+        { text: "Verified Builder Badge", included: true, highlight: true },
+        { text: "10,000 points deposited monthly", included: true },
+        { text: "Priority Support in 'Builders' Channel", included: true },
       ],
     },
     {

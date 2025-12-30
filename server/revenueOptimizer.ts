@@ -4,7 +4,7 @@
  * Runs daily via cron job
  */
 
-import { db } from './db';
+import { db } from './database';
 import { users, subscriptions, redemptions } from '@db/schema';
 import { eq, sql, desc, and, gte } from 'drizzle-orm';
 

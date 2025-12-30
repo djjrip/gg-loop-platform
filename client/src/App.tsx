@@ -25,6 +25,7 @@ import Subscription from "@/pages/Subscription";
 import DesktopDownload from "@/pages/DesktopDownload";
 import Business from "@/pages/Business";
 import DeveloperAPI from "@/pages/DeveloperAPI";
+// import VibeCoding from "@/pages/VibeCoding"; // TEMPORARILY REMOVED
 
 // User pages
 import Login from "@/pages/Login";
@@ -64,6 +65,7 @@ import AdminAntiCheat from "@/pages/AdminAntiCheat";
 import AdminAnalytics from "@/pages/AdminAnalytics";
 import GameRequestsAnalytics from "@/pages/admin/GameRequestsAnalytics";
 import PitchDeck from "@/pages/PitchDeck";
+import EmpireCommand from "@/pages/EmpireCommand";
 
 // 404
 import NotFound from "@/pages/not-found";
@@ -97,6 +99,7 @@ function Router() {
       <Route path="/download" component={DesktopDownload} />
       <Route path="/business" component={Business} />
       <Route path="/developer" component={DeveloperAPI} />
+      {/* <Route path="/vibe-coding" component={VibeCoding} /> */}
 
       {/* User Routes */}
       <Route path="/login" component={Login} />
@@ -138,8 +141,12 @@ function Router() {
       <Route path="/admin/anticheat" component={AdminAntiCheat} />
       <Route path="/admin/analytics" component={AdminAnalytics} />
       <Route path="/admin/game-requests" component={GameRequestsAnalytics} />
+      <Route path="/admin/game-requests" component={GameRequestsAnalytics} />
       <Route path="/trust" component={Trust} />
       <Route path="/vision" component={PitchDeck} />
+
+      {/* Level 100: Empire Command (Internal) */}
+      <Route path="/empire" component={EmpireCommand} />
 
       {/* 404 */}
       <Route component={NotFound} />

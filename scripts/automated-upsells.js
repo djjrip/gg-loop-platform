@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "dotenv/config";
 
 /**
  * REVENUE SYSTEM: Automated upsell engine
@@ -6,8 +7,8 @@
  * Increases average revenue per user (ARPU)
  */
 
-import { db } from "../server/db.js";
-import { users, subscriptions, verificationProofs } from "@shared/schema";
+import { db } from "../server/db";
+import { users, subscriptions, verificationProofs } from "../shared/schema";
 import { sql, eq, and, gte } from "drizzle-orm";
 import fs from 'fs/promises';
 
@@ -52,12 +53,12 @@ async function findUpsellOpportunities() {
         if (usageScore > 50 || pointsScore > 5000) {
             // Heavy user → Elite
             upsellTier = 'elite_monthly';
-            reason = 'High usage - would benefit from Elite features';
+            reason = 'Top 1% activity - Elite grants maximum multiplier';
             estimatedRevenueIncrease = 20; // $25 - $5
-        } else if (usageScore > 20 || pointsScore > 2000) {
-            // Moderate user → Pro
-            upsellTier = 'pro_monthly';
-            reason = 'Regular user - Pro tier unlocks more value';
+        } else if (usageScore > 10 || pointsScore > 1000) {
+            // Moderate user → Builder (New Core Tier)
+            upsellTier = 'builder_monthly';
+            reason = 'Active user - ideal for Vibe Coding multiplier';
             estimatedRevenueIncrease = 7; // $12 - $5
         }
 
@@ -103,50 +104,48 @@ async function findUpsellOpportunities() {
     console.log('═'.repeat(60));
     console.log('\n📧 UPSELL EMAIL TEMPLATES:\n');
 
-    const proTemplate = `Subject: You're getting a lot of value from GG LOOP 🎮
+    const builderTemplate = `Subject: Get paid to code (Vibe Coding Update) 🧑‍💻
 
 Hey {username},
 
-I noticed you've verified {usage_count} matches and earned {points} points on GG LOOP.
+I noticed you've been active on GG LOOP. 
+We just launched something new: **Vibe Coding.**
 
-You're clearly getting value from the platform. Have you considered Pro?
+If you verify your coding sessions (VS Code / Cursor), you now earn XP just like in Ranked.
 
-Pro unlocks:
-• 2x point multiplier
-• Priority support
-• Exclusive rewards
-• Advanced stats
+**The Builder Tier ($12/mo) is now live:**
+• 2x XP Multiplier for all Code Sessions
+• "Verified Builder" Profile Badge
+• Support independent development
 
-Just $12/month (instead of $5).
+You're already putting in the hours. Make them count.
 
-Worth it for power users like you.
+Upgrade to Builder: https://ggloop.io/subscription
 
-Upgrade: https://ggloop.io/subscription
-
-- Jayson`;
+- Jayson
+Founder, GL LOOP`;
 
     const eliteTemplate = `Subject: Elite tier built for users like you
 
 {username},
 
-{usage_count} verified matches. {points} points earned.
+{usage_count} verified sessions. {points} points earned.
 
-You're in the top 10% of GG LOOP users.
+You're in the top 10% of users.
 
-Elite tier was literally built for people like you:
-• 3x point multiplier
-• First access to new games
-• Custom rewards
-• Direct line to founder (me)
+Elite tier ($25/mo) was built for this level of grind:
+• 3x point multiplier (Gaming AND Coding)
+• First access to new features
+• Direct line to me
 
-$25/month. Worth every penny for serious gamers.
+Worth every penny if you're serious about the leaderboard.
 
-See the difference: https://ggloop.io/subscription
+Upgrade: https://ggloop.io/subscription
 
 - Jayson`;
 
-    console.log('PRO UPSELL TEMPLATE:');
-    console.log(proTemplate);
+    console.log('BUILDER (Vibe Coding) TEMPLATE:');
+    console.log(builderTemplate);
     console.log('\n' + '═'.repeat(60) + '\n');
     console.log('ELITE UPSELL TEMPLATE:');
     console.log(eliteTemplate);
@@ -158,7 +157,7 @@ See the difference: https://ggloop.io/subscription
         timestamp: new Date().toISOString(),
         targets: upsellTargets,
         potentialMRR: totalPotentialMRR,
-        templates: { pro: proTemplate, elite: eliteTemplate }
+        templates: { builder: builderTemplate, elite: eliteTemplate }
     }, null, 2));
 
     console.log('💾 Upsell data saved to data/upsell-opportunities.json\n');

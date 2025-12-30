@@ -192,18 +192,35 @@ export default function DesktopDownload() {
                     </div>
                 </div>
 
-                {/* Supported Games */}
+                {/* Supported Games & Tools */}
                 <div className="mb-16">
-                    <h2 className="text-2xl font-bold text-center mb-8 text-[#C19A6B]">Supported Games</h2>
-                    <div className="grid grid-cols-3 md:grid-cols-6 gap-4 text-center text-sm">
-                        {['Valorant', 'League of Legends', 'CS2', 'Dota 2', 'Apex Legends', 'PUBG',
-                            'Fortnite', 'Overwatch 2', 'Warframe', 'Destiny 2', 'Rocket League', 'TF2',
-                            'Rust', 'Dead by Daylight', 'ARK', 'GTA V', 'Minecraft', 'Roblox'
-                        ].map((game) => (
-                            <div key={game} className="bg-[#1a120b]/50 border border-[#3E2723] rounded-lg p-3">
-                                <span className="text-gray-300">{game}</span>
-                            </div>
-                        ))}
+                    <h2 className="text-2xl font-bold text-center mb-8 text-[#C19A6B]">Supported Activities</h2>
+
+                    {/* Games */}
+                    <div className="mb-6">
+                        <h3 className="text-center text-gray-500 text-sm mb-3 uppercase tracking-wider">Games</h3>
+                        <div className="grid grid-cols-3 md:grid-cols-6 gap-4 text-center text-sm">
+                            {['Valorant', 'League of Legends', 'CS2', 'Dota 2', 'Apex Legends', 'PUBG',
+                                'Fortnite', 'Overwatch 2', 'Warframe', 'Destiny 2', 'Rocket League', 'TF2',
+                                'Rust', 'Dead by Daylight', 'ARK', 'GTA V', 'Minecraft', 'Roblox'
+                            ].map((game) => (
+                                <div key={game} className="bg-[#1a120b]/50 border border-[#3E2723] rounded-lg p-3">
+                                    <span className="text-gray-300">{game}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Vibe Coding - NEW */}
+                    <div>
+                        <h3 className="text-center text-[#C19A6B] text-sm mb-3 uppercase tracking-wider font-bold">✨ Vibe Coding (Builders)</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center text-sm max-w-2xl mx-auto">
+                            {['Visual Studio Code', 'Cursor AI', 'Windsurf'].map((tool) => (
+                                <div key={tool} className="bg-[#C19A6B]/10 border border-[#C19A6B]/50 rounded-lg p-3">
+                                    <span className="text-white font-semibold">{tool}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

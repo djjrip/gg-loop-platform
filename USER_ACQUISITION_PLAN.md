@@ -6,6 +6,17 @@
 
 ---
 
+## 🚀 PHASE 0: OWN THE PLATFORM (New)
+**The Pivot:** Instead of fighting gatekeepers, we build our own castle.
+**Channel:** r/BuildYourVibe
+**Action:**
+- Launch the subreddit
+- Post the "Origin Story" (Bankruptcy to Builder)
+- Invite other AI builders from Twitter/X and r/SideProject
+- **Goal:** Become the HQ for the "Vibe Coding" movement.
+
+---
+
 ## 🎯 WEEK 1: Reddit Blitz (Goal: +15 users)
 
 ### Day 1 (Saturday) - r/gamedev

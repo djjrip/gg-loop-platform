@@ -1,155 +1,135 @@
 
 export const outboundConfig = {
-    // Truth Protocol: Single Source of Truth
-    allowedLink: "https://ggloop.io",
+        // Truth Protocol: Single Source of Truth
+        allowedLink: "https://ggloop.io",
 
-    bannedTerms: [
-        "optionshunter",
-        "3890.up.railway.app",
-        "marketscanner",
-        "free scanner"
-    ],
+        bannedTerms: [
+                "optionshunter",
+                "3890.up.railway.app",
+                "marketscanner",
+                "free scanner"
+        ],
 
-    missionTweets: [
-        // Day 1
-        `GG LOOP update:
-Core platform is live.
-Steam linking is live.
-Subscription system is live.
+        missionTweets: [
+                // Tweet 1: The Pivot
+                `We just gamified coding.
 
-We're early. We're building in public.
-No hype — just fundamentals.
+Open VS Code. Write code. Earn XP.
+Get paid to build.
 
+"Vibe Coding" is now live on GG LOOP.
 https://ggloop.io
-#GGLOOP #BuildInPublic #GamingTech`,
+#VibeCoding #BuildInPublic #DevLife`,
 
-        // Day 2
-        `What if your gaming hours actually counted for something?
+                // Tweet 2: The Builder Tier
+                `New Subscription Tier: BUILDER ($12/mo)
 
-That's what we're building.
-Link your accounts. Verify your matches. Earn rewards.
+- 2x XP for VS Code / Cursor sessions
+- "Verified Builder" Badge
+- Support independent dev
 
-Early access is open.
-https://ggloop.io
-#Gaming #Rewards #GGLOOP`,
-
-        // Day 3
-        `Day 27 of building GG LOOP.
-
-✅ Auth system (Google, Twitch, Steam)
-✅ Subscription tiers live
-✅ Reward shop functional
-🔄 Match verification in progress
-
-Building the verification layer for gaming.
-https://ggloop.io`,
-
-        // Day 4
-        `Most "gaming rewards" apps = watch ads for pennies.
-
-GG LOOP = link your account, verify your matches, earn real gear.
-
-We're not there yet. But we're building it right.
-https://ggloop.io`,
-
-        // Day 5
-        `Honest update:
-- 0 users besides me
-- Platform works
-- Need feedback
-
-If you play Valorant or League, I'll give you free Pro access to test.
-
-DM me.
-#GGLOOP #IndieDev`,
-
-        // Day 6
-        `The vision:
-You play ranked → We verify it → You earn points → You get real rewards.
-
-The reality:
-Platform live. Verification partial. Shop ready.
-
-Join early. Shape the product.
-https://ggloop.io`,
-
-        // Day 7
-        `Why I'm building GG LOOP:
-
-Spent 2000+ hours in ranked.
-Nothing to show for it.
-
-Now building a system where skill = value.
-Early and imperfect. But real.
-
-https://ggloop.io`,
-
-        // Day 8
-        `Request a game feature is live.
-
-Tell us what you play.
-We'll prioritize verification for the games people actually want.
-
-https://ggloop.io/request-game
-#GGLOOP #Gaming`,
-
-        // Day 9
-        `GG LOOP subscription tiers:
-
-Basic: $5/mo → 3,000 points
-Pro: $12/mo → 10,000 points  
-Elite: $25/mo → 25,000 points
-
-Points = real rewards.
+Directly monetizing your flow state.
 https://ggloop.io/subscription`,
 
-        // Day 10
-        `Building in public, day 30+
+                // Tweet 3: Anti-Gatekeeping
+                `Stop gatekeeping development.
+Use Cursor. Use AI. Use whatever blocks you need to ship.
 
-Current status:
-- Steam linking ✅
-- Riot linking (display only) ✅
-- PayPal subscriptions ✅
-- Match verification 🔄
-
+We don't care HOW you code. We verify that you SHIP.
+Earn rewards for the hours you put in.
 https://ggloop.io`,
 
-        // Day 11
-        `Looking for early testers.
+                // Tweet 4: Stats Hook
+                `Someone just earned 500 XP for a 2-hour coding session.
+Real rewards for real work.
 
-If you:
-- Play Valorant or League
-- Want free Pro tier access
-- Will give honest feedback
+Link your VS Code presence. Start earning.
+https://ggloop.io
+#IndieDev #Coding`,
 
-DM me. Seriously.
-#GGLOOP #BetaTesters`,
+                // Tweet 5: The Loop
+                `The Loop:
+1. Build (VS Code/Cursor)
+2. Earn XP (Verified by App)
+3. Reedem Rewards
+4. Invest back into your setup
 
-        // Day 12
-        `The gaming economy is broken.
-
-Streamers get paid. Pros get paid.
-Regular ranked grinders? Nothing.
-
-GG LOOP is step one toward fixing that.
+It's self-sustaining.
 https://ggloop.io`,
 
-        // Day 13
-        `Small win today:
-First Steam account linked by someone other than me.
+                // Tweet 6: Authenticity 
+                `I built this platform from bankruptcy in 90 days.
+Now I'm building tools for people who want to do the same.
 
-It's not much. But it's real.
+GG LOOP isn't just for gamers anymore.
+It's for BUILDERS.
 https://ggloop.io`,
 
-        // Day 14
-        `What games should we support next?
+                // Tweet 7: Tool Support
+                `Supported "Games" on GG LOOP:
+- Valorant (Ranked)
+- League of Legends
+- Visual Studio Code (Ranked?)
+- Cursor AI
+- Windsurf
 
-Reply with your main game.
-We're prioritizing based on demand.
+Yes, we treat your IDE like a game. Because it is.
+https://ggloop.io`,
 
-Currently: Valorant, League, Steam games
-Coming: ???
+                // Tweet 8: Call to Action
+                `Are you a "Vibe Coder"?
+Music on. Lights low. AI assistant running. Shipping fast.
 
-#GGLOOP #Gaming`
-    ]
+We built a home for you.
+Join r/BuildYourVibe
+Earn on ggloop.io`,
+
+                // Tweet 9: Revenue Transparency
+                `Building in public update:
+$12/month "Builder Tier" is live.
+Direct support for the platform + 2x multiplier for you.
+
+We are monetizing the craft.
+https://ggloop.io`,
+
+                // Tweet 10: Cursor Love
+                `If you use Cursor AI, you are already ahead.
+Now get rewarded for it.
+
+GG LOOP detects Cursor.exe and awards XP based on active session time.
+Monetize your learning curve.
+https://ggloop.io`,
+
+                // Tweet 11: Community
+                `We are building a community of shippers.
+Not "aspiring" developers.
+People who HIT ENTER.
+
+Join the leaderboard:
+https://ggloop.io`,
+
+                // Tweet 12: Night Owl
+                `2 AM coding session?
+That's 2x XP on Builder Tier.
+
+The grind doesn't stop, so the rewards shouldn't either.
+Verify your session now.
+https://ggloop.io`,
+
+                // Tweet 13: Momentum
+                `Momentum is everything.
+Track your streaks.
+Watch your XP grow as you ship features.
+
+Gamify your own productivity.
+https://ggloop.io`,
+
+                // Tweet 14: Vision
+                `The vision:
+A world where "playing games" and "building software" are both viable paths to value.
+
+Play. Build. Earn. Loop.
+We are just getting started.
+https://ggloop.io`
+        ]
 };

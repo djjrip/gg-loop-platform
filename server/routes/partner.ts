@@ -1,5 +1,5 @@
-﻿import { Router } from "express";
-import { db } from "../db";
+import { Router } from "express";
+import { db } from "../database";
 import { users, partnerApiKeys, verificationProofs } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 

@@ -3,7 +3,7 @@
  * AI-powered fraud detection with risk scoring, pattern recognition, and automated flagging
  */
 
-import { db } from '../db';
+import { db } from '../database';
 import { fraudDetectionLogs, matchSubmissions, users, verificationQueue } from '../../shared/schema';
 import { verificationConfig } from '../config/verificationConfig';
 import { eq, and, desc, sql, gte } from 'drizzle-orm';

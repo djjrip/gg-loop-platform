@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db } from "./database";
 import { users, pointTransactions, fraudDetectionLogs } from "../shared/schema";
 import { eq, desc, sql, and, gte, lte } from "drizzle-orm";
 

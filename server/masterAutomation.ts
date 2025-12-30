@@ -21,7 +21,7 @@ import { runBusinessAutomation } from './businessAutomation';
 import { startTwitterAutomation } from './services/twitter';
 import { sendEmail } from './services/email';
 import { notify } from './alerts';
-import { db } from './db';
+import { db } from './database';
 import { users, subscriptions, rewardClaims, pointTransactions } from '@shared/schema';
 import { eq, and, gte, sql } from 'drizzle-orm';
 import { autoFulfillRewards } from './automation/rewardFulfillment';

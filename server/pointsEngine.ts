@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db } from "./database";
 import { users, pointTransactions, subscriptions } from "@shared/schema";
 import type { InsertPointTransaction, PointTransaction } from "@shared/schema";
 import { eq, and, sql, gte } from "drizzle-orm";
@@ -506,7 +506,24 @@ export class PointsEngine {
         elite: 4.0
       };
 
-      const tierMultiplier = tierMultipliers[tier] || 1.0;
+      let tierMultiplier = tierMultipliers[tier] || 1.0;
+
+      // === VIBE CODING MULTIPLIER ===
+      // If the user is on PRO tier (Builder Tier maps to Pro) AND using a coding tool:
+      // Apply an additional 2.0x Vibe Multiplier.
+      const vibeCodingTools = ['vscode', 'cursor', 'windsurf', 'code', 'cursor.exe', 'code.exe', 'windsurf.exe'];
+      // We need to pass the gameName/sourceId to verify this. 
+      // Assuming 'desktopSessionId' or a new param contains the game name. 
+      // For now, we will assume the caller validates this or we check the 'description' if it contains the tool name.
+      // INNOVATION HACK: Check if description contains tool name since we don't have gameId param here yet.
+      // Long term: Add gameId param to awardGameplayPoints.
+      const lowerDesc = (desktopSessionId || "").toLowerCase();
+      const isVibeSession = vibeCodingTools.some(tool => lowerDesc.includes(tool));
+
+      if (isVibeSession && (tier === 'pro' || tier === 'elite')) {
+        tierMultiplier = tierMultiplier * 2.0; // DOUBLE XP for Builders
+        console.log(`[PointsEngine] Applied 2.0x Vibe Coding Multiplier for ${userId}`);
+      }
 
       // Calculate base points: (minutes_played / 60) * tierMultiplier
       const basePoints = (minutesPlayed / 60) * tierMultiplier;

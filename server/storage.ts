@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db } from "./database";
 import {
   users, games, userGames, leaderboardEntries, achievements, rewards, userRewards,
   subscriptions, subscriptionEvents, pointTransactions, apiPartners, gamingEvents, matchSubmissions, referrals, checklistItems,

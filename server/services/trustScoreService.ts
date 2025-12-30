@@ -3,7 +3,7 @@
  * Calculates user trust score based on verification signals, gameplay history, and fraud risk.
  */
 
-import { db } from '../db';
+import { db } from '../database';
 import { trustScores, trustScoreEvents, users, matchSubmissions, verificationProofs, fraudDetectionLogs, riotAccounts } from '../../shared/schema';
 import { eq, desc, and, gte, sql } from 'drizzle-orm';
 

@@ -2,7 +2,7 @@
 // This endpoint receives match data from the desktop app and verifies it via Riot API
 
 import { Request, Response } from 'express';
-import { db } from '../db';
+import { db } from '../database';
 import { users, matches } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { isAuthenticated, getUserMiddleware } from '../middleware';

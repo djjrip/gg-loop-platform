@@ -5,7 +5,7 @@
  * Usage: npx tsx server/seed-daily-login-quest.ts
  */
 
-import { db } from './db';
+import { db } from './database';
 import { challenges } from '@shared/schema';
 import crypto from 'crypto';
 
