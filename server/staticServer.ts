@@ -14,7 +14,7 @@ export function log(message: string, source = "express") {
 }
 
 export function serveStatic(app: Express) {
-    const distPath = path.resolve(__dirname, "..", "dist", "public");
+    const distPath = path.resolve(__dirname, "..", "public");
     const fallbackPath = path.resolve(__dirname, "..", "client", "public");
 
     if (fs.existsSync(distPath)) {
