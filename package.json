@@ -179,6 +179,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.20",
     "cross-env": "^10.1.0",
+    "esbuild": "^0.27.2",
     "puppeteer": "^24.34.0",
     "rimraf": "^6.1.2",
     "supertest": "^6.3.4",
