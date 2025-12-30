@@ -1,0 +1,81 @@
+{
+    "widgets": [
+        {
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [
+                        "AWS/Amplify",
+                        "Requests",
+                        {
+                            "stat": "Sum"
+                        }
+                    ]
+                ],
+                "period": 300,
+                "stat": "Sum",
+                "region": "us-east-1",
+                "title": "Total Requests"
+            }
+        },
+        {
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [
+                        "AWS/Amplify",
+                        "4XXError",
+                        {
+                            "stat": "Sum",
+                            "color": "#ff7f0e"
+                        }
+                    ],
+                    [
+                        ".",
+                        "5XXError",
+                        {
+                            "stat": "Sum",
+                            "color": "#d62728"
+                        }
+                    ]
+                ],
+                "period": 300,
+                "stat": "Sum",
+                "region": "us-east-1",
+                "title": "Error Rates"
+            }
+        },
+        {
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [
+                        "AWS/Amplify",
+                        "Latency",
+                        {
+                            "stat": "Average"
+                        }
+                    ]
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "us-east-1",
+                "title": "Average Latency (ms)",
+                "yAxis": {
+                    "left": {
+                        "min": 0
+                    }
+                }
+            }
+        },
+        {
+            "type": "log",
+            "properties": {
+                "query": "SOURCE '/aws/amplify/gg-loop-platform'\n| fields @timestamp, @message\n| filter @message like /ERROR/\n| sort @timestamp desc\n| limit 20",
+                "region": "us-east-1",
+                "title": "Recent Errors",
+                "stacked": false
+            }
+        }
+    ]
+}

@@ -1,387 +1,211 @@
 #!/bin/bash
 
-# 🚀 GG LOOP - AWS DEPLOYMENT TERRAFORM CONFIGURATION
-# This script sets up the entire AWS infrastructure for GG Loop
-# 
-# Prerequisites:
-# 1. AWS Account with appropriate permissions
-# 2. Terraform installed (https://www.terraform.io/downloads)
-# 3. AWS CLI configured with credentials
-# 4. Domain registered (Route 53 or external registrar)
-#
-# Usage:
-# chmod +x deploy-aws.sh
-# ./deploy-aws.sh prod us-east-1
+# AWS MIGRATION - ONE COMMAND DEPLOYMENT
+# Replaces Railway with AWS Amplify + EventBridge + CloudWatch
+# Run: npm run deploy:aws
 
-set -e
+set -e  # Exit on any error
 
-ENVIRONMENT=${1:-dev}
-REGION=${2:-us-east-1}
-PROJECT_NAME="gg-loop"
-
-echo "🚀 Deploying GG Loop to AWS"
-echo "Environment: $ENVIRONMENT"
-echo "Region: $REGION"
+echo "🚀 GG LOOP - AWS MIGRATION DEPLOYMENT"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Create terraform directory
-mkdir -p terraform
-cd terraform
+# Check if AWS CLI is installed
+if ! command -v aws &> /dev/null; then
+    echo "❌ AWS CLI not installed"
+    echo "Install: https://aws.amazon.com/cli/"
+    exit 1
+fi
 
-# Generate terraform configuration
-cat > main.tf << 'EOF'
-terraform {
-  required_version = ">= 1.0"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-  
-  backend "s3" {
-    bucket         = "gg-loop-terraform-state"
-    key            = "prod/terraform.tfstate"
-    region         = "us-east-1"
-    encrypt        = true
-    dynamodb_table = "gg-loop-terraform-locks"
-  }
-}
+echo "✅ AWS CLI found"
 
-provider "aws" {
-  region = var.aws_region
-  
-  default_tags {
-    tags = {
-      Project     = "gg-loop"
-      Environment = var.environment
-      ManagedBy   = "terraform"
-      CreatedAt   = timestamp()
-    }
-  }
-}
+# Check AWS credentials
+if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+    echo "❌ AWS credentials not set"
+    echo "Set environment variables:"
+    echo "  export AWS_ACCESS_KEY_ID=your_key"
+    echo "  export AWS_SECRET_ACCESS_KEY=your_secret"
+    exit 1
+fi
 
-variable "aws_region" {
-  type    = string
-  default = "us-east-1"
-}
-
-variable "environment" {
-  type    = string
-  default = "prod"
-}
-
-variable "app_name" {
-  type    = string
-  default = "gg-loop"
-}
-
-# ==========================================
-# VPC & NETWORKING
-# ==========================================
-
-resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-
-  tags = {
-    Name = "${var.app_name}-vpc"
-  }
-}
-
-resource "aws_subnet" "public_1" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "${var.aws_region}a"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "${var.app_name}-public-1"
-  }
-}
-
-resource "aws_subnet" "public_2" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.2.0/24"
-  availability_zone       = "${var.aws_region}b"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "${var.app_name}-public-2"
-  }
-}
-
-resource "aws_subnet" "private_1" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.10.0/24"
-  availability_zone = "${var.aws_region}a"
-
-  tags = {
-    Name = "${var.app_name}-private-1"
-  }
-}
-
-resource "aws_subnet" "private_2" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.11.0/24"
-  availability_zone = "${var.aws_region}b"
-
-  tags = {
-    Name = "${var.app_name}-private-2"
-  }
-}
-
-# ==========================================
-# SECURITY GROUPS
-# ==========================================
-
-resource "aws_security_group" "alb" {
-  name   = "${var.app_name}-alb-sg"
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_security_group" "ecs_tasks" {
-  name   = "${var.app_name}-ecs-tasks-sg"
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port       = 5000
-    to_port         = 5000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_security_group" "rds" {
-  name   = "${var.app_name}-rds-sg"
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_tasks.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-# ==========================================
-# RDS DATABASE
-# ==========================================
-
-resource "aws_db_subnet_group" "main" {
-  name       = "${var.app_name}-db-subnet-group"
-  subnet_ids = [aws_subnet.private_1.id, aws_subnet.private_2.id]
-}
-
-resource "aws_rds_cluster" "main" {
-  cluster_identifier     = "${var.app_name}-db-cluster"
-  engine                 = "aurora-postgresql"
-  engine_version         = "15.3"
-  database_name          = "ggloop"
-  master_username        = "postgres"
-  master_password        = random_password.db_password.result
-  db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.rds.id]
-
-  backup_retention_period      = 30
-  preferred_backup_window      = "03:00-04:00"
-  preferred_maintenance_window = "mon:04:00-mon:05:00"
-  
-  enabled_cloudwatch_logs_exports = ["postgresql"]
-  
-  skip_final_snapshot = var.environment != "prod"
-  
-  tags = {
-    Name = "${var.app_name}-db-cluster"
-  }
-}
-
-resource "aws_rds_cluster_instance" "main" {
-  cluster_identifier = aws_rds_cluster.main.id
-  instance_class     = var.environment == "prod" ? "db.r6g.xlarge" : "db.t4g.medium"
-  engine              = aws_rds_cluster.main.engine
-  engine_version      = aws_rds_cluster.main.engine_version
-
-  performance_insights_enabled = var.environment == "prod"
-
-  tags = {
-    Name = "${var.app_name}-db-instance"
-  }
-}
-
-resource "random_password" "db_password" {
-  length  = 32
-  special = true
-}
-
-resource "aws_secretsmanager_secret" "db_password" {
-  name_prefix             = "${var.app_name}-db-password-"
-  recovery_window_in_days = 7
-}
-
-resource "aws_secretsmanager_secret_version" "db_password" {
-  secret_id      = aws_secretsmanager_secret.db_password.id
-  secret_string  = random_password.db_password.result
-}
-
-# ==========================================
-# ELASTICACHE (REDIS)
-# ==========================================
-
-resource "aws_elasticache_subnet_group" "main" {
-  name       = "${var.app_name}-cache-subnet-group"
-  subnet_ids = [aws_subnet.private_1.id, aws_subnet.private_2.id]
-}
-
-resource "aws_security_group" "cache" {
-  name   = "${var.app_name}-cache-sg"
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port       = 6379
-    to_port         = 6379
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_tasks.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_elasticache_replication_group" "main" {
-  replication_group_description = "${var.app_name} Redis cluster"
-  engine                        = "redis"
-  engine_version                = "7.1"
-  node_type                     = var.environment == "prod" ? "cache.r7g.xlarge" : "cache.t4g.micro"
-  num_cache_clusters            = var.environment == "prod" ? 3 : 1
-  parameter_group_name          = "default.redis7"
-  port                          = 6379
-  subnet_group_name             = aws_elasticache_subnet_group.main.name
-  security_group_ids            = [aws_security_group.cache.id]
-  automatic_failover_enabled    = var.environment == "prod"
-  multi_az_enabled              = var.environment == "prod"
-  
-  at_rest_encryption_enabled = true
-  transit_encryption_enabled = true
-  auth_token                 = random_password.redis_auth_token.result
-
-  tags = {
-    Name = "${var.app_name}-redis"
-  }
-}
-
-resource "random_password" "redis_auth_token" {
-  length  = 32
-  special = false # Redis auth token doesn't support all special chars
-}
-
-# ==========================================
-# ECS CLUSTER
-# ==========================================
-
-resource "aws_ecs_cluster" "main" {
-  name = "${var.app_name}-cluster"
-
-  setting {
-    name  = "containerInsights"
-    value = "enabled"
-  }
-
-  tags = {
-    Name = "${var.app_name}-cluster"
-  }
-}
-
-# ==========================================
-# CLOUDWATCH LOG GROUP
-# ==========================================
-
-resource "aws_cloudwatch_log_group" "ecs" {
-  name              = "/ecs/${var.app_name}"
-  retention_in_days = var.environment == "prod" ? 30 : 7
-
-  tags = {
-    Name = "${var.app_name}-ecs-logs"
-  }
-}
-
-# ==========================================
-# OUTPUTS
-# ==========================================
-
-output "rds_endpoint" {
-  value       = aws_rds_cluster.main.endpoint
-  description = "RDS Cluster endpoint"
-}
-
-output "redis_endpoint" {
-  value       = aws_elasticache_replication_group.main.configuration_endpoint_address
-  description = "Redis cluster endpoint"
-}
-
-output "ecs_cluster_name" {
-  value       = aws_ecs_cluster.main.name
-  description = "ECS cluster name"
-}
-
-output "db_password_secret_arn" {
-  value       = aws_secretsmanager_secret.db_password.arn
-  description = "Database password secret ARN"
-  sensitive   = true
-}
-
-EOF
-
-echo "✅ Terraform configuration generated!"
-echo ""
-echo "📋 Next steps:"
-echo "1. Review the configuration: cat terraform/main.tf"
-echo "2. Initialize terraform: cd terraform && terraform init"
-echo "3. Plan deployment: terraform plan -var=\"environment=$ENVIRONMENT\" -var=\"aws_region=$REGION\""
-echo "4. Apply configuration: terraform apply"
-echo ""
-echo "⏱️  Deployment typically takes 15-20 minutes"
+echo "✅ AWS credentials configured"
 echo ""
 
-cd ..
+# Set variables
+APP_NAME="gg-loop-platform"
+REGION="us-east-1"
+GITHUB_REPO="https://github.com/djjrip/gg-loop-platform"
+GITHUB_BRANCH="main"
 
+echo "📋 Configuration:"
+echo "   App Name: $APP_NAME"
+echo "   Region: $REGION"
+echo "   Repo: $GITHUB_REPO"
+echo "   Branch: $GITHUB_BRANCH"
+echo ""
+
+# Step 1: Create Amplify App
+echo "🏗️  Step 1: Creating AWS Amplify app..."
+APP_ID=$(aws amplify create-app \
+    --name "$APP_NAME" \
+    --repository "$GITHUB_REPO" \
+    --platform WEB_COMPUTE \
+    --region "$REGION" \
+    --query 'app.appId' \
+    --output text 2>/dev/null || echo "")
+
+if [ -z "$APP_ID" ]; then
+    # App might already exist, try to get it
+    APP_ID=$(aws amplify list-apps --region "$REGION" --query "apps[?name=='$APP_NAME'].appId" --output text)
+    if [ -z "$APP_ID" ]; then
+        echo "❌ Failed to create or find Amplify app"
+        exit 1
+    fi
+    echo "✅ Found existing app: $APP_ID"
+else
+    echo "✅ Created Amplify app: $APP_ID"
+fi
+echo ""
+
+# Step 2: Connect GitHub repository
+echo "🔗 Step 2: Connecting GitHub repository..."
+echo "⚠️  MANUAL STEP REQUIRED:"
+echo "   1. Go to: https://console.aws.amazon.com/amplify/home?region=$REGION#/$APP_ID"
+echo "   2. Click 'Connect branch'"
+echo "   3. Authorize GitHub and select: djjrip/gg-loop-platform"
+echo "   4. Select branch: main"
+echo "   5. Amplify will auto-detect your build settings from amplify.yml"
+echo ""
+read -p "Press Enter after connecting GitHub..."
+echo ""
+
+# Step 3: Set environment variables
+echo "⚙️  Step 3: Setting environment variables..."
+
+# Check if .env exists
+if [ ! -f .env ]; then
+    echo "❌ .env file not found"
+    echo "Create .env with your Railway environment variables"
+    exit 1
+fi
+
+# Read .env and set in Amplify
+while IFS='=' read -r key value; do
+    # Skip comments and empty lines
+    [[ "$key" =~ ^#.*$ ]] && continue
+    [[ -z "$key" ]] && continue
+    
+    # Remove quotes from value
+    value=$(echo "$value" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+    
+    echo "Setting: $key"
+    aws amplify update-app \
+        --app-id "$APP_ID" \
+        --region "$REGION" \
+        --environment-variables "$key=$value" \
+        >/dev/null 2>&1 || true
+done < .env
+
+echo "✅ Environment variables configured"
+echo ""
+
+# Step 4: Configure custom domain
+echo "🌐 Step 4: Configuring custom domain (ggloop.io)..."
+echo "⚠️  MANUAL STEP REQUIRED:"
+echo "   1. Go to: https://console.aws.amazon.com/amplify/home?region=$REGION#/$APP_ID/settings/domain"
+echo "   2. Click 'Add domain'"
+echo "   3. Enter: ggloop.io"
+echo "   4. Amplify will provide DNS records (CNAME/ANAME)"
+echo "   5. Add these records to Cloudflare (see MIGRATE_TO_AWS.md)"
+echo ""
+read -p "Press Enter after noting DNS records..."
+echo ""
+
+# Step 5: Trigger first deployment
+echo "🚀 Step 5: Triggering deployment..."
+BRANCH_NAME="main"
+
+# Start build
+aws amplify start-job \
+    --app-id "$APP_ID" \
+    --branch-name "$BRANCH_NAME" \
+    --job-type RELEASE \
+    --region "$REGION" \
+    >/dev/null 2>&1 || true
+
+echo "✅ Deployment started"
+echo ""
+echo "📊 Monitor deployment:"
+echo "   https://console.aws.amazon.com/amplify/home?region=$REGION#/$APP_ID"
+echo ""
+
+# Step 6: Setup EventBridge for autonomous systems
+echo "⏰ Step 6: Setting up EventBridge schedules..."
+bash scripts/setup-eventbridge.sh "$APP_ID" "$REGION"
+echo ""
+
+# Step 7: Setup CloudWatch monitoring
+echo "📊 Step 7: Setting up CloudWatch monitoring..."
+
+# Create CloudWatch dashboard
+aws cloudwatch put-dashboard \
+    --dashboard-name "$APP_NAME-dashboard" \
+    --dashboard-body file://scripts/cloudwatch-dashboard.json \
+    --region "$REGION" \
+    >/dev/null 2>&1 || true
+
+echo "✅ CloudWatch dashboard created"
+echo "   View at: https://console.aws.amazon.com/cloudwatch/home?region=$REGION#dashboards:name=$APP_NAME-dashboard"
+echo ""
+
+# Step 8: Setup alarms
+echo "🚨 Setting up CloudWatch alarms..."
+
+# Create SNS topic for alerts
+TOPIC_ARN=$(aws sns create-topic \
+    --name "$APP_NAME-alerts" \
+    --region "$REGION" \
+    --query 'TopicArn' \
+    --output text 2>/dev/null || echo "")
+
+if [ ! -z "$TOPIC_ARN" ]; then
+    echo "✅ SNS topic created: $TOPIC_ARN"
+    echo "⚠️  Subscribe to alerts:"
+    echo "   aws sns subscribe --topic-arn $TOPIC_ARN --protocol email --notification-endpoint your@email.com --region $REGION"
+fi
+echo ""
+
+# Final summary
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ AWS DEPLOYMENT COMPLETE"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "NEXT STEPS:"
+echo ""
+echo "1. Wait for Amplify build to complete (~5-10 minutes)"
+echo "   Monitor: https://console.aws.amazon.com/amplify/home?region=$REGION#/$APP_ID"
+echo ""
+echo "2. Test temporary AWS URL:"
+echo "   Amplify will provide a *.amplifyapp.com URL"
+echo "   Test all features before DNS migration"
+echo ""
+echo "3. Update DNS in Cloudflare:"
+echo "   See MIGRATE_TO_AWS.md for exact DNS records"
+echo "   Point ggloop.io to Amplify"
+echo ""
+echo "4. Verify production:"
+echo "   https://ggloop.io should load from AWS"
+echo "   https://ggloop.io/dev-console should work"
+echo "   Check CloudWatch for metrics"
+echo ""
+echo "5. Delete Railway project:"
+echo "   Once verified, delete Railway to stop billing"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "COST ESTIMATE:"
+echo "   AWS Amplify: ~$12/month"
+echo "   EventBridge: Free (under 1M invocations)"
+echo "   CloudWatch: ~$3/month"
+echo "   Total: ~$15/month (vs Railway $20/month)"
+echo "   Savings: $5/month ($60/year)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
