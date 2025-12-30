@@ -21,7 +21,7 @@ frontend:
       commands:
         - npm run build
   artifacts:
-    baseDirectory: client/dist
+    baseDirectory: dist/public
     files:
       - '**/*'
   cache:
