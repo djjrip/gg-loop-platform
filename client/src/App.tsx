@@ -25,6 +25,7 @@ import Subscription from "@/pages/Subscription";
 import DesktopDownload from "@/pages/DesktopDownload";
 import Business from "@/pages/Business";
 import DeveloperAPI from "@/pages/DeveloperAPI";
+import DevConsole from "@/pages/DevConsole";
 // import VibeCoding from "@/pages/VibeCoding"; // TEMPORARILY REMOVED
 
 // User pages
@@ -99,6 +100,7 @@ function Router() {
       <Route path="/download" component={DesktopDownload} />
       <Route path="/business" component={Business} />
       <Route path="/developer" component={DeveloperAPI} />
+      <Route path="/dev-console" component={DevConsole} />
       {/* <Route path="/vibe-coding" component={VibeCoding} /> */}
 
       {/* User Routes */}

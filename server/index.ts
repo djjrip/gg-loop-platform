@@ -52,6 +52,7 @@ import { twitchErrorLogger } from "./middleware/twitchErrorLogger";
 import { serveStatic, log } from "./staticServer";
 import { getMetrics, setHealthStatus } from './monitoring';
 import { storage } from './storage';
+import bedrockRoutes from './bedrock-routes';
 
 console.log("Starting server... (DEPLOY: 2025-11-26 02:50 CST - AUTH REFACTOR + LOGGING)");
 
@@ -180,6 +181,11 @@ app.use((req, res, next) => {
     }
 
     console.log('🔧 Registering routes...');
+
+    // AWS Bedrock Dev Console routes
+    app.use('/api/bedrock', bedrockRoutes);
+    console.log('✅ AWS Bedrock routes registered');
+
     const server = await registerRoutes(app);
     console.log('✅ Routes registered successfully');
 
