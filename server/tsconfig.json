@@ -12,6 +12,7 @@
             "ES2020"
         ],
         "moduleResolution": "node",
+        "noEmitOnError": false,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "strict": true,
