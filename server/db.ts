@@ -12,25 +12,25 @@ let db: any;
 let client: any;
 
 if (usePostgres && databaseUrl) {
-    // Production: PostgreSQL (Railway)
-    console.log('🐘 Using PostgreSQL database');
-    const queryClient = postgres(databaseUrl, {
-      max: 20,
-      idle_timeout: 20,
-      connect_timeout: 10,
-    });
-    db = drizzlePostgres(queryClient, { schema });
-    client = queryClient;
+  // Production: PostgreSQL (Railway)
+  console.log('🐘 Using PostgreSQL database');
+  const queryClient = postgres(databaseUrl, {
+    max: 20,
+    idle_timeout: 20,
+    connect_timeout: 10,
+  });
+  db = drizzlePostgres(queryClient, { schema });
+  client = queryClient;
 } else {
-    // Development: SQLite (local)
-    console.log('📁 Using SQLite database (local.db)');
-    // Dynamic import to avoid production build issues with better-sqlite3
-    const { default: Database } = await import("better-sqlite3");
-    const { drizzle: drizzleSqlite } = await import("drizzle-orm/better-sqlite3");
+  // Development: SQLite (local)
+  console.log('📁 Using SQLite database (local.db)');
+  // Dynamic import to avoid production build issues with better-sqlite3
+  const Database = require("better-sqlite3");
+  const { drizzle: drizzleSqlite } = require("drizzle-orm/better-sqlite3");
 
-    const sqlite = new Database("local.db");
-    db = drizzleSqlite(sqlite, { schema });
-    client = sqlite;
+  const sqlite = new Database("local.db");
+  db = drizzleSqlite(sqlite, { schema });
+  client = sqlite;
 }
 
 export { db, client as sqlite };
