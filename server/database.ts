@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { drizzle as drizzlePostgres } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "@shared/schema";
+import * as schema from "../shared/schema";
 
 // Auto-detect database type based on environment
 const isDevelopment = process.env.NODE_ENV !== 'production';
