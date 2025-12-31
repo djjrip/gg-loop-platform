@@ -1,5 +1,5 @@
 import { db } from "./database";
-import { users, streamingSessions, pointTransactions, games } from "@shared/schema";
+import { users, streamingSessions, pointTransactions, games } from "../shared/schema";
 import { twitchAPI } from "./lib/twitch";
 import { eq, and, sql, isNull } from "drizzle-orm";
 import { pointsEngine } from "./pointsEngine";

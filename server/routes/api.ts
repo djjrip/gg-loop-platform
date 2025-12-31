@@ -1,7 +1,7 @@
 // GG Loop API - Self-serve developer access
 import { Router } from 'express';
 import { db } from '../database';
-import { users, pointTransactions } from '@shared/schema';
+import { users, pointTransactions } from "../../shared/schema";
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
 

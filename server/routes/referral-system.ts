@@ -1,5 +1,5 @@
 import { db } from "../database";
-import { referrals, users } from "@shared/schema";
+import { referrals, users } from "../../shared/schema";
 import { eq, sql } from "drizzle-orm";
 
 export const REFERRAL_REWARDS = {

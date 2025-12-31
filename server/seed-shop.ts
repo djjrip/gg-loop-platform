@@ -8,7 +8,7 @@
  */
 
 import { db } from './database';
-import { rewards } from '@shared/schema';
+import { rewards } from "../shared/schema";
 
 async function seedShop() {
     console.log('🛍️ Seeding GG LOOP Shop...');

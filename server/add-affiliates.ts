@@ -11,7 +11,7 @@
  */
 
 import { db } from './database';
-import { rewards } from '@shared/schema';
+import { rewards } from "../shared/schema";
 import { eq } from 'drizzle-orm';
 
 // Real affiliate program links (you'll replace with your actual affiliate IDs)

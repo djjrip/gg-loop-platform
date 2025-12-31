@@ -22,7 +22,7 @@ import {
   pointTransactions,
   rewardTypes,
   type RewardClaim
-} from '@shared/schema';
+} from "../shared/schema";
 import { eq, and, gte, desc, sql } from 'drizzle-orm';
 import { sendEmail } from './services/email';
 import { notify } from './alerts';

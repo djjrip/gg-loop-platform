@@ -7,7 +7,7 @@
 
 import { Router } from 'express';
 import { db } from '../database';
-import { userRewards, rewards, users } from '@shared/schema';
+import { userRewards, rewards, users } from "../../shared/schema";
 import { eq, and, desc, count } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth';
 import { sendEmail } from '../services/email';

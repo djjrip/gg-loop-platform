@@ -7,7 +7,7 @@
  */
 
 import { db } from './database';
-import { users } from '@shared/schema';
+import { users } from "../shared/schema";
 import { sql } from 'drizzle-orm';
 import { sendEmail } from './services/email';
 import { WELCOME_SEQUENCE, getNextEmail, renderEmail } from './lib/emailSequence';

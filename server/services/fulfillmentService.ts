@@ -7,7 +7,7 @@ import {
   users,
   RewardClaim,
   UpdateRewardClaim,
-} from "@shared/schema";
+} from "../../shared/schema";
 import { eq, desc, and, sql, asc as drizzleAsc } from "drizzle-orm";
 
 export interface MissionControlMetrics {

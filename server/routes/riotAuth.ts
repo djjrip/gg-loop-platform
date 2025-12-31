@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import crypto from 'crypto';
 import { db } from "../database";
-import { riotAccounts } from "@shared/schema";
+import { riotAccounts } from "../../shared/schema";
 import { eq } from "drizzle-orm";
 
 const riotAuthRouter = Router();

@@ -5557,11 +5557,11 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
 
       // Check if user already earned points for this template
       const existingTransaction = await db.select()
-        .from(require('@shared/schema').pointTransactions)
+        .from(require("../shared/schema").pointTransactions)
         .where(and(
-          eq(require('@shared/schema').pointTransactions.userId, userId),
-          eq(require('@shared/schema').pointTransactions.sourceType, 'tiktok_template'),
-          eq(require('@shared/schema').pointTransactions.sourceId, templateId)
+          eq(require("../shared/schema").pointTransactions.userId, userId),
+          eq(require("../shared/schema").pointTransactions.sourceType, 'tiktok_template'),
+          eq(require("../shared/schema").pointTransactions.sourceId, templateId)
         ))
         .limit(1);
 

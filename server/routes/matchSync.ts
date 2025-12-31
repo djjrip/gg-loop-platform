@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../database";
-import { riotAccounts, processedRiotMatches } from "@shared/schema";
+import { riotAccounts, processedRiotMatches } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 import { RiotApiService } from "../riotApi";
 import { pointsEngine, EARNING_RULES } from "../pointsEngine";

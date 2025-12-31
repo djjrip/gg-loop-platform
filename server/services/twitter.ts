@@ -1,6 +1,6 @@
 import { TwitterApi } from 'twitter-api-v2';
 import { db } from "../database";
-import { xPostLogs } from "@shared/schema";
+import { xPostLogs } from "../../shared/schema";
 import { count, eq, sql, desc } from "drizzle-orm";
 import crypto from 'crypto';
 // @ts-ignore
@@ -82,7 +82,7 @@ async function getPlatformStats(): Promise<{
 }> {
     try {
         // Import tables we need
-        const { users, steamAccounts, subscriptions } = await import("@shared/schema");
+        const { users, steamAccounts, subscriptions } = await import("../../shared/schema");
 
         const [userCount] = await db.select({ count: count() }).from(users);
         const [steamCount] = await db.select({ count: count() }).from(steamAccounts);

@@ -10,7 +10,7 @@
  */
 
 import { db } from '../database';
-import { users, pointsTransactions } from '@shared/schema';
+import { users, pointsTransactions } from "../../shared/schema";
 import { sql, eq, and, gte } from 'drizzle-orm';
 
 interface RevenueMetrics {

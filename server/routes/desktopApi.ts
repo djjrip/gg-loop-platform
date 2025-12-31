@@ -11,7 +11,7 @@
 
 import { Router } from 'express';
 import { db } from '../database';
-import { users, pointTransactions, processedRiotMatches, riotAccounts } from '@shared/schema';
+import { users, pointTransactions, processedRiotMatches, riotAccounts } from "../../shared/schema";
 import { eq, and } from 'drizzle-orm';
 import { pointsEngine, EARNING_RULES } from '../pointsEngine';
 import jwt from 'jsonwebtoken';

@@ -1,4 +1,4 @@
-import { steamAccounts } from "@shared/schema";
+import { steamAccounts } from "../../shared/schema";
 import { db } from "../database";
 import { eq } from "drizzle-orm";
 

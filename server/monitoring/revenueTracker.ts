@@ -1,5 +1,5 @@
 import { db } from "../database";
-import { subscriptions, users, xPostLogs } from "@shared/schema";
+import { subscriptions, users, xPostLogs } from "../../shared/schema";
 import { eq, count, sql, and, gte } from "drizzle-orm";
 
 interface RevenueSnapshot {

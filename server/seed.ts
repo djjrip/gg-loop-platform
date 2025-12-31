@@ -1,5 +1,5 @@
 import { db } from "./database";
-import { games, rewards } from "@shared/schema";
+import { games, rewards } from "../shared/schema";
 
 async function seed() {
   console.log("Seeding database...");

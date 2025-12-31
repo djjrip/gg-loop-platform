@@ -1,5 +1,5 @@
 import { db } from "./database";
-import { users, pointTransactions, auditLog } from "@shared/schema";
+import { users, pointTransactions, auditLog } from "../shared/schema";
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
 // Audit Log Types

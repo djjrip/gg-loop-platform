@@ -6,7 +6,7 @@
  */
 
 import { db } from './database';
-import { challenges } from '@shared/schema';
+import { challenges } from "../shared/schema";
 import crypto from 'crypto';
 
 async function seedDailyLoginQuest() {

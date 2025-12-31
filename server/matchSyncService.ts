@@ -1,5 +1,5 @@
 import { db } from './database';
-import { riotAccounts, processedRiotMatches } from '@shared/schema';
+import { riotAccounts, processedRiotMatches } from "../shared/schema";
 import { getRiotAPI } from './lib/riot';
 import { eq, and } from 'drizzle-orm';
 import { pointsEngine } from './pointsEngine';

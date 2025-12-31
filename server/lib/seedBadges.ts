@@ -1,5 +1,5 @@
 import { db } from "../database";
-import { virtualBadges } from "@shared/schema";
+import { virtualBadges } from "../../shared/schema";
 import { eq } from "drizzle-orm";
 
 /**

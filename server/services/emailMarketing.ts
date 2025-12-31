@@ -9,7 +9,7 @@
  */
 
 import { db } from '../database';
-import { users, subscriptions, userRewards, rewards } from '@shared/schema';
+import { users, subscriptions, userRewards, rewards } from "../../shared/schema";
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { sendEmail } from './email';
 

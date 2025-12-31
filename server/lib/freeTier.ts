@@ -1,5 +1,5 @@
 import { db } from "../database";
-import { users, ggCoinTransactions, userBadges, virtualBadges } from "@shared/schema";
+import { users, ggCoinTransactions, userBadges, virtualBadges } from "../../shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 
 // Free Tier Economics

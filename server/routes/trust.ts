@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { TrustScoreService } from "../services/trustScoreService";
 import { db } from "../database";
-import { trustScoreEvents } from "@shared/schema";
+import { trustScoreEvents } from "../../shared/schema";
 import { eq, desc } from "drizzle-orm";
 
 const router = Router();

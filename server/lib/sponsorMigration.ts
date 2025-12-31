@@ -1,5 +1,5 @@
 import { db } from '../database';
-import { challenges, sponsors } from '@shared/schema';
+import { challenges, sponsors } from "../../shared/schema";
 import { eq, isNull, sql } from 'drizzle-orm';
 
 /**

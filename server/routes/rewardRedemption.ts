@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../database";
-import { rewards, userRewards, users } from "@shared/schema";
+import { rewards, userRewards, users } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 import { pointsEngine } from "../pointsEngine";
 import { alertFounderRedemption } from "../founderAlerts";

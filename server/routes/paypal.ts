@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { verifyPayPalSubscription, verifyPayPalWebhook } from "../paypal";
 import { db } from "../database";
-import { users, subscriptions, pointTransactions } from "@shared/schema";
+import { users, subscriptions, pointTransactions } from "../../shared/schema";
 import { eq } from "drizzle-orm";
 import { pointsEngine } from "../pointsEngine";
 

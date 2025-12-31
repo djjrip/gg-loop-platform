@@ -13,7 +13,7 @@
  */
 
 import { db } from '../database';
-import { rewardClaims, rewardTypes, users } from '@shared/schema';
+import { rewardClaims, rewardTypes, users } from "../../shared/schema";
 import { eq, and } from 'drizzle-orm';
 import { sendEmail } from '../services/email';
 

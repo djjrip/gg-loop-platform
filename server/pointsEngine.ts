@@ -1,6 +1,6 @@
 import { db } from "./database";
-import { users, pointTransactions, subscriptions } from "@shared/schema";
-import type { InsertPointTransaction, PointTransaction } from "@shared/schema";
+import { users, pointTransactions, subscriptions } from "../shared/schema";
+import type { InsertPointTransaction, PointTransaction } from "../shared/schema";
 import { eq, and, sql, gte } from "drizzle-orm";
 
 type DbOrTx = typeof db | any;

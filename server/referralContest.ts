@@ -12,7 +12,7 @@
  */
 
 import { db } from './database';
-import { users, pointsTransactions } from '@shared/schema';
+import { users, pointsTransactions } from "../shared/schema";
 import { sql, desc, gte } from 'drizzle-orm';
 import { sendEmail } from './services/email';
 

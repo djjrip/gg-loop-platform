@@ -1,4 +1,4 @@
-import { User } from "@shared/schema";
+import { User } from "../../shared/schema";
 import 'express-session';
 
 declare global {

@@ -7,7 +7,7 @@
  */
 
 import { db } from '../database';
-import { users } from '@shared/schema';
+import { users } from "../../shared/schema";
 import { eq } from 'drizzle-orm';
 
 export interface TrialStatus {

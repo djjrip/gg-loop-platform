@@ -1,5 +1,5 @@
 import { db } from './database';
-import { achievements, processedRiotMatches, riotAccounts, games } from '@shared/schema';
+import { achievements, processedRiotMatches, riotAccounts, games } from "../shared/schema";
 import { ACHIEVEMENT_DEFINITIONS, AchievementDefinition } from './achievementDefinitions';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import type { IStorage } from './storage';

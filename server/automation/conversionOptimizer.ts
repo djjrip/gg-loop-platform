@@ -6,7 +6,7 @@
  */
 
 import { db } from '../database';
-import { users, subscriptions, userRewards } from '@shared/schema';
+import { users, subscriptions, userRewards } from "../../shared/schema";
 import { eq, and, gte, sql } from 'drizzle-orm';
 
 interface ConversionMetrics {
