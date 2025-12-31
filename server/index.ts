@@ -57,14 +57,22 @@ import bedrockRoutes from './bedrock-routes';
 console.log("Starting server... (DEPLOY: 2025-11-26 02:50 CST - AUTH REFACTOR + LOGGING)");
 
 const app = express();
+
+// CORS - MUST BE FIRST
+import cors from "cors";
+const corsOptions = {
+  origin: ["https://main.d18bfkxzeom7ln.amplifyapp.com", "http://localhost:5173", "https://ggloop.io", "https://www.ggloop.io", "https://reward-fulfillment-production.up.railway.app"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-import cors from "cors";
-app.use(cors({
-  origin: ["https://main.d18bfkxzeom7ln.amplifyapp.com", "http://localhost:5173", "https://ggloop.io", "https://www.ggloop.io"],
-  credentials: true
-}));
+// CORS moved to top
 
 // Defensive middleware – strip stray Date objects from session to avoid Date serialization errors
 app.use((req, _res, next) => {
