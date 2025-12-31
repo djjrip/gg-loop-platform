@@ -61,7 +61,7 @@ const app = express();
 // CORS - MUST BE FIRST
 import cors from "cors";
 const corsOptions = {
-  origin: ["https://main.d18bfkxzeom7ln.amplifyapp.com", "http://localhost:5173", "https://ggloop.io", "https://www.ggloop.io", "https://reward-fulfillment-production.up.railway.app"],
+  origin: '*', // NUCLEAR OPTION: Allow keys to open all doors momentarily to confirm connectivity
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
