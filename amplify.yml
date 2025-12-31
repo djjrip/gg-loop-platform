@@ -19,6 +19,7 @@ frontend:
         - rm -rf node_modules package-lock.json && npm install
     build:
       commands:
+        - export VITE_API_BASE_URL="https://reward-fulfillment-production.up.railway.app"
         - npm run build
   artifacts:
     baseDirectory: dist/public

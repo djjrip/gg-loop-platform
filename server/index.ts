@@ -60,6 +60,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+import cors from "cors";
+app.use(cors({
+  origin: ["https://main.d18bfkxzeom7ln.amplifyapp.com", "http://localhost:5173", "https://ggloop.io", "https://www.ggloop.io"],
+  credentials: true
+}));
+
 // Defensive middleware – strip stray Date objects from session to avoid Date serialization errors
 app.use((req, _res, next) => {
   if (req.session) {

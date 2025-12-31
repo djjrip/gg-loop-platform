@@ -3,7 +3,9 @@
         "./**/*"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "../vite.config.ts",
+        "../client/**/*"
     ],
     "compilerOptions": {
         "target": "ES2020",
@@ -24,6 +26,9 @@
             "@shared/*": [
                 "../shared/*"
             ]
-        }
+        },
+        "types": [
+            "vite/client"
+        ]
     }
 }
