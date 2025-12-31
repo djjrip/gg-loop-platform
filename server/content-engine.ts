@@ -5,7 +5,7 @@
  * Innovation: Self-running content factory that drives user acquisition 24/7
  */
 
-import { db } from '../database';
+import { db } from './database';
 import { users, userRewards, rewards } from '../../shared/schema';
 import { sql } from 'drizzle-orm';
 

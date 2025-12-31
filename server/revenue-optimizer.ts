@@ -5,7 +5,7 @@
  * Innovation: Real-time price checking across affiliates, auto-routing to best margin
  */
 
-import { db } from '../database';
+import { db } from './database';
 import { rewards } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
 

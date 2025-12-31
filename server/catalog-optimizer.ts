@@ -5,7 +5,7 @@
  * Innovation: Catalog optimizes itself - always best margins, always fresh deals
  */
 
-import { db } from '../database';
+import { db } from './database';
 import { rewards } from '../../shared/schema';
 import { eq, sql } from 'drizzle-orm';
 

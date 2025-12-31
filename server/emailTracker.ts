@@ -4,7 +4,7 @@
  * Auto-updates databases when people open/click/reply
  */
 
-import { db } from '../database';
+import { db } from './database';
 import { eq } from 'drizzle-orm';
 
 interface SendGridEvent {
