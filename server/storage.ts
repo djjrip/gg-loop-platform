@@ -17,7 +17,7 @@ import {
   type MatchSubmission, type InsertMatchSubmission,
   type Referral, type InsertReferral,
   type ChecklistItem, type InsertChecklistItem
-} from "@shared/schema";
+} from "../shared/schema";
 import { eq, desc, and, sql, gte } from "drizzle-orm";
 import { pointsEngine } from "./pointsEngine";
 import { generateReferralCode } from "./lib/referral";

@@ -32,7 +32,7 @@ import {
   charities, charityCampaigns, games, leaderboardEntries,
   verificationProofs, fraudDetectionLogs, verificationQueue,
   gameRequests, insertGameRequestSchema, pointTransactions
-} from "@shared/schema";
+} from "../shared/schema";
 import { sql, desc, eq, and, gte, ne } from "drizzle-orm";
 import { setupAuth, isAuthenticated } from "./auth";
 import { setupTwitchAuth } from "./twitchAuth";
