@@ -14,17 +14,28 @@ export function log(message: string, source = "express") {
 }
 
 export function serveStatic(app: Express) {
+    // In production, compiled server is in dist/server/
+    // Frontend build is in dist/public/
     const distPath = path.resolve(__dirname, "..", "public");
-    const fallbackPath = path.resolve(__dirname, "..", "client", "public");
+    const fallbackPath = path.resolve(__dirname, "..", "..", "client", "public");
+
+    console.log(`📁 Attempting to serve static files from: ${distPath}`);
 
     if (fs.existsSync(distPath)) {
+        console.log(`✅ Found dist directory, serving from: ${distPath}`);
         app.use(express.static(distPath));
         app.use("*", (_req, res) => res.sendFile(path.resolve(distPath, "index.html")));
     } else {
-        console.warn(`Build directory missing, serving fallback from ${fallbackPath}`);
-        app.use(express.static(fallbackPath));
-        app.use("*", (_req, res) => res.sendFile(path.resolve(fallbackPath, "uplink.html")));
+        console.warn(`⚠️ Build directory missing at ${distPath}, trying fallback: ${fallbackPath}`);
+        if (fs.existsSync(fallbackPath)) {
+            app.use(express.static(fallbackPath));
+            app.use("*", (_req, res) => res.sendFile(path.resolve(fallbackPath, "uplink.html")));
+        } else {
+            console.error(`❌ No static files found. Checked:\n  - ${distPath}\n  - ${fallbackPath}`);
+        }
     }
+    return;
+
     return;
 
     // app.use(express.static(distPath)); // Handled above
