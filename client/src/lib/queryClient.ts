@@ -12,7 +12,8 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+  // Hardcoded for stability - AWS Amplify env vars can be flaky
+  const baseUrl = "https://reward-fulfillment-production.up.railway.app";
   const fullUrl = url.startsWith("/") ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
 
   const res = await fetch(fullUrl, {
@@ -32,7 +33,8 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
     async ({ queryKey }) => {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+      // Hardcoded for stability
+      const baseUrl = "https://reward-fulfillment-production.up.railway.app";
       const path = queryKey.join("/");
       const fullUrl = path.startsWith("/") ? `${baseUrl}${path}` : `${baseUrl}/${path}`;
 
