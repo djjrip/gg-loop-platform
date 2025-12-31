@@ -191,7 +191,7 @@ Your viewers could earn real rewards (Amazon cards, game keys, gaming gear) whil
 **The numbers:**
 - {{totalUsers}} users earning
 - {{totalRedemptions}} rewards claimed
-- ${{ totalValueRedeemed }} distributed
+- \${{ totalValueRedeemed }} distributed
 
 Want to try it? I can give you + your mods early access.
 

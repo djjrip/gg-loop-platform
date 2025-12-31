@@ -95,7 +95,7 @@ Here's what we built in 3 months:
 
 • {{activeRewards}} active rewards
 • {{totalRedemptions}} redemptions fulfilled  
-• ${{ totalValueRedeemed }} in value distributed
+• \${{ totalValueRedeemed }} in value distributed
 • Desktop app auto-tracks 15+ games
 • Viral referral system (both users earn forever)
 
@@ -110,7 +110,7 @@ The gaming economy is changing. 🧵`,
 {{totalUsers}} competitive gamers
 {{totalRedemptions}} rewards claimed
 {{activeRewards}} items in shop
-${{ totalValueRedeemed }} total value
+\${{ totalValueRedeemed }} total value
 
 Every number is verified on-chain.
 Every redemption is public.
@@ -130,7 +130,7 @@ const REDDIT_POSTS: ContentTemplate[] = [
 
 • {{totalUsers}} users signed up
 • {{totalRedemptions}} rewards redeemed
-• ${{ totalValueRedeemed }} in value distributed
+• \${{ totalValueRedeemed }} in value distributed
 • Desktop app verifies 15+ games automatically
 
 **How it works:**
@@ -171,7 +171,7 @@ const DISCORD_ANNOUNCEMENTS: ContentTemplate[] = [
 
 🎮 **{{totalUsers}}** gamers earning
 💎 **{{totalRedemptions}}** rewards claimed
-💰 **${{ totalValueRedeemed }}** distributed
+💰 **\${{ totalValueRedeemed }}** distributed
 🎁 **{{activeRewards}}** items in shop
 
 **New features shipping:**
