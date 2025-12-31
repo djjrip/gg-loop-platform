@@ -10,7 +10,7 @@
     "build": "vite build",
     "build:server": "node scripts/build-server-bypass.js",
     "tauri": "tauri",
-    "start": "npx tsx server/index.ts",
+    "start": "node dist/server/index.js",
     "start:dev": "npx tsx server/index.ts",
     "verify:dist": "node ./scripts/check-dist.cjs",
     "deploy:check": "npm run build && npm run verify:dist",
