@@ -2,6 +2,10 @@ console.log('🚀 Starting server initialization...');
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 
+// ----- CRITICAL: Import alerts FIRST for error handlers -----
+// Must be imported before error handler registration to avoid 'Cannot access alerts_1 before initialization'
+import { notify, type AlertPayload } from './alerts';
+
 // ----- Set Environment Defaults FIRST -----
 // Provide safe defaults for essential env vars so the server can start even if .env is missing.
 process.env.NODE_ENV ??= 'development';
@@ -17,10 +21,13 @@ import { validateRequiredEnv, logEnvChecks } from './envValidation';
 logEnvChecks(validateRequiredEnv());
 
 // Global error handling – graceful shutdown on fatal errors
+// Note: notify is now safely available as it was imported above
 process.on('uncaughtException', async (err) => {
   console.error('❌ FATAL: Uncaught Exception:', err);
   try {
-    await notify({ severity: 'critical', source: 'server.uncaughtException', message: `Server crash: ${err.message}` });
+    if (typeof notify === 'function') {
+      await notify({ severity: 'critical', source: 'server.uncaughtException', message: `Server crash: ${err.message}` });
+    }
   } catch (notifyError) {
     console.error('Failed to send crash alert:', notifyError);
   }
@@ -34,7 +41,9 @@ process.on('uncaughtException', async (err) => {
 process.on('unhandledRejection', async (reason) => {
   console.error('❌ FATAL: Unhandled Rejection:', reason);
   try {
-    await notify({ severity: 'critical', source: 'server.unhandledRejection', message: `Unhandled rejection: ${reason}` });
+    if (typeof notify === 'function') {
+      await notify({ severity: 'critical', source: 'server.unhandledRejection', message: `Unhandled rejection: ${reason}` });
+    }
   } catch (notifyError) {
     console.error('Failed to send rejection alert:', notifyError);
   }
@@ -47,7 +56,6 @@ process.on('unhandledRejection', async (reason) => {
 import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
 import { startTwitterAutomation } from "./services/twitter";
-import { notify, type AlertPayload } from './alerts';
 import { twitchErrorLogger } from "./middleware/twitchErrorLogger";
 import { serveStatic, log } from "./staticServer";
 import { getMetrics, setHealthStatus } from './monitoring';
