@@ -9,6 +9,7 @@
     "dev": "set NODE_ENV=development&& npx tsx server/index.ts",
     "build": "vite build",
     "build:server": "node scripts/build-server-bypass.js",
+    "build:all": "npm run build && npm run build:server",
     "tauri": "tauri",
     "start": "node dist/server/index.js",
     "start:dev": "npx tsx server/index.ts",
