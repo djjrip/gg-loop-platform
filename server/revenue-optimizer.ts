@@ -6,7 +6,7 @@
  */
 
 import { db } from './database';
-import { rewards } from '../../shared/schema';
+import { rewards } from '../shared/schema';
 import { eq } from 'drizzle-orm';
 
 interface AffiliateSource {

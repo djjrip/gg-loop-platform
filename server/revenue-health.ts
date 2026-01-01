@@ -6,7 +6,7 @@
  */
 
 import { db } from './database';
-import { userRewards } from '../../shared/schema';
+import { userRewards } from '../shared/schema';
 import { gte, sql } from 'drizzle-orm';
 import { getAffiliateRevenue } from '../affiliate-revenue';
 

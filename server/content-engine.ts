@@ -6,7 +6,7 @@
  */
 
 import { db } from './database';
-import { users, userRewards, rewards } from '../../shared/schema';
+import { users, userRewards, rewards } from '../shared/schema';
 import { sql } from 'drizzle-orm';
 
 interface ContentTemplate {
