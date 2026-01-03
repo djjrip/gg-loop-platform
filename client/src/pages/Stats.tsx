@@ -13,6 +13,7 @@ import MatchSyncStatus from "@/components/MatchSyncStatus";
 import GlobalActivityFeed from "@/components/GlobalActivityFeed";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import { ReferralWidget } from "@/components/ReferralWidget";
+import DesktopVerificationCard from "@/components/DesktopVerificationCard";
 
 interface RiotMatch {
   id: string;
@@ -287,6 +288,9 @@ export default function Stats() {
 
           {/* Right Column - Rewards Preview */}
           <div className="space-y-6">
+            {/* Desktop Verification Status */}
+            <DesktopVerificationCard />
+            
             <Card data-testid="card-rewards-preview">
               <CardHeader>
                 <CardTitle className="text-2xl">Top Rewards</CardTitle>

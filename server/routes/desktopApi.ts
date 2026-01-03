@@ -372,11 +372,11 @@ desktopApiRouter.get('/verification-status/:userId', async (req, res) => {
         // Calculate session stats
         const hasDesktopActivity = recentSessions.length > 0;
         const lastSession = recentSessions[0];
-        const totalSessionPoints = recentSessions.reduce((sum, s) => sum + (s.amount || 0), 0);
+        const totalSessionPoints = recentSessions.reduce((sum: number, s: any) => sum + (s.amount || 0), 0);
 
         // Parse game name from description (format: "GameName (process) - X min active play")
-        let lastGame = null;
-        let lastVerifiedAt = null;
+        let lastGame: string | null = null;
+        let lastVerifiedAt: Date | null = null;
         if (lastSession) {
             const desc = lastSession.description || '';
             const gameMatch = desc.match(/^([^(]+)/);
@@ -389,7 +389,7 @@ desktopApiRouter.get('/verification-status/:userId', async (req, res) => {
             lastGame,
             lastVerifiedAt,
             sessionPoints: totalSessionPoints,
-            recentSessions: recentSessions.map(s => ({
+            recentSessions: recentSessions.map((s: any) => ({
                 id: s.id,
                 points: s.amount,
                 description: s.description,
