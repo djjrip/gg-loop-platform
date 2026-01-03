@@ -44,7 +44,7 @@ function FoundingMemberCTA() {
   const displayMessage = count === 0 ? "Be the first." : `${count} / ${limit} joined`;
 
   return (
-    <Link href="/subscription">
+    <Link href="/founding-member">
       <div className="bg-gradient-to-r from-purple-600 to-ggloop-orange border-2 border-purple-400/50 hover:border-purple-400 rounded-xl p-6 md:p-8 shadow-[0_0_40px_rgba(147,51,234,0.3)] hover:shadow-[0_0_60px_rgba(147,51,234,0.5)] transition-all duration-300 cursor-pointer">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex-1 text-center md:text-left">
@@ -82,10 +82,10 @@ function FoundingMemberCTA() {
             </div>
           </div>
           <div className="flex-shrink-0">
-            <button className="bg-white text-purple-600 hover:bg-gray-100 rounded-lg px-6 py-3 font-bold text-lg transition-all duration-300 flex items-center gap-2 whitespace-nowrap">
+            <div className="bg-white text-purple-600 hover:bg-gray-100 rounded-lg px-6 py-3 font-bold text-lg transition-all duration-300 flex items-center gap-2 whitespace-nowrap">
               Join Now
               <ArrowRight className="h-5 w-5" />
-            </button>
+            </div>
           </div>
         </div>
       </div>
