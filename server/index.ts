@@ -354,6 +354,14 @@ app.use((req, res, next) => {
         startTwitterMonitoring();
         startRevenueTracking();
         console.log('✅ Monitoring systems initialized');
+
+        // Start Business Bot autonomous scheduler
+        try {
+          const { startBusinessBotScheduler } = await import('../business-bot/scheduler');
+          startBusinessBotScheduler();
+        } catch (botErr) {
+          console.warn('⚠️ Business Bot scheduler failed to start:', botErr);
+        }
       } catch (err) {
         console.log(' ℹ️ Monitoring systems skipped (optional dependencies)');
       }

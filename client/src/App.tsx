@@ -10,6 +10,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LoginNotification } from "@/components/LoginNotification";
 import Footer from "@/components/Footer";
 import { useAuth } from "./hooks/useAuth";
+import { useBootImmunity } from "./lib/bootImmunity";
 import MobileNav from "@/components/MobileNav";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -72,7 +73,15 @@ import EmpireCommand from "@/pages/EmpireCommand";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // BOOT IMMUNITY: Homepage renders within 3 seconds, no matter what
+  const { isLoading, timedOut } = useBootImmunity(authLoading);
+
+  // Log timeout for debugging
+  if (timedOut) {
+    console.warn('[App] Boot immunity timeout - rendering homepage without auth');
+  }
 
   if (isLoading) {
     return (

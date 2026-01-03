@@ -1,0 +1,164 @@
+/**
+ * GG LOOP Business Bot - Status Reporter
+ * Generates machine-readable and human-readable status artifacts
+ * FOUNDER ZERO-THINK MODE: State → Reason → Action
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+import { BotStatus, SystemState, HealthCheck } from './types';
+import { config } from './config';
+
+/**
+ * Determine overall system state from checks
+ */
+export function determineState(checks: HealthCheck[]): SystemState {
+    const hasCritical = checks.some(c => c.status === 'FAIL');
+    const hasWarning = checks.some(c => c.status === 'WARN');
+
+    if (hasCritical) return 'BROKEN';
+    if (hasWarning) return 'DEGRADED';
+    return 'HEALTHY';
+}
+
+/**
+ * Determine next action based on state
+ */
+export function determineNextAction(status: BotStatus): string {
+    if (status.state === 'HEALTHY') {
+        return 'No action required. All systems operational.';
+    }
+
+    const failedChecks = status.checks.filter(c => c.status === 'FAIL');
+
+    if (failedChecks.length === 0) {
+        return 'Review warnings but no immediate action required.';
+    }
+
+    // Check for specific failure patterns
+    const frontendFailed = failedChecks.some(c => c.name === 'Frontend Serving');
+    const deployStale = status.deployment?.isStale;
+
+    if (frontendFailed && deployStale) {
+        return 'TRIGGER MANUAL DEPLOY: Railway auto-deploy not running. Go to Railway and click Deploy.';
+    }
+
+    if (frontendFailed) {
+        return 'FRONTEND DOWN: Check Railway build logs. Likely dist/public missing.';
+    }
+
+    if (failedChecks.some(c => c.name === 'Backend API')) {
+        return 'BACKEND DOWN: Check Railway logs for crash or database issues.';
+    }
+
+    if (failedChecks.some(c => c.name === 'Database Connection')) {
+        return 'DATABASE ISSUE: Check NeonDB status and DATABASE_URL env var.';
+    }
+
+    return 'Review failed checks and take action.';
+}
+
+/**
+ * Write status to JSON file
+ */
+export function writeStatusJson(status: BotStatus): void {
+    const outputPath = path.resolve(process.cwd(), config.output.statusFile);
+    const dir = path.dirname(outputPath);
+
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+
+    fs.writeFileSync(outputPath, JSON.stringify(status, null, 2), 'utf-8');
+    console.log(`📄 Status JSON written to: ${outputPath}`);
+}
+
+/**
+ * Write human-readable status markdown
+ * FOUNDER ZERO-THINK MODE: State → Reason → Action
+ */
+export function writeStatusMarkdown(status: BotStatus): void {
+    const outputPath = path.resolve(process.cwd(), config.output.statusMarkdown);
+    const dir = path.dirname(outputPath);
+
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+
+    const stateEmoji: Record<SystemState, string> = {
+        HEALTHY: '🟢',
+        DEGRADED: '🟡',
+        BROKEN: '🔴',
+    };
+
+    const checkEmoji: Record<string, string> = {
+        PASS: '✅',
+        WARN: '⚠️',
+        FAIL: '❌',
+    };
+
+    // Build markdown - FOUNDER ZERO-THINK FORMAT
+    let md = `# GG LOOP — System Status
+
+**Last Check:** ${status.timestamp.toISOString()}
+
+---
+
+## ${stateEmoji[status.state]} STATE: ${status.state}
+
+`;
+
+    // If not healthy, show reason and action prominently
+    if (status.state !== 'HEALTHY') {
+        const failedChecks = status.checks.filter(c => c.status === 'FAIL');
+        const warningChecks = status.checks.filter(c => c.status === 'WARN');
+
+        if (failedChecks.length > 0) {
+            md += `### ❌ FAILED\n\n`;
+            failedChecks.forEach(c => {
+                md += `- **${c.name}:** ${c.message}\n`;
+            });
+            md += `\n`;
+        }
+
+        if (warningChecks.length > 0) {
+            md += `### ⚠️ WARNINGS\n\n`;
+            warningChecks.forEach(c => {
+                md += `- **${c.name}:** ${c.message}\n`;
+            });
+            md += `\n`;
+        }
+
+        md += `---\n\n## 🎯 NEXT ACTION\n\n**${status.nextAction}**\n\n`;
+
+        if (status.runbookStep) {
+            md += `${status.runbookStep}\n\n`;
+        }
+    } else {
+        md += `**All systems operational. No action required.**\n\n`;
+    }
+
+    // Health check details table
+    md += `---\n\n## Details\n\n`;
+    md += `| Check | Status | Message |\n`;
+    md += `|-------|--------|--------|\n`;
+
+    for (const check of status.checks) {
+        md += `| ${check.name} | ${checkEmoji[check.status]} | ${check.message} |\n`;
+    }
+
+    // Deployment info
+    if (status.deployment) {
+        md += `\n---\n\n## Deployment\n\n`;
+        md += `| Metric | Value |\n`;
+        md += `|--------|-------|\n`;
+        md += `| Git Commit | \`${status.deployment.lastGitCommit}\` |\n`;
+        md += `| Running | \`${status.deployment.runningCommit}\` |\n`;
+        md += `| Stale | ${status.deployment.isStale ? '⚠️ YES' : '✅ NO'} |\n`;
+    }
+
+    md += `\n---\n\n*Auto-generated by GG LOOP Business Bot*\n`;
+
+    fs.writeFileSync(outputPath, md, 'utf-8');
+    console.log(`📄 Status MD written to: ${outputPath}`);
+}

@@ -1,0 +1,40 @@
+{
+  "state": "MISALIGNED",
+  "timestamp": "2026-01-02T23:34:28.937Z",
+  "recentOutputs": [
+    {
+      "id": "197a72c",
+      "category": "product",
+      "description": "feat: add build:all script for full-stack deployment",
+      "timestamp": "2026-01-01T16:42:53.000Z",
+      "impact": "high",
+      "evidence": "197a72c041503d99b385bd8afda6278a47cd7878"
+    }
+  ],
+  "outputCountLast7Days": 20,
+  "outputCountLast30Days": 20,
+  "nextActions": [
+    {
+      "priority": "critical",
+      "category": "growth",
+      "action": "Stop building, start distributing",
+      "reason": "Product without users = vanity project."
+    },
+    {
+      "priority": "high",
+      "category": "growth",
+      "action": "Create one piece of content showcasing recent features",
+      "reason": "Translate technical work into user-facing value."
+    },
+    {
+      "priority": "low",
+      "category": "business",
+      "action": "Review monetization readiness",
+      "reason": "Regular revenue pulse check."
+    }
+  ],
+  "diagnosis": "Heavy product/technical work is happening, but no growth or business output. Features without distribution = wasted effort.",
+  "stagnationDays": 1,
+  "consecutiveIdleDays": 1,
+  "lastMeaningfulOutput": "2026-01-01T16:42:53.000Z"
+}
