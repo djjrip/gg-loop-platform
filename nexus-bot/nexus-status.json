@@ -1,6 +1,6 @@
 {
   "state": "MISALIGNED_BUILDING_NO_DISTRIBUTION",
-  "timestamp": "2026-01-03T02:02:27.765Z",
+  "timestamp": "2026-01-03T02:49:36.241Z",
   "reason": "Heavy technical work happening but no growth or distribution. Features without users = wasted effort.",
   "autoActions": [
     {
@@ -15,18 +15,18 @@
   "nextAction": "STOP BUILDING. Create one piece of content showcasing what was built.",
   "innovation": {
     "leverageUpgrade": {
-      "id": "crash-auto-restart",
+      "id": "stale-deploy-auto-trigger",
       "type": "leverage",
-      "title": "Automatic Crash Recovery",
-      "description": "Add Railway restart policy with exponential backoff",
-      "effort": "low",
+      "title": "Stale Deploy Auto-Trigger",
+      "description": "If deploy stale >2 hours, auto-trigger via Railway API",
+      "effort": "medium",
       "impact": "high"
     },
     "efficiencyUpgrade": {
-      "id": "one-command-check",
+      "id": "inline-fix-suggestions",
       "type": "efficiency",
-      "title": "Single Health Command",
-      "description": "npm run check-all that runs bot + aoe + nexus in sequence",
+      "title": "Inline Fix Commands",
+      "description": "Include copy-paste terminal commands in every error report",
       "effort": "low",
       "impact": "high"
     }
@@ -51,5 +51,5 @@
   ],
   "inSafeMode": false,
   "failureMemory": [],
-  "runCount": 2
+  "runCount": 3
 }

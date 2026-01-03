@@ -8,5 +8,15 @@
       "postingStreak": 0,
       "postsThisWeek": 0
     }
+  },
+  {
+    "timestamp": "2026-01-03T02:48:50.972Z",
+    "result": "posted",
+    "details": "Processed 3 signals, 2 posts attempted",
+    "stats": {
+      "totalPosts": 0,
+      "postingStreak": 0,
+      "postsThisWeek": 0
+    }
   }
 ]

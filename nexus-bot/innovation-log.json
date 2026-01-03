@@ -3,7 +3,9 @@
     "auto-deploy-health-gate",
     "status-at-glance",
     "crash-auto-restart",
-    "one-command-check"
+    "one-command-check",
+    "stale-deploy-auto-trigger",
+    "inline-fix-suggestions"
   ],
-  "lastProposalDate": "2026-01-03T02:02:27.764Z"
+  "lastProposalDate": "2026-01-03T02:49:36.240Z"
 }
