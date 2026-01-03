@@ -146,6 +146,52 @@ export async function getBalance(token: string): Promise<{ points: number; error
 }
 
 /**
+ * CRITICAL: Fetch current user info for account binding
+ * This MUST succeed before points can accrue
+ */
+export interface UserInfo {
+    id: string;
+    username: string;
+    email: string;
+    totalPoints: number;
+    isFounder?: boolean;
+    tier?: string;
+}
+
+export async function getMe(token: string): Promise<{ success: boolean; user?: UserInfo; error?: string }> {
+    try {
+        const response = await fetch(`${BASE_URL}/api/me`, {
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            return { success: false, error: errorData.error || `Auth failed (${response.status})` };
+        }
+
+        const data = await response.json();
+        return { 
+            success: true, 
+            user: {
+                id: data.id || data.userId,
+                username: data.username || data.displayName || data.email?.split('@')[0] || 'Unknown',
+                email: data.email,
+                totalPoints: data.totalPoints || 0,
+                isFounder: data.isFounder,
+                tier: data.tier
+            }
+        };
+    } catch (error: any) {
+        console.error('[API] getMe error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
  * Sync pending matches (offline buffer)
  */
 export async function syncPendingMatches(
