@@ -1,39 +1,33 @@
-$files = @(
-    'STATE_OF_REALITY_LEVERAGE_REPORT.md',
-    'AUTONOMOUS_STATUS_REPORT.md',
-    'FINAL_STATUS_REPORT.md',
-    'EMPIRE_STATUS_REPORT.md',
-    'TACTICAL_REPORT.md',
-    'HONESTY_AUDIT_REPORT.md',
-    'BRAND_SITE_READINESS_REPORT.md',
-    'LEVEL_4_SAFETY_REPORT.md',
-    'LEVEL_4_CONSISTENCY_REPORT.md',
-    'AWS_VERIFICATION_REPORT.md',
-    'SECURITY_AUDIT_REPORT.md',
-    'PRODUCTION_RECOVERY_REPORT.md',
-    'ACTUAL_STATUS.md',
-    'OPERATIONAL_STATUS.md',
-    'AUTHENTICITY_AUDIT.md',
-    'BRAND_ALIGNMENT_AUDIT.md',
-    'COPY_AUDIT_L3.md',
-    'ENV_AUDIT_COMPLETE.md',
-    'CLEANUP_AUDIT.md',
-    'RIOT_COMPLIANCE_AUDIT.md',
-    'COMPLETE_BUSINESS_ANALYSIS.md',
-    'LAUNCH_STATUS_HONEST_ASSESSMENT.md'
+# LOCAL REPORT MIRRORING SCRIPT (LOCKED)
+# Copies markdown reports to Detailed CHATGPT reports directory
+# Idempotent: Safe to run multiple times
+
+$RepoRoot = "C:\Users\Jayson Quindao\Desktop\GG LOOP\GG-LOOP-PLATFORM"
+$DestDir = "C:\Users\Jayson Quindao\Desktop\GG LOOP\Detailed CHATGPT reports"
+$FilesToCopy = @(
+    "STATE_OF_REALITY_LEVERAGE_REPORT.md",
+    "AG_GIT_STATE_RESOLUTION_REPORT.md"
 )
 
-$dest = 'Detailed CHATGPT reports'
-
-foreach ($f in $files) {
-    if (Test-Path $f) {
-        Copy-Item $f -Destination $dest -Force
-        Write-Host "Copied $f"
-    } else {
-        Write-Host "Not found: $f"
-    }
+# Ensure destination directory exists
+if (-not (Test-Path $DestDir)) {
+    New-Item -ItemType Directory -Path $DestDir -Force | Out-Null
 }
 
-Write-Host "Done!"
-
-
+# Copy each file if it exists
+foreach ($FileName in $FilesToCopy) {
+    $SourcePath = Join-Path $RepoRoot $FileName
+    $DestPath = Join-Path $DestDir $FileName
+    
+    if (Test-Path $SourcePath) {
+        if (Test-Path $DestPath) {
+            # File exists - append timestamp
+            $Timestamp = Get-Date -Format "yyyy-MM-dd_HHmm"
+            $NameWithoutExt = [System.IO.Path]::GetFileNameWithoutExtension($FileName)
+            $Extension = [System.IO.Path]::GetExtension($FileName)
+            $NewFileName = "${NameWithoutExt}_${Timestamp}${Extension}"
+            $DestPath = Join-Path $DestDir $NewFileName
+        }
+        Copy-Item -Path $SourcePath -Destination $DestPath -Force | Out-Null
+    }
+}
