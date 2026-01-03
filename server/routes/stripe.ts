@@ -241,7 +241,7 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent): Prom
 async function grantFoundingMemberStatus(userId: string, paymentId: string): Promise<void> {
   console.log(`[Stripe] Granting Founding Member status to user ${userId} (payment: ${paymentId})`);
 
-  await db.transaction(async (tx) => {
+  await db.transaction(async (tx: any) => {
     // Get next founder number
     const [lastFounder] = await tx
       .select({ founderNumber: users.founderNumber })
