@@ -23,6 +23,7 @@
     "nexus:run": "npx tsx nexus-bot/index.ts",
     "nexus:distribute": "npx tsx nexus-bot/distribution-engine/index.ts",
     "nexus:distribute:dry": "npx tsx nexus-bot/distribution-engine/index.ts --dry-run",
+    "nexus:auto": "npx tsx nexus-bot/distribution-engine/autonomous-runner.ts",
     "check-rewards": "node scripts/check-rewards.js",
     "db:push": "drizzle-kit push",
     "seed:rewards": "npx tsx server/seed-rewards.ts",
