@@ -7,14 +7,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Trophy, Zap, Star, Flame, Gift, Sparkles, Coins, AlertCircle, ChevronDown, ChevronUp, Clock, Code } from "lucide-react";
+import { Check, X, Trophy, Zap, Star, Flame, Gift, Sparkles, Coins, Clock, Code } from "lucide-react";
 import type { Subscription } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import Header from "@/components/Header";
-import PayPalSubscriptionButton from "@/components/PayPalSubscriptionButton";
 
 function getRemainingDays(endDate: string | Date): number {
   const end = new Date(endDate);
@@ -28,8 +27,6 @@ export default function SubscriptionPage() {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [referralCode, setReferralCode] = useState("");
-  const [paypalSubId, setPaypalSubId] = useState("");
-  const [showManualSync, setShowManualSync] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   // Update countdown timers every hour to keep them accurate
@@ -136,36 +133,28 @@ export default function SubscriptionPage() {
     },
   });
 
-  const manualSyncMutation = useMutation({
-    mutationFn: async (subscriptionId: string) => {
-      const response = await apiRequest("POST", "/api/paypal/manual-sync", { subscriptionId });
-      return response.json();
-    },
-    onSuccess: (data) => {
+  const handleStripeCheckout = async (tier: string) => {
+    try {
+      const response = await apiRequest("POST", "/api/stripe/create-subscription-checkout", { tier });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create checkout session",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "Subscription Synced! 🎉",
-        description: `Your ${data.tier} subscription is now active!`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      setPaypalSubId("");
-      setShowManualSync(false);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Sync Failed",
-        description: error.message || "Failed to sync subscription. Check your PayPal Subscription ID.",
+        title: "Error",
+        description: error.message || "Failed to start checkout",
         variant: "destructive",
       });
-    },
-  });
-
-  const paypalPlanIds = {
-    basic: "P-6A485619U8349492UNEK4RRA",
-    builder: "P-7PE45456B7870481SNEK4TRY", // Uses Pro Plan ID ($12) for now
-    pro: "P-7PE45456B7870481SNEK4TRY",
-    elite: "P-369148416D044494CNEK4UDQ",
+    }
   };
+
 
   const tiers = [
     {
@@ -287,61 +276,6 @@ export default function SubscriptionPage() {
           )}
         </div>
 
-        {/* Manual Sync for PayPal Subscription Issues */}
-        {isAuthenticated && !subscription?.tier && (
-          <div className="mb-8 max-w-2xl mx-auto">
-            <Card className="border-accent/30 bg-accent/5">
-              <CardHeader className="pb-3">
-                <button
-                  onClick={() => setShowManualSync(!showManualSync)}
-                  className="flex items-center justify-between w-full text-left hover-elevate p-2 -m-2 rounded-md"
-                  data-testid="button-toggle-manual-sync"
-                >
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-accent-foreground" />
-                    <CardTitle className="text-base">Subscription Not Showing?</CardTitle>
-                  </div>
-                  {showManualSync ? (
-                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </button>
-              </CardHeader>
-              {showManualSync && (
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    If you completed payment but your subscription isn't showing, manually sync it using your PayPal Subscription ID.
-                  </p>
-                  <div className="space-y-2">
-                    <Label htmlFor="paypal-sub-id" className="text-sm">
-                      PayPal Subscription ID
-                    </Label>
-                    <Input
-                      id="paypal-sub-id"
-                      placeholder="I-XXXXXXXXXX"
-                      value={paypalSubId}
-                      onChange={(e) => setPaypalSubId(e.target.value)}
-                      data-testid="input-paypal-subscription-id"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Find this in your PayPal account under Subscriptions
-                    </p>
-                  </div>
-                  <Button
-                    onClick={() => paypalSubId && manualSyncMutation.mutate(paypalSubId)}
-                    disabled={!paypalSubId || manualSyncMutation.isPending}
-                    className="w-full"
-                    data-testid="button-sync-subscription"
-                  >
-                    {manualSyncMutation.isPending ? "Syncing..." : "Sync Subscription"}
-                  </Button>
-                </CardContent>
-              )}
-            </Card>
-          </div>
-        )}
-
         {isAuthenticated && subLoading ? (
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {[1, 2].map((i) => (
@@ -456,22 +390,26 @@ export default function SubscriptionPage() {
                       {cancelMutation.isPending ? "Canceling..." : "Cancel Subscription"}
                     </Button>
                   )}
-                  {subscription.status === "past_due" && paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds] && (
+                  {subscription.status === "past_due" && (
                     <div className="flex flex-col gap-2">
                       <p className="text-sm text-muted-foreground">
                         To update your payment method, please cancel and create a new subscription:
                       </p>
-                      <PayPalSubscriptionButton
-                        planId={paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds]}
-                        tier={subscription.tier}
-                      />
+                      <Button
+                        onClick={() => handleStripeCheckout(subscription.tier)}
+                        className="w-full"
+                      >
+                        Resubscribe with Stripe
+                      </Button>
                     </div>
                   )}
-                  {subscription.status === "canceling" && paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds] && (
-                    <PayPalSubscriptionButton
-                      planId={paypalPlanIds[subscription.tier as keyof typeof paypalPlanIds]}
-                      tier={subscription.tier}
-                    />
+                  {subscription.status === "canceling" && (
+                    <Button
+                      onClick={() => handleStripeCheckout(subscription.tier)}
+                      className="w-full"
+                    >
+                      Resubscribe with Stripe
+                    </Button>
                   )}
                 </CardFooter>
               </Card>
@@ -771,24 +709,15 @@ export default function SubscriptionPage() {
                           </Link>
                         </div>
                       ) : !isAuthenticated ? (
-                        paypalPlanIds[tier.id as keyof typeof paypalPlanIds] ? (
-                          <div className="w-full">
-                            <PayPalSubscriptionButton
-                              planId={paypalPlanIds[tier.id as keyof typeof paypalPlanIds]}
-                              tier={tier.name}
-                            />
-                          </div>
-                        ) : (
-                          <Link href="/login">
-                            <Button
-                              className="w-full"
-                              variant={isElite ? "default" : "outline"}
-                              data-testid={`button-login-${tier.id}`}
-                            >
-                              Get Started
-                            </Button>
-                          </Link>
-                        )
+                        <Link href="/login">
+                          <Button
+                            className="w-full"
+                            variant={isElite ? "default" : "outline"}
+                            data-testid={`button-login-${tier.id}`}
+                          >
+                            Get Started
+                          </Button>
+                        </Link>
                       ) : isCurrentTier ? (
                         <Button
                           className="w-full"
@@ -812,13 +741,15 @@ export default function SubscriptionPage() {
                             Cancel your current subscription first to switch to this tier
                           </p>
                         </div>
-                      ) : !isDowngrade && paypalPlanIds[tier.id as keyof typeof paypalPlanIds] ? (
-                        <div className="w-full">
-                          <PayPalSubscriptionButton
-                            planId={paypalPlanIds[tier.id as keyof typeof paypalPlanIds]}
-                            tier={tier.name}
-                          />
-                        </div>
+                      ) : !isDowngrade ? (
+                        <Button
+                          className="w-full"
+                          variant={isElite ? "default" : "outline"}
+                          onClick={() => handleStripeCheckout(tier.id)}
+                          data-testid={`button-subscribe-${tier.id}`}
+                        >
+                          Subscribe with Stripe
+                        </Button>
                       ) : null}
                     </CardFooter>
                   </Card>

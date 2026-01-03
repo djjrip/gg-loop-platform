@@ -2016,7 +2016,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Platform capabilities (static, true facts)
         capabilities: {
           authProviders: ['Google', 'Discord', 'Twitch'],
-          paymentProvider: 'PayPal',
+          paymentProvider: 'Stripe',
           gamesSupported: ['League of Legends'],
           featuresReady: [
             'User Authentication (OAuth)',
@@ -4204,404 +4204,6 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
     }
   });
 
-  // PayPal: Create subscription (called by PayPal SDK on button click)
-  app.post('/api/paypal/create-subscription', getUserMiddleware, async (req: any, res) => {
-    const { planId, tier } = req.body;
-    const userId = req.dbUser.id;
-
-    if (!planId || !tier) {
-      return res.status(400).json({ message: "Plan ID and tier are required" });
-    }
-
-    try {
-      // Validate tier
-      const validTiers = ['basic', 'pro', 'elite', 'Basic', 'Pro', 'Elite'];
-      if (!validTiers.includes(tier)) {
-        return res.status(400).json({ message: "Invalid subscription tier" });
-      }
-
-      // The PayPal SDK handles the actual subscription creation on the client side
-      // This endpoint just validates the request and returns the plan ID
-      // The SDK will use this plan ID to create the subscription with PayPal
-      console.log(`PayPal subscription creation initiated: planId=${planId}, tier=${tier}, userId=${userId}`);
-
-      res.json({
-        planId: planId,
-        message: "Subscription creation initiated"
-      });
-    } catch (error: any) {
-      console.error("Error in PayPal create-subscription:", error);
-      res.status(500).json({
-        message: error.message || "Failed to initiate subscription"
-      });
-    }
-  });
-
-  // Manual PayPal subscription sync - for users who had issues during checkout
-  app.post('/api/paypal/manual-sync', getUserMiddleware, async (req: any, res) => {
-    const { subscriptionId } = req.body;
-    const userId = req.dbUser.id;
-
-    if (!subscriptionId) {
-      return res.status(400).json({ message: "PayPal Subscription ID is required" });
-    }
-
-    // Generate stable event ID for deduplication
-    const eventId = `paypal_approved_${subscriptionId}_${userId}`;
-
-    try {
-      // Check if already processed
-      const existingEvent = await storage.checkEventProcessed(eventId);
-      if (existingEvent) {
-        console.log(`PayPal subscription ${subscriptionId} already synced for user ${userId}`);
-        const subscription = await storage.getSubscription(userId);
-        return res.json({
-          success: true,
-          message: "Subscription already synced",
-          tier: subscription?.tier || "unknown"
-        });
-      }
-
-      const verification = await verifyPayPalSubscription(subscriptionId);
-
-      if (!verification.valid) {
-        console.error("PayPal subscription verification failed:", verification.error);
-        return res.status(400).json({
-          message: verification.error || "Invalid PayPal subscription"
-        });
-      }
-
-      if (!verification.tier) {
-        return res.status(400).json({
-          message: "Could not determine subscription tier"
-        });
-      }
-
-      // Security: Block guest users (must be authenticated with verified email)
-      const userEmail = req.dbUser.email;
-      if (!userEmail) {
-        console.error("Manual sync blocked: Guest user attempted sync (no verified email)");
-        return res.status(401).json({
-          message: "You must be logged in with a verified account to sync subscriptions."
-        });
-      }
-
-      // Security: Verify subscription ownership - subscriber email must match authenticated user's email
-      if (!verification.subscriberEmail) {
-        console.error("Manual sync blocked: PayPal subscription has no subscriber email");
-        return res.status(400).json({
-          message: "Unable to verify subscription ownership. Contact support."
-        });
-      }
-
-      if (verification.subscriberEmail.toLowerCase() !== userEmail.toLowerCase()) {
-        console.error(`Manual sync blocked: Email mismatch. Subscriber: ${verification.subscriberEmail}, User: ${userEmail}`);
-        return res.status(403).json({
-          message: "This subscription belongs to a different account. Please use the correct PayPal account."
-        });
-      }
-
-      const tierLower = verification.tier;
-      const currentDate = new Date();
-      const nextBillingDate = new Date(currentDate);
-      nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
-
-      const existingSubscription = await storage.getSubscription(userId);
-      let subscriptionDbId: string;
-
-      if (existingSubscription) {
-        await storage.updateSubscription(existingSubscription.id, {
-          tier: tierLower,
-          status: "active",
-          paypalSubscriptionId: subscriptionId,
-          currentPeriodEnd: nextBillingDate,
-        });
-        subscriptionDbId = existingSubscription.id;
-
-        await storage.logSubscriptionEvent({
-          subscriptionId: existingSubscription.id,
-          eventType: "subscription.manual_sync",
-          eventData: {
-            eventId,
-            previousTier: existingSubscription.tier,
-            newTier: tierLower,
-            paypalSubscriptionId: subscriptionId,
-            status: verification.status,
-          },
-        });
-      } else {
-        const newSub = await storage.createSubscription({
-          userId,
-          tier: tierLower,
-          status: "active",
-          paypalSubscriptionId: subscriptionId,
-          currentPeriodStart: currentDate,
-          currentPeriodEnd: nextBillingDate,
-        });
-        subscriptionDbId = newSub.id;
-
-        await storage.logSubscriptionEvent({
-          subscriptionId: newSub.id,
-          eventType: "subscription.manual_sync_created",
-          eventData: {
-            eventId,
-            tier: tierLower,
-            paypalSubscriptionId: subscriptionId,
-            status: verification.status,
-          },
-        });
-      }
-
-      await pointsEngine.awardMonthlySubscriptionPoints(userId, tierLower, subscriptionId);
-
-      res.json({
-        success: true,
-        message: "Subscription synced successfully!",
-        tier: tierLower
-      });
-    } catch (error: any) {
-      console.error("Error syncing PayPal subscription:", error);
-      res.status(500).json({
-        message: error.message || "Failed to sync subscription"
-      });
-    }
-  });
-
-  app.post('/api/paypal/subscription-approved', getUserMiddleware, async (req: any, res) => {
-    const { subscriptionId } = req.body;
-    const userId = req.dbUser.id;
-
-    if (!subscriptionId) {
-      return res.status(400).json({ message: "Missing subscription ID" });
-    }
-
-    // Generate stable event ID for deduplication (based on subscription ID, not timestamp)
-    const eventId = `paypal_approved_${subscriptionId}_${userId}`;
-
-    try {
-      // Check if this approval has already been processed (deduplication)
-      const existingEvent = await storage.checkEventProcessed(eventId);
-      if (existingEvent) {
-        console.log(`PayPal subscription ${subscriptionId} already processed, skipping`);
-        const subscription = await storage.getSubscription(userId);
-        return res.json({
-          message: "Subscription already activated",
-          tier: subscription?.tier || "unknown"
-        });
-      }
-
-      const verification = await verifyPayPalSubscription(subscriptionId);
-
-      if (!verification.valid) {
-        console.error("PayPal subscription verification failed:", verification.error);
-
-        // Log verification failure event
-        try {
-          const sub = await storage.getSubscription(userId);
-          if (sub) {
-            await storage.logSubscriptionEvent({
-              subscriptionId: sub.id,
-              eventType: "subscription.verification_failed",
-              eventData: {
-                eventId,
-                error: verification.error,
-                paypalSubscriptionId: subscriptionId,
-                status: verification.status,
-              },
-            });
-          }
-        } catch (logError) {
-          console.error("Failed to log verification failure:", logError);
-        }
-
-        return res.status(400).json({
-          message: verification.error || "Invalid subscription"
-        });
-      }
-
-      if (!verification.tier) {
-        return res.status(400).json({
-          message: "Could not determine tier from PayPal subscription"
-        });
-      }
-
-      const tierLower = verification.tier;
-      const currentDate = new Date();
-      const nextBillingDate = new Date(currentDate);
-      nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
-
-      const existingSubscription = await storage.getSubscription(userId);
-      let subscriptionDbId: string;
-
-      if (existingSubscription) {
-        await storage.updateSubscription(existingSubscription.id, {
-          tier: tierLower,
-          status: "active",
-          paypalSubscriptionId: subscriptionId,
-          currentPeriodEnd: nextBillingDate,
-        });
-        subscriptionDbId = existingSubscription.id;
-
-        // Log subscription update event with stable ID
-        await storage.logSubscriptionEvent({
-          subscriptionId: existingSubscription.id,
-          eventType: "subscription.updated",
-          eventData: {
-            eventId,
-            previousTier: existingSubscription.tier,
-            newTier: tierLower,
-            paypalSubscriptionId: subscriptionId,
-            status: verification.status,
-          },
-        });
-      } else {
-        const newSub = await storage.createSubscription({
-          userId,
-          tier: tierLower,
-          status: "active",
-          paypalSubscriptionId: subscriptionId,
-          currentPeriodStart: currentDate,
-          currentPeriodEnd: nextBillingDate,
-        });
-        subscriptionDbId = newSub.id;
-
-        // Log subscription created event with stable ID
-        await storage.logSubscriptionEvent({
-          subscriptionId: newSub.id,
-          eventType: "subscription.created",
-          eventData: {
-            eventId,
-            tier: tierLower,
-            paypalSubscriptionId: subscriptionId,
-            status: verification.status,
-          },
-        });
-      }
-
-      await pointsEngine.awardMonthlySubscriptionPoints(userId, tierLower, subscriptionId);
-
-      res.json({
-        message: "Subscription activated successfully",
-        tier: tierLower
-      });
-    } catch (error: any) {
-      console.error("Error processing PayPal subscription:", error);
-
-      // Log failure event with error details
-      try {
-        const sub = await storage.getSubscription(userId);
-        if (sub) {
-          await storage.logSubscriptionEvent({
-            subscriptionId: sub.id,
-            eventType: "subscription.processing_failed",
-            eventData: {
-              error: error.message,
-              paypalSubscriptionId: subscriptionId,
-              stack: error.stack,
-            },
-          });
-        }
-      } catch (logError) {
-        console.error("Failed to log processing error:", logError);
-      }
-
-      res.status(500).json({ message: error.message || "Failed to process subscription" });
-    }
-  });
-
-  // PayPal Webhook Handler - Recurring Payments
-  app.post('/api/webhooks/paypal', async (req, res) => {
-    try {
-      // Verify webhook signature for security
-      const verification = await verifyPayPalWebhook(req.headers as Record<string, string>, req.body);
-      if (!verification.valid) {
-        console.error(`[PayPal Webhook] Signature verification failed: ${verification.error}`);
-        return res.status(401).json({ message: 'Webhook signature verification failed' });
-      }
-
-      const event = req.body;
-      const eventType = event.event_type;
-
-      console.log(`[PayPal Webhook] Verified event: ${eventType}`);
-
-      // Handle PAYMENT.SALE.COMPLETED (monthly recurring payment)
-      if (eventType === 'PAYMENT.SALE.COMPLETED') {
-        const subscriptionId = event.resource?.billing_agreement_id;
-        const saleId = event.resource?.id;
-
-        if (!subscriptionId || !saleId) {
-          console.error('[PayPal Webhook] Missing subscription or sale ID');
-          return res.status(400).json({ message: 'Missing required data' });
-        }
-
-        // Find user by PayPal subscription ID
-        const subscription = await db
-          .select()
-          .from(subscriptions)
-          .where(eq(subscriptions.paypalSubscriptionId, subscriptionId))
-          .limit(1);
-
-        if (!subscription[0]) {
-          console.error(`[PayPal Webhook] Subscription not found: ${subscriptionId}`);
-          return res.status(404).json({ message: 'Subscription not found' });
-        }
-
-        const userId = subscription[0].userId;
-        const tier = subscription[0].tier;
-
-        // Check idempotency
-        const eventId = `paypal_sale_${saleId}`;
-        const existingEvent = await storage.checkEventProcessed(eventId);
-        if (existingEvent) {
-          console.log(`[PayPal Webhook] Sale ${saleId} already processed`);
-          return res.json({ received: true, message: 'Already processed' });
-        }
-
-        // Award monthly points
-        await pointsEngine.awardMonthlySubscriptionPoints(userId, tier, saleId);
-
-        // Log event
-        await storage.logSubscriptionEvent({
-          subscriptionId: subscription[0].id,
-          eventType: 'payment.sale.completed',
-          eventData: {
-            eventId,
-            saleId,
-            paypalSubscriptionId: subscriptionId,
-            tier,
-          },
-        });
-
-        console.log(`[PayPal Webhook] Awarded monthly points for ${tier} tier to user ${userId}`);
-      }
-
-      // Handle BILLING.SUBSCRIPTION.CANCELLED
-      if (eventType === 'BILLING.SUBSCRIPTION.CANCELLED') {
-        const subscriptionId = event.resource?.id;
-
-        if (!subscriptionId) {
-          return res.status(400).json({ message: 'Missing subscription ID' });
-        }
-
-        const subscription = await db
-          .select()
-          .from(subscriptions)
-          .where(eq(subscriptions.paypalSubscriptionId, subscriptionId))
-          .limit(1);
-
-        if (subscription[0]) {
-          await storage.updateSubscription(subscription[0].id, { status: 'canceled' });
-          console.log(`[PayPal Webhook] Subscription ${subscriptionId} cancelled`);
-        }
-      }
-
-      res.json({ received: true });
-    } catch (error: any) {
-      console.error('[PayPal Webhook] Error:', error);
-      res.status(500).json({ message: error.message || 'Webhook processing failed' });
-    }
-  });
-
   app.post('/api/subscription/cancel', getUserMiddleware, async (req: any, res) => {
     const userId = req.dbUser.id;
 
@@ -4613,22 +4215,16 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       }
 
       // Generate stable event ID for deduplication
-      const eventId = `cancel_${subscription.paypalSubscriptionId}_${userId}`;
+      const eventId = `cancel_${subscription.id}_${userId}`;
 
       // Check if cancellation already processed
       const existingEvent = await storage.checkEventProcessed(eventId);
       if (existingEvent) {
-        console.log(`Subscription ${subscription.paypalSubscriptionId} already being canceled`);
+        console.log(`Subscription ${subscription.id} already being canceled`);
         return res.json({ message: "Subscription cancellation already in progress" });
       }
 
-      if (subscription.paypalSubscriptionId) {
-        await cancelPayPalSubscription(
-          subscription.paypalSubscriptionId,
-          "User requested cancellation"
-        );
-      }
-
+      // Update subscription status to canceling (Stripe webhook will handle actual cancellation)
       await storage.updateSubscription(subscription.id, {
         status: "canceling"
       });
@@ -4640,7 +4236,6 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
         eventData: {
           eventId,
           tier: subscription.tier,
-          paypalSubscriptionId: subscription.paypalSubscriptionId,
           reason: "user_requested",
         },
       });
@@ -4653,7 +4248,7 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
       try {
         const subscription = await storage.getSubscription(userId);
         if (subscription) {
-          const eventId = `cancel_${subscription.paypalSubscriptionId}_${userId}`;
+          const eventId = `cancel_${subscription.id}_${userId}`;
           await storage.logSubscriptionEvent({
             subscriptionId: subscription.id,
             eventType: "subscription.cancel_failed",
@@ -4661,7 +4256,6 @@ ACTION NEEDED: ${reward.fulfillmentType === 'physical'
               eventId,
               error: error.message,
               tier: subscription.tier,
-              paypalSubscriptionId: subscription.paypalSubscriptionId,
             },
           });
         }

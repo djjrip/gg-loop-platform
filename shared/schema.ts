@@ -182,7 +182,6 @@ export const userRewards = pgTable("user_rewards", {
 export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id).unique(),
-  paypalSubscriptionId: varchar("paypal_subscription_id").unique(),
   tier: varchar("tier").notNull().default("basic"),
   status: varchar("status").notNull().default("active"),
   currentPeriodStart: timestamp("current_period_start").notNull(),
@@ -193,7 +192,6 @@ export const subscriptions = pgTable("subscriptions", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => [
   index("idx_subscriptions_status").on(table.status),
-  index("idx_subscriptions_paypal_id").on(table.paypalSubscriptionId),
   index("idx_subscriptions_user_id").on(table.userId),
   index("idx_subscriptions_tier").on(table.tier),
 ]);
