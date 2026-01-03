@@ -7,14 +7,17 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+/**
+ * BOOT IMMUNITY: Use relative URLs to avoid CORS issues
+ * Requests go to the SAME origin, not a hardcoded external domain
+ */
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Hardcoded for stability - AWS Amplify env vars can be flaky
-  const baseUrl = "https://reward-fulfillment-production.up.railway.app";
-  const fullUrl = url.startsWith("/") ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+  // Use relative URLs - same origin = no CORS issues
+  const fullUrl = url.startsWith("/") ? url : `/${url}`;
 
   const res = await fetch(fullUrl, {
     method,
@@ -33,10 +36,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
     async ({ queryKey }) => {
-      // Hardcoded for stability
-      const baseUrl = "https://reward-fulfillment-production.up.railway.app";
+      // Use relative URLs - same origin = no CORS issues
       const path = queryKey.join("/");
-      const fullUrl = path.startsWith("/") ? `${baseUrl}${path}` : `${baseUrl}/${path}`;
+      const fullUrl = path.startsWith("/") ? path : `/${path}`;
 
       const res = await fetch(fullUrl, {
         credentials: "include",
@@ -64,3 +66,4 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
