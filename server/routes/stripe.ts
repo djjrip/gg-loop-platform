@@ -115,6 +115,91 @@ router.post('/create-checkout', async (req: any, res) => {
 });
 
 /**
+ * POST /api/stripe/create-subscription-checkout
+ * Creates a Stripe Checkout session for subscription tiers (basic, pro, elite)
+ * 
+ * Mode: subscription (recurring monthly)
+ */
+router.post('/create-subscription-checkout', async (req: any, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user?.oidcSub) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!isStripeConfigured()) {
+      console.error('[Stripe] Subscription checkout creation failed: Stripe not configured');
+      return res.status(500).json({ error: 'Payment processing not available' });
+    }
+
+    const { tier } = req.body;
+    if (!tier) {
+      return res.status(400).json({ error: 'Tier is required' });
+    }
+
+    const dbUser = await storage.getUserByOidcSub(req.user.oidcSub);
+    if (!dbUser) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    // Subscription pricing (monthly, in cents)
+    const tierPricing: Record<string, { price: number; name: string; points: number }> = {
+      basic: { price: 500, name: 'Basic', points: 3000 },
+      pro: { price: 1200, name: 'Pro', points: 10000 },
+      builder: { price: 1200, name: 'Builder', points: 10000 },
+      elite: { price: 2500, name: 'Elite', points: 25000 },
+    };
+
+    const tierConfig = tierPricing[tier.toLowerCase()];
+    if (!tierConfig) {
+      return res.status(400).json({ error: 'Invalid subscription tier' });
+    }
+
+    console.log(`[Stripe] Creating subscription checkout for user ${dbUser.id}, tier: ${tierConfig.name}`);
+
+    const stripe = getStripeClient();
+    const baseUrl = process.env.BASE_URL || 'https://ggloop.io';
+
+    const session = await stripe.checkout.sessions.create({
+      customer_email: dbUser.email || undefined,
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `${tierConfig.name} Subscription`,
+              description: `${tierConfig.points.toLocaleString()} monthly points`,
+            },
+            unit_amount: tierConfig.price,
+            recurring: {
+              interval: 'month',
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${baseUrl}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/subscription?canceled=true`,
+      metadata: {
+        userId: dbUser.id,
+        type: 'subscription',
+        tier: tier.toLowerCase(),
+      },
+    });
+
+    console.log(`[Stripe] ✅ Subscription checkout session created: ${session.id}`);
+
+    res.json({
+      sessionId: session.id,
+      url: session.url,
+    });
+  } catch (error: any) {
+    console.error('[Stripe] Subscription checkout creation error:', error);
+    res.status(500).json({ error: 'Failed to create subscription checkout session' });
+  }
+});
+
+/**
  * POST /api/stripe/webhook
  * Handles Stripe webhook events
  * 
