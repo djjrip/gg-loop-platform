@@ -271,4 +271,218 @@ function buildFounderNarrative(status: any): string {
     return narrative;
 }
 
+/**
+ * Parse markdown file for key data
+ * Simple parsing for NEXUS_HEARTBEAT.md structure
+ */
+function parseHeartbeat(markdown: string): any {
+    const lines = markdown.split('\n');
+    const result: any = {
+        status: 'UNKNOWN',
+        lastPulse: null,
+        systemStatus: 'UNKNOWN',
+        lastAction: null,
+        lastActionTime: null,
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        // Parse status
+        if (line.includes('**STATUS:**')) {
+            const match = line.match(/\*\*STATUS:\*\*\s*(.+)/);
+            if (match) result.status = match[1].trim();
+        }
+        
+        // Parse last pulse
+        if (line.includes('**LAST PULSE:**')) {
+            const match = line.match(/\*\*LAST PULSE:\*\*\s*(.+)/);
+            if (match) result.lastPulse = match[1].trim();
+        }
+        
+        // Parse system status from table
+        if (line.includes('| System Status |')) {
+            const nextLine = lines[i + 1]?.trim() || '';
+            const match = nextLine.match(/\|\s*(.+?)\s*\|/);
+            if (match) result.systemStatus = match[1].trim();
+        }
+        
+        // Parse last action
+        if (line.includes('| Last Action |')) {
+            const nextLine = lines[i + 1]?.trim() || '';
+            const match = nextLine.match(/\|\s*(.+?)\s*\|/);
+            if (match) result.lastAction = match[1].trim();
+        }
+        
+        // Parse last action time
+        if (line.includes('| Last Action Time |')) {
+            const nextLine = lines[i + 1]?.trim() || '';
+            const match = nextLine.match(/\|\s*(.+?)\s*\|/);
+            if (match) result.lastActionTime = match[1].trim();
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Parse activity feed for last N entries
+ */
+function parseActivityFeed(markdown: string, limit: number = 3): any[] {
+    const lines = markdown.split('\n');
+    const activities: any[] = [];
+    let inTable = false;
+    let headerSkipped = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        // Detect table start
+        if (line.includes('| Time |') && line.includes('Action |')) {
+            inTable = true;
+            headerSkipped = false;
+            continue;
+        }
+        
+        // Skip header separator
+        if (inTable && line.match(/^\|[\s\-:]+\|/)) {
+            headerSkipped = true;
+            continue;
+        }
+        
+        // Parse table rows
+        if (inTable && headerSkipped && line.startsWith('|')) {
+            const parts = line.split('|').map(p => p.trim()).filter(p => p);
+            if (parts.length >= 3) {
+                activities.push({
+                    time: parts[0],
+                    action: parts[1],
+                    system: parts[2] || '',
+                    status: parts[3] || '',
+                    impact: parts[4] || '',
+                });
+            }
+        }
+        
+        // Stop at end of table or section
+        if (inTable && line === '---') {
+            break;
+        }
+    }
+
+    return activities.slice(0, limit);
+}
+
+/**
+ * GET /api/nexus/heartbeat
+ * Read NEXUS_HEARTBEAT.md and return parsed data
+ */
+router.get('/heartbeat', requireFounder, (req, res) => {
+    try {
+        const heartbeatPath = path.resolve(process.cwd(), 'REPORTS/CANONICAL/NEXUS_HEARTBEAT.md');
+        
+        if (!fs.existsSync(heartbeatPath)) {
+            return res.json({
+                status: 'NOT_FOUND',
+                lastPulse: null,
+                systemStatus: 'UNKNOWN',
+                lastAction: null,
+                lastActionTime: null,
+                error: 'NEXUS_HEARTBEAT.md not found',
+            });
+        }
+
+        const markdown = fs.readFileSync(heartbeatPath, 'utf-8');
+        const parsed = parseHeartbeat(markdown);
+        
+        res.json(parsed);
+    } catch (error: any) {
+        res.status(500).json({
+            error: 'Failed to read heartbeat',
+            details: error.message,
+        });
+    }
+});
+
+/**
+ * GET /api/nexus/activity
+ * Read NEXUS_ACTIVITY_FEED.md and return last N entries
+ */
+router.get('/activity', requireFounder, (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit as string) || 3;
+        const activityPath = path.resolve(process.cwd(), 'REPORTS/CANONICAL/NEXUS_ACTIVITY_FEED.md');
+        
+        if (!fs.existsSync(activityPath)) {
+            return res.json({
+                activities: [],
+                error: 'NEXUS_ACTIVITY_FEED.md not found',
+            });
+        }
+
+        const markdown = fs.readFileSync(activityPath, 'utf-8');
+        const activities = parseActivityFeed(markdown, limit);
+        
+        res.json({ activities });
+    } catch (error: any) {
+        res.status(500).json({
+            error: 'Failed to read activity feed',
+            details: error.message,
+        });
+    }
+});
+
+/**
+ * GET /api/nexus/revenue
+ * Read FIRST_REVENUE_LOOP.md and return revenue status
+ */
+router.get('/revenue', requireFounder, (req, res) => {
+    try {
+        const revenuePath = path.resolve(process.cwd(), 'REPORTS/CANONICAL/FIRST_REVENUE_LOOP.md');
+        
+        if (!fs.existsSync(revenuePath)) {
+            return res.json({
+                status: 'NOT_FOUND',
+                offer: 'Founding Member $29 Lifetime',
+                payments: 0,
+                clicks: 0,
+                error: 'FIRST_REVENUE_LOOP.md not found',
+            });
+        }
+
+        const markdown = fs.readFileSync(revenuePath, 'utf-8');
+        const lines = markdown.split('\n');
+        
+        // Simple parsing for revenue loop status
+        const result: any = {
+            status: 'ACTIVE',
+            offer: 'Founding Member $29 Lifetime',
+            payments: 0,
+            clicks: 0,
+        };
+
+        for (const line of lines) {
+            if (line.includes('**STATUS:**')) {
+                const match = line.match(/\*\*STATUS:\*\*\s*(.+)/);
+                if (match) result.status = match[1].trim();
+            }
+            if (line.includes('| Payments |')) {
+                const match = line.match(/\|\s*Payments\s*\|\s*(\d+)/);
+                if (match) result.payments = parseInt(match[1]);
+            }
+            if (line.includes('| Clicks |')) {
+                const match = line.match(/\|\s*Clicks\s*\|\s*(\d+)/);
+                if (match) result.clicks = parseInt(match[1]);
+            }
+        }
+        
+        res.json(result);
+    } catch (error: any) {
+        res.status(500).json({
+            error: 'Failed to read revenue loop',
+            details: error.message,
+        });
+    }
+});
+
 export default router;

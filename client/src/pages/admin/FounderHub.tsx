@@ -56,6 +56,39 @@ export default function FounderHub() {
     refetchInterval: 30000 // Refresh every 30 seconds
   });
 
+  // NEXUS Heartbeat (Truth Layer)
+  const { data: nexusHeartbeat, isLoading: heartbeatLoading } = useQuery({
+    queryKey: ["/api/nexus/heartbeat"],
+    queryFn: async () => {
+      const res = await fetch("/api/nexus/heartbeat");
+      if (!res.ok) return null;
+      return res.json();
+    },
+    refetchInterval: 60000 // Refresh every minute
+  });
+
+  // NEXUS Activity Feed (last 3 entries)
+  const { data: nexusActivity, isLoading: activityLoading } = useQuery({
+    queryKey: ["/api/nexus/activity"],
+    queryFn: async () => {
+      const res = await fetch("/api/nexus/activity?limit=3");
+      if (!res.ok) return { activities: [] };
+      return res.json();
+    },
+    refetchInterval: 60000 // Refresh every minute
+  });
+
+  // Revenue signals
+  const { data: revenueSignals, isLoading: revenueLoading } = useQuery({
+    queryKey: ["/api/nexus/revenue"],
+    queryFn: async () => {
+      const res = await fetch("/api/nexus/revenue");
+      if (!res.ok) return { status: "ACTIVE", offer: "Founding Member $29 Lifetime", payments: 0, clicks: 0 };
+      return res.json();
+    },
+    refetchInterval: 60000 // Refresh every minute
+  });
+
   // Check rewards count
   const { data: rewards } = useQuery({
     queryKey: ["/api/rewards"],
@@ -137,6 +170,112 @@ export default function FounderHub() {
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-white mb-2">Platform Health Dashboard</h2>
                 <p className="text-gray-400">Real-time status and daily CEO checklist</p>
+              </div>
+
+              {/* NEXUS TRUTH LAYER */}
+              <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Activity className="h-6 w-6 text-purple-400" />
+                  <h3 className="text-xl font-bold text-white">NEXUS Truth Layer</h3>
+                </div>
+
+                {/* What NEXUS is doing right now */}
+                <div className="bg-black/40 border border-white/5 rounded-lg p-4 mb-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="text-sm text-gray-400">What NEXUS is doing right now</span>
+                    {nexusHeartbeat?.lastPulse && (
+                      <span className="text-xs text-gray-500">
+                        Last pulse: {new Date(nexusHeartbeat.lastPulse).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                  {heartbeatLoading ? (
+                    <p className="text-gray-500">Loading...</p>
+                  ) : nexusHeartbeat ? (
+                    <p className="text-white font-medium">
+                      {nexusHeartbeat.lastAction || "Monitoring system activity"} · 
+                      <span className="text-gray-400 ml-2">
+                        {nexusHeartbeat.lastActionTime 
+                          ? `${Math.round((Date.now() - new Date(nexusHeartbeat.lastActionTime).getTime()) / 60000)} minutes ago`
+                          : "Active"}
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="text-gray-400">NEXUS heartbeat data unavailable</p>
+                  )}
+                </div>
+
+                {/* Last NEXUS Actions */}
+                <div className="bg-black/40 border border-white/5 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-white">Recent Activity</span>
+                    <Badge variant="secondary" className="bg-purple-500/20 text-purple-300">
+                      Live
+                    </Badge>
+                  </div>
+                  {activityLoading ? (
+                    <p className="text-gray-500">Loading activity...</p>
+                  ) : nexusActivity?.activities?.length > 0 ? (
+                    <div className="space-y-2">
+                      {nexusActivity.activities.map((activity: any, idx: number) => (
+                        <div key={idx} className="flex items-start gap-3 text-sm">
+                          <Clock className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <span className="text-white">{activity.action}</span>
+                            <span className="text-gray-500 ml-2">({activity.time})</span>
+                          </div>
+                          {activity.status === "✅ Success" && (
+                            <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 text-sm">No recent activity logged</p>
+                  )}
+                </div>
+
+                {/* Revenue Signal Visibility */}
+                <div className="bg-black/40 border border-white/5 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-white">Revenue Signals</span>
+                    <Badge 
+                      variant="secondary" 
+                      className={revenueSignals?.status === "ACTIVE" ? "bg-green-500/20 text-green-300" : "bg-gray-500/20 text-gray-300"}
+                    >
+                      {revenueSignals?.status || "ACTIVE"}
+                    </Badge>
+                  </div>
+                  {revenueLoading ? (
+                    <p className="text-gray-500">Loading...</p>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <div className="text-xs text-gray-400 mb-1">Offer</div>
+                        <div className="text-sm font-semibold text-white">
+                          {revenueSignals?.offer || "Founding Member $29"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-400 mb-1">Payments</div>
+                        <div className="text-lg font-bold text-white">
+                          {revenueSignals?.payments ?? 0}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-400 mb-1">Clicks</div>
+                        <div className="text-lg font-bold text-white">
+                          {revenueSignals?.clicks ?? 0}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-3 pt-3 border-t border-white/5">
+                    <p className="text-xs text-gray-500">
+                      Zero signals are intentional — system is actively monitoring for first revenue signal
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Status Cards */}
