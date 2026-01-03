@@ -29,23 +29,9 @@ const FOUNDING_MEMBER_MAX = 50; // First 50 only
  */
 router.post('/create-checkout', async (req: any, res) => {
   try {
-    if (!req.isAuthenticated() || !req.user?.oidcSub) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
     if (!isStripeConfigured()) {
       console.error('[Stripe] Checkout creation failed: Stripe not configured');
       return res.status(500).json({ error: 'Payment processing not available' });
-    }
-
-    const dbUser = await storage.getUserByOidcSub(req.user.oidcSub);
-    if (!dbUser) {
-      return res.status(401).json({ error: 'User not found' });
-    }
-
-    // Check if user is already a Founding Member
-    if (dbUser.isFounder) {
-      return res.status(400).json({ error: 'User is already a Founding Member' });
     }
 
     // Check if we've reached the limit
@@ -59,50 +45,70 @@ router.post('/create-checkout', async (req: any, res) => {
       return res.status(400).json({ error: 'Founding Member spots are sold out' });
     }
 
-    console.log(`[Stripe] Creating checkout session for user ${dbUser.id} (Founding Member)`);
+    // Support both logged-in and guest users
+    let userId: string | undefined;
+    let userEmail: string | undefined;
+
+    if (req.isAuthenticated() && req.user?.oidcSub) {
+      const dbUser = await storage.getUserByOidcSub(req.user.oidcSub);
+      if (dbUser) {
+        // Check if user is already a Founding Member
+        if (dbUser.isFounder) {
+          return res.status(400).json({ error: 'You are already a Founding Member' });
+        }
+        userId = dbUser.id;
+        userEmail = dbUser.email || undefined;
+      }
+    }
+
+    console.log(`[Stripe] Creating Founding Member checkout session (${userId ? `user: ${userId}` : 'guest'})`);
 
     const stripe = getStripeClient();
     const baseUrl = process.env.BASE_URL || 'https://ggloop.io';
 
-    // Generate idempotency key (prevents duplicate sessions)
-    const idempotencyKey = `founding_member_${dbUser.id}_${Date.now()}`;
-
-    const session = await stripe.checkout.sessions.create(
-      {
-        customer_email: dbUser.email || undefined,
-        line_items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: 'Founding Member - Lifetime Access',
-                description: 'Join the first 50 members. Lock in lifetime benefits: 2x points forever, name on wall, early access, and more.',
-              },
-              unit_amount: FOUNDING_MEMBER_PRICE,
+    const sessionConfig: any = {
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Founding Member - Lifetime Access',
+              description: 'Join the first 50 members. Lock in lifetime benefits: 2x points forever, name on wall, early access, and more.',
             },
-            quantity: 1,
+            unit_amount: FOUNDING_MEMBER_PRICE,
           },
-        ],
-        mode: 'payment',
-        success_url: `${baseUrl}/founding-member?success=true&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/founding-member?canceled=true`,
-        metadata: {
-          userId: dbUser.id,
-          type: 'founding_member',
+          quantity: 1,
         },
-        payment_intent_data: {
-          metadata: {
-            userId: dbUser.id,
-            type: 'founding_member',
-          },
-        },
+      ],
+      mode: 'payment',
+      success_url: `${baseUrl}/founding-member?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/founding-member?canceled=true`,
+      metadata: {
+        type: 'founding_member',
+        billing_type: 'lifetime',
       },
-      {
-        idempotencyKey: idempotencyKey.substring(0, 255), // Stripe limit is 255 chars
-      }
-    );
+    };
 
-    console.log(`[Stripe] ✅ Checkout session created: ${session.id} for user ${dbUser.id}`);
+    // Add customer email if available
+    if (userEmail) {
+      sessionConfig.customer_email = userEmail;
+    }
+
+    // Add userId if authenticated
+    if (userId) {
+      sessionConfig.metadata.userId = userId;
+      sessionConfig.payment_intent_data = {
+        metadata: {
+          userId,
+          type: 'founding_member',
+          billing_type: 'lifetime',
+        },
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
+
+    console.log(`[Stripe] ✅ Checkout session created: ${session.id}`);
 
     res.json({
       sessionId: session.id,
@@ -122,10 +128,6 @@ router.post('/create-checkout', async (req: any, res) => {
  */
 router.post('/create-subscription-checkout', async (req: any, res) => {
   try {
-    if (!req.isAuthenticated() || !req.user?.oidcSub) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
     if (!isStripeConfigured()) {
       console.error('[Stripe] Subscription checkout creation failed: Stripe not configured');
       return res.status(500).json({ error: 'Payment processing not available' });
@@ -134,11 +136,6 @@ router.post('/create-subscription-checkout', async (req: any, res) => {
     const { tier } = req.body;
     if (!tier) {
       return res.status(400).json({ error: 'Tier is required' });
-    }
-
-    const dbUser = await storage.getUserByOidcSub(req.user.oidcSub);
-    if (!dbUser) {
-      return res.status(401).json({ error: 'User not found' });
     }
 
     // Subscription pricing (monthly, in cents)
@@ -154,13 +151,24 @@ router.post('/create-subscription-checkout', async (req: any, res) => {
       return res.status(400).json({ error: 'Invalid subscription tier' });
     }
 
-    console.log(`[Stripe] Creating subscription checkout for user ${dbUser.id}, tier: ${tierConfig.name}`);
+    // Support both logged-in and guest users
+    let userId: string | undefined;
+    let userEmail: string | undefined;
+
+    if (req.isAuthenticated() && req.user?.oidcSub) {
+      const dbUser = await storage.getUserByOidcSub(req.user.oidcSub);
+      if (dbUser) {
+        userId = dbUser.id;
+        userEmail = dbUser.email || undefined;
+      }
+    }
+
+    console.log(`[Stripe] Creating subscription checkout (${userId ? `user: ${userId}` : 'guest'}), tier: ${tierConfig.name}`);
 
     const stripe = getStripeClient();
     const baseUrl = process.env.BASE_URL || 'https://ggloop.io';
 
-    const session = await stripe.checkout.sessions.create({
-      customer_email: dbUser.email || undefined,
+    const sessionConfig: any = {
       line_items: [
         {
           price_data: {
@@ -181,11 +189,23 @@ router.post('/create-subscription-checkout', async (req: any, res) => {
       success_url: `${baseUrl}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/subscription?canceled=true`,
       metadata: {
-        userId: dbUser.id,
         type: 'subscription',
         tier: tier.toLowerCase(),
+        billing_type: 'monthly',
       },
-    });
+    };
+
+    // Add customer email if available
+    if (userEmail) {
+      sessionConfig.customer_email = userEmail;
+    }
+
+    // Add userId if authenticated
+    if (userId) {
+      sessionConfig.metadata.userId = userId;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     console.log(`[Stripe] ✅ Subscription checkout session created: ${session.id}`);
 
