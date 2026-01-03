@@ -134,43 +134,7 @@ export default function Home() {
 
               {/* FOUNDING MEMBER CTA - PROMINENT */}
               <div className="mb-8 max-w-2xl mx-auto">
-                <Link href="/subscription">
-                  <div className="bg-gradient-to-r from-purple-600 to-ggloop-orange border-2 border-purple-400/50 hover:border-purple-400 rounded-xl p-6 md:p-8 shadow-[0_0_40px_rgba(147,51,234,0.3)] hover:shadow-[0_0_60px_rgba(147,51,234,0.5)] transition-all duration-300 cursor-pointer">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                      <div className="flex-1 text-center md:text-left">
-                        <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                          <Trophy className="h-6 w-6 text-yellow-300" />
-                          <h3 className="text-2xl md:text-3xl font-black text-white">
-                            Become a Founding Member
-                          </h3>
-                        </div>
-                        <p className="text-lg font-bold text-yellow-200 mb-3">
-                          $29 Lifetime • First 50 Only
-                        </p>
-                        <div className="flex flex-wrap gap-3 justify-center md:justify-start text-sm text-gray-200">
-                          <span className="flex items-center gap-1">
-                            <Check className="h-4 w-4 text-green-400" />
-                            2x Points Forever
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Check className="h-4 w-4 text-green-400" />
-                            Name on Wall
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Check className="h-4 w-4 text-green-400" />
-                            Early Access
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <button className="bg-white text-purple-600 hover:bg-gray-100 rounded-lg px-6 py-3 font-bold text-lg transition-all duration-300 flex items-center gap-2 whitespace-nowrap">
-                          Join Now
-                          <ArrowRight className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
+                <FoundingMemberCTA />
               </div>
 
               {!isAuthenticated && (

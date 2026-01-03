@@ -485,4 +485,36 @@ router.get('/revenue', requireFounder, (req, res) => {
     }
 });
 
+/**
+ * GET /api/nexus/founding-members-count
+ * PUBLIC ENDPOINT - Returns count of Founding Members
+ * Used for "Proof of Life" counter on homepage
+ */
+router.get('/founding-members-count', (req, res) => {
+    try {
+        // TODO: Replace with actual database query when Founding Member tracking is implemented
+        // For now, return 0 as we're in manual validation phase
+        // When members are added manually, update this endpoint to query the database
+        
+        // Example future query (not implemented yet):
+        // const count = await db.select({ count: sql<number>`count(*)` })
+        //   .from(users)
+        //   .where(eq(users.subscriptionTier, 'founding_member'));
+        
+        res.json({
+            count: 0,
+            limit: 50,
+            message: 'Be the first.',
+            timestamp: new Date().toISOString(),
+        });
+    } catch (error: any) {
+        res.json({
+            count: 0,
+            limit: 50,
+            message: 'Be the first.',
+            timestamp: new Date().toISOString(),
+        });
+    }
+});
+
 export default router;
