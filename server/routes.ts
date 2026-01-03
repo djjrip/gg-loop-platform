@@ -260,6 +260,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // [PAYMENTS] Payment Configuration Status
+  app.get("/api/payments/status", async (req, res) => {
+    res.json({
+      foundingMemberLinkConfigured: !!process.env.PAYPAL_FOUNDING_MEMBER_URL,
+      subscriptionsConfigured: !!(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET),
+    });
+  });
+
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
   app.post("/api/admin/mission-tweets", async (req, res) => {

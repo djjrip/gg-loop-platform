@@ -110,23 +110,37 @@ export default function FoundingMemberPage() {
                     </div>
                     
                     {isConfigured && paypalUrl ? (
-                      <Button
-                        onClick={handlePayClick}
-                        className="w-full bg-gradient-to-r from-purple-600 to-ggloop-orange hover:from-purple-700 hover:to-ggloop-orange-dark text-white text-lg py-6 font-bold"
-                        size="lg"
-                      >
-                        Pay $29 with PayPal
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </Button>
+                      <div className="space-y-4">
+                        <Button
+                          onClick={handlePayClick}
+                          className="w-full bg-gradient-to-r from-purple-600 to-ggloop-orange hover:from-purple-700 hover:to-ggloop-orange-dark text-white text-lg py-6 font-bold"
+                          size="lg"
+                        >
+                          Pay $29 with PayPal
+                          <ArrowRight className="ml-2 h-5 w-5" />
+                        </Button>
+                        <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+                          <div className="text-blue-200 text-xs font-semibold mb-1">What happens next:</div>
+                          <ol className="text-blue-300/80 text-xs space-y-1 list-decimal list-inside">
+                            <li>Complete payment on PayPal</li>
+                            <li>You'll receive a confirmation email</li>
+                            <li>Upgrade processed manually within 24 hours</li>
+                            <li>2x points multiplier activated after verification</li>
+                          </ol>
+                        </div>
+                      </div>
                     ) : (
                       <div className="space-y-4">
                         <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
                           <div className="flex items-start gap-3">
                             <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                             <div>
-                              <div className="text-yellow-200 font-semibold mb-1">Payments Temporarily Offline</div>
-                              <div className="text-yellow-300/80 text-sm">
-                                Payment processing is being configured. Join our Discord to get notified when payments go live, or sign up for the waitlist.
+                              <div className="text-yellow-200 font-semibold mb-1">Payments Not Live Yet</div>
+                              <div className="text-yellow-300/80 text-sm mb-2">
+                                Payment processing is being configured. Check back in a few hours.
+                              </div>
+                              <div className="text-yellow-400/70 text-xs">
+                                (PayPal link configuration in progress)
                               </div>
                             </div>
                           </div>

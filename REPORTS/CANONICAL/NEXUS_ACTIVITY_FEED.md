@@ -18,6 +18,7 @@
 
 | Time | Action | System | Status | Impact |
 |------|--------|--------|--------|--------|
+| 19:15 | Payments UX hardened - added /api/payments/status endpoint, improved /founding-member fallback state, validation report created | Cursor AI | ✅ Success | Payment status now explicit, no broken clicks, honest "not live yet" state |
 | 18:30 | Founding Member checkout flow fixed - /founding-member page created, PayPal URL endpoint added, transparency disclosures added | Cursor AI | ✅ Success | Checkout path now deterministic, PayPal env config required (PAYPAL_FOUNDING_MEMBER_URL) |
 | 17:46 | Created DESKTOP_VERIFICATION_APP_STATUS.md | AG | ✅ Success | Honest app status |
 | 17:46 | Created AUTHENTICITY_TRANSPARENCY_AUDIT.md | AG | ✅ Success | Copy audit complete |
