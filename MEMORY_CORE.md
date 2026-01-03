@@ -51,6 +51,11 @@
    - If Twitter posted yesterday, it's working
    - System adapts to reality, not the other way
 
+7. **Cloud-Native or Repo-Native Only**
+   - Founder does not execute local code
+   - No PowerShell, no terminal commands, no local scripts
+   - All value via repo artifacts or cloud services
+
 ---
 
 ## 3. CURRENT BUSINESS STATE
@@ -176,6 +181,7 @@ REDDIT_USERNAME / REDDIT_PASSWORD
 | 2026-01-03 | All founding decisions locked |
 | 2026-01-03 | Distribution rules codified |
 | 2026-01-03 | Credential discovery formalized |
+| 2026-01-03 | Cloud-native mandate added; local scripts deprecated |
 
 ---
 
