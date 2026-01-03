@@ -1,128 +1,113 @@
 # WEBHOOK IMPLEMENTATION REPORT
 
-**Status:** 🟢 PayPal IMPLEMENTED | 🔴 Stripe NOT IMPLEMENTED  
-**Last Updated:** 2026-01-03T19:12:02Z  
+**Status:** 🟡 PARTIAL — Stripe Implemented, PayPal Still Present  
+**Last Updated:** 2026-01-03T19:27:20Z  
 **Analyst:** AG (Antigravity)
 
 ---
 
-## PayPal Webhooks
+## Mandate
 
-### Implementation Status: ✅ COMPLETE
-
-| Component | Status | Location |
-|-----------|--------|----------|
-| Endpoint | ✅ Live | `/api/webhooks/paypal` |
-| Signature verification | ✅ Implemented | `verifyPayPalWebhook()` |
-| Event handling | ✅ Implemented | routes.ts:4525 |
-| Replay protection | ✅ Implemented | Sale ID check |
-
-### Events Handled
-
-| Event | Action | Idempotent |
-|-------|--------|------------|
-| PAYMENT.SALE.COMPLETED | Grant tier + award points | ✅ Yes |
-| BILLING.SUBSCRIPTION.CANCELLED | Remove tier | ✅ Yes |
-
-### Security Verification
-
-| Check | Status |
-|-------|--------|
-| Signature header required | ✅ Yes |
-| Signature validated | ✅ Yes |
-| Invalid signature rejected | ✅ 401 returned |
-| Event type validated | ✅ Yes |
-| Duplicate events rejected | ✅ Yes (sale ID check) |
-
-### Code Evidence
-```typescript
-// routes.ts:4525-4613
-app.post('/api/webhooks/paypal', async (req, res) => {
-  const verification = await verifyPayPalWebhook(req.headers, req.body);
-  if (!verification.verified) {
-    return res.status(401).json({ message: 'Webhook signature verification failed' });
-  }
-  // Event processing...
-});
-```
+> Stripe webhook MUST be the ONLY mutation trigger.
+> PayPal webhooks must not exist.
 
 ---
 
 ## Stripe Webhooks
 
-### Implementation Status: ❌ NOT IMPLEMENTED
+### Implementation Status: ✅ EXISTS (Needs Verification)
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Endpoint | ❌ Missing | No `/api/webhooks/stripe` |
-| Signature verification | ❌ Missing | No Stripe signature check |
-| Event handling | ❌ Missing | No event handlers |
-| Stripe SDK | ❌ Missing | Not in package.json |
+| Component | Status | Location |
+|-----------|--------|----------|
+| Webhook endpoint | ✅ Present | /api/stripe/webhook |
+| Signature verification | ⚠️ Needs STRIPE_WEBHOOK_SECRET | Using constructEvent() |
+| Routes file | ✅ Present | server/routes/stripe.ts |
 
-### Required for Stripe Webhooks
+### Event Handlers (Need Confirmation)
 
-1. Install `stripe` package
-2. Create webhook endpoint
-3. Implement signature verification using `STRIPE_WEBHOOK_SECRET`
-4. Handle events:
-   - `checkout.session.completed`
-   - `payment_intent.succeeded`
-   - `payment_intent.payment_failed`
-5. Ensure idempotency
+| Event | Required | Status |
+|-------|----------|--------|
+| checkout.session.completed | ✅ Yes | ⚠️ Verify handler exists |
+| invoice.payment_succeeded | ✅ Yes | ⚠️ Verify handler exists |
+| customer.subscription.updated | ✅ Yes | ⚠️ Verify handler exists |
+| customer.subscription.deleted | ✅ Yes | ⚠️ Verify handler exists |
+| payment_intent.succeeded | Nice to have | ⚠️ Verify |
+| payment_intent.payment_failed | Nice to have | ⚠️ Verify |
+
+### Security
+
+| Check | Status |
+|-------|--------|
+| Signature verification code | ✅ Present |
+| STRIPE_WEBHOOK_SECRET env var | ⚠️ Must be configured |
+| Raw body parsing | ⚠️ Verify express.raw() used |
+| Idempotency | ⚠️ Verify duplicate handling |
+
+---
+
+## PayPal Webhooks: 🔴 STILL PRESENT (Must Be Removed)
+
+### Current State
+
+| Endpoint | Status | Action Required |
+|----------|--------|-----------------|
+| /api/webhooks/paypal | 🔴 Present | DELETE |
+| /api/paypal/subscription-approved | 🔴 Present | DELETE |
+| /api/paypal/manual-sync | 🔴 Present | DELETE |
+| /api/paypal/create-subscription | 🔴 Present | DELETE |
+
+### Non-Compliant Code
+```typescript
+// routes.ts:4524 - MUST BE REMOVED
+app.post('/api/webhooks/paypal', async (req, res) => {
+  const verification = await verifyPayPalWebhook(req.headers, req.body);
+  // ... PayPal webhook handling
+});
+```
 
 ---
 
 ## Gaming Partner Webhooks
 
-### Implementation Status: ✅ COMPLETE
+| Endpoint | Auth | Status | Note |
+|----------|------|--------|------|
+| /api/webhooks/gaming/match-win | HMAC | ✅ Keep | Not payment-related |
+| /api/webhooks/gaming/achievement | HMAC | ✅ Keep | Not payment-related |
+| /api/webhooks/gaming/tournament | HMAC | ✅ Keep | Not payment-related |
 
-| Endpoint | Auth | Status |
-|----------|------|--------|
-| `/api/webhooks/gaming/match-win` | HMAC | ✅ Live |
-| `/api/webhooks/gaming/achievement` | HMAC | ✅ Live |
-| `/api/webhooks/gaming/tournament` | HMAC | ✅ Live |
-
-### Security
-- HMAC-SHA256 signature validation
-- Timestamp verification (prevent replay)
-- Partner authentication via middleware
+**These are NOT payment webhooks. They can remain.**
 
 ---
 
 ## Retry Safety
 
-### PayPal
-| Scenario | Behavior |
-|----------|----------|
-| Duplicate webhook | Sale ID checked, duplicate ignored |
-| Partial processing | Atomic operations |
-| Server error | PayPal retries, no duplicate grants |
-
 ### Stripe
-Not implemented.
+| Scenario | Expected Behavior |
+|----------|-------------------|
+| Duplicate webhook | Check for processed event ID |
+| Partial processing | Atomic operations |
+| Server error | Stripe retries with backoff |
+
+### PayPal
+**Must be removed entirely.**
 
 ---
 
-## Recommendations
+## Required Stripe Webhook Configuration
 
-### Immediate
-- PayPal webhooks are production-ready
-- Use PayPal for Founding Member
-- No action needed for PayPal
-
-### If Stripe Required
-1. Implement `/api/webhooks/stripe` endpoint
-2. Add signature verification:
-```typescript
-const sig = req.headers['stripe-signature'];
-const event = stripe.webhooks.constructEvent(
-  req.body,
-  sig,
-  process.env.STRIPE_WEBHOOK_SECRET
-);
+In Railway, configure:
 ```
-3. Handle checkout.session.completed
-4. Grant entitlements on success
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+In Stripe Dashboard:
+1. Add endpoint: `https://ggloop.io/api/stripe/webhook`
+2. Select events:
+   - checkout.session.completed
+   - invoice.payment_succeeded
+   - customer.subscription.updated
+   - customer.subscription.deleted
+3. Copy signing secret to Railway
 
 ---
 
@@ -130,15 +115,22 @@ const event = stripe.webhooks.constructEvent(
 
 | Check | Status |
 |-------|--------|
-| PayPal webhook endpoint | ✅ PASS |
-| PayPal signature validation | ✅ PASS |
-| PayPal replay safety | ✅ PASS |
-| Stripe webhook endpoint | ❌ FAIL (not implemented) |
-| Stripe signature validation | ❌ FAIL (not implemented) |
-| Gaming webhooks | ✅ PASS |
-| **Overall PayPal** | **✅ PASS** |
-| **Overall Stripe** | **🔴 FAIL** |
+| Stripe webhook endpoint exists | ✅ PASS |
+| Stripe signature verification code | ✅ PASS |
+| STRIPE_WEBHOOK_SECRET configured | ⚠️ VERIFY IN RAILWAY |
+| PayPal webhooks removed | **🔴 FAIL** |
+| Single webhook source | **🔴 FAIL** |
+| **Overall compliance** | **🔴 FAIL** |
 
 ---
 
-*PayPal webhooks are secure and functional. Stripe requires full implementation.*
+## Next Steps
+
+1. **Cursor:** Remove all PayPal webhook handlers
+2. **Founder/Ops:** Configure STRIPE_WEBHOOK_SECRET in Railway
+3. **Founder/Ops:** Add webhook endpoint in Stripe Dashboard
+4. **AG:** Re-verify after cleanup
+
+---
+
+*PayPal webhooks must be removed. Stripe webhook needs secret configured.*

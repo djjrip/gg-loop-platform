@@ -1,5 +1,4 @@
 import notificationRoutes from "./routes/notifications";
-import paypalRoutes from "./routes/paypal";
 import stripeRoutes from "./routes/stripe";
 import trustRouter from "./routes/trust";
 import partnerRoutes from "./routes/partner";
@@ -40,7 +39,6 @@ import { setupAuth, isAuthenticated } from "./auth";
 import { setupTwitchAuth } from "./twitchAuth";
 import { setupSteamAuth } from "./routes/steamAuth";
 import { z } from "zod";
-import { verifyPayPalSubscription, cancelPayPalSubscription, verifyPayPalWebhook } from "./paypal";
 import { pointsEngine } from "./pointsEngine";
 import { createWebhookSignatureMiddleware } from "./webhookSecurity";
 import { twitchAPI } from "./lib/twitch";
@@ -194,9 +192,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ghost Bot API - Cursor Integration
   app.use("/api/ghost-bot", ghostBotRouter);
 
-  // [PHASE 3] PayPal Subscription Routes
-  app.use("/api/paypal", paypalRoutes);
-
   // [STRIPE] Founding Member Payment Routes
   app.use("/api/stripe", stripeRoutes);
 
@@ -253,22 +248,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // [NEXUS] Operating Brain - Founder Visibility Endpoint
   app.use("/api/nexus", nexusRouter);
 
-  // [FOUNDING MEMBER] PayPal URL Configuration
-  app.get("/api/founding-member/paypal-url", async (req, res) => {
-    const paypalUrl = process.env.PAYPAL_FOUNDING_MEMBER_URL;
-    const configured = !!paypalUrl;
-    
-    res.json({
-      url: paypalUrl || null,
-      configured,
-    });
-  });
-
   // [PAYMENTS] Payment Configuration Status
   app.get("/api/payments/status", async (req, res) => {
     res.json({
-      foundingMemberLinkConfigured: !!process.env.PAYPAL_FOUNDING_MEMBER_URL,
-      subscriptionsConfigured: !!(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET),
+      foundingMemberLinkConfigured: !!process.env.STRIPE_SECRET_KEY && !!process.env.STRIPE_PUBLISHABLE_KEY,
+      subscriptionsConfigured: !!process.env.STRIPE_SECRET_KEY && !!process.env.STRIPE_PUBLISHABLE_KEY,
     });
   });
 

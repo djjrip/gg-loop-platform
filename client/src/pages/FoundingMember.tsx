@@ -5,28 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Check, Shield, Users, AlertCircle, ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function FoundingMemberPage() {
-  const [showFallback, setShowFallback] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Fetch PayPal URL from API
-  const { data: paypalConfig } = useQuery<{ url: string | null; configured: boolean }>({
-    queryKey: ["/api/founding-member/paypal-url"],
-    queryFn: async () => {
-      const res = await fetch("/api/founding-member/paypal-url");
-      if (!res.ok) return { url: null, configured: false };
-      return res.json();
-    },
-  });
-
-  const paypalUrl = paypalConfig?.url;
-  const isConfigured = paypalConfig?.configured ?? false;
-
-  const handlePayClick = () => {
-    if (paypalUrl && isConfigured) {
-      window.open(paypalUrl, '_blank');
-    } else {
-      setShowFallback(true);
+  // Fetch Stripe checkout session
+  const handlePayClick = async () => {
+    setLoading(true);
+    try {
+      const response = await apiRequest("POST", "/api/stripe/create-checkout");
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error("No checkout URL returned");
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -109,61 +107,15 @@ export default function FoundingMemberPage() {
                       <div className="text-sm text-gray-500 mt-2">First 50 only • Price increases to $49 after</div>
                     </div>
                     
-                    {isConfigured && paypalUrl ? (
-                      <div className="space-y-4">
-                        <Button
-                          onClick={handlePayClick}
-                          className="w-full bg-gradient-to-r from-purple-600 to-ggloop-orange hover:from-purple-700 hover:to-ggloop-orange-dark text-white text-lg py-6 font-bold"
-                          size="lg"
-                        >
-                          Pay $29 with PayPal
-                          <ArrowRight className="ml-2 h-5 w-5" />
-                        </Button>
-                        <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
-                          <div className="text-blue-200 text-xs font-semibold mb-1">What happens next:</div>
-                          <ol className="text-blue-300/80 text-xs space-y-1 list-decimal list-inside">
-                            <li>Complete payment on PayPal</li>
-                            <li>You'll receive a confirmation email</li>
-                            <li>Upgrade processed manually within 24 hours</li>
-                            <li>2x points multiplier activated after verification</li>
-                          </ol>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
-                          <div className="flex items-start gap-3">
-                            <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <div className="text-yellow-200 font-semibold mb-1">Payments Not Live Yet</div>
-                              <div className="text-yellow-300/80 text-sm mb-2">
-                                Payment processing is being configured. Check back in a few hours.
-                              </div>
-                              <div className="text-yellow-400/70 text-xs">
-                                (PayPal link configuration in progress)
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <a
-                            href="https://discord.gg/X6GXg2At2D"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full"
-                          >
-                            <Button variant="outline" className="w-full border-purple-500/50 text-purple-300 hover:bg-purple-500/10">
-                              Join Discord for Updates
-                            </Button>
-                          </a>
-                          <Link href="/subscription">
-                            <Button variant="ghost" className="w-full text-gray-400 hover:text-white">
-                              View Subscription Options
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    )}
+                    <Button
+                      onClick={handlePayClick}
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-purple-600 to-ggloop-orange hover:from-purple-700 hover:to-ggloop-orange-dark text-white text-lg py-6 font-bold"
+                      size="lg"
+                    >
+                      {loading ? "Loading..." : "Pay $29 with Stripe"}
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -171,51 +123,33 @@ export default function FoundingMemberPage() {
           </CardContent>
         </Card>
 
-        {/* Transparency Disclosure */}
-        <Card className="bg-black/40 border border-white/5 mb-6">
+        {/* How This Works */}
+        <Card className="bg-black/40 border border-white/10 mb-8">
           <CardContent className="p-6">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Shield className="h-5 w-5 text-blue-400" />
-              How This Works (Manual Validation Phase)
-            </h3>
-            <div className="space-y-3 text-gray-300 text-sm">
-              <p>
-                <strong className="text-white">During validation:</strong> Upgrades are processed manually within 24 hours of payment.
-              </p>
-              <p>
-                <strong className="text-white">After payment:</strong> You'll receive a confirmation email. Your 2x points multiplier applies after verification.
-              </p>
-              <p>
-                <strong className="text-white">Why manual:</strong> We're validating real demand before building automation. This ensures we build the right features.
+            <h2 className="text-xl font-bold text-white mb-4">How This Works (Manual Validation Phase)</h2>
+            <div className="space-y-3 text-gray-300">
+              <p className="text-sm">
+                During validation, upgrades are processed manually within 24 hours. 2x points multiplier applies after verification.
               </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Fair Play Note */}
-        <Card className="bg-black/40 border border-white/5">
+        {/* Fair Play */}
+        <Card className="bg-black/40 border border-white/10 mb-8">
           <CardContent className="p-6">
-            <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-              <Shield className="h-5 w-5 text-green-400" />
-              Fair Play
-            </h3>
-            <p className="text-gray-300 text-sm">
-              Rewards are verified. Suspicious activity is reviewed. Cheaters get removed. We're building a platform that rewards genuine skill, not exploits.
-            </p>
+            <div className="flex items-start gap-3">
+              <Shield className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-2">Fair Play</h2>
+                <p className="text-sm text-gray-300">
+                  Rewards are verified. Suspicious activity is reviewed. Cheaters get removed.
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
-
-        {/* Proof of Life Counter */}
-        <div className="mt-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-6 py-3">
-            <Users className="h-5 w-5 text-purple-300" />
-            <span className="text-gray-300">
-              Founding Members: <span className="text-yellow-300 font-semibold">Be the first.</span>
-            </span>
-          </div>
-        </div>
       </main>
     </div>
   );
 }
-
