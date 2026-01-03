@@ -7,6 +7,7 @@
  */
 
 import { Router } from 'express';
+import express from 'express';
 import { getStripeClient, getStripeWebhookSecret, isStripeConfigured } from '../stripe';
 import { db } from '../database';
 import { users } from '../../shared/schema';
