@@ -184,7 +184,17 @@ REDDIT_USERNAME / REDDIT_PASSWORD
 
 ---
 
-## 10. UPDATE LOG
+## 10. MULTI-AI COORDINATION
+
+**For coordination between Cursor AI, ChatGPT, and AG (Antigravity):**
+- See: `/REPORTS/CANONICAL/MULTI_AI_COORDINATION_NEXUS.md`
+- This file is the single source of truth for multi-AI coordination
+- All three AIs reference this file before coordination-related work
+- Founder coordinates, AIs don't prompt each other directly
+
+---
+
+## 11. UPDATE LOG
 
 | Date | Change |
 |------|--------|
@@ -193,6 +203,7 @@ REDDIT_USERNAME / REDDIT_PASSWORD
 | 2026-01-03 | Distribution rules codified |
 | 2026-01-03 | Credential discovery formalized |
 | 2026-01-03 | Cloud-native mandate added; local scripts deprecated |
+| 2026-01-03 | Multi-AI coordination nexus reference added |
 
 ---
 
