@@ -1,0 +1,47 @@
+{
+    "_meta": {
+        "description": "Canonical deployment state for GG LOOP. Auto-updated by deployment scripts.",
+        "lastUpdated": "2026-01-03T16:56:40Z",
+        "updatedBy": "AG",
+        "version": "1.0.0"
+    },
+    "production": {
+        "platform": "Railway",
+        "status": "LIVE",
+        "url": "https://ggloop.io",
+        "branch": "main",
+        "autoDeploy": true,
+        "lastDeployedCommit": "a800734",
+        "lastDeployedAt": "2026-01-03T16:27:15Z"
+    },
+    "otherEnvironments": {
+        "homelab": {
+            "status": "DEPRECATED",
+            "note": "Previously considered but not active"
+        },
+        "aws": {
+            "status": "DEPRECATED",
+            "note": "Future migration target per CORE_PRODUCTION_MANIFEST.md but NOT current production"
+        }
+    },
+    "hierarchy": {
+        "canonical": "This file (DEPLOYMENT_STATE.json)",
+        "conflicts": {
+            "RAILWAY_DEPRECATION_NOTICE.md": "SUPERSEDED - Railway is still production",
+            "CORE_PRODUCTION_MANIFEST.md": "FUTURE - AWS is migration target, not current",
+            "WHEN_YOU_RETURN.md": "OUTDATED - Homelab reference is stale"
+        }
+    },
+    "truth": {
+        "whereIsProduction": "Railway",
+        "whereIsGGLoopHosted": "Railway",
+        "isRailwayDeprecated": false,
+        "isAWSProduction": false,
+        "isHomelabProduction": false
+    },
+    "verification": {
+        "dnsResolution": "ggloop.io → Railway",
+        "sslCert": "Valid, Railway-issued",
+        "healthCheck": "https://ggloop.io returns 200"
+    }
+}
