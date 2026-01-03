@@ -1,14 +1,17 @@
 /**
- * NEXUS Distribution Engine - Distribution Executor
- * Posts to X (Twitter) and Reddit
+ * NEXUS Distribution Engine - Executor
+ * 
+ * REALITY-FIRST PRINCIPLE:
+ * Execution success marks channel as VALID.
+ * This is the highest authority signal.
  */
 
-import { ContentDraft, PostRecord, DistributionMemory } from './types';
+import { ContentDraft, PostRecord } from './types';
 import { distributionConfig } from './config';
+import { markChannelSuccess, markChannelFailure, classifyError } from './credential-verifier';
 
 /**
  * Post to Twitter
- * Uses existing Twitter API integration
  */
 export async function postToTwitter(draft: ContentDraft): Promise<PostRecord> {
     const record: PostRecord = {
@@ -21,7 +24,6 @@ export async function postToTwitter(draft: ContentDraft): Promise<PostRecord> {
     };
 
     try {
-        // Dynamic import to avoid breaking if Twitter not configured
         const { TwitterApi } = await import('twitter-api-v2');
 
         const appKey = process.env.TWITTER_API_KEY || process.env.TWITTER_CONSUMER_KEY;
@@ -30,26 +32,27 @@ export async function postToTwitter(draft: ContentDraft): Promise<PostRecord> {
         const accessSecret = process.env.TWITTER_ACCESS_SECRET;
 
         if (!appKey || !appSecret || !accessToken || !accessSecret) {
-            record.error = 'Twitter credentials not configured';
-            console.log('[Distribution] Twitter credentials missing - skipping');
+            record.error = 'INVALID_CREDENTIALS';
+            markChannelFailure('twitter', 'INVALID_CREDENTIALS', 'Missing credentials');
             return record;
         }
 
-        const client = new TwitterApi({
-            appKey,
-            appSecret,
-            accessToken,
-            accessSecret,
-        });
-
+        const client = new TwitterApi({ appKey, appSecret, accessToken, accessSecret });
         const result = await client.v2.tweet(draft.content);
+
         record.success = true;
         record.id = result.data.id;
+
+        // CRITICAL: Mark channel as valid after successful execution
+        markChannelSuccess('twitter');
+
         console.log(`[Distribution] ✅ Posted to Twitter: ${result.data.id}`);
 
     } catch (error: any) {
-        record.error = error.message;
-        console.error('[Distribution] Twitter post failed:', error.message);
+        const reason = classifyError(error);
+        record.error = reason;
+        markChannelFailure('twitter', reason, error.message);
+        console.error(`[Distribution] Twitter failed: ${reason} - ${error.message}`);
     }
 
     return record;
@@ -57,7 +60,6 @@ export async function postToTwitter(draft: ContentDraft): Promise<PostRecord> {
 
 /**
  * Post to Reddit
- * Uses Reddit API (snoowrap)
  */
 export async function postToReddit(draft: ContentDraft): Promise<PostRecord> {
     const record: PostRecord = {
@@ -70,24 +72,19 @@ export async function postToReddit(draft: ContentDraft): Promise<PostRecord> {
     };
 
     try {
-        // Check for Reddit credentials
         const clientId = process.env.REDDIT_CLIENT_ID;
         const clientSecret = process.env.REDDIT_CLIENT_SECRET;
         const username = process.env.REDDIT_USERNAME;
         const password = process.env.REDDIT_PASSWORD;
 
         if (!clientId || !clientSecret || !username || !password) {
-            record.error = 'Reddit credentials not configured';
-            console.log('[Distribution] Reddit credentials missing - saving draft for manual post');
-
-            // Save draft to file for manual posting
+            record.error = 'INVALID_CREDENTIALS';
+            markChannelFailure('reddit', 'INVALID_CREDENTIALS', 'Missing credentials');
             saveDraftForManualPost(draft);
             return record;
         }
 
-        // Dynamic import snoowrap
         const Snoowrap = (await import('snoowrap')).default;
-
         const reddit = new Snoowrap({
             userAgent: 'GGLoop Distribution Bot',
             clientId,
@@ -104,13 +101,17 @@ export async function postToReddit(draft: ContentDraft): Promise<PostRecord> {
 
         record.success = true;
         record.id = submission.name;
+
+        // CRITICAL: Mark channel as valid after successful execution
+        markChannelSuccess('reddit');
+
         console.log(`[Distribution] ✅ Posted to Reddit: ${submission.name}`);
 
     } catch (error: any) {
-        record.error = error.message;
-        console.error('[Distribution] Reddit post failed:', error.message);
-
-        // Save draft for manual posting
+        const reason = classifyError(error);
+        record.error = reason;
+        markChannelFailure('reddit', reason, error.message);
+        console.error(`[Distribution] Reddit failed: ${reason} - ${error.message}`);
         saveDraftForManualPost(draft);
     }
 
@@ -118,7 +119,7 @@ export async function postToReddit(draft: ContentDraft): Promise<PostRecord> {
 }
 
 /**
- * Save draft for manual posting when API fails
+ * Save draft for manual posting
  */
 function saveDraftForManualPost(draft: ContentDraft): void {
     const fs = require('fs');
@@ -140,7 +141,7 @@ function saveDraftForManualPost(draft: ContentDraft): void {
 
     drafts.push(draft);
     fs.writeFileSync(draftsPath, JSON.stringify(drafts, null, 2), 'utf-8');
-    console.log(`[Distribution] Draft saved to ${draftsPath}`);
+    console.log(`[Distribution] 📄 Draft saved for manual posting`);
 }
 
 /**
@@ -160,6 +161,6 @@ export async function executeDistribution(draft: ContentDraft): Promise<PostReco
         signalType: draft.signal.type,
         postedAt: new Date(),
         success: false,
-        error: 'Unknown channel',
+        error: 'UNKNOWN',
     };
 }

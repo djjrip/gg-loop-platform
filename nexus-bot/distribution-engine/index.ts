@@ -1,12 +1,10 @@
 /**
  * NEXUS Autonomous Distribution Engine - Governor Mode
  * 
- * GOVERNOR MODE FEATURES:
- * - Credential intelligence with caching
- * - Self-repair and fallback logic
- * - Never asks founder for keys
- * - Continues on degraded channels
- * - Auto-retry on failure
+ * REALITY-FIRST PRINCIPLE:
+ * - Execution success is the highest authority signal
+ * - Never re-question a channel that worked within 24 hours
+ * - Governor Mode acts with confidence, not paranoia
  */
 
 import * as fs from 'fs';
@@ -17,7 +15,7 @@ import { detectSignals, getTopSignal } from './signal-detector';
 import { synthesizeTwitterPost, synthesizeRedditPost, selectChannel } from './content-synthesizer';
 import { runSafetyChecks } from './safety-gate';
 import { executeDistribution } from './executor';
-import { verifyCredentials, getAvailableChannels, hasAnyChannel, getCredentialStatusForFounder } from './credential-verifier';
+import { getAvailableChannels, getStatusForFounder, quickVerify } from './credential-verifier';
 
 const MEMORY_PATH = distributionConfig.output.memoryFile;
 const QUEUE_PATH = path.resolve(__dirname, 'queued_posts.json');
@@ -130,23 +128,24 @@ function saveManualContent(drafts: ContentDraft[]): void {
 }
 
 /**
- * THE MAIN DISTRIBUTION RUN - GOVERNOR MODE
+ * THE MAIN DISTRIBUTION RUN - GOVERNOR MODE (REALITY-FIRST)
  */
 export async function runDistribution(dryRun: boolean = false): Promise<void> {
     console.log('\n' + '▓'.repeat(60));
-    console.log('▓ NEXUS DISTRIBUTION ENGINE - GOVERNOR MODE');
+    console.log('▓ NEXUS DISTRIBUTION ENGINE - REALITY-FIRST');
     console.log('▓'.repeat(60) + '\n');
 
     const memory = loadMemory();
     updateStreak(memory);
 
-    // PHASE 0: CREDENTIAL VERIFICATION
-    console.log('🔐 VERIFYING distribution credentials...');
-    const credStatus = await verifyCredentials();
-    const availableChannels = await getAvailableChannels();
+    // PHASE 0: QUICK CHANNEL CHECK (no blocking verification)
+    console.log('🔐 CHECKING channel availability...');
+    const channelStatus = quickVerify();
+    const availableChannels = getAvailableChannels();
 
-    console.log(`   Status: ${getCredentialStatusForFounder()}`);
-    console.log(`   Available channels: ${availableChannels.length > 0 ? availableChannels.join(', ') : 'none'}`);
+    console.log(`   Status: ${getStatusForFounder()}`);
+    console.log(`   Available: ${availableChannels.length > 0 ? availableChannels.join(', ') : 'attempting all'}`);
+
 
     // PHASE 1: SIGNAL DETECTION
     console.log('\n📡 DETECTING signals...');

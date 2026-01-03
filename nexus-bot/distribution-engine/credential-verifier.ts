@@ -1,24 +1,36 @@
 /**
- * NEXUS Distribution Credential Verifier
+ * NEXUS Distribution Credential Verifier - Reality-First
  * 
- * GOVERNOR MODE COMPONENT:
- * - Validates credentials on startup
- * - Caches validation results
- * - Never asks founder for keys
- * - Self-repairs and falls back automatically
+ * CORE PRINCIPLE:
+ * Execution success is the highest authority signal.
+ * Verifier checks are ADVISORY ONLY.
+ * 
+ * If a post succeeds → Channel is VALID (period).
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 
+export type FailureReason =
+    | 'INVALID_CREDENTIALS'
+    | 'RATE_LIMIT'
+    | 'PERMISSION_DENIED'
+    | 'NETWORK_ERROR'
+    | 'PLACEHOLDER_VALUES'
+    | 'UNKNOWN';
+
+interface ChannelStatus {
+    status: 'valid' | 'unverified' | 'failed';
+    lastSuccess?: string;
+    lastFailure?: string;
+    failureReason?: FailureReason;
+    errorMessage?: string;
+}
+
 interface CredentialStatus {
-    twitter: 'valid' | 'invalid' | 'unavailable';
-    reddit: 'valid' | 'invalid' | 'unavailable';
+    twitter: ChannelStatus;
+    reddit: ChannelStatus;
     lastChecked: string;
-    twitterError?: string;
-    redditError?: string;
-    retryCount: number;
-    nextRetry?: string;
 }
 
 const STATUS_FILE = path.resolve(__dirname, 'distribution_credentials_status.json');
@@ -26,20 +38,86 @@ const STATUS_FILE = path.resolve(__dirname, 'distribution_credentials_status.jso
 /**
  * Load cached credential status
  */
-export function loadCredentialStatus(): CredentialStatus | null {
+export function loadCredentialStatus(): CredentialStatus {
     try {
         if (fs.existsSync(STATUS_FILE)) {
             return JSON.parse(fs.readFileSync(STATUS_FILE, 'utf-8'));
         }
     } catch { }
-    return null;
+    return {
+        twitter: { status: 'unverified' },
+        reddit: { status: 'unverified' },
+        lastChecked: new Date().toISOString(),
+    };
 }
 
 /**
  * Save credential status
  */
 export function saveCredentialStatus(status: CredentialStatus): void {
+    status.lastChecked = new Date().toISOString();
     fs.writeFileSync(STATUS_FILE, JSON.stringify(status, null, 2), 'utf-8');
+}
+
+/**
+ * CRITICAL: Mark channel as VALID after successful execution
+ * This is the highest authority signal - overrides all verifier checks
+ */
+export function markChannelSuccess(channel: 'twitter' | 'reddit'): void {
+    const status = loadCredentialStatus();
+    status[channel] = {
+        status: 'valid',
+        lastSuccess: new Date().toISOString(),
+    };
+    saveCredentialStatus(status);
+    console.log(`[Credential] ✅ ${channel.toUpperCase()} marked VALID (execution success)`);
+}
+
+/**
+ * Mark channel as failed with specific reason
+ */
+export function markChannelFailure(channel: 'twitter' | 'reddit', reason: FailureReason, message?: string): void {
+    const status = loadCredentialStatus();
+
+    // If channel was successful within last 24 hours, don't downgrade
+    const lastSuccess = status[channel].lastSuccess;
+    if (lastSuccess) {
+        const hoursSince = (Date.now() - new Date(lastSuccess).getTime()) / (1000 * 60 * 60);
+        if (hoursSince < 24) {
+            console.log(`[Credential] ${channel.toUpperCase()} failed but was successful ${hoursSince.toFixed(1)}h ago - keeping VALID`);
+            return;
+        }
+    }
+
+    status[channel] = {
+        status: 'failed',
+        lastFailure: new Date().toISOString(),
+        failureReason: reason,
+        errorMessage: message?.substring(0, 100),
+    };
+    saveCredentialStatus(status);
+    console.log(`[Credential] ❌ ${channel.toUpperCase()} marked FAILED: ${reason}`);
+}
+
+/**
+ * Classify error into failure reason
+ */
+export function classifyError(error: any): FailureReason {
+    const msg = (error?.message || error?.toString() || '').toLowerCase();
+
+    if (msg.includes('401') || msg.includes('unauthorized') || msg.includes('invalid') || msg.includes('credentials')) {
+        return 'INVALID_CREDENTIALS';
+    }
+    if (msg.includes('429') || msg.includes('rate') || msg.includes('limit') || msg.includes('too many')) {
+        return 'RATE_LIMIT';
+    }
+    if (msg.includes('403') || msg.includes('forbidden') || msg.includes('permission')) {
+        return 'PERMISSION_DENIED';
+    }
+    if (msg.includes('network') || msg.includes('econnrefused') || msg.includes('timeout') || msg.includes('enotfound')) {
+        return 'NETWORK_ERROR';
+    }
+    return 'UNKNOWN';
 }
 
 /**
@@ -47,187 +125,116 @@ export function saveCredentialStatus(status: CredentialStatus): void {
  */
 function isPlaceholder(value: string | undefined): boolean {
     if (!value) return true;
-    const placeholders = ['your-', 'xxx', 'placeholder', 'todo', 'changeme', 'mock'];
+    const placeholders = ['your-', 'xxx', 'placeholder', 'todo', 'changeme', 'mock', 'example'];
     const lower = value.toLowerCase();
     return placeholders.some(p => lower.includes(p)) || value.length < 10;
 }
 
 /**
- * Validate Twitter credentials
+ * REALITY-FIRST: Check if channel should be trusted
+ * Trusts execution history over verifier checks
  */
-async function validateTwitterCredentials(): Promise<{ valid: boolean; error?: string }> {
-    const appKey = process.env.TWITTER_API_KEY || process.env.TWITTER_CONSUMER_KEY;
-    const appSecret = process.env.TWITTER_API_SECRET || process.env.TWITTER_CONSUMER_SECRET;
-    const accessToken = process.env.TWITTER_ACCESS_TOKEN;
-    const accessSecret = process.env.TWITTER_ACCESS_SECRET;
+export function isChannelTrusted(channel: 'twitter' | 'reddit'): boolean {
+    const status = loadCredentialStatus();
+    const channelStatus = status[channel];
 
-    // Check presence
-    if (!appKey || !appSecret || !accessToken || !accessSecret) {
-        return { valid: false, error: 'Missing credentials' };
+    // If marked valid (execution success), trust it
+    if (channelStatus.status === 'valid') {
+        return true;
     }
 
-    // Check for placeholders
-    if (isPlaceholder(appKey) || isPlaceholder(appSecret) ||
-        isPlaceholder(accessToken) || isPlaceholder(accessSecret)) {
-        return { valid: false, error: 'Placeholder values detected' };
-    }
-
-    // Attempt lightweight validation (verify credentials endpoint)
-    try {
-        const { TwitterApi } = await import('twitter-api-v2');
-        const client = new TwitterApi({ appKey, appSecret, accessToken, accessSecret });
-
-        // Light API call to verify
-        await client.v2.me();
-        return { valid: true };
-    } catch (error: any) {
-        return { valid: false, error: error.message?.substring(0, 100) };
-    }
-}
-
-/**
- * Validate Reddit credentials
- */
-async function validateRedditCredentials(): Promise<{ valid: boolean; error?: string }> {
-    const clientId = process.env.REDDIT_CLIENT_ID;
-    const clientSecret = process.env.REDDIT_CLIENT_SECRET;
-    const username = process.env.REDDIT_USERNAME;
-    const password = process.env.REDDIT_PASSWORD;
-
-    // Check presence
-    if (!clientId || !clientSecret || !username || !password) {
-        return { valid: false, error: 'Missing credentials' };
-    }
-
-    // Check for placeholders
-    if (isPlaceholder(clientId) || isPlaceholder(clientSecret) ||
-        isPlaceholder(username) || isPlaceholder(password)) {
-        return { valid: false, error: 'Placeholder values detected' };
-    }
-
-    // Attempt lightweight validation
-    try {
-        const Snoowrap = (await import('snoowrap')).default;
-        const reddit = new Snoowrap({
-            userAgent: 'GGLoop Credential Verifier',
-            clientId,
-            clientSecret,
-            username,
-            password,
-        });
-
-        // Light API call
-        await reddit.getMe();
-        return { valid: true };
-    } catch (error: any) {
-        return { valid: false, error: error.message?.substring(0, 100) };
-    }
-}
-
-/**
- * Verify all distribution credentials
- * Called on startup and before distribution attempts
- */
-export async function verifyCredentials(): Promise<CredentialStatus> {
-    console.log('[Credential Verifier] Checking distribution credentials...');
-
-    const cached = loadCredentialStatus();
-    const now = new Date();
-
-    // Check if we should skip (verified within last hour and both valid)
-    if (cached && cached.twitter === 'valid' && cached.reddit === 'valid') {
-        const lastCheck = new Date(cached.lastChecked);
-        const hoursSince = (now.getTime() - lastCheck.getTime()) / (1000 * 60 * 60);
-        if (hoursSince < 1) {
-            console.log('[Credential Verifier] Using cached status (both valid, checked recently)');
-            return cached;
+    // If successful within last 24 hours, trust it
+    if (channelStatus.lastSuccess) {
+        const hoursSince = (Date.now() - new Date(channelStatus.lastSuccess).getTime()) / (1000 * 60 * 60);
+        if (hoursSince < 24) {
+            return true;
         }
     }
 
-    // Check if we should wait for retry (failed recently)
-    if (cached && cached.nextRetry) {
-        const nextRetry = new Date(cached.nextRetry);
-        if (now < nextRetry) {
-            console.log(`[Credential Verifier] Waiting for retry at ${cached.nextRetry}`);
-            return cached;
-        }
-    }
-
-    // Validate credentials
-    const [twitterResult, redditResult] = await Promise.all([
-        validateTwitterCredentials(),
-        validateRedditCredentials(),
-    ]);
-
-    const status: CredentialStatus = {
-        twitter: twitterResult.valid ? 'valid' : 'unavailable',
-        reddit: redditResult.valid ? 'valid' : 'unavailable',
-        lastChecked: now.toISOString(),
-        twitterError: twitterResult.error,
-        redditError: redditResult.error,
-        retryCount: (cached?.retryCount || 0) + 1,
-    };
-
-    // Set next retry if both failed (6 hours)
-    if (!twitterResult.valid && !redditResult.valid) {
-        const nextRetry = new Date(now.getTime() + 6 * 60 * 60 * 1000);
-        status.nextRetry = nextRetry.toISOString();
-        console.log(`[Credential Verifier] Both channels unavailable. Next retry: ${status.nextRetry}`);
-    }
-
-    // Log results
-    console.log(`[Credential Verifier] Twitter: ${status.twitter}${status.twitterError ? ` (${status.twitterError})` : ''}`);
-    console.log(`[Credential Verifier] Reddit: ${status.reddit}${status.redditError ? ` (${status.redditError})` : ''}`);
-
-    saveCredentialStatus(status);
-    return status;
+    return false;
 }
 
 /**
- * Get available channels (valid credentials only)
+ * Get available channels (execution-validated OR has credentials)
  */
-export async function getAvailableChannels(): Promise<('twitter' | 'reddit')[]> {
-    const status = await verifyCredentials();
+export function getAvailableChannels(): ('twitter' | 'reddit')[] {
     const channels: ('twitter' | 'reddit')[] = [];
 
-    if (status.twitter === 'valid') channels.push('twitter');
-    if (status.reddit === 'valid') channels.push('reddit');
+    // Check Twitter
+    if (isChannelTrusted('twitter') || hasTwitterCredentials()) {
+        channels.push('twitter');
+    }
+
+    // Check Reddit
+    if (isChannelTrusted('reddit') || hasRedditCredentials()) {
+        channels.push('reddit');
+    }
 
     return channels;
 }
 
 /**
- * Check if any distribution channel is available
+ * Check if Twitter credentials exist (not placeholders)
  */
-export async function hasAnyChannel(): Promise<boolean> {
-    const channels = await getAvailableChannels();
-    return channels.length > 0;
+function hasTwitterCredentials(): boolean {
+    const appKey = process.env.TWITTER_API_KEY || process.env.TWITTER_CONSUMER_KEY;
+    const appSecret = process.env.TWITTER_API_SECRET || process.env.TWITTER_CONSUMER_SECRET;
+    const accessToken = process.env.TWITTER_ACCESS_TOKEN;
+    const accessSecret = process.env.TWITTER_ACCESS_SECRET;
+
+    return !!(appKey && appSecret && accessToken && accessSecret &&
+        !isPlaceholder(appKey) && !isPlaceholder(appSecret) &&
+        !isPlaceholder(accessToken) && !isPlaceholder(accessSecret));
 }
 
 /**
- * Get human-readable status for Founder Desktop App
+ * Check if Reddit credentials exist (not placeholders)
  */
-export function getCredentialStatusForFounder(): string {
-    const cached = loadCredentialStatus();
+function hasRedditCredentials(): boolean {
+    const clientId = process.env.REDDIT_CLIENT_ID;
+    const clientSecret = process.env.REDDIT_CLIENT_SECRET;
+    const username = process.env.REDDIT_USERNAME;
+    const password = process.env.REDDIT_PASSWORD;
 
-    if (!cached) {
-        return 'Distribution channels not yet verified. Checking now...';
+    return !!(clientId && clientSecret && username && password &&
+        !isPlaceholder(clientId) && !isPlaceholder(clientSecret) &&
+        !isPlaceholder(username) && !isPlaceholder(password));
+}
+
+/**
+ * Get status summary for Founder Desktop App
+ */
+export function getStatusForFounder(): string {
+    const status = loadCredentialStatus();
+    const parts: string[] = [];
+
+    // Twitter
+    if (status.twitter.status === 'valid') {
+        parts.push('Twitter: Active');
+    } else if (status.twitter.status === 'failed') {
+        parts.push(`Twitter: ${status.twitter.failureReason || 'Failed'}`);
+    } else {
+        parts.push('Twitter: Unverified');
     }
 
-    if (cached.twitter === 'valid' && cached.reddit === 'valid') {
-        return 'All distribution channels operational.';
+    // Reddit
+    if (status.reddit.status === 'valid') {
+        parts.push('Reddit: Active');
+    } else if (status.reddit.status === 'failed') {
+        parts.push(`Reddit: ${status.reddit.failureReason || 'Failed'}`);
+    } else {
+        parts.push('Reddit: Unverified');
     }
 
-    if (cached.twitter === 'valid' || cached.reddit === 'valid') {
-        const working = cached.twitter === 'valid' ? 'Twitter' : 'Reddit';
-        const degraded = cached.twitter !== 'valid' ? 'Twitter' : 'Reddit';
-        return `${working} active. ${degraded} temporarily unavailable (auto-retry scheduled).`;
-    }
+    return parts.join(' | ');
+}
 
-    if (cached.nextRetry) {
-        const retryTime = new Date(cached.nextRetry).toLocaleTimeString();
-        return `Distribution channels recovering. Auto-retry at ${retryTime}. Manual posting available in NEXUS_STATUS.md.`;
-    }
-
-    return 'Distribution channels unavailable. Preparing manual content.';
+/**
+ * Quick verify - no network calls, just checks state
+ */
+export function quickVerify(): { twitter: boolean; reddit: boolean } {
+    return {
+        twitter: isChannelTrusted('twitter') || hasTwitterCredentials(),
+        reddit: isChannelTrusted('reddit') || hasRedditCredentials(),
+    };
 }
