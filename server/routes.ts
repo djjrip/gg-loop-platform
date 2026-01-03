@@ -249,6 +249,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // [NEXUS] Operating Brain - Founder Visibility Endpoint
   app.use("/api/nexus", nexusRouter);
 
+  // [FOUNDING MEMBER] PayPal URL Configuration
+  app.get("/api/founding-member/paypal-url", async (req, res) => {
+    const paypalUrl = process.env.PAYPAL_FOUNDING_MEMBER_URL;
+    const configured = !!paypalUrl;
+    
+    res.json({
+      url: paypalUrl || null,
+      configured,
+    });
+  });
+
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
   app.post("/api/admin/mission-tweets", async (req, res) => {
