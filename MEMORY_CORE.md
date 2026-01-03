@@ -56,6 +56,17 @@
    - No PowerShell, no terminal commands, no local scripts
    - All value via repo artifacts or cloud services
 
+8. **All Reports Mirror to Local Visibility Folder**
+   - Every AG-generated report MUST copy to: `C:\Users\Jayson Quindao\Desktop\GG LOOP\Detailed CHATGPT reports\`
+   - Repo version = canonical truth
+   - Local version = founder visibility & trust
+   - Failure to mirror = execution failure
+
+9. **No Invisible Systems**
+   - Any autonomous system without a visible observer layer is non-operational
+   - If founder cannot SEE activity, activity did not happen
+   - Visibility files: NEXUS_ACTIVITY_FEED.md, NEXUS_HEARTBEAT.md, NEXUS_DAILY_SNAPSHOT.md
+
 ---
 
 ## 3. CURRENT BUSINESS STATE
