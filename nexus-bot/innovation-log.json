@@ -5,7 +5,9 @@
     "crash-auto-restart",
     "one-command-check",
     "stale-deploy-auto-trigger",
-    "inline-fix-suggestions"
+    "inline-fix-suggestions",
+    "content-auto-generator",
+    "parallel-build"
   ],
-  "lastProposalDate": "2026-01-03T02:49:36.240Z"
+  "lastProposalDate": "2026-01-03T03:07:01.816Z"
 }
