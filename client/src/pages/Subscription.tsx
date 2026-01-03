@@ -154,7 +154,8 @@ export default function SubscriptionPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 max-w-[1600px] mx-auto">
+        {/* 6-tier balanced grid - responsive with no orphaned cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 max-w-[1800px] mx-auto">
           {tiers.map((tier) => {
             const TierIcon = tier.icon;
             const isFree = tier.id === "free";
@@ -215,9 +216,9 @@ export default function SubscriptionPage() {
 
                 <CardFooter className="pt-4">
                   {isFree ? (
-                    <Link href={isAuthenticated ? "/stats" : "/login"}>
+                    <Link href={isAuthenticated ? "/stats" : "/login"} className="w-full">
                       <Button className="w-full" variant="outline">
-                        {isAuthenticated ? "Dashboard" : "Get Started"}
+                        {isAuthenticated ? "Dashboard" : "Get Started Free"}
                       </Button>
                     </Link>
                   ) : current ? (
@@ -226,13 +227,15 @@ export default function SubscriptionPage() {
                     </Button>
                   ) : (
                     <Button
-                      className="w-full"
+                      className={`w-full ${tier.highlight ? "bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600" : ""}`}
                       variant={tier.highlight ? "default" : "outline"}
                       onClick={() => handleStripeCheckout(tier.id, isFounder)}
                     >
-                      {isAuthenticated
-                        ? "Subscribe with Stripe"
-                        : "Sign Up & Subscribe"}
+                      {isFounder 
+                        ? "Lock In $29 Forever"
+                        : isAuthenticated
+                          ? "Subscribe with Stripe"
+                          : "Sign Up & Subscribe"}
                     </Button>
                   )}
                 </CardFooter>
