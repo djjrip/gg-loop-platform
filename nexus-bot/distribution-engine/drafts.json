@@ -95,5 +95,19 @@
       "priority": "high"
     },
     "createdAt": "2026-01-03T03:54:51.054Z"
+  },
+  {
+    "channel": "reddit",
+    "content": "## Where I Am\n\n- Platform: Live and working\n- Features: 10 shipped\n- Users: Basically zero\n- Revenue: $0\n- Marketing: $0 spent\n\n## The Real Problem\n\nI built a complete product. Nobody knows it exists.\n\nClassic indie dev trap: building is comfortable, marketing is not.\n\n## What I'm Doing About It\n\nBuilt an autonomous system that forces me to distribute before building more.\n\nNEXUS literally blocks new features until I announce what shipped.\n\n## The Lesson\n\nIf you know you'll skip marketing, build a system that makes it automatic.\n\n---\n\n*Being honest about where I am.*",
+    "title": "[Honest] The Gap Between Building and Growing",
+    "subreddit": "BuildYourVibe",
+    "signal": {
+      "type": "scheduled_post",
+      "title": "Scheduled: founder_reality",
+      "description": "Autonomous distribution",
+      "timestamp": "2026-01-03T03:59:31.417Z",
+      "priority": "high"
+    },
+    "createdAt": "2026-01-03T03:59:31.417Z"
   }
 ]

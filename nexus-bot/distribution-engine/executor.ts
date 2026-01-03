@@ -1,14 +1,14 @@
 /**
- * NEXUS Distribution Engine - Executor
+ * NEXUS Distribution Engine - Executor (Environment Unified)
  * 
- * REALITY-FIRST PRINCIPLE:
- * Execution success marks channel as VALID.
- * This is the highest authority signal.
+ * PRINCIPLE: Uses env-discovery to find credentials
+ * regardless of which env var alias is used.
  */
 
 import { ContentDraft, PostRecord } from './types';
 import { distributionConfig } from './config';
 import { markChannelSuccess, markChannelFailure, classifyError } from './credential-verifier';
+import { getTwitterCredentials, getRedditCredentials, logEnvVars } from './env-discovery';
 
 /**
  * Post to Twitter
@@ -26,18 +26,26 @@ export async function postToTwitter(draft: ContentDraft): Promise<PostRecord> {
     try {
         const { TwitterApi } = await import('twitter-api-v2');
 
-        const appKey = process.env.TWITTER_API_KEY || process.env.TWITTER_CONSUMER_KEY;
-        const appSecret = process.env.TWITTER_API_SECRET || process.env.TWITTER_CONSUMER_SECRET;
-        const accessToken = process.env.TWITTER_ACCESS_TOKEN;
-        const accessSecret = process.env.TWITTER_ACCESS_SECRET;
+        // Use unified credential discovery
+        const creds = getTwitterCredentials();
 
-        if (!appKey || !appSecret || !accessToken || !accessSecret) {
+        if (!creds) {
+            console.log('[Distribution] Twitter credentials not found - checking env vars:');
+            logEnvVars();
             record.error = 'INVALID_CREDENTIALS';
-            markChannelFailure('twitter', 'INVALID_CREDENTIALS', 'Missing credentials');
+            markChannelFailure('twitter', 'INVALID_CREDENTIALS', 'No valid credentials found');
             return record;
         }
 
-        const client = new TwitterApi({ appKey, appSecret, accessToken, accessSecret });
+        console.log('[Distribution] Twitter credentials found via env-discovery');
+
+        const client = new TwitterApi({
+            appKey: creds.appKey,
+            appSecret: creds.appSecret,
+            accessToken: creds.accessToken,
+            accessSecret: creds.accessSecret,
+        });
+
         const result = await client.v2.tweet(draft.content);
 
         record.success = true;
@@ -72,25 +80,25 @@ export async function postToReddit(draft: ContentDraft): Promise<PostRecord> {
     };
 
     try {
-        const clientId = process.env.REDDIT_CLIENT_ID;
-        const clientSecret = process.env.REDDIT_CLIENT_SECRET;
-        const username = process.env.REDDIT_USERNAME;
-        const password = process.env.REDDIT_PASSWORD;
+        // Use unified credential discovery
+        const creds = getRedditCredentials();
 
-        if (!clientId || !clientSecret || !username || !password) {
+        if (!creds) {
             record.error = 'INVALID_CREDENTIALS';
-            markChannelFailure('reddit', 'INVALID_CREDENTIALS', 'Missing credentials');
+            markChannelFailure('reddit', 'INVALID_CREDENTIALS', 'No valid credentials found');
             saveDraftForManualPost(draft);
             return record;
         }
 
+        console.log('[Distribution] Reddit credentials found via env-discovery');
+
         const Snoowrap = (await import('snoowrap')).default;
         const reddit = new Snoowrap({
             userAgent: 'GGLoop Distribution Bot',
-            clientId,
-            clientSecret,
-            username,
-            password,
+            clientId: creds.clientId,
+            clientSecret: creds.clientSecret,
+            username: creds.username,
+            password: creds.password,
         });
 
         const subreddit = await reddit.getSubreddit(draft.subreddit || distributionConfig.reddit.subreddit);
