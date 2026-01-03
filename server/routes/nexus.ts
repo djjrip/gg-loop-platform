@@ -1,37 +1,83 @@
 /**
- * NEXUS API Routes - SECURITY HARDENED
+ * NEXUS API Routes - SECURITY HARDENED + AUTO-AUTH
  * 
  * PUBLIC/PRIVATE SPLIT:
  * - /api/nexus/status → Sanitized outcome-level data ONLY
  * - /api/nexus/health → Simple health check
  * - /api/nexus/founder → AUTH-GATED, full cognition, founder-only
  * 
- * NEVER EXPOSE:
- * - Internal reasoning
- * - Confidence/uncertainty signals
- * - Enforcement logic
- * - Decision heuristics
- * - Raw memory
+ * AUTH METHODS:
+ * - Session-based (web login)
+ * - Bearer token (desktop app auto-auth)
  */
 
 import { Router, Request, Response, NextFunction } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import crypto from 'crypto';
 
 const router = Router();
 
+// Founder tokens (in production, use Redis/DB)
+const founderTokens = new Map<string, { userId: number; expiresAt: Date }>();
+
+// Founder emails
+const FOUNDER_EMAILS = (process.env.ADMIN_EMAILS || 'jaysonquindao@gmail.com').split(',').map(e => e.trim());
+
 /**
  * Founder authentication middleware
- * Checks if user is founder before granting access
+ * Accepts both session auth and Bearer token (for desktop app)
  */
 async function requireFounder(req: any, res: Response, next: NextFunction) {
     try {
-        // Check for authenticated session
-        if (!req.isAuthenticated || !req.isAuthenticated() || !req.user?.oidcSub) {
-            return res.status(401).json({ error: 'Authentication required' });
+        const { storage } = await import('../storage');
+
+        // METHOD 1: Bearer Token (Desktop App Auto-Auth)
+        const authHeader = req.headers.authorization;
+        if (authHeader?.startsWith('Bearer ')) {
+            const token = authHeader.substring(7);
+            const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+            const stored = founderTokens.get(tokenHash);
+
+            if (stored && new Date() < stored.expiresAt) {
+                const user = await storage.getUser(stored.userId);
+                if (user) {
+                    req.dbUser = user;
+                    req.isFounderToken = true;
+                    return next();
+                }
+            }
         }
 
-        // Get user from storage
+        // METHOD 2: Session Auth (Web Login)
+        if (req.isAuthenticated && req.isAuthenticated() && req.user?.oidcSub) {
+            const user = await storage.getUserByOidcSub(req.user.oidcSub);
+
+            if (user) {
+                const isFounder = user.isFounder || FOUNDER_EMAILS.includes(user.email || '');
+                if (isFounder) {
+                    req.dbUser = user;
+                    return next();
+                }
+            }
+        }
+
+        return res.status(401).json({ error: 'Founder authentication required' });
+    } catch (error) {
+        return res.status(500).json({ error: 'Authentication check failed' });
+    }
+}
+
+/**
+ * Generate founder token (called from desktop app after web login)
+ * POST /api/nexus/token
+ */
+router.post('/token', async (req: any, res) => {
+    try {
+        if (!req.isAuthenticated || !req.isAuthenticated() || !req.user?.oidcSub) {
+            return res.status(401).json({ error: 'Login to ggloop.io first' });
+        }
+
         const { storage } = await import('../storage');
         const user = await storage.getUserByOidcSub(req.user.oidcSub);
 
@@ -39,20 +85,47 @@ async function requireFounder(req: any, res: Response, next: NextFunction) {
             return res.status(401).json({ error: 'User not found' });
         }
 
-        // Check founder status
-        const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
-        const isFounder = user.isFounder || adminEmails.includes(user.email || '');
-
+        const isFounder = user.isFounder || FOUNDER_EMAILS.includes(user.email || '');
         if (!isFounder) {
             return res.status(403).json({ error: 'Founder access required' });
         }
 
-        (req as any).dbUser = user;
-        next();
-    } catch (error) {
-        return res.status(500).json({ error: 'Authentication check failed' });
+        // Generate token
+        const token = crypto.randomBytes(32).toString('hex');
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+        // Expires in 90 days
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 90);
+
+        founderTokens.set(tokenHash, { userId: user.id, expiresAt });
+
+        res.json({ success: true, token, expiresAt: expiresAt.toISOString() });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
     }
-}
+});
+
+/**
+ * Validate founder token
+ * POST /api/nexus/validate
+ */
+router.post('/validate', (req, res) => {
+    const { token } = req.body;
+
+    if (!token) {
+        return res.json({ valid: false });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const stored = founderTokens.get(tokenHash);
+
+    if (!stored || new Date() > stored.expiresAt) {
+        return res.json({ valid: false });
+    }
+
+    res.json({ valid: true, expiresAt: stored.expiresAt.toISOString() });
+});
 
 /**
  * Sanitize state for public consumption
