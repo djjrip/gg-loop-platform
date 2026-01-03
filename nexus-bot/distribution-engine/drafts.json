@@ -1,0 +1,28 @@
+[
+  {
+    "channel": "twitter",
+    "content": "💡 new capability: Automatic Crash Recovery\n\nAdd Railway restart policy with exponential backoff\n\nbuilding leverage, not just features.",
+    "signal": {
+      "type": "innovation_executed",
+      "title": "Innovation: Automatic Crash Recovery",
+      "description": "Add Railway restart policy with exponential backoff",
+      "timestamp": "2026-01-03T02:11:42.109Z",
+      "priority": "high"
+    },
+    "createdAt": "2026-01-03T02:11:42.110Z"
+  },
+  {
+    "channel": "reddit",
+    "title": "[System Design] Automatic Crash Recovery",
+    "content": "## Builder Log - 2026-01-03\n\n### What happened\nAdd Railway restart policy with exponential backoff\n\n### Why this matters\nThis removes an entire class of problems, not just one bug.\n\n### Technical approach\nBuilding leverage through automation rather than manual fixes.\n\n---\n\n*Shipping in public. No hype, just building.*",
+    "subreddit": "BuildYourVibe",
+    "signal": {
+      "type": "innovation_executed",
+      "title": "Innovation: Automatic Crash Recovery",
+      "description": "Add Railway restart policy with exponential backoff",
+      "timestamp": "2026-01-03T02:11:42.109Z",
+      "priority": "high"
+    },
+    "createdAt": "2026-01-03T02:11:42.111Z"
+  }
+]

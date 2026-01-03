@@ -1,6 +1,6 @@
 {
   "state": "MISALIGNED_BUILDING_NO_DISTRIBUTION",
-  "timestamp": "2026-01-03T01:10:26.383Z",
+  "timestamp": "2026-01-03T02:02:27.765Z",
   "reason": "Heavy technical work happening but no growth or distribution. Features without users = wasted effort.",
   "autoActions": [
     {
@@ -15,18 +15,18 @@
   "nextAction": "STOP BUILDING. Create one piece of content showcasing what was built.",
   "innovation": {
     "leverageUpgrade": {
-      "id": "auto-deploy-health-gate",
+      "id": "crash-auto-restart",
       "type": "leverage",
-      "title": "Deploy Health Gate",
-      "description": "Block deploys that fail frontend boot test automatically",
-      "effort": "medium",
+      "title": "Automatic Crash Recovery",
+      "description": "Add Railway restart policy with exponential backoff",
+      "effort": "low",
       "impact": "high"
     },
     "efficiencyUpgrade": {
-      "id": "status-at-glance",
+      "id": "one-command-check",
       "type": "efficiency",
-      "title": "One-Line Status",
-      "description": "Add /api/nexus endpoint returning single JSON with all states",
+      "title": "Single Health Command",
+      "description": "npm run check-all that runs bot + aoe + nexus in sequence",
       "effort": "low",
       "impact": "high"
     }
@@ -51,5 +51,5 @@
   ],
   "inSafeMode": false,
   "failureMemory": [],
-  "runCount": 1
+  "runCount": 2
 }
