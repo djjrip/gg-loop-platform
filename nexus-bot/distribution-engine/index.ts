@@ -1,10 +1,12 @@
 /**
- * NEXUS Autonomous Distribution Engine - Main Orchestrator
+ * NEXUS Autonomous Distribution Engine - Governor Mode
  * 
- * THE COMPLETE PIPELINE:
- * Signal Detection → Content Synthesis → Safety Gate → Execution → Feedback
- * 
- * Usage: npx tsx nexus-bot/distribution-engine/index.ts
+ * GOVERNOR MODE FEATURES:
+ * - Credential intelligence with caching
+ * - Self-repair and fallback logic
+ * - Never asks founder for keys
+ * - Continues on degraded channels
+ * - Auto-retry on failure
  */
 
 import * as fs from 'fs';
@@ -15,8 +17,17 @@ import { detectSignals, getTopSignal } from './signal-detector';
 import { synthesizeTwitterPost, synthesizeRedditPost, selectChannel } from './content-synthesizer';
 import { runSafetyChecks } from './safety-gate';
 import { executeDistribution } from './executor';
+import { verifyCredentials, getAvailableChannels, hasAnyChannel, getCredentialStatusForFounder } from './credential-verifier';
 
 const MEMORY_PATH = distributionConfig.output.memoryFile;
+const QUEUE_PATH = path.resolve(__dirname, 'queued_posts.json');
+
+interface QueuedPost {
+    draft: ContentDraft;
+    queuedAt: string;
+    retryCount: number;
+    channel: string;
+}
 
 /**
  * Load distribution memory
@@ -28,7 +39,6 @@ function loadMemory(): DistributionMemory {
             return JSON.parse(fs.readFileSync(memPath, 'utf-8'));
         }
     } catch { }
-
     return {
         lastTwitterPost: null,
         lastRedditPost: null,
@@ -49,6 +59,49 @@ function saveMemory(memory: DistributionMemory): void {
 }
 
 /**
+ * Load queued posts for retry
+ */
+function loadQueue(): QueuedPost[] {
+    try {
+        if (fs.existsSync(QUEUE_PATH)) {
+            return JSON.parse(fs.readFileSync(QUEUE_PATH, 'utf-8'));
+        }
+    } catch { }
+    return [];
+}
+
+/**
+ * Save queue
+ */
+function saveQueue(queue: QueuedPost[]): void {
+    fs.writeFileSync(QUEUE_PATH, JSON.stringify(queue, null, 2), 'utf-8');
+}
+
+/**
+ * Add to retry queue
+ */
+function queueForRetry(draft: ContentDraft): void {
+    const queue = loadQueue();
+
+    // Check for duplicates
+    const exists = queue.some(q =>
+        q.draft.content === draft.content &&
+        q.draft.channel === draft.channel
+    );
+
+    if (!exists) {
+        queue.push({
+            draft,
+            queuedAt: new Date().toISOString(),
+            retryCount: 0,
+            channel: draft.channel,
+        });
+        saveQueue(queue);
+        console.log(`   📋 Queued for auto-retry: ${draft.channel}`);
+    }
+}
+
+/**
  * Update posting streak
  */
 function updateStreak(memory: DistributionMemory): void {
@@ -56,47 +109,47 @@ function updateStreak(memory: DistributionMemory): void {
     const postedYesterday = memory.postHistory.some(p =>
         new Date(p.postedAt).getTime() > yesterday && p.success
     );
-
-    if (postedYesterday) {
-        memory.postingStreak++;
-    } else {
-        memory.postingStreak = 0;
-    }
+    memory.postingStreak = postedYesterday ? memory.postingStreak + 1 : 0;
 }
 
 /**
- * Generate distribution status report
+ * Save ready-to-post content for manual assist mode
  */
-function generateStatusReport(memory: DistributionMemory, result: 'posted' | 'skipped', details: string): string {
-    const report = {
-        timestamp: new Date().toISOString(),
-        result,
-        details,
-        stats: {
-            totalPosts: memory.totalPosts,
-            postingStreak: memory.postingStreak,
-            postsThisWeek: memory.postHistory.filter(p =>
-                new Date(p.postedAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
-            ).length,
-        },
-    };
-
-    return JSON.stringify(report, null, 2);
+function saveManualContent(drafts: ContentDraft[]): void {
+    const manualPath = path.resolve(__dirname, 'manual_ready.json');
+    fs.writeFileSync(manualPath, JSON.stringify({
+        preparedAt: new Date().toISOString(),
+        message: 'Distribution channels recovering. Content ready for manual posting.',
+        drafts: drafts.map(d => ({
+            channel: d.channel,
+            title: d.title,
+            content: d.content,
+            subreddit: d.subreddit,
+        })),
+    }, null, 2), 'utf-8');
 }
 
 /**
- * THE MAIN DISTRIBUTION RUN
+ * THE MAIN DISTRIBUTION RUN - GOVERNOR MODE
  */
 export async function runDistribution(dryRun: boolean = false): Promise<void> {
     console.log('\n' + '▓'.repeat(60));
-    console.log('▓ NEXUS DISTRIBUTION ENGINE');
+    console.log('▓ NEXUS DISTRIBUTION ENGINE - GOVERNOR MODE');
     console.log('▓'.repeat(60) + '\n');
 
     const memory = loadMemory();
     updateStreak(memory);
 
+    // PHASE 0: CREDENTIAL VERIFICATION
+    console.log('🔐 VERIFYING distribution credentials...');
+    const credStatus = await verifyCredentials();
+    const availableChannels = await getAvailableChannels();
+
+    console.log(`   Status: ${getCredentialStatusForFounder()}`);
+    console.log(`   Available channels: ${availableChannels.length > 0 ? availableChannels.join(', ') : 'none'}`);
+
     // PHASE 1: SIGNAL DETECTION
-    console.log('📡 DETECTING signals...');
+    console.log('\n📡 DETECTING signals...');
     const signals = detectSignals();
     console.log(`   Found ${signals.length} signals`);
 
@@ -114,9 +167,26 @@ export async function runDistribution(dryRun: boolean = false): Promise<void> {
 
     console.log(`   Top signal: [${topSignal.priority}] ${topSignal.type} - ${topSignal.title}`);
 
-    // PHASE 2: CHANNEL SELECTION
-    const channelChoice = selectChannel(topSignal);
-    console.log(`\n📌 CHANNEL: ${channelChoice}`);
+    // PHASE 2: CHANNEL SELECTION (based on available channels)
+    let channelChoice = selectChannel(topSignal);
+
+    // Filter to only available channels
+    if (channelChoice === 'both') {
+        if (!availableChannels.includes('twitter') && availableChannels.includes('reddit')) {
+            channelChoice = 'reddit';
+        } else if (availableChannels.includes('twitter') && !availableChannels.includes('reddit')) {
+            channelChoice = 'twitter';
+        } else if (availableChannels.length === 0) {
+            channelChoice = 'both'; // Will fall through to manual mode
+        }
+    } else if (!availableChannels.includes(channelChoice as any)) {
+        // Preferred channel unavailable, try other
+        if (availableChannels.length > 0) {
+            channelChoice = availableChannels[0];
+        }
+    }
+
+    console.log(`\n📌 CHANNEL: ${channelChoice} (filtered by availability)`);
 
     // PHASE 3: CONTENT SYNTHESIS
     console.log('\n✍️  SYNTHESIZING content...');
@@ -149,18 +219,41 @@ export async function runDistribution(dryRun: boolean = false): Promise<void> {
 
     const safeDrafts = safetyResults.filter(r => r.canPost);
 
+    // Handle no available channels - MANUAL ASSIST MODE
+    if (availableChannels.length === 0 && !dryRun) {
+        console.log('   ⚠️ All channels unavailable - entering MANUAL ASSIST MODE');
+        saveManualContent(safeDrafts.map(s => s.draft));
+
+        for (const { draft } of safeDrafts) {
+            queueForRetry(draft);
+        }
+
+        console.log('   📋 Content queued for auto-retry');
+        console.log('   📝 Manual content saved to manual_ready.json');
+        console.log('\n' + '═'.repeat(60));
+        console.log('📊 MANUAL ASSIST MODE ACTIVE');
+        console.log(`   Next auto-retry: ${credStatus.nextRetry || 'On next run'}`);
+        console.log('═'.repeat(60) + '\n');
+        return;
+    }
+
     if (safeDrafts.length === 0) {
         console.log('   ⚠️ All drafts blocked by safety gate');
         console.log('\n✅ Distribution run complete (skipped).\n');
         return;
     }
 
+    let successCount = 0;
+    let failCount = 0;
+
     for (const { draft } of safeDrafts) {
+        // Check if this specific channel is available
+        const channelAvailable = availableChannels.includes(draft.channel as any);
+
         if (dryRun) {
             console.log(`   [DRY RUN] Would post to ${draft.channel}:`);
             console.log(`   ${draft.content.substring(0, 100)}...`);
 
-            // Save draft for review
             const draftPath = path.resolve(process.cwd(), distributionConfig.output.draftsFile);
             const dir = path.dirname(draftPath);
             if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -173,12 +266,20 @@ export async function runDistribution(dryRun: boolean = false): Promise<void> {
             fs.writeFileSync(draftPath, JSON.stringify(existingDrafts, null, 2), 'utf-8');
             console.log(`   📄 Draft saved to ${draftPath}`);
 
+        } else if (!channelAvailable) {
+            // Channel not available - queue for retry, don't fail loudly
+            console.log(`   ⏳ ${draft.channel} unavailable - queuing for auto-retry`);
+            queueForRetry(draft);
+            failCount++;
+
         } else {
+            // Channel available - execute
             const record = await executeDistribution(draft);
             memory.postHistory.push(record);
 
             if (record.success) {
                 memory.totalPosts++;
+                successCount++;
                 if (draft.channel === 'twitter') {
                     memory.lastTwitterPost = record.postedAt;
                 } else if (draft.channel === 'reddit') {
@@ -187,6 +288,8 @@ export async function runDistribution(dryRun: boolean = false): Promise<void> {
                 console.log(`   ✅ Posted to ${draft.channel}`);
             } else {
                 console.log(`   ❌ Failed: ${record.error}`);
+                queueForRetry(draft);
+                failCount++;
             }
         }
     }
@@ -194,26 +297,8 @@ export async function runDistribution(dryRun: boolean = false): Promise<void> {
     // PHASE 6: SAVE & REPORT
     saveMemory(memory);
 
-    const statusReport = generateStatusReport(
-        memory,
-        safeDrafts.length > 0 ? 'posted' : 'skipped',
-        `Processed ${signals.length} signals, ${safeDrafts.length} posts attempted`
-    );
-
-    // Save log
-    const logPath = path.resolve(process.cwd(), distributionConfig.output.logFile);
-    const dir = path.dirname(logPath);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
-    let logs: any[] = [];
-    if (fs.existsSync(logPath)) {
-        try { logs = JSON.parse(fs.readFileSync(logPath, 'utf-8')); } catch { }
-    }
-    logs.push(JSON.parse(statusReport));
-    fs.writeFileSync(logPath, JSON.stringify(logs.slice(-50), null, 2), 'utf-8'); // Keep last 50
-
     console.log('\n' + '═'.repeat(60));
-    console.log(`📊 STATS: ${memory.totalPosts} total posts | ${memory.postingStreak} day streak`);
+    console.log(`📊 STATS: ${memory.totalPosts} total | ${memory.postingStreak} day streak | ${successCount} posted | ${failCount} queued`);
     console.log('═'.repeat(60));
     console.log('\n✅ Distribution run complete.\n');
 }

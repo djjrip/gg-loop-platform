@@ -1,7 +1,26 @@
 {
   "lastTwitterPost": null,
   "lastRedditPost": null,
-  "postHistory": [],
+  "postHistory": [
+    {
+      "id": "twitter-1767409829379",
+      "channel": "twitter",
+      "content": "💡 new capability: Commit-to-Post Generator\n\nAuto-generate social post draft from every meaningful commit\n\nbuilding leverage, not just features.",
+      "signalType": "innovation_executed",
+      "postedAt": "2026-01-03T03:10:29.379Z",
+      "success": false,
+      "error": "Twitter credentials not configured"
+    },
+    {
+      "id": "reddit-1767409829498",
+      "channel": "reddit",
+      "content": "## Builder Log - 2026-01-03\n\n### What happened\nAuto-generate social post draft from every meaningful commit\n\n### Why this matters\nThis removes an entire class of problems, not just one bug.\n\n### Technical approach\nBuilding leverage through automation rather than manual fixes.\n\n---\n\n*Shipping in public. No hype, just building.*",
+      "signalType": "innovation_executed",
+      "postedAt": "2026-01-03T03:10:29.498Z",
+      "success": false,
+      "error": "Reddit credentials not configured"
+    }
+  ],
   "postingStreak": 0,
   "totalPosts": 0
 }
