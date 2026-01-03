@@ -343,3 +343,61 @@ desktopApiRouter.get('/status', (req, res) => {
         timestamp: new Date().toISOString()
     });
 });
+
+/**
+ * GET /api/desktop/verification-status/:userId
+ * Get desktop verification status for web dashboard display
+ * Shows: connected state, last verified game, session points
+ */
+desktopApiRouter.get('/verification-status/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'userId required' });
+        }
+
+        // Get recent desktop sessions for this user
+        const recentSessions = await db.select()
+            .from(pointTransactions)
+            .where(
+                and(
+                    eq(pointTransactions.userId, userId),
+                    eq(pointTransactions.sourceType, 'desktop_app')
+                )
+            )
+            .orderBy(pointTransactions.createdAt)
+            .limit(5);
+
+        // Calculate session stats
+        const hasDesktopActivity = recentSessions.length > 0;
+        const lastSession = recentSessions[0];
+        const totalSessionPoints = recentSessions.reduce((sum, s) => sum + (s.amount || 0), 0);
+
+        // Parse game name from description (format: "GameName (process) - X min active play")
+        let lastGame = null;
+        let lastVerifiedAt = null;
+        if (lastSession) {
+            const desc = lastSession.description || '';
+            const gameMatch = desc.match(/^([^(]+)/);
+            lastGame = gameMatch ? gameMatch[1].trim() : 'Unknown Game';
+            lastVerifiedAt = lastSession.createdAt;
+        }
+
+        res.json({
+            connected: hasDesktopActivity,
+            lastGame,
+            lastVerifiedAt,
+            sessionPoints: totalSessionPoints,
+            recentSessions: recentSessions.map(s => ({
+                id: s.id,
+                points: s.amount,
+                description: s.description,
+                timestamp: s.createdAt
+            }))
+        });
+    } catch (error: any) {
+        console.error('Verification status error:', error);
+        res.status(500).json({ error: 'Failed to get verification status' });
+    }
+});
