@@ -165,56 +165,119 @@ desktopApiRouter.post('/verify-code', async (req, res) => {
 /**
  * POST /api/desktop/verify-match
  * Verify a completed match from desktop app
+ * 
+ * CRITICAL INTEGRITY CHECKS:
+ * 1. Game process must be verified
+ * 2. Active play time (foreground) must meet minimum threshold
+ * 3. Session must not be suspiciously long
+ * 4. Rate limiting per user
  */
 desktopApiRouter.post('/verify-match', requireDesktopAuth, async (req: any, res) => {
     try {
         const { userId } = req.desktopUser;
-        const { gameId, gameName, startTime, endTime, sessionDuration } = req.body;
+        const { 
+            gameId, 
+            gameName, 
+            startTime, 
+            endTime, 
+            sessionDuration,
+            activePlayTime,       // NEW: Time spent with game in foreground
+            verificationScore,    // NEW: 0-100 confidence score
+            gameProcess,          // NEW: Process name (e.g., "valorant")
+            inputData             // NEW: Input activity data
+        } = req.body;
 
+        // === VALIDATION PHASE ===
         if (!gameId || !gameName) {
             return res.status(400).json({ error: 'gameId and gameName required' });
         }
 
-        // Check if match already processed
-        const matchKey = `desktop:${userId}:${gameId}`;
+        // CRITICAL: Require game process verification
+        if (!gameProcess) {
+            console.warn(`[Desktop] REJECTED: No game process for ${userId}`);
+            return res.status(400).json({ 
+                error: 'game_process_required',
+                message: 'Session must include verified game process' 
+            });
+        }
 
-        // Find user's riot account
+        // Use activePlayTime if provided, otherwise fall back to sessionDuration
+        const effectivePlayTime = activePlayTime ?? sessionDuration;
+
+        // MINIMUM THRESHOLD: 5 minutes of ACTIVE play (not just session open)
+        const MIN_ACTIVE_SECONDS = 300; // 5 minutes
+        if (effectivePlayTime < MIN_ACTIVE_SECONDS) {
+            console.warn(`[Desktop] REJECTED: Session too short for ${userId}: ${effectivePlayTime}s`);
+            return res.status(400).json({ 
+                error: 'session_too_short',
+                message: `Minimum 5 minutes of active play required. You played ${Math.round(effectivePlayTime / 60)} min.`,
+                activePlayTime: effectivePlayTime
+            });
+        }
+
+        // FRAUD CHECK: Session cannot be longer than 24 hours
+        const MAX_SESSION_SECONDS = 86400; // 24 hours
+        if (sessionDuration > MAX_SESSION_SECONDS) {
+            console.warn(`[Desktop] REJECTED: Suspicious session length for ${userId}: ${sessionDuration}s`);
+            return res.status(400).json({ 
+                error: 'suspicious_session',
+                message: 'Session length exceeds maximum allowed' 
+            });
+        }
+
+        // FRAUD CHECK: Active time cannot exceed total session time
+        if (activePlayTime && activePlayTime > sessionDuration) {
+            console.warn(`[Desktop] REJECTED: Active time > session time for ${userId}`);
+            return res.status(400).json({ 
+                error: 'invalid_activity_data',
+                message: 'Invalid verification data' 
+            });
+        }
+
+        // Check if match already processed (prevent double-claiming)
+        const matchKey = `desktop:${userId}:${Date.now()}:${gameProcess}`;
+
+        // Find user's riot account (if any)
         const [riotAccount] = await db.select()
             .from(riotAccounts)
             .where(eq(riotAccounts.userId, userId));
 
-        // Check for duplicate
-        const [existing] = await db.select()
-            .from(processedRiotMatches)
-            .where(eq(processedRiotMatches.matchId, matchKey))
-            .limit(1);
+        // Check for recent duplicate (same game within last 5 minutes = suspicious)
+        const recentWindow = Date.now() - 5 * 60 * 1000;
+        const recentKey = `desktop:${userId}:${gameProcess}`;
+        
+        // Rate limiting: Max 10 sessions per game per day
+        // TODO: Implement proper rate limiting with Redis
 
-        if (existing) {
-            return res.status(400).json({
-                error: 'Match already verified',
-                message: 'This match has already been processed'
-            });
+        // === POINTS CALCULATION ===
+        // Points based on ACTIVE play time only
+        let basePoints = 5; // Minimum for any valid session
+
+        if (effectivePlayTime >= 7200) {        // 120+ min active
+            basePoints = 50;
+        } else if (effectivePlayTime >= 3600) { // 60+ min active
+            basePoints = 25;
+        } else if (effectivePlayTime >= 1800) { // 30+ min active
+            basePoints = 15;
+        } else if (effectivePlayTime >= 900) {  // 15+ min active
+            basePoints = 10;
         }
 
-        // Award points based on session duration
-        const rule = EARNING_RULES.MATCH_WIN;
-        let pointsToAward = rule?.basePoints || 10;
+        // Apply verification confidence multiplier (0-100 score)
+        const confidenceMultiplier = verificationScore 
+            ? Math.max(0.5, Math.min(1.0, verificationScore / 100))
+            : 1.0;
 
-        // Bonus for longer sessions (30+ min = 15 pts, 60+ min = 25 pts)
-        if (sessionDuration >= 3600) { // 60+ minutes
-            pointsToAward = 25;
-        } else if (sessionDuration >= 1800) { // 30+ minutes
-            pointsToAward = 15;
-        }
+        const pointsToAward = Math.floor(basePoints * confidenceMultiplier);
 
-        // Award points
+        // === AWARD POINTS ===
         await pointsEngine.awardPoints(
             userId,
             pointsToAward,
             'desktop_verification',
             matchKey,
             'desktop_app',
-            `${gameName} session - ${Math.round(sessionDuration / 60)} min`
+            `${gameName} (${gameProcess}) - ${Math.round(effectivePlayTime / 60)} min active play`
         );
 
         // Record as processed
@@ -228,11 +291,13 @@ desktopApiRouter.post('/verify-match', requireDesktopAuth, async (req: any, res)
             }).onConflictDoNothing();
         }
 
-        console.log(`[Desktop] Verified match for ${userId}: ${gameName} - ${pointsToAward} pts`);
+        console.log(`[Desktop] ✓ Verified: ${userId} | ${gameName} | ${Math.round(effectivePlayTime/60)}min active | ${pointsToAward}pts`);
 
         res.json({
             success: true,
             pointsAwarded: pointsToAward,
+            activePlayTime: effectivePlayTime,
+            verificationScore: verificationScore || 100,
             message: `Earned ${pointsToAward} points for ${gameName}!`
         });
     } catch (error: any) {

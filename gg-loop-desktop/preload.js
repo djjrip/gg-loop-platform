@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, shell } = require('electron');
 
 // Expose protected methods that allow the renderer process to use
 // ipcRenderer without exposing the entire object
@@ -13,6 +13,12 @@ contextBridge.exposeInMainWorld('ggloop', {
     getAuthToken: () => ipcRenderer.invoke('get-auth-token'),
     setAuthToken: (token) => ipcRenderer.invoke('set-auth-token', token),
     clearAuth: () => ipcRenderer.invoke('clear-auth'),
+    
+    // CRITICAL: Account binding - fetch user info
+    getMe: () => ipcRenderer.invoke('get-me'),
+
+    // Open external URLs (for OAuth)
+    openExternal: (url) => ipcRenderer.invoke('open-external', url),
 
     // System info
     getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
@@ -40,6 +46,16 @@ contextBridge.exposeInMainWorld('ggloop', {
     },
     onPointsAwarded: (callback) => {
         ipcRenderer.on('points-awarded', (event, data) => callback(data));
+    },
+    
+    // NEW: Verification state changes (game foreground detection)
+    onVerificationStateChange: (callback) => {
+        ipcRenderer.on('verification-state-change', (event, state) => callback(state));
+    },
+    
+    // NEW: Auth callback (OAuth redirect)
+    onAuthCallback: (callback) => {
+        ipcRenderer.on('auth-callback', (event, token) => callback(token));
     },
 
     // Update notifications

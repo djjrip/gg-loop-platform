@@ -1,12 +1,28 @@
 import { useState, useEffect } from 'react';
 import logoImage from '../assets/logo.jpg';
 
+// User info from account binding
+interface UserInfo {
+    id: string;
+    username: string;
+    email: string;
+    totalPoints: number;
+    isFounder?: boolean;
+    tier?: string;
+}
+
 interface DashboardPageProps {
+    user: UserInfo;
     onLogout: () => void;
 }
 
-// Activity status from anti-idle system
-type ActivityStatus = 'ACTIVE' | 'WARNING' | 'PAUSED' | 'UNKNOWN';
+// Verification states - matches gameVerification.js
+type VerificationState = 
+    | 'NOT_PLAYING'           // No supported game detected
+    | 'GAME_DETECTED'         // Game running but not in foreground
+    | 'ACTIVE_PLAY_CONFIRMED' // Game running + foreground = POINTS ACCRUE
+    | 'PAUSED'                // Game minimized or alt-tabbed
+    | 'ERROR';                // Verification failed
 
 // GG LOOP Brand Colors
 const BRAND = {
@@ -22,70 +38,75 @@ const BRAND = {
     danger: '#ef4444',
 };
 
-export default function DashboardPage({ onLogout }: DashboardPageProps) {
-    const [gameDetected, setGameDetected] = useState<any>(null);
-    const [sessionTime, setSessionTime] = useState(0);
-    const [activeTime, setActiveTime] = useState(0); // Only counts when active
-    const [totalPoints, setTotalPoints] = useState(0);
-    const [activityStatus, setActivityStatus] = useState<ActivityStatus>('ACTIVE');
-    const [idleWarnings, setIdleWarnings] = useState(0);
+export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
+    const [verificationState, setVerificationState] = useState<VerificationState>('NOT_PLAYING');
+    const [gameName, setGameName] = useState<string | null>(null);
+    const [gameIcon, setGameIcon] = useState<string>('🎮');
+    const [activeTime, setActiveTime] = useState(0);
+    const [statusExplanation, setStatusExplanation] = useState('Launch a supported game to start earning.');
+    const [lastVerifiedAt, setLastVerifiedAt] = useState<string | null>(null);
 
     useEffect(() => {
-        // Listen for game detection events
+        // Listen for verification state changes from main process
+        if (window.ggloop?.onVerificationStateChange) {
+            window.ggloop.onVerificationStateChange((state: any) => {
+                setVerificationState(state.state);
+                setGameName(state.gameName);
+                setGameIcon(state.gameIcon || '🎮');
+                setLastVerifiedAt(state.lastVerifiedAt);
+                
+                // Update explanation based on state
+                updateStatusExplanation(state);
+            });
+        }
+
+        // Also listen for legacy game detection events as fallback
         if (window.ggloop?.onGameDetected) {
             window.ggloop.onGameDetected((game: any) => {
-                console.log('Game detected:', game);
-                setGameDetected(game);
-                setSessionTime(0);
-                setActiveTime(0);
+                setGameName(game.name);
+                setGameIcon(game.icon || '🎮');
             });
         }
 
-        // Listen for game close events
         if (window.ggloop?.onGameClosed) {
-            window.ggloop.onGameClosed((game: any) => {
-                console.log('Game closed:', game);
-                setGameDetected(null);
-                setSessionTime(0);
+            window.ggloop.onGameClosed(() => {
+                setGameName(null);
                 setActiveTime(0);
+                setVerificationState('NOT_PLAYING');
             });
-        }
-
-        // Listen for activity status changes
-        if (window.ggloop?.onActivityChange) {
-            window.ggloop.onActivityChange((status: any) => {
-                setActivityStatus(status.status);
-                setIdleWarnings(status.idleWarnings || 0);
-            });
-        }
-
-        // Initial detection check
-        if (window.ggloop?.detectGame) {
-            window.ggloop.detectGame()
-                .then((game: any) => {
-                    if (game) setGameDetected(game);
-                })
-                .catch((error: any) => {
-                    console.error('Initial game detection error:', error);
-                });
         }
     }, []);
 
-    // Session timer - ONLY counts active time
+    // Active time counter - ONLY counts when ACTIVE_PLAY_CONFIRMED
     useEffect(() => {
-        if (!gameDetected) return;
+        if (verificationState !== 'ACTIVE_PLAY_CONFIRMED') return;
 
         const timer = setInterval(() => {
-            setSessionTime(prev => prev + 1);
-
-            // ONLY increment active time if user is ACTIVE
-            if (activityStatus === 'ACTIVE') {
-                setActiveTime(prev => prev + 1);
-            }
+            setActiveTime(prev => prev + 1);
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [gameDetected, activityStatus]);
+    }, [verificationState]);
+
+    const updateStatusExplanation = (state: any) => {
+        switch (state.state) {
+            case 'NOT_PLAYING':
+                setStatusExplanation('Launch a supported game to start earning.');
+                break;
+            case 'GAME_DETECTED':
+                setStatusExplanation(`${state.gameName} detected but not focused. Click on the game window to earn points.`);
+                break;
+            case 'ACTIVE_PLAY_CONFIRMED':
+                setStatusExplanation(`Playing ${state.gameName}. Points are accruing!`);
+                break;
+            case 'PAUSED':
+                setStatusExplanation('Game is paused or minimized. Return to game to continue earning.');
+                break;
+            case 'ERROR':
+                setStatusExplanation(`Error: ${state.errorReason || 'Verification failed'}`);
+                break;
+        }
+    };
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -93,9 +114,8 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // Points based on ACTIVE time only
     const getEstimatedPoints = () => {
-        if (activityStatus === 'PAUSED') return 0;
+        if (verificationState !== 'ACTIVE_PLAY_CONFIRMED') return 0;
         if (activeTime >= 7200) return 50;
         if (activeTime >= 3600) return 25;
         if (activeTime >= 1800) return 15;
@@ -104,36 +124,42 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
     };
 
     const getStatusColor = () => {
-        switch (activityStatus) {
-            case 'ACTIVE': return BRAND.success;
-            case 'WARNING': return BRAND.warning;
-            case 'PAUSED': return BRAND.danger;
+        switch (verificationState) {
+            case 'ACTIVE_PLAY_CONFIRMED': return BRAND.success;
+            case 'GAME_DETECTED': return BRAND.warning;
+            case 'NOT_PLAYING': return BRAND.textMuted;
+            case 'PAUSED': return BRAND.warning;
+            case 'ERROR': return BRAND.danger;
             default: return BRAND.textMuted;
         }
     };
 
-    const getStatusText = () => {
-        switch (activityStatus) {
-            case 'ACTIVE': return '✓ Playing';
-            case 'WARNING': return `⚠ Move mouse (${3 - idleWarnings} warnings left)`;
-            case 'PAUSED': return '⏸ PAUSED - No input detected';
-            default: return 'Checking...';
+    const getStatusIcon = () => {
+        switch (verificationState) {
+            case 'ACTIVE_PLAY_CONFIRMED': return '✓';
+            case 'GAME_DETECTED': return '⚠';
+            case 'NOT_PLAYING': return '○';
+            case 'PAUSED': return '⏸';
+            case 'ERROR': return '✕';
+            default: return '?';
         }
     };
+
+    const canEarnPoints = verificationState === 'ACTIVE_PLAY_CONFIRMED';
 
     return (
         <div style={{
             minHeight: '100vh',
             background: `linear-gradient(135deg, ${BRAND.dark} 0%, ${BRAND.darkAlt} 100%)`,
-            padding: '2rem',
+            padding: '1.5rem',
             fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
         }}>
-            {/* Header */}
+            {/* Header with Account Binding Info */}
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '2rem',
+                marginBottom: '1.5rem',
                 paddingBottom: '1rem',
                 borderBottom: `1px solid ${BRAND.border}`
             }}>
@@ -142,17 +168,17 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                         src={logoImage}
                         alt="GG LOOP"
                         style={{
-                            width: '40px',
-                            height: '40px',
+                            width: '36px',
+                            height: '36px',
                             objectFit: 'contain',
-                            filter: gameDetected && activityStatus === 'ACTIVE'
+                            filter: canEarnPoints
                                 ? 'drop-shadow(0 0 10px rgba(193, 154, 107, 0.8))'
                                 : 'none'
                         }}
                     />
                     <div>
                         <h1 style={{
-                            fontSize: '1.5rem',
+                            fontSize: '1.25rem',
                             background: `linear-gradient(135deg, ${BRAND.primary} 0%, #D4A373 100%)`,
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
@@ -161,13 +187,32 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                         }}>
                             GG LOOP
                         </h1>
-                        <span style={{ fontSize: '0.75rem', color: BRAND.textMuted }}>
+                        <span style={{ fontSize: '0.7rem', color: BRAND.textMuted }}>
                             Desktop Verification
                         </span>
                     </div>
                 </div>
 
+                {/* CRITICAL: Account Binding Display */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{
+                        padding: '0.5rem 1rem',
+                        background: `rgba(74, 222, 128, 0.1)`,
+                        border: `1px solid ${BRAND.success}`,
+                        borderRadius: '8px',
+                        textAlign: 'right'
+                    }}>
+                        <div style={{ fontSize: '0.65rem', color: BRAND.success, marginBottom: '2px' }}>
+                            ✓ CONNECTED AS
+                        </div>
+                        <div style={{ color: BRAND.text, fontWeight: 'bold', fontSize: '0.875rem' }}>
+                            {user.username}
+                        </div>
+                        <div style={{ fontSize: '0.65rem', color: BRAND.textMuted }}>
+                            ID: {user.id.substring(0, 8)}...
+                        </div>
+                    </div>
+
                     <div style={{
                         padding: '0.5rem 1rem',
                         background: `rgba(193, 154, 107, 0.1)`,
@@ -176,7 +221,7 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                         boxShadow: `0 0 10px ${BRAND.primaryGlow}`
                     }}>
                         <span style={{ color: BRAND.primary, fontWeight: 'bold' }}>
-                            {totalPoints.toLocaleString()} pts
+                            {user.totalPoints.toLocaleString()} pts
                         </span>
                     </div>
 
@@ -189,7 +234,7 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                             color: BRAND.textMuted,
                             borderRadius: '4px',
                             cursor: 'pointer',
-                            fontSize: '0.875rem'
+                            fontSize: '0.75rem'
                         }}
                     >
                         Sign Out
@@ -197,192 +242,144 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                 </div>
             </div>
 
-            {/* Main Status Card */}
+            {/* Verification Status Banner */}
             <div style={{
-                background: `rgba(193, 154, 107, 0.03)`,
-                border: `1px solid ${activityStatus === 'PAUSED' ? BRAND.danger : BRAND.border}`,
-                borderRadius: '16px',
-                padding: '2rem',
-                marginBottom: '2rem',
-                position: 'relative',
-                overflow: 'hidden'
+                background: canEarnPoints 
+                    ? 'rgba(74, 222, 128, 0.1)' 
+                    : verificationState === 'GAME_DETECTED'
+                        ? 'rgba(251, 191, 36, 0.1)'
+                        : 'rgba(100, 100, 100, 0.1)',
+                border: `2px solid ${getStatusColor()}`,
+                borderRadius: '12px',
+                padding: '1rem 1.5rem',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
             }}>
-                {/* Activity Status Bar */}
-                {gameDetected && (
-                    <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        padding: '8px 16px',
-                        background: activityStatus === 'PAUSED'
-                            ? 'rgba(239, 68, 68, 0.2)'
-                            : activityStatus === 'WARNING'
-                                ? 'rgba(251, 191, 36, 0.2)'
-                                : 'rgba(74, 222, 128, 0.1)',
-                        borderBottom: `1px solid ${getStatusColor()}`,
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: getStatusColor(),
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '8px'
+                        fontSize: '1rem',
+                        color: '#000'
                     }}>
-                        <span style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: getStatusColor(),
-                            animation: activityStatus === 'ACTIVE' ? 'pulse 2s infinite' : 'none'
-                        }} />
-                        <span style={{ color: getStatusColor(), fontSize: '0.875rem', fontWeight: '500' }}>
-                            {getStatusText()}
+                        {getStatusIcon()}
+                    </span>
+                    <div>
+                        <div style={{ 
+                            color: getStatusColor(), 
+                            fontWeight: 'bold',
+                            fontSize: '1rem'
+                        }}>
+                            {verificationState.replace(/_/g, ' ')}
+                        </div>
+                        <div style={{ color: BRAND.textMuted, fontSize: '0.8rem' }}>
+                            {statusExplanation}
+                        </div>
+                    </div>
+                </div>
+                
+                {canEarnPoints && (
+                    <div style={{
+                        padding: '0.5rem 1rem',
+                        background: 'rgba(74, 222, 128, 0.2)',
+                        borderRadius: '8px',
+                        animation: 'pulse 2s infinite'
+                    }}>
+                        <span style={{ color: BRAND.success, fontWeight: 'bold', fontSize: '1.25rem' }}>
+                            +{getEstimatedPoints()} pts
                         </span>
                     </div>
                 )}
+            </div>
 
-                {/* Glowing background when active */}
-                {gameDetected && activityStatus === 'ACTIVE' && (
+            {/* Main Game Card */}
+            <div style={{
+                background: `rgba(193, 154, 107, 0.03)`,
+                border: `1px solid ${canEarnPoints ? BRAND.success : BRAND.border}`,
+                borderRadius: '16px',
+                padding: '2rem',
+                marginBottom: '1.5rem',
+                textAlign: 'center',
+                position: 'relative',
+                overflow: 'hidden'
+            }}>
+                {/* Glow effect when earning */}
+                {canEarnPoints && (
                     <div style={{
                         position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
+                        top: 0, left: 0, right: 0, bottom: 0,
                         background: `radial-gradient(circle at center, ${BRAND.primaryGlow} 0%, transparent 70%)`,
                         opacity: 0.3,
                         pointerEvents: 'none'
                     }} />
                 )}
 
-                <div style={{ position: 'relative', textAlign: 'center', paddingTop: gameDetected ? '2rem' : 0 }}>
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <img
-                            src={logoImage}
-                            alt="GG LOOP"
-                            style={{
-                                width: '100px',
-                                height: '100px',
-                                objectFit: 'contain',
-                                filter: gameDetected && activityStatus === 'ACTIVE'
-                                    ? 'drop-shadow(0 0 30px rgba(193, 154, 107, 0.6))'
-                                    : activityStatus === 'PAUSED'
-                                        ? 'grayscale(100%) opacity(0.5)'
-                                        : 'none'
-                            }}
-                        />
+                <div style={{ position: 'relative' }}>
+                    <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
+                        {gameName ? gameIcon : '🎮'}
                     </div>
 
-                    {gameDetected ? (
+                    {gameName ? (
                         <>
                             <div style={{
                                 display: 'inline-block',
                                 padding: '0.75rem 1.5rem',
-                                background: activityStatus === 'PAUSED'
-                                    ? 'rgba(239, 68, 68, 0.1)'
-                                    : `linear-gradient(135deg, ${BRAND.primary}22 0%, #D4A37322 100%)`,
-                                border: `2px solid ${activityStatus === 'PAUSED' ? BRAND.danger : BRAND.primary}`,
+                                background: canEarnPoints
+                                    ? 'rgba(74, 222, 128, 0.1)'
+                                    : `rgba(193, 154, 107, 0.1)`,
+                                border: `2px solid ${canEarnPoints ? BRAND.success : BRAND.primary}`,
                                 borderRadius: '12px',
-                                marginBottom: '1rem',
-                                boxShadow: activityStatus !== 'PAUSED' ? `0 0 20px ${BRAND.primaryGlow}` : 'none'
+                                marginBottom: '1.5rem'
                             }}>
-                                <span style={{ fontSize: '1.5rem', marginRight: '8px' }}>{gameDetected.icon}</span>
                                 <span style={{
-                                    color: activityStatus === 'PAUSED' ? BRAND.danger : BRAND.primary,
+                                    color: canEarnPoints ? BRAND.success : BRAND.primary,
                                     fontWeight: 'bold',
-                                    fontSize: '1.25rem'
+                                    fontSize: '1.5rem'
                                 }}>
-                                    {gameDetected.name}
+                                    {gameName}
                                 </span>
                             </div>
 
-                            {/* Two timers: Total vs Active */}
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '1.5rem' }}>
-                                <div>
-                                    <div style={{
-                                        fontSize: '2rem',
-                                        fontWeight: 'bold',
-                                        fontFamily: 'monospace',
-                                        color: BRAND.textMuted
-                                    }}>
-                                        {formatTime(sessionTime)}
-                                    </div>
-                                    <div style={{ color: BRAND.textMuted, fontSize: '0.75rem' }}>
-                                        Total Time
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div style={{
-                                        fontSize: '2.5rem',
-                                        fontWeight: 'bold',
-                                        fontFamily: 'monospace',
-                                        color: activityStatus === 'PAUSED' ? BRAND.danger : BRAND.success
-                                    }}>
-                                        {formatTime(activeTime)}
-                                    </div>
-                                    <div style={{ color: activityStatus === 'PAUSED' ? BRAND.danger : BRAND.success, fontSize: '0.875rem', fontWeight: '500' }}>
-                                        {activityStatus === 'PAUSED' ? '⏸ PAUSED' : '✓ Active Play Time'}
-                                    </div>
-                                </div>
+                            <div style={{
+                                fontSize: '3rem',
+                                fontWeight: 'bold',
+                                fontFamily: 'monospace',
+                                color: canEarnPoints ? BRAND.success : BRAND.textMuted,
+                                marginBottom: '0.5rem'
+                            }}>
+                                {formatTime(activeTime)}
                             </div>
-
-                            {/* Points Display */}
-                            {activityStatus === 'PAUSED' ? (
-                                <div style={{
-                                    padding: '1rem',
-                                    background: 'rgba(239, 68, 68, 0.1)',
-                                    border: `1px solid ${BRAND.danger}`,
-                                    borderRadius: '8px',
-                                    display: 'inline-block'
-                                }}>
-                                    <span style={{ color: BRAND.danger, fontSize: '1.1rem', fontWeight: 'bold' }}>
-                                        ⏸ POINTS PAUSED
-                                    </span>
-                                    <br />
-                                    <span style={{ color: BRAND.textMuted, fontSize: '0.875rem' }}>
-                                        Move mouse or press keys to resume
-                                    </span>
-                                </div>
-                            ) : (
-                                <div style={{
-                                    padding: '1rem',
-                                    background: `rgba(74, 222, 128, 0.1)`,
-                                    border: `1px solid ${BRAND.success}`,
-                                    borderRadius: '8px',
-                                    display: 'inline-block'
-                                }}>
-                                    <span style={{ color: BRAND.success, fontSize: '1.25rem', fontWeight: 'bold' }}>
-                                        +{getEstimatedPoints()} pts
-                                    </span>
-                                    <span style={{ color: BRAND.textMuted, fontSize: '0.875rem', marginLeft: '8px' }}>
-                                        for active play
-                                    </span>
-                                </div>
-                            )}
+                            <div style={{
+                                color: canEarnPoints ? BRAND.success : BRAND.textMuted,
+                                fontSize: '0.875rem'
+                            }}>
+                                {canEarnPoints ? '✓ Verified Active Play Time' : 'Waiting for game focus...'}
+                            </div>
                         </>
                     ) : (
                         <>
                             <div style={{
-                                padding: '0.75rem 1.5rem',
-                                background: 'rgba(100, 100, 100, 0.1)',
-                                border: `1px solid ${BRAND.border}`,
-                                borderRadius: '12px',
-                                marginBottom: '1rem',
-                                display: 'inline-block'
+                                color: BRAND.textMuted,
+                                fontSize: '1.25rem',
+                                marginBottom: '1rem'
                             }}>
-                                <span style={{ color: BRAND.textMuted, fontSize: '1.1rem' }}>
-                                    Waiting for Game...
-                                </span>
+                                No Game Detected
                             </div>
-
                             <p style={{
                                 color: BRAND.textMuted,
                                 fontSize: '0.875rem',
-                                maxWidth: '300px',
-                                margin: '0 auto',
-                                lineHeight: 1.6
+                                maxWidth: '400px',
+                                margin: '0 auto'
                             }}>
-                                Launch a supported game to start earning points.
-                                <strong> You must be actively playing</strong> - idle time doesn't count!
+                                Launch a supported game to start earning points. 
+                                Points only accrue when the game is in focus and you're actively playing.
                             </p>
                         </>
                     )}
@@ -390,47 +387,49 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
             </div>
 
             {/* Info Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                {/* Anti-Idle Notice */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                {/* Verification Info */}
                 <div style={{
-                    background: 'rgba(251, 191, 36, 0.05)',
-                    border: `1px solid ${BRAND.warning}`,
+                    background: 'rgba(74, 222, 128, 0.05)',
+                    border: `1px solid ${BRAND.success}`,
                     borderRadius: '12px',
-                    padding: '1.5rem'
+                    padding: '1.25rem'
                 }}>
                     <h2 style={{
-                        fontSize: '1rem',
-                        color: BRAND.warning,
-                        marginBottom: '1rem',
+                        fontSize: '0.9rem',
+                        color: BRAND.success,
+                        marginBottom: '0.75rem',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px'
                     }}>
-                        <span>⚡</span> Active Play Required
+                        <span>✓</span> How Verification Works
                     </h2>
 
-                    <div style={{ fontSize: '0.85rem', color: BRAND.textMuted, lineHeight: 1.6 }}>
-                        <p style={{ margin: '0 0 8px 0' }}>We verify you're actually playing:</p>
-                        <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
-                            <li>Mouse/keyboard activity tracked</li>
-                            <li>1 min idle = warning</li>
-                            <li>3 warnings = points paused</li>
-                            <li>Resume playing = resume earning</li>
+                    <div style={{ fontSize: '0.8rem', color: BRAND.textMuted, lineHeight: 1.5 }}>
+                        <p style={{ margin: '0 0 8px 0' }}>Points ONLY accrue when:</p>
+                        <ul style={{ margin: 0, paddingLeft: '1rem' }}>
+                            <li>Game process is running</li>
+                            <li>Game window is in foreground</li>
+                            <li>Your account is verified</li>
                         </ul>
+                        <p style={{ margin: '8px 0 0 0', fontStyle: 'italic' }}>
+                            Idle time and alt-tabbing do NOT count!
+                        </p>
                     </div>
                 </div>
 
-                {/* Points System */}
+                {/* Points Info */}
                 <div style={{
                     background: `rgba(193, 154, 107, 0.03)`,
                     border: `1px solid ${BRAND.border}`,
                     borderRadius: '12px',
-                    padding: '1.5rem'
+                    padding: '1.25rem'
                 }}>
                     <h2 style={{
-                        fontSize: '1rem',
+                        fontSize: '0.9rem',
                         color: BRAND.primary,
-                        marginBottom: '1rem',
+                        marginBottom: '0.75rem',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px'
@@ -438,20 +437,20 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                         <span>⭐</span> Points (Active Time Only)
                     </h2>
 
-                    <div style={{ fontSize: '0.85rem', color: BRAND.textMuted }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${BRAND.border}` }}>
+                    <div style={{ fontSize: '0.8rem', color: BRAND.textMuted }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: `1px solid ${BRAND.border}` }}>
                             <span>15+ min active</span>
                             <span style={{ color: BRAND.primary }}>+10 pts</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${BRAND.border}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: `1px solid ${BRAND.border}` }}>
                             <span>30+ min active</span>
                             <span style={{ color: BRAND.primary }}>+15 pts</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${BRAND.border}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: `1px solid ${BRAND.border}` }}>
                             <span>60+ min active</span>
                             <span style={{ color: BRAND.primary }}>+25 pts</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
                             <span>120+ min active</span>
                             <span style={{ color: BRAND.primary, fontWeight: 'bold' }}>+50 pts</span>
                         </div>
@@ -459,18 +458,35 @@ export default function DashboardPage({ onLogout }: DashboardPageProps) {
                 </div>
             </div>
 
+            {/* Founder Badge */}
+            {user.isFounder && (
+                <div style={{
+                    marginTop: '1rem',
+                    padding: '0.75rem 1rem',
+                    background: 'linear-gradient(135deg, rgba(193, 154, 107, 0.2) 0%, rgba(212, 163, 115, 0.2) 100%)',
+                    border: `2px solid ${BRAND.primary}`,
+                    borderRadius: '8px',
+                    textAlign: 'center'
+                }}>
+                    <span style={{ color: BRAND.primary, fontWeight: 'bold' }}>
+                        👑 FOUNDING MEMBER — 2x Points Forever
+                    </span>
+                </div>
+            )}
+
             {/* Footer */}
             <div style={{
-                marginTop: '2rem',
+                marginTop: '1.5rem',
                 paddingTop: '1rem',
                 borderTop: `1px solid ${BRAND.border}`,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                fontSize: '0.75rem',
+                fontSize: '0.7rem',
                 color: BRAND.textMuted
             }}>
                 <span>PLAY → EARN → LOOP</span>
+                <span>Last verified: {lastVerifiedAt ? new Date(lastVerifiedAt).toLocaleTimeString() : 'N/A'}</span>
                 <a
                     href="https://ggloop.io"
                     style={{ color: BRAND.primary, textDecoration: 'none' }}

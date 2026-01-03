@@ -1,12 +1,17 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 const { detectGame, monitorGames } = require('./gameDetection');
+const { startVerificationLoop, setVerifiedUser, clearUser, getVerificationState } = require('./gameVerification');
 const sessionSync = require('./sessionSync');
 const crypto = require('crypto');
 
 let mainWindow;
 let gameMonitorCleanup = null;
+let verificationCleanup = null;
+
+// API configuration
+const API_BASE_URL = 'https://ggloop.io';
 
 // Make mainWindow globally accessible for sessionSync notifications
 global.mainWindow = null;
@@ -129,42 +134,83 @@ function createWindow() {
 }
 
 function startGameMonitoring() {
+    // Clean up old monitors
     if (gameMonitorCleanup) {
         gameMonitorCleanup();
     }
+    if (verificationCleanup) {
+        verificationCleanup();
+    }
 
-    gameMonitorCleanup = monitorGames(
-        (game) => {
-            // Game detected - start session tracking
-            console.log('[Electron] Game detected:', game.name);
-            sessionSync.startSession(game);
+    // Start new verification-based monitoring (game + foreground detection)
+    verificationCleanup = startVerificationLoop((state) => {
+        // Send verification state to renderer
+        if (mainWindow) {
+            mainWindow.webContents.send('verification-state-change', state);
+        }
 
-            if (mainWindow) {
-                mainWindow.webContents.send('game-detected', game);
-            }
-        },
-        async (game) => {
-            // Game closed - end session and sync to backend
-            console.log('[Electron] Game closed:', game.name);
+        // CRITICAL: Track active play time based on foreground detection
+        const isActivePlay = state.state === 'ACTIVE_PLAY_CONFIRMED';
+        sessionSync.updateActivePlayTime(isActivePlay);
 
-            // End session and sync points
-            const result = await sessionSync.endSession();
-            console.log('[Electron] Session sync result:', result);
-
-            if (mainWindow) {
-                mainWindow.webContents.send('game-closed', game);
-
-                // Send sync result to UI
-                if (result && result.success) {
-                    mainWindow.webContents.send('points-awarded', {
-                        points: result.pointsAwarded,
-                        game: game.name
+        // Handle session tracking based on verification state
+        if (isActivePlay && state.gameName) {
+            // Start/continue session only when actively playing
+            if (!sessionSync.getCurrentSession()) {
+                console.log('[Electron] Active play confirmed:', state.gameName);
+                sessionSync.startSession({
+                    name: state.gameName,
+                    gameId: state.gameProcess,
+                    process: state.gameProcess,
+                    icon: state.gameIcon
+                });
+                
+                if (mainWindow) {
+                    mainWindow.webContents.send('game-detected', {
+                        name: state.gameName,
+                        icon: state.gameIcon
                     });
                 }
             }
+        } else if (state.state === 'NOT_PLAYING' && sessionSync.getCurrentSession()) {
+            // Game closed - end session
+            endCurrentSession();
+        }
+    }, 3000); // Check every 3 seconds
+
+    // Also keep legacy game monitor for session end detection
+    gameMonitorCleanup = monitorGames(
+        (game) => {
+            // Game detected (legacy event)
+            console.log('[Electron] Game process detected:', game.name);
         },
-        5000 // Poll every 5 seconds
+        async (game) => {
+            // Game closed - end session and sync
+            await endCurrentSession(game);
+        },
+        5000
     );
+}
+
+async function endCurrentSession(game) {
+    const session = sessionSync.getCurrentSession();
+    if (!session) return;
+
+    console.log('[Electron] Game closed:', game?.name || session.gameName);
+
+    const result = await sessionSync.endSession();
+    console.log('[Electron] Session sync result:', result);
+
+    if (mainWindow) {
+        mainWindow.webContents.send('game-closed', game || { name: session.gameName });
+
+        if (result && result.success) {
+            mainWindow.webContents.send('points-awarded', {
+                points: result.pointsAwarded,
+                game: session.gameName
+            });
+        }
+    }
 }
 
 // IPC Handlers
@@ -200,6 +246,60 @@ ipcMain.handle('clear-auth', async () => {
     });
     store.clear();
     sessionSync.clearAuth();
+    clearUser(); // Clear verification user binding
+    return true;
+});
+
+// CRITICAL: Fetch user info for account binding
+ipcMain.handle('get-me', async () => {
+    const Store = require('electron-store');
+    const store = new Store({
+        name: 'gg-loop-session',
+        encryptionKey: getDeviceEncryptionKey()
+    });
+    
+    const token = store.get('authToken');
+    if (!token) {
+        return { success: false, error: 'No auth token' };
+    }
+
+    try {
+        const fetch = require('node-fetch');
+        const response = await fetch(`${API_BASE_URL}/api/me`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            return { success: false, error: `Auth failed (${response.status})` };
+        }
+
+        const data = await response.json();
+        const user = {
+            id: data.id || data.userId,
+            username: data.username || data.displayName || data.email?.split('@')[0] || 'Unknown',
+            email: data.email,
+            totalPoints: data.totalPoints || 0,
+            isFounder: data.isFounder,
+            tier: data.tier
+        };
+
+        // Bind user to verification system
+        setVerifiedUser(user.id, user.username);
+        
+        console.log(`[Electron] Account bound: ${user.username} (${user.id})`);
+        return { success: true, user };
+    } catch (error) {
+        console.error('[Electron] getMe error:', error);
+        return { success: false, error: error.message };
+    }
+});
+
+// Open external URL (for OAuth)
+ipcMain.handle('open-external', async (event, url) => {
+    await shell.openExternal(url);
     return true;
 });
 

@@ -16,6 +16,8 @@ const store = new Store({
 // Current session state
 let currentSession = null;
 let sessionStartTime = null;
+let activePlayTime = 0; // Time spent with game in foreground (ACTIVE_PLAY_CONFIRMED)
+let lastActiveCheck = null;
 let inputData = {
     totalInputs: 0,
     wasdCount: 0,
@@ -30,12 +32,31 @@ function startSession(gameInfo) {
     currentSession = {
         gameId: gameInfo.steamAppId || gameInfo.gameId || 'unknown',
         gameName: gameInfo.name,
+        gameProcess: gameInfo.gameId || gameInfo.process || 'unknown',
         startTime: new Date().toISOString()
     };
     sessionStartTime = Date.now();
+    activePlayTime = 0;
+    lastActiveCheck = Date.now();
     inputData = { totalInputs: 0, wasdCount: 0, mouseMovement: 0, clickCount: 0 };
 
     console.log('[SessionSync] Session started:', currentSession.gameName);
+}
+
+/**
+ * Update active play time (called when game is in foreground)
+ * Only counts time when game window is focused
+ */
+function updateActivePlayTime(isActive) {
+    const now = Date.now();
+    
+    if (isActive && lastActiveCheck && currentSession) {
+        // Add time since last check to active play time
+        const elapsed = (now - lastActiveCheck) / 1000;
+        activePlayTime += elapsed;
+    }
+    
+    lastActiveCheck = now;
 }
 
 /**
@@ -50,6 +71,7 @@ function updateInputData(data) {
 
 /**
  * End session and sync to backend
+ * CRITICAL: Sends activePlayTime (foreground time) instead of just session duration
  */
 async function endSession() {
     if (!currentSession) {
@@ -60,17 +82,29 @@ async function endSession() {
     const endTime = new Date().toISOString();
     const sessionDuration = Math.floor((Date.now() - sessionStartTime) / 1000);
 
-    // Create match data for verification
+    // Calculate verification score based on active time ratio
+    const activeRatio = sessionDuration > 0 ? (activePlayTime / sessionDuration) : 0;
+    const verificationScore = Math.min(100, Math.floor(activeRatio * 100));
+
+    // Create match data for verification - includes NEW fields
     const matchData = {
         gameId: currentSession.gameId,
         gameName: currentSession.gameName,
+        gameProcess: currentSession.gameProcess,    // NEW: Process name for validation
         startTime: currentSession.startTime,
         endTime: endTime,
         sessionDuration: sessionDuration,
+        activePlayTime: Math.floor(activePlayTime), // NEW: Actual active (foreground) time
+        verificationScore: verificationScore,       // NEW: Confidence score
         inputData: { ...inputData }
     };
 
-    console.log('[SessionSync] Session ended:', matchData);
+    console.log('[SessionSync] Session ended:', {
+        game: matchData.gameName,
+        totalTime: sessionDuration,
+        activeTime: Math.floor(activePlayTime),
+        verificationScore
+    });
 
     // Get stored auth token
     const token = store.get('authToken');
@@ -79,14 +113,22 @@ async function endSession() {
         console.log('[SessionSync] No auth token - saving session for later sync');
         savePendingSession(matchData);
         currentSession = null;
+        activePlayTime = 0;
         return { success: false, reason: 'not_authenticated' };
     }
 
-    // Minimum session requirement: 5 minutes and some input
-    if (sessionDuration < 300 || inputData.totalInputs < 100) {
-        console.log('[SessionSync] Session too short or not enough input');
+    // CRITICAL: Minimum ACTIVE play requirement (5 minutes in foreground)
+    // This is the real anti-cheat - must actually be playing
+    if (activePlayTime < 300) {
+        console.log(`[SessionSync] Insufficient active play: ${Math.floor(activePlayTime)}s (need 300s)`);
         currentSession = null;
-        return { success: false, reason: 'insufficient_activity', sessionDuration, inputCount: inputData.totalInputs };
+        activePlayTime = 0;
+        return { 
+            success: false, 
+            reason: 'insufficient_active_play', 
+            activePlayTime: Math.floor(activePlayTime),
+            required: 300
+        };
     }
 
     // Sync to backend
@@ -100,7 +142,8 @@ async function endSession() {
             if (global.mainWindow) {
                 global.mainWindow.webContents.send('points-awarded', {
                     points: result.pointsAwarded,
-                    game: matchData.gameName
+                    game: matchData.gameName,
+                    activeTime: Math.floor(activePlayTime)
                 });
             }
         } else {
@@ -109,11 +152,13 @@ async function endSession() {
         }
 
         currentSession = null;
+        activePlayTime = 0;
         return result;
     } catch (error) {
         console.error('[SessionSync] Sync error:', error);
         savePendingSession(matchData);
         currentSession = null;
+        activePlayTime = 0;
         return { success: false, error: error.message };
     }
 }
@@ -201,6 +246,7 @@ module.exports = {
     startSession,
     endSession,
     updateInputData,
+    updateActivePlayTime,  // NEW: Track foreground time
     syncPendingSessions,
     setAuthToken,
     clearAuth,

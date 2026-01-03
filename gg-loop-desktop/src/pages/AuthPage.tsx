@@ -1,18 +1,65 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import logoImage from '../assets/logo.jpg';
 
 interface AuthPageProps {
     onLogin: (token: string) => void;
+    error?: string;
 }
 
-export default function AuthPage({ onLogin }: AuthPageProps) {
+export default function AuthPage({ onLogin, error }: AuthPageProps) {
     const [loading, setLoading] = useState<string | null>(null);
+    const [authError, setAuthError] = useState<string | null>(error || null);
+    const [pollingForToken, setPollingForToken] = useState(false);
+
+    // Update error from props
+    useEffect(() => {
+        if (error) setAuthError(error);
+    }, [error]);
+
+    // Poll for auth callback token (desktop deep link)
+    useEffect(() => {
+        if (!pollingForToken) return;
+
+        // Check URL params for token (from OAuth redirect)
+        const checkForToken = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            if (token) {
+                setPollingForToken(false);
+                setLoading(null);
+                onLogin(token);
+            }
+        };
+
+        // Also listen for IPC token message from main process
+        if (window.ggloop?.onAuthCallback) {
+            window.ggloop.onAuthCallback((token: string) => {
+                setPollingForToken(false);
+                setLoading(null);
+                onLogin(token);
+            });
+        }
+
+        const interval = setInterval(checkForToken, 1000);
+        const timeout = setTimeout(() => {
+            setPollingForToken(false);
+            setLoading(null);
+            setAuthError('Login timed out. Please try again.');
+        }, 120000); // 2 min timeout
+
+        return () => {
+            clearInterval(interval);
+            clearTimeout(timeout);
+        };
+    }, [pollingForToken, onLogin]);
 
     // OAuth login - opens browser to ggloop.io
     const handleOAuthLogin = (provider: string) => {
         setLoading(provider);
+        setAuthError(null);
+        setPollingForToken(true);
 
-        // Open browser to OAuth flow
+        // Open browser to OAuth flow with desktop=true flag
         const authUrl = `https://ggloop.io/api/auth/${provider}?desktop=true`;
 
         // Open in default browser
@@ -21,18 +68,10 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
         } else {
             window.open(authUrl, '_blank');
         }
-
-        // For demo purposes - simulate successful login after 3 seconds
-        setTimeout(() => {
-            onLogin('demo-token-' + Date.now());
-            setLoading(null);
-        }, 3000);
     };
 
-    // Demo mode - skip login for testing
-    const handleDemoMode = () => {
-        onLogin('demo-mode-' + Date.now());
-    };
+    // Demo mode REMOVED - No fake logins allowed
+    // Points system requires real account binding
 
     return (
         <div style={{
@@ -189,35 +228,36 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
                     </button>
                 </div>
 
-                {/* Divider */}
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '1rem'
-                }}>
-                    <div style={{ flex: 1, height: '1px', background: '#3E2723' }} />
-                    <span style={{ color: '#666', fontSize: '0.75rem' }}>or</span>
-                    <div style={{ flex: 1, height: '1px', background: '#3E2723' }} />
-                </div>
-
-                {/* Demo Mode */}
-                <button
-                    onClick={handleDemoMode}
-                    style={{
-                        width: '100%',
-                        padding: '12px 20px',
-                        fontSize: '0.9rem',
-                        color: '#888',
-                        background: 'transparent',
-                        border: '1px solid #3E2723',
+                {/* Error Display */}
+                {authError && (
+                    <div style={{
+                        padding: '12px 16px',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid #ef4444',
                         borderRadius: '8px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                    }}
-                >
-                    Try Demo Mode (No Login)
-                </button>
+                        marginBottom: '1rem',
+                        color: '#ef4444',
+                        fontSize: '0.875rem',
+                        textAlign: 'left'
+                    }}>
+                        ⚠ {authError}
+                    </div>
+                )}
+
+                {/* Waiting message when polling */}
+                {pollingForToken && (
+                    <div style={{
+                        padding: '12px 16px',
+                        background: 'rgba(193, 154, 107, 0.1)',
+                        border: '1px solid #C19A6B',
+                        borderRadius: '8px',
+                        marginBottom: '1rem',
+                        color: '#C19A6B',
+                        fontSize: '0.875rem'
+                    }}>
+                        Complete login in your browser, then return here...
+                    </div>
+                )}
 
                 {/* Features */}
                 <div style={{
