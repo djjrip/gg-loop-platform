@@ -13,6 +13,7 @@ import { observeSubsystems, isPlatformBroken, isOutputBroken } from './observer'
 import { classifyNexusState, generateReason, determineAutoActions, determineNextAction, generatePreventionUpgrades } from './decision-engine';
 import { generateInnovation } from './innovation-engine';
 import { writeNexusJson, writeNexusMarkdown } from './output-generator';
+import { analyzeDistribution, getDistributionRecommendation } from './distribution-awareness';
 
 const MEMORY_PATH = './nexus-bot/memory.json';
 
@@ -90,6 +91,13 @@ async function runNexus(): Promise<NexusStatus> {
     console.log(`   Database: ${health.database.status}`);
     console.log(`   Deploy: ${health.deploy.status}`);
     console.log(`   Output: ${health.output.status}`);
+
+    // PHASE 1.5: DISTRIBUTION AWARENESS
+    console.log('\n📡 ANALYZING distribution signals...');
+    const distribution = analyzeDistribution();
+    console.log(`   Distribution Score: ${distribution.distributionScore}/100`);
+    console.log(`   Days since distribution: ${distribution.daysSinceLastDistribution}`);
+    console.log(`   Desktop released: ${distribution.desktopAppReleased ? 'Yes' : 'No'}`);
 
     // PHASE 2: DECIDE
     console.log('\n🧠 DECIDING state...');

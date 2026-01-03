@@ -16,6 +16,7 @@ import optimizerRouter from "./routes/optimizer";
 import contentRouter from "./routes/content";
 import autoPostRouter from "./routes/auto-post";
 import catalogRouter from "./routes/catalog";
+import nexusRouter from "./routes/nexus";
 import acquisitionRouter from "./routes/acquisition";
 import type { Express } from "express";
 import { createServer, type Server } from "http";
@@ -244,6 +245,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // [USER ACQUISITION] Automated outreach to bring real users
   app.use("/api/acquisition", acquisitionRouter);
+
+  // [NEXUS] Operating Brain - Founder Visibility Endpoint
+  app.use("/api/nexus", nexusRouter);
 
   // [MISSION 3] Temporary Admin Route for Controlled Tweets
   // USAGE: POST /api/admin/mission-tweets
