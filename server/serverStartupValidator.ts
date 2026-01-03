@@ -71,6 +71,31 @@ export function validateServerConfig(): ValidationResult {
         warnings.push('WARNING: PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET not configured. PayPal integration will be disabled.');
     }
 
+    // Stripe validation (LIVE mode only)
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const stripePublishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
+    const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!stripeSecretKey) {
+        warnings.push('WARNING: STRIPE_SECRET_KEY not configured. Stripe payment processing will fail.');
+    } else {
+        // Validate Stripe key format (starts with sk_live_ for live mode)
+        if (!stripeSecretKey.startsWith('sk_live_')) {
+            errors.push('CRITICAL: STRIPE_SECRET_KEY must be a LIVE key (starts with sk_live_). Test keys are not allowed.');
+        }
+        console.log('✅ Stripe secret key configured (LIVE mode)');
+    }
+
+    if (!stripePublishableKey) {
+        warnings.push('WARNING: STRIPE_PUBLISHABLE_KEY not configured. Frontend cannot initialize Stripe.');
+    } else if (!stripePublishableKey.startsWith('pk_live_')) {
+        errors.push('CRITICAL: STRIPE_PUBLISHABLE_KEY must be a LIVE key (starts with pk_live_). Test keys are not allowed.');
+    }
+
+    if (!stripeWebhookSecret) {
+        warnings.push('WARNING: STRIPE_WEBHOOK_SECRET not configured. Webhook signature verification will fail.');
+    }
+
     return {
         valid: errors.length === 0,
         errors,

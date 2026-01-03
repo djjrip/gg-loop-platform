@@ -1,5 +1,6 @@
 import notificationRoutes from "./routes/notifications";
 import paypalRoutes from "./routes/paypal";
+import stripeRoutes from "./routes/stripe";
 import trustRouter from "./routes/trust";
 import partnerRoutes from "./routes/partner";
 import riotAuthRouter from "./routes/riotAuth";
@@ -195,6 +196,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // [PHASE 3] PayPal Subscription Routes
   app.use("/api/paypal", paypalRoutes);
+
+  // [STRIPE] Founding Member Payment Routes
+  app.use("/api/stripe", stripeRoutes);
 
   // [LEVEL 2] Riot OAuth Routes
   app.use("/api/riot", riotAuthRouter);
