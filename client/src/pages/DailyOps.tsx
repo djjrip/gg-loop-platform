@@ -450,17 +450,17 @@ export default function DailyOps() {
                 <div className="flex items-center gap-2 mb-3">
                   <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-500 flex-shrink-0" />
                   <p className="text-sm font-medium text-blue-600 dark:text-blue-500">
-                    Information: PayPal Tax Settings
+                    Information: Stripe Tax Integration
                   </p>
                 </div>
                 <p className="text-sm text-muted-foreground mb-3">
-                  PayPal Business Accounts include tax-related settings that you may research and configure independently. Some merchants use these features; others use third-party services or manual tracking.
+                  GG Loop uses Stripe as the sole payment processor. Stripe Tax can automatically calculate and collect sales tax based on your business location and customer addresses.
                 </p>
                 <p className="text-sm text-muted-foreground mb-2">
-                  <strong>Research needed:</strong> Businesses should investigate whether PayPal's built-in tax options meet their specific requirements and comply with applicable state obligations before relying on any automated features.
+                  <strong>Setup:</strong> Configure Stripe Tax in your Stripe Dashboard under Settings → Tax. You can enable automatic tax calculation for subscriptions and one-time payments.
                 </p>
                 <p className="text-xs text-muted-foreground mt-3 italic">
-                  See the external setup guide for more reference material. GG Loop provides no tax integration - you are responsible for all tax management.
+                  See Stripe's tax documentation for detailed setup instructions. GG Loop relies on Stripe for payment processing - you are responsible for tax compliance configuration.
                 </p>
               </div>
 

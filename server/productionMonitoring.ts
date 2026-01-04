@@ -77,7 +77,7 @@ async function sendAlert(alert: MonitoringAlert) {
 function getSuggestedAction(alert: MonitoringAlert): string {
     switch (alert.category) {
         case 'revenue':
-            return '1. Check PayPal dashboard<br>2. Test subscription flow<br>3. Verify webhook endpoints';
+            return '1. Check Stripe dashboard<br>2. Test subscription flow<br>3. Verify webhook endpoints';
         case 'security':
             return '1. Review security logs<br>2. Check for unauthorized access<br>3. Rotate compromised credentials';
         case 'performance':
@@ -199,10 +199,10 @@ export function trackError(error: Error, context?: any) {
     }
 
     // Always alert on critical errors
-    if (error.message.includes('database') || error.message.includes('PayPal') || error.message.includes('subscription')) {
+    if (error.message.includes('database') || error.message.includes('Stripe') || error.message.includes('subscription')) {
         sendAlert({
             severity: 'critical',
-            category: error.message.includes('PayPal') || error.message.includes('subscription') ? 'revenue' : 'error',
+            category: error.message.includes('Stripe') || error.message.includes('subscription') ? 'revenue' : 'error',
             message: error.message,
             details: { stack: error.stack, context }
         });

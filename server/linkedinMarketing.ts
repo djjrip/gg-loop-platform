@@ -22,7 +22,7 @@ const LINKEDIN_POSTS: LinkedInPost[] = [
 
 The idea: Your ranked games should mean something. Not through predatory mechanics or crypto schemes, but through fair, transparent rewards.
 
-Play ranked → Earn points → Redeem for real value (Amazon cards, PayPal, gaming gear).
+Play ranked → Earn points → Redeem for real value (Amazon cards, cash, gaming gear).
 
 Built by gamers, for gamers. No exploitation. No BS.
 
@@ -126,7 +126,7 @@ How it works:
 1. Link your Riot account (secure, official API)
 2. Play ranked like normal
 3. Earn points automatically
-4. Redeem for Amazon cards, PayPal, gaming gear
+4. Redeem for Amazon cards, cash, gaming gear
 
 Free tier available. Pro ($19.99) and Elite ($49.99) tiers boost earnings.
 

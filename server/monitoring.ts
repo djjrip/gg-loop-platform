@@ -41,13 +41,13 @@ export const userLoginCounter = new Counter({
 export const revenueCounter = new Counter({
     name: 'ggloop_revenue_usd_total',
     help: 'Total revenue in USD',
-    labelNames: ['source'], // 'paypal_subscription', 'referral', 'other'
+    labelNames: ['source'], // 'stripe_subscription', 'referral', 'other'
     registers: [register],
 });
 
 export const subscriptionsGauge = new Gauge({
     name: 'ggloop_active_subscriptions',
-    help: 'Number of active PayPal subscriptions',
+    help: 'Number of active Stripe subscriptions',
     registers: [register],
 });
 

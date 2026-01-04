@@ -19,15 +19,14 @@ export function applyHelmetSecurity(app: Express) {
                 scriptSrc: [
                     "'self'",
                     "'unsafe-inline'", // Needed for React
-                    "https://www.paypal.com",
-                    "https://www.paypalobjects.com",
+                    "https://js.stripe.com",
                     "https://www.google-analytics.com"
                 ],
                 styleSrc: ["'self'", "'unsafe-inline'"], // Needed for styled components
                 imgSrc: ["'self'", "data:", "https:"],
                 fontSrc: ["'self'", "https:", "data:"],
                 connectSrc: ["'self'", "https:"],
-                frameSrc: ["'self'", "https://www.paypal.com"]
+                frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"]
             }
         },
         hsts: {

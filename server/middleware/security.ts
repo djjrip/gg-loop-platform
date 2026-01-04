@@ -49,7 +49,7 @@ export const securityHeaders = helmet({
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:"],
             scriptSrc: ["'self'"],
-            connectSrc: ["'self'", "https://api.riotgames.com", "https://api.paypal.com"],
+            connectSrc: ["'self'", "https://api.riotgames.com", "https://api.stripe.com"],
         },
     },
     hsts: {

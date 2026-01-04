@@ -43,7 +43,7 @@ NEW AFFILIATE PROGRAM (Just Launched):
 ✅ Custom code for your community
 ✅ Branded dashboard: ggloop.io/streamers/${streamerName.toLowerCase()}
 ✅ Exclusive bonus points for your viewers (500 points head start)
-✅ Monthly payouts via PayPal
+✅ Monthly payouts via Stripe
 
 WHY PARTNER WITH US:
 - Passive income for you (recurring 20% commission)
@@ -98,7 +98,7 @@ P.S. - As a new program, we're offering founding affiliates 25% commission for t
     <li>✅ Custom code for your community</li>
     <li>✅ Branded dashboard: ggloop.io/streamers/${streamerName.toLowerCase()}</li>
     <li>✅ Exclusive bonus points for your viewers</li>
-    <li>✅ Monthly payouts via PayPal</li>
+    <li>✅ Monthly payouts via Stripe</li>
   </ul>
   
   <h3 style="color: #004E89;">Why Partner With Us:</h3>

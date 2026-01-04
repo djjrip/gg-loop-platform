@@ -4,9 +4,9 @@
  * Drives viral growth through competitive incentives
  * 
  * Prizes:
- * 1st place: $50 PayPal + 5,000 bonus points
- * 2nd-3rd: $25 PayPal + 2,500 points
- * 4th-10th: $10 PayPal + 1,000 points
+ * 1st place: $50 Cash + 5,000 bonus points
+ * 2nd-3rd: $25 Cash + 2,500 points
+ * 4th-10th: $10 Cash + 1,000 points
  * 
  * Usage: node server/referralContest.js (run monthly via cron)
  */
@@ -67,7 +67,7 @@ async function getMonthlyWinners(): Promise<ContestWinner[]> {
         return {
             ...user,
             rank: index + 1,
-            prize: `$${tier.cash} PayPal`,
+            prize: `$${tier.cash} Cash`,
             bonusPoints: tier.points,
         };
     });
@@ -123,7 +123,7 @@ async function notifyWinners(winners: ContestWinner[]): Promise<void> {
           
           <h2>Your Prize:</h2>
           <ul>
-            <li>💵 <strong>$${tier.cash} PayPal Cash</strong> (sent within 3 business days)</li>
+            <li>💵 <strong>$${tier.cash} Cash</strong> (sent within 3 business days)</li>
             <li>⭐ <strong>${tier.points.toLocaleString()} Bonus Points</strong> (already added to your account!)</li>
           </ul>
           
@@ -134,7 +134,7 @@ async function notifyWinners(winners: ContestWinner[]): Promise<void> {
           </ul>
           
           <p><strong>To claim your cash prize:</strong><br>
-          Reply to this email with your PayPal email address. We'll send payment within 3 business days.</p>
+          Reply to this email with your payout details. We'll send payment within 3 business days via Stripe.</p>
           
           <p>Keep crushing it! Next month's contest is already live.</p>
           
