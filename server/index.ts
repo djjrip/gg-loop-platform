@@ -115,8 +115,8 @@ app.use((req, res, next) => {
   // Referrer policy for privacy
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-  // Content Security Policy - allows PayPal SDK and payment widgets
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.paypal.com https://www.paypalobjects.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://*.paypal.com; img-src 'self' https: data: blob:; font-src 'self' https:; connect-src 'self' https: wss:; frame-src https://*.paypal.com; child-src https://*.paypal.com blob:");
+  // Content Security Policy - Stripe-only payment integration
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; font-src 'self' https:; connect-src 'self' https: wss:; frame-src https://js.stripe.com https://hooks.stripe.com; child-src https://js.stripe.com blob:");
 
   // HSTS - enforce HTTPS in production
   if (process.env.NODE_ENV === 'production') {

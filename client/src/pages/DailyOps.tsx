@@ -417,10 +417,10 @@ export default function DailyOps() {
                 </CardTitle>
                 <CardDescription>Educational guidance for tax setup (manual configuration required)</CardDescription>
               </div>
-              <a href="https://github.com/replit/ggloop/blob/main/PAYPAL_TAX_SETUP.md" target="_blank" rel="noopener noreferrer">
+              <a href="https://stripe.com/docs/tax" target="_blank" rel="noopener noreferrer">
                 <Button variant="outline" size="sm" data-testid="button-tax-guide">
                   <FileText className="h-4 w-4 mr-2" />
-                  View Setup Guide
+                  Stripe Tax Docs
                 </Button>
               </a>
             </div>

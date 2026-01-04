@@ -66,10 +66,8 @@ export function validateServerConfig(): ValidationResult {
         warnings.push('WARNING: BASE_URL is not set. OAuth callbacks may not work correctly.');
     }
 
-    // PayPal is optional but warn if not configured
-    if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
-        warnings.push('WARNING: PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET not configured. PayPal integration will be disabled.');
-    }
+    // NOTE: PayPal has been fully removed. GG LOOP uses Stripe only.
+    // This validation block intentionally left empty for documentation.
 
     // Stripe validation (LIVE mode only)
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;

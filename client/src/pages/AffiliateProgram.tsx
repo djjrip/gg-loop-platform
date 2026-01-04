@@ -393,7 +393,7 @@ export default function AffiliateProgram() {
                           <FormControl>
                             <Input
                               type="email"
-                              placeholder="paypal@example.com"
+                              placeholder="payout@example.com"
                               data-testid="input-payout-email"
                               {...field}
                             />

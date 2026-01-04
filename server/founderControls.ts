@@ -320,7 +320,7 @@ export async function getSystemHealth() {
   const now = new Date();
   const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  // Payment health (simplified - would integrate with Stripe/PayPal)
+  // Payment health (Stripe-only integration)
   const paymentHealth = {
     successRate: 98.5, // Placeholder
     failedCount: 3,

@@ -1,97 +1,75 @@
 # NEXUS HEARTBEAT
 
-**STATUS:** 🟢 ALIVE  
-**LAST PULSE:** 2026-01-03T17:34:26Z  
-**NEXT CHECK:** +60 minutes
+**Status:** 🟢 ALIVE  
+**Last Pulse:** 2026-01-03T22:54:51Z  
+**Mode:** AUTOMATION-ONLY
 
 ---
 
-> **If this file is stale (no update in 6+ hours), NEXUS is DOWN.**
+## System Pulse
+
+| Component | Status | Last Check |
+|-----------|--------|------------|
+| Stripe Payments | 🟢 LIVE | 22:54 |
+| Guest Checkout | 🟢 ENABLED | 22:54 |
+| Desktop Verification | 🟢 CERTIFIED | 22:54 |
+| NEXUS Monitoring | 🟢 ACTIVE | 22:54 |
+| Git Repo | 🟢 CLEAN | 22:54 |
+| Railway Deploy | 🟢 HEALTHY | 22:54 |
 
 ---
 
-## Current State
+## Active Monitoring
 
-| Property | Value |
-|----------|-------|
-| System Status | 🟢 Operational |
-| Last Action | Heartbeat pulse |
-| Last Action Time | 2026-01-03T17:34:26Z |
-| Hours Since Last Action | 0 |
+### Revenue Signals
+- 💰 Founding Member $29: 🟢 Watching
+- 💰 Subscriptions: 🟢 Watching
+- 📊 First payment: ⏳ Waiting
 
----
-
-## What Was Just Checked
-
-| Check | Result | Time |
-|-------|--------|------|
-| PayPal for Founding Member payments | 0 payments | 17:24 |
-| Homepage CTA clicks | Monitoring | 17:24 |
-| Revenue signals | None yet | 17:24 |
-| Distribution queue | Ready | 17:24 |
+### Verification Integrity
+- 🎮 Game detection: ✅ Active
+- 🖥️ Foreground check: ✅ Active
+- ⏱️ 5-min active play: ✅ Enforced
+- 🔗 Account binding: ✅ Required
 
 ---
 
-## What Is Being Watched Next
+## Certifications
 
-| Watch Item | Expected Action |
-|------------|-----------------|
-| First Founding Member payment | Alert + log + celebrate |
-| Homepage CTA click | Log to activity feed |
-| Distribution trigger | Post when Railway context |
-| Heartbeat timeout | Self-repair if stale |
-
----
-
-## Active Systems
-
-| System | Status | Health |
-|--------|--------|--------|
-| NEXUS Brain | ✅ Active | Healthy |
-| Revenue Monitoring | 🟡 Watching | $0 so far |
-| Distribution Engine | ⏳ Ready | Awaiting Railway |
-| Visibility Layer | ✅ Active | Healthy |
-| Local Mirroring | ✅ Active | Synced |
+| Cert | Status |
+|------|--------|
+| STRIPE_ONLY | ✅ PASS |
+| GUEST_CHECKOUT | ✅ PASS |
+| DESKTOP_VERIFICATION | ✅ PASS |
+| SYSTEM_INTEGRITY | ✅ PASS |
 
 ---
 
-## Heartbeat History (Last 24h)
+## Automation Status
 
-| Time | Status | Note |
-|------|--------|------|
-| 2026-01-03 17:24 | 🟢 Alive | Revenue monitoring active |
-| 2026-01-03 17:14 | 🟢 Alive | Coordination nexus acknowledged |
-| 2026-01-03 17:06 | 🟢 Alive | Automation scripts built |
-| 2026-01-03 16:56 | 🟢 Alive | 3 leverage moves executed |
-| 2026-01-03 16:27 | 🟢 Alive | Heartbeat maintenance |
-| 2026-01-03 15:44 | 🟢 Alive | Visibility enforcement |
-| 2026-01-03 15:05 | 🟢 Alive | Revenue loop activated |
+| Function | Status |
+|----------|--------|
+| Report mirroring | 🟢 Automated |
+| Activity logging | 🟢 Automated |
+| Git commits | 🟢 Automated |
+| Marketing | 🟡 Ready (needs API keys) |
 
 ---
 
-## Health Check Rules
+## Last Actions
 
-| Condition | Status |
-|-----------|--------|
-| Last action < 1 hour ago | 🟢 Excellent |
-| Last action 1-6 hours ago | 🟡 Idle |
-| Last action 6-24 hours ago | 🟠 Stale |
-| Last action > 24 hours ago | 🔴 Down |
-
-**Current: 🟢 Excellent** — Action within last hour.
+| Time | Action | Status |
+|------|--------|--------|
+| 22:54 | Heartbeat pulse | ✅ |
+| 22:33 | Desktop verification certified | ✅ |
+| 22:33 | Monitoring activated | ✅ |
 
 ---
 
-## Revenue Status (THE NUMBER THAT MATTERS)
+## Next Pulse
 
-| Metric | Value |
-|--------|-------|
-| Founding Members | **0** |
-| Revenue | **$0** |
-| Status | 🟡 VALIDATING |
-
-*Zero is not dead. Zero is waiting. System is watching.*
+Expected: +5 minutes or on material change.
 
 ---
 
-*Updated automatically. If stale, system has stopped.*
+*NEXUS is alive. AG watching. Founder observing.*
