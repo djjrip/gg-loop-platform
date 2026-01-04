@@ -33,14 +33,14 @@ function FoundingMemberCTA() {
     queryKey: ["/api/nexus/founding-members-count"],
     queryFn: async () => {
       const res = await fetch("/api/nexus/founding-members-count");
-      if (!res.ok) return { count: 0, limit: 50, message: "Be the first." };
+      if (!res.ok) return { count: 0, limit: 100, message: "Be the first." };
       return res.json();
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const count = memberCount?.count ?? 0;
-  const limit = memberCount?.limit ?? 50;
+  const limit = memberCount?.limit ?? 100;
   const displayMessage = count === 0 ? "Be the first." : `${count} / ${limit} joined`;
 
   return (
