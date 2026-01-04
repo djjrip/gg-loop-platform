@@ -15,6 +15,9 @@ import { Router, Request, Response, NextFunction } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 import crypto from 'crypto';
+import { db } from '../database';
+import { users } from '../../shared/schema';
+import { eq, sql } from 'drizzle-orm';
 
 const router = Router();
 
@@ -490,27 +493,42 @@ router.get('/revenue', requireFounder, (req, res) => {
  * PUBLIC ENDPOINT - Returns count of Founding Members
  * Used for "Proof of Life" counter on homepage
  */
-router.get('/founding-members-count', (req, res) => {
+router.get('/founding-members-count', async (req, res) => {
+    const FOUNDING_MEMBER_LIMIT = 100; // HARD LIMIT - First 100 only
+    
     try {
-        // TODO: Replace with actual database query when Founding Member tracking is implemented
-        // For now, return 0 as we're in manual validation phase
-        // When members are added manually, update this endpoint to query the database
+        // Query actual founder count from database
+        const [result] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(users)
+            .where(eq(users.isFounder, true));
         
-        // Example future query (not implemented yet):
-        // const count = await db.select({ count: sql<number>`count(*)` })
-        //   .from(users)
-        //   .where(eq(users.subscriptionTier, 'founding_member'));
+        const count = Number(result?.count || 0);
+        const remaining = Math.max(0, FOUNDING_MEMBER_LIMIT - count);
+        const isSoldOut = count >= FOUNDING_MEMBER_LIMIT;
+        
+        let message = 'Be the first.';
+        if (count > 0 && !isSoldOut) {
+            message = `${count} / ${FOUNDING_MEMBER_LIMIT} joined`;
+        } else if (isSoldOut) {
+            message = 'SOLD OUT';
+        }
         
         res.json({
-            count: 0,
-            limit: 50,
-            message: 'Be the first.',
+            count,
+            limit: FOUNDING_MEMBER_LIMIT,
+            remaining,
+            isSoldOut,
+            message,
             timestamp: new Date().toISOString(),
         });
     } catch (error: any) {
+        console.error('[NEXUS] Failed to get founder count:', error);
         res.json({
             count: 0,
-            limit: 50,
+            limit: FOUNDING_MEMBER_LIMIT,
+            remaining: FOUNDING_MEMBER_LIMIT,
+            isSoldOut: false,
             message: 'Be the first.',
             timestamp: new Date().toISOString(),
         });
