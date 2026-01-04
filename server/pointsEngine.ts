@@ -162,6 +162,13 @@ export class PointsEngine {
     if (!rule) throw new Error("Invalid earning type");
 
     const executeAward = async (tx: DbOrTx) => {
+      // Get user info including founder status
+      const [userData] = await tx
+        .select({ isFounder: users.isFounder, founderNumber: users.founderNumber })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
       const userSub = await tx
         .select()
         .from(subscriptions)
@@ -169,7 +176,17 @@ export class PointsEngine {
         .limit(1);
 
       const tier = userSub[0]?.tier || "basic";
-      const multiplier = rule.tierMultipliers[tier] || 1.0;
+      let multiplier = rule.tierMultipliers[tier] || 1.0;
+      
+      // FOUNDER 2X MULTIPLIER - Applied to first 100 founders
+      // This is ADDITIVE to tier multiplier for maximum benefit
+      const isFounder = userData?.isFounder === true;
+      const founderNumber = userData?.founderNumber;
+      if (isFounder && founderNumber && founderNumber <= 100) {
+        multiplier = multiplier * 2.0; // 2x founder multiplier
+        console.log(`[PointsEngine] Applied 2x Founder #${founderNumber} multiplier for ${userId}`);
+      }
+      
       const finalAmount = Math.floor(amount * multiplier);
 
       if (rule.dailyCap) {
@@ -489,6 +506,13 @@ export class PointsEngine {
     if (verificationScore < 0 || verificationScore > 100) throw new Error("Verification score must be 0-100");
 
     const executeAward = async (tx: DbOrTx) => {
+      // Get user info including founder status
+      const [userData] = await tx
+        .select({ isFounder: users.isFounder, founderNumber: users.founderNumber })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
       // Get user's subscription tier for multiplier
       const userSub = await tx
         .select()
@@ -534,8 +558,17 @@ export class PointsEngine {
       // Calculate verification multiplier (0-100 score becomes 0.0-1.0 multiplier)
       const verificationMultiplier = verificationScore / 100;
 
-      // Final points: (basePoints + bonusPoints) * verificationScoreMultiplier
-      const finalPoints = Math.floor((basePoints + bonusPoints) * verificationMultiplier);
+      // Final points BEFORE founder multiplier: (basePoints + bonusPoints) * verificationScoreMultiplier
+      let finalPoints = Math.floor((basePoints + bonusPoints) * verificationMultiplier);
+
+      // FOUNDER 2X MULTIPLIER - Applied AFTER verification confidence
+      // This is the last multiplier applied, ensuring founders get 2x of verified points
+      const isFounder = userData?.isFounder === true;
+      const founderNumber = userData?.founderNumber;
+      if (isFounder && founderNumber && founderNumber <= 100) {
+        finalPoints = Math.floor(finalPoints * 2.0); // 2x founder multiplier
+        console.log(`[PointsEngine] Applied 2x Founder #${founderNumber} multiplier for gameplay - ${userId}`);
+      }
 
       // DESKTOP APP VALIDATION HOOK
       // TODO: When desktop app is built (Level 5), validate desktopSessionId here

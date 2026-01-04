@@ -19,7 +19,7 @@ import Stripe from 'stripe';
 const router = Router();
 
 const FOUNDING_MEMBER_PRICE = 2900; // $29.00 in cents
-const FOUNDING_MEMBER_MAX = 50; // First 50 only
+const FOUNDING_MEMBER_MAX = 100; // First 100 only - HARD LIMIT ENFORCED
 
 /**
  * POST /api/stripe/create-checkout
@@ -386,6 +386,50 @@ async function grantFoundingMemberStatus(userId: string, paymentId: string): Pro
     console.log(`[Stripe] ✅ Granted Founding Member #${nextFounderNumber} to user ${userId}`);
   });
 }
+
+/**
+ * GET /api/stripe/founder-status
+ * Returns current founder count, availability, and user's founder status
+ * PUBLIC endpoint - no auth required for count
+ */
+router.get('/founder-status', async (req: any, res) => {
+  try {
+    // Get total founder count
+    const [founderCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(eq(users.isFounder, true));
+    
+    const currentCount = Number(founderCount?.count || 0);
+    const spotsRemaining = Math.max(0, FOUNDING_MEMBER_MAX - currentCount);
+    const isSoldOut = currentCount >= FOUNDING_MEMBER_MAX;
+
+    // Get user's founder status if authenticated
+    let userStatus = null;
+    if (req.isAuthenticated() && req.user?.oidcSub) {
+      const dbUser = await storage.getUserByOidcSub(req.user.oidcSub);
+      if (dbUser) {
+        userStatus = {
+          isFounder: dbUser.isFounder,
+          founderNumber: dbUser.founderNumber,
+          multiplier: dbUser.isFounder ? 2.0 : 1.0,
+        };
+      }
+    }
+
+    res.json({
+      totalSlots: FOUNDING_MEMBER_MAX,
+      claimed: currentCount,
+      remaining: spotsRemaining,
+      isSoldOut,
+      price: FOUNDING_MEMBER_PRICE / 100, // Convert to dollars
+      userStatus,
+    });
+  } catch (error: any) {
+    console.error('[Stripe] Founder status error:', error);
+    res.status(500).json({ error: 'Failed to get founder status' });
+  }
+});
 
 export default router;
 

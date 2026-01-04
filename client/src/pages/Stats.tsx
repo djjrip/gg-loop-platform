@@ -14,6 +14,7 @@ import GlobalActivityFeed from "@/components/GlobalActivityFeed";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import { ReferralWidget } from "@/components/ReferralWidget";
 import DesktopVerificationCard from "@/components/DesktopVerificationCard";
+import FounderStatusCard from "@/components/FounderStatusCard";
 
 interface RiotMatch {
   id: string;
@@ -290,6 +291,9 @@ export default function Stats() {
           <div className="space-y-6">
             {/* Desktop Verification Status */}
             <DesktopVerificationCard />
+
+            {/* Founder Status */}
+            <FounderStatusCard />
             
             <Card data-testid="card-rewards-preview">
               <CardHeader>
