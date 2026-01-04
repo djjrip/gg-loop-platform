@@ -267,6 +267,26 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
                 </div>
             </div>
 
+            {/* ACTIVE PLAY SESSION BANNER - Only when earning */}
+            {isEligibleForPoints && (
+                <div style={{
+                    background: 'linear-gradient(135deg, rgba(74, 222, 128, 0.2) 0%, rgba(74, 222, 128, 0.1) 100%)',
+                    border: `2px solid ${BRAND.success}`,
+                    borderRadius: '12px',
+                    padding: '1rem 1.5rem',
+                    marginBottom: '1rem',
+                    textAlign: 'center',
+                    animation: 'pulse 2s infinite'
+                }}>
+                    <div style={{ color: BRAND.success, fontWeight: 'bold', fontSize: '1.25rem' }}>
+                        ✓ ACTIVE PLAY CONFIRMED — POINTS EARNING
+                    </div>
+                    <div style={{ color: BRAND.textMuted, fontSize: '0.8rem', marginTop: '4px' }}>
+                        Session verified • Confidence: {confidenceScore}% ({confidenceInfo.label})
+                    </div>
+                </div>
+            )}
+
             {/* Verification Status Banner */}
             <div style={{
                 background: canEarnPoints 
@@ -307,21 +327,61 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
                         <div style={{ color: BRAND.textMuted, fontSize: '0.8rem' }}>
                             {statusExplanation}
                         </div>
+                        {/* Countdown to eligibility */}
+                        {canEarnPoints && !isEligibleForPoints && (
+                            <div style={{ 
+                                color: BRAND.warning, 
+                                fontSize: '0.75rem',
+                                marginTop: '4px'
+                            }}>
+                                ⏱ Points start in {formatTime(getTimeUntilEligible())} (5 min minimum)
+                            </div>
+                        )}
+                        {/* Not playing hint */}
+                        {verificationState === 'NOT_PLAYING' && (
+                            <div style={{ 
+                                color: BRAND.textMuted, 
+                                fontSize: '0.75rem',
+                                marginTop: '4px'
+                            }}>
+                                Supported games: League of Legends, VALORANT, Apex Legends, Fortnite...
+                            </div>
+                        )}
+                        {/* Game detected but not focused */}
+                        {verificationState === 'GAME_DETECTED' && (
+                            <div style={{ 
+                                color: BRAND.warning, 
+                                fontSize: '0.75rem',
+                                marginTop: '4px'
+                            }}>
+                                ⚠ Alt-Tab back to {gameName} to start earning
+                            </div>
+                        )}
                     </div>
                 </div>
                 
-                {canEarnPoints && (
+                {/* Points display - only when eligible */}
+                {isEligibleForPoints ? (
                     <div style={{
                         padding: '0.5rem 1rem',
                         background: 'rgba(74, 222, 128, 0.2)',
-                        borderRadius: '8px',
-                        animation: 'pulse 2s infinite'
+                        borderRadius: '8px'
                     }}>
                         <span style={{ color: BRAND.success, fontWeight: 'bold', fontSize: '1.25rem' }}>
                             +{getEstimatedPoints()} pts
                         </span>
                     </div>
-                )}
+                ) : canEarnPoints ? (
+                    <div style={{
+                        padding: '0.5rem 1rem',
+                        background: 'rgba(251, 191, 36, 0.2)',
+                        borderRadius: '8px'
+                    }}>
+                        <span style={{ color: BRAND.warning, fontWeight: 'bold', fontSize: '0.9rem' }}>
+                            Earning in {formatTime(getTimeUntilEligible())}
+                        </span>
+                    </div>
+                ) : null}
             </div>
 
             {/* Main Game Card */}
@@ -376,17 +436,60 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
                                 fontSize: '3rem',
                                 fontWeight: 'bold',
                                 fontFamily: 'monospace',
-                                color: canEarnPoints ? BRAND.success : BRAND.textMuted,
+                                color: isEligibleForPoints ? BRAND.success : canEarnPoints ? BRAND.warning : BRAND.textMuted,
                                 marginBottom: '0.5rem'
                             }}>
                                 {formatTime(activeTime)}
                             </div>
                             <div style={{
-                                color: canEarnPoints ? BRAND.success : BRAND.textMuted,
+                                color: isEligibleForPoints ? BRAND.success : canEarnPoints ? BRAND.warning : BRAND.textMuted,
                                 fontSize: '0.875rem'
                             }}>
-                                {canEarnPoints ? '✓ Verified Active Play Time' : 'Waiting for game focus...'}
+                                {isEligibleForPoints 
+                                    ? '✓ Verified Active Play — Points Accruing' 
+                                    : canEarnPoints 
+                                        ? `⏱ ${formatTime(getTimeUntilEligible())} until points start (5 min min)`
+                                        : 'Waiting for game focus...'}
                             </div>
+
+                            {/* Confidence Meter */}
+                            {canEarnPoints && confidenceScore > 0 && (
+                                <div style={{
+                                    marginTop: '1rem',
+                                    padding: '0.75rem',
+                                    background: 'rgba(0,0,0,0.3)',
+                                    borderRadius: '8px',
+                                    maxWidth: '300px',
+                                    margin: '1rem auto 0'
+                                }}>
+                                    <div style={{ 
+                                        fontSize: '0.75rem', 
+                                        color: BRAND.textMuted,
+                                        marginBottom: '6px',
+                                        display: 'flex',
+                                        justifyContent: 'space-between'
+                                    }}>
+                                        <span>Verification Confidence</span>
+                                        <span style={{ color: confidenceInfo.color, fontWeight: 'bold' }}>
+                                            {confidenceScore}% ({confidenceInfo.label})
+                                        </span>
+                                    </div>
+                                    <div style={{
+                                        height: '8px',
+                                        background: 'rgba(100,100,100,0.3)',
+                                        borderRadius: '4px',
+                                        overflow: 'hidden'
+                                    }}>
+                                        <div style={{
+                                            height: '100%',
+                                            width: `${confidenceScore}%`,
+                                            background: confidenceInfo.color,
+                                            borderRadius: '4px',
+                                            transition: 'width 0.3s ease'
+                                        }} />
+                                    </div>
+                                </div>
+                            )}
                         </>
                     ) : (
                         <>

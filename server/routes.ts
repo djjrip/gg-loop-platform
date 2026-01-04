@@ -1,5 +1,6 @@
 import notificationRoutes from "./routes/notifications";
 import stripeRoutes from "./routes/stripe";
+import giftRoutes from "./routes/gift";
 import trustRouter from "./routes/trust";
 import partnerRoutes from "./routes/partner";
 import riotAuthRouter from "./routes/riotAuth";
@@ -194,6 +195,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // [STRIPE] Founding Member Payment Routes
   app.use("/api/stripe", stripeRoutes);
+
+  // [GIFT-A-TIER] Gift subscription routes
+  app.use("/api/gift", giftRoutes);
 
   // [LEVEL 2] Riot OAuth Routes
   app.use("/api/riot", riotAuthRouter);

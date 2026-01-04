@@ -196,6 +196,27 @@ export const subscriptions = pgTable("subscriptions", {
   index("idx_subscriptions_tier").on(table.tier),
 ]);
 
+// Gift-a-Tier: Allow users to gift subscription tiers to others
+export const giftPurchases = pgTable("gift_purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  purchaserId: varchar("purchaser_id").references(() => users.id), // Can be null for guest purchases
+  recipientEmail: varchar("recipient_email").notNull(),
+  tier: varchar("tier").notNull(), // 'basic', 'builder', 'pro', 'elite', 'founder'
+  stripeSessionId: varchar("stripe_session_id").notNull().unique(),
+  stripePaymentIntentId: varchar("stripe_payment_intent_id"),
+  claimToken: varchar("claim_token").notNull().unique(),
+  claimedAt: timestamp("claimed_at"),
+  claimedByUserId: varchar("claimed_by_user_id").references(() => users.id),
+  expiresAt: timestamp("expires_at").notNull(),
+  amount: integer("amount").notNull(), // Price paid in cents
+  status: varchar("status").notNull().default("pending"), // pending, claimed, expired, refunded
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_gift_purchases_token").on(table.claimToken),
+  index("idx_gift_purchases_recipient").on(table.recipientEmail),
+  index("idx_gift_purchases_status").on(table.status),
+]);
+
 export const pointTransactions = pgTable("point_transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),

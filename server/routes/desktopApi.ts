@@ -374,27 +374,65 @@ desktopApiRouter.get('/verification-status/:userId', async (req, res) => {
         const lastSession = recentSessions[0];
         const totalSessionPoints = recentSessions.reduce((sum: number, s: any) => sum + (s.amount || 0), 0);
 
-        // Parse game name from description (format: "GameName (process) - X min active play")
+        // Parse game name and active minutes from description 
+        // Format: "GameName (process) - X min active play"
         let lastGame: string | null = null;
         let lastVerifiedAt: Date | null = null;
+        let activeMinutes = 0;
+        let confidenceScore = 0;
+        
         if (lastSession) {
             const desc = lastSession.description || '';
             const gameMatch = desc.match(/^([^(]+)/);
             lastGame = gameMatch ? gameMatch[1].trim() : 'Unknown Game';
             lastVerifiedAt = lastSession.createdAt;
+            
+            // Parse active minutes from description
+            const minMatch = desc.match(/(\d+)\s*min/);
+            activeMinutes = minMatch ? parseInt(minMatch[1]) : 0;
+            
+            // Calculate confidence score based on session quality
+            // Higher active time = higher confidence
+            if (activeMinutes >= 30) confidenceScore = 95;
+            else if (activeMinutes >= 20) confidenceScore = 85;
+            else if (activeMinutes >= 10) confidenceScore = 75;
+            else if (activeMinutes >= 5) confidenceScore = 65;
+            else confidenceScore = 50;
         }
+
+        // Calculate total active minutes across recent sessions
+        const totalActiveMinutes = recentSessions.reduce((sum: number, s: any) => {
+            const desc = s.description || '';
+            const minMatch = desc.match(/(\d+)\s*min/);
+            return sum + (minMatch ? parseInt(minMatch[1]) : 0);
+        }, 0);
 
         res.json({
             connected: hasDesktopActivity,
             lastGame,
             lastVerifiedAt,
             sessionPoints: totalSessionPoints,
-            recentSessions: recentSessions.map((s: any) => ({
-                id: s.id,
-                points: s.amount,
-                description: s.description,
-                timestamp: s.createdAt
-            }))
+            activeMinutes: totalActiveMinutes,
+            confidenceScore,
+            verificationState: hasDesktopActivity ? 'ACTIVE_PLAY_CONFIRMED' : 'NOT_PLAYING',
+            recentSessions: recentSessions.map((s: any) => {
+                const desc = s.description || '';
+                const minMatch = desc.match(/(\d+)\s*min/);
+                const mins = minMatch ? parseInt(minMatch[1]) : 0;
+                let sessionConfidence = 50;
+                if (mins >= 30) sessionConfidence = 95;
+                else if (mins >= 20) sessionConfidence = 85;
+                else if (mins >= 10) sessionConfidence = 75;
+                else if (mins >= 5) sessionConfidence = 65;
+                
+                return {
+                    id: s.id,
+                    points: s.amount,
+                    description: s.description,
+                    timestamp: s.createdAt,
+                    confidenceScore: sessionConfidence
+                };
+            })
         });
     } catch (error: any) {
         console.error('Verification status error:', error);

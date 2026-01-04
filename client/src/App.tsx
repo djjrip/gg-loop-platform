@@ -24,6 +24,7 @@ import Shop from "@/pages/Shop";
 import CreatorTools from "@/pages/CreatorTools";
 import Subscription from "@/pages/Subscription";
 import FoundingMember from "@/pages/FoundingMember";
+import GiftTier from "@/pages/GiftTier";
 import DesktopDownload from "@/pages/DesktopDownload";
 import Business from "@/pages/Business";
 import DeveloperAPI from "@/pages/DeveloperAPI";
@@ -105,6 +106,7 @@ function Router() {
       <Route path="/creator-tools" component={CreatorTools} />
       <Route path="/subscription" component={Subscription} />
       <Route path="/founding-member" component={FoundingMember} />
+      <Route path="/gift" component={GiftTier} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/roadmap" component={Roadmap} />
