@@ -38,6 +38,9 @@ const BRAND = {
     danger: '#ef4444',
 };
 
+// Minimum active time (5 minutes) before points display
+const MIN_ACTIVE_TIME_FOR_POINTS = 300; // 5 minutes in seconds
+
 export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
     const [verificationState, setVerificationState] = useState<VerificationState>('NOT_PLAYING');
     const [gameName, setGameName] = useState<string | null>(null);
@@ -45,6 +48,7 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
     const [activeTime, setActiveTime] = useState(0);
     const [statusExplanation, setStatusExplanation] = useState('Launch a supported game to start earning.');
     const [lastVerifiedAt, setLastVerifiedAt] = useState<string | null>(null);
+    const [confidenceScore, setConfidenceScore] = useState<number>(0);
 
     useEffect(() => {
         // Listen for verification state changes from main process
@@ -54,6 +58,7 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
                 setGameName(state.gameName);
                 setGameIcon(state.gameIcon || '🎮');
                 setLastVerifiedAt(state.lastVerifiedAt);
+                setConfidenceScore(state.confidenceScore || 0);
                 
                 // Update explanation based on state
                 updateStatusExplanation(state);
@@ -73,6 +78,7 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
                 setGameName(null);
                 setActiveTime(0);
                 setVerificationState('NOT_PLAYING');
+                setConfidenceScore(0);
             });
         }
     }, []);
@@ -116,11 +122,29 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
 
     const getEstimatedPoints = () => {
         if (verificationState !== 'ACTIVE_PLAY_CONFIRMED') return 0;
+        // No points until minimum active time (5 minutes)
+        if (activeTime < MIN_ACTIVE_TIME_FOR_POINTS) return 0;
         if (activeTime >= 7200) return 50;
         if (activeTime >= 3600) return 25;
         if (activeTime >= 1800) return 15;
         if (activeTime >= 900) return 10;
         return 5;
+    };
+
+    const getTimeUntilEligible = () => {
+        if (verificationState !== 'ACTIVE_PLAY_CONFIRMED') return MIN_ACTIVE_TIME_FOR_POINTS;
+        const remaining = MIN_ACTIVE_TIME_FOR_POINTS - activeTime;
+        return remaining > 0 ? remaining : 0;
+    };
+
+    const isEligibleForPoints = verificationState === 'ACTIVE_PLAY_CONFIRMED' && activeTime >= MIN_ACTIVE_TIME_FOR_POINTS;
+
+    const getConfidenceLabel = () => {
+        if (confidenceScore >= 90) return { label: 'Verified', color: BRAND.success };
+        if (confidenceScore >= 70) return { label: 'High', color: BRAND.success };
+        if (confidenceScore >= 50) return { label: 'Medium', color: BRAND.warning };
+        if (confidenceScore >= 30) return { label: 'Low', color: '#f97316' };
+        return { label: 'Suspicious', color: BRAND.danger };
     };
 
     const getStatusColor = () => {
@@ -146,6 +170,7 @@ export default function DashboardPage({ user, onLogout }: DashboardPageProps) {
     };
 
     const canEarnPoints = verificationState === 'ACTIVE_PLAY_CONFIRMED';
+    const confidenceInfo = getConfidenceLabel();
 
     return (
         <div style={{
